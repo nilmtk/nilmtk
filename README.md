@@ -1,7 +1,7 @@
 nilmtk
 ======
 
-Non-Intrusive Load Monitoring Toolkit (NILMTK)
+Non-Intrusive Load Monitoring Toolkit (nilmtk)
 
 #####Installing
 
