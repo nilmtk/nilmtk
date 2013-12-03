@@ -3,12 +3,12 @@ nilmtk
 
 NILM Toolkit
 
-Installing
-----------
+#####Installing
+
 `pip install nilmtk`
 
-Usage
-----
+#####Usage
+
 
 Algortihms
 ----------
