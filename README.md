@@ -1,23 +1,17 @@
 nilmtk
 ======
 
-NILM Toolkit
+Non-Intrusive Load Monitoring Toolkit (NILMTK)
 
 #####Installing
 
-`pip install nilmtk`
+`python setup.py install`
 
-#####Usage
-
-
-Algortihms
-----------
-
-1. MS NALM
-2. Combinatorial Optimization
-
-Software Dependencies
----------------------
+#####Software Dependencies
 
 1. Pandas
 2. matplotlib
+
+#####Further info
+
+Please see [the nilmtk wiki](https://github.com/nilmtk/nilmtk/wiki) for more details.
