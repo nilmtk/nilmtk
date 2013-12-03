@@ -16,8 +16,8 @@ Algortihms
 1. MS NALM
 2. Combinatorial Optimization
 
-Sowtware Dependencies
+Software Dependencies
 ---------------------
 
 1. Pandas
-2.
+2. matplotlib
