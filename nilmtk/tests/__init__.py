@@ -1,0 +1,1 @@
+from nilmtk.tests import *
