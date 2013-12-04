@@ -3,7 +3,7 @@ nilmtk
 
 Non-Intrusive Load Monitoring Toolkit (nilmtk)
 
-<img src="https://dl.dropboxusercontent.com/u/75845627/misc/before_disagg.png" alt="Drawing" style="width: 200px;"/>
+<img src="https://dl.dropboxusercontent.com/u/75845627/misc/before_disagg.png" alt="Drawing" style="width: 40% height: 40%;"/>
 
 
 
