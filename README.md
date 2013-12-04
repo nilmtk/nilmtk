@@ -3,6 +3,8 @@ nilmtk
 
 Non-Intrusive Load Monitoring Toolkit (nilmtk)
 
+![alt text](https://dl.dropboxusercontent.com/u/75845627/misc/before_disagg.png "Before Disaggregation")
+
 #####Installing
 
 `python setup.py install`
