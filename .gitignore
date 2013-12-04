@@ -1,0 +1,13 @@
+.project
+.pydevproject
+*.pyc
+*.*~
+*.log
+profile.txt
+*.so
+*.h5
+build/
+_build/
+*.egg-info/
+dist/
+.ropeproject/
