@@ -3,7 +3,9 @@ nilmtk
 
 Non-Intrusive Load Monitoring Toolkit (nilmtk)
 
-![alt text](https://dl.dropboxusercontent.com/u/75845627/misc/before_disagg.png "Before Disaggregation")
+<img src="https://dl.dropboxusercontent.com/u/75845627/misc/before_disagg.png" alt="Drawing" style="width: 200px;"/>
+
+
 
 #####Installing
 
