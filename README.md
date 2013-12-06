@@ -9,7 +9,15 @@ Non-Intrusive Load Monitoring Toolkit (nilmtk)
 
 #####Installing
 
+If you just want to use the code without modifying it then:
+
 `python setup.py install`
+
+(you may have to run as `sudo`)
+
+If you want to get involved in development then:
+
+`python setup.py develop`
 
 #####Software Dependencies
 
