@@ -78,12 +78,21 @@ class Building(object):
         geographic_coordinates = None
         n_occupants = None
         rooms = None
+        electric={}
+        '''
         electric = namedtuple("electric", ["mains", "circuits", "appliances",
                                            "appliance_estimates",
                                            "nominal_mains_voltage",
                                            "map_appliance_to_room",
                                            "map_appliance_to_upstream",
                                            "map_circuit_to_mains"])
+
+        '''
+    def set_mains(self, mains):
+        self.electric.mains = mains
+
+    def get_electric(self):
+        return self.electric
 
     def get_appliance(self, appliance_name, measurement="all"):
         """

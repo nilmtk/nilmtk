@@ -44,11 +44,15 @@ class Pecan(DataSet):
         raise NotImplementedError
 
     def load_building(self, building, directory):
-        spreadsheet = pd.ExcelFile(directory)
+        spreadsheet = pd.ExcelFile(directory + \
+         "15_min/Homes 01-10_15min_2012-0819-0825 .xlsx")
         df = spreadsheet.parse(building, index_col=0, date_parser=True)
+        print building
 
         # Converting power from kW to W
-        df = df / 1e3
+        # Note some homes contain Voltage as well, need to multiply that
+        # back with 1e3
+        df = df * 1e3
 
         # Convert to standard appliance names
         # 1. Mains is use [kW]; replace space with mains_0_active
@@ -59,15 +63,29 @@ class Pecan(DataSet):
         # 6. Appliance names should have separate active and apparent fields
         # (have a *)
 
+
         # 1
         df = df.rename(columns={'use [kW]': 'mains_0_active'})
 
+        if "LEG1V [V]" in df.columns:
+            df = df.rename(columns=lambda x: x.replace("LEG1V [V]", "mains_0_voltage"))
+            df = df.rename(columns=lambda x: x.replace("LEG2V [V]", "mains_1_voltage"))
+
+
         # 2
-        if "gen" in df.columns:
-            df.drop('gen [kW]', 1)
+        if "gen [kW]" in df.columns:
+            df = df.drop('gen [kW]', 1)
 
         # 3
-        df.drop('Grid [kW]', 1)
+        df = df.drop('Grid [kW]', 1)
+
+        print df.columns
+
+        # 4
+        if "Grid* [kVA]" in df.columns:
+            df = df.drop('Grid* [kVA]', 1)
+
+
 
         # 4
         df = df.rename(columns=lambda x: x.lower())
@@ -76,34 +94,53 @@ class Pecan(DataSet):
         df = df.rename(columns=lambda x: x.replace(" ", "_"))
 
         # 6
-        df = df.rename(columns=lambda x: x.replace("[kW]", "active"))
-        df = df.rename(columns=lambda x: x.replace("[kVA]", "apparent"))
+        df = df.rename(columns=lambda x: x.replace("[kw]", "active"))
+        df = df.rename(columns=lambda x: x.replace("[kva]", "apparent"))
+        df = df.rename(columns=lambda x: x.replace("*", ""))
+
+        # Find if voltage columns exist
+        # 1. Multiply those back by 1e3
+        # 2  Leg1 [V] to be replaced by mains_0_voltage
+        # 3  Leg2 [V] to be replaces by mains_1_voltage
+
+
+
+
+
 
         # Create a new building
-        building = Building()
+        b = Building()
 
         # Add mains DataFrame
-        building.electric.mains = df.mains_0_active
+        b.electric={}
+
+        # Find columns containing mains in them
+        mains_column_names = [x for x in df.columns if "mains" in x]
+        b.electric["mains"] = df[mains_column_names]
 
         # Getting a list of appliance names
         appliance_names = list(set([a.split("_")[0] for a in df.columns \
         if "mains" not in a]))
 
+
         # Add appliances
-        building.electric.appliances = {}
+        b.electric['appliances'] = {}
         for appliance in appliance_names:
-            building.electric.appliances[appliance] = df[[appliance + "_active", appliance + "_apparent"]]
+            # Finding headers corresponding to the appliance
+            names = [x for x in df.columns if x.split("_")[0]==appliance]
+            b.electric['appliances'][appliance] = df[names]
 
         # Adding this building to dict of buildings
-        self.buildings[building] = building
+        building = building.replace(" ", "_")
+        self.buildings[building] = b
 
-        return self.buildings
+
 
     def load_building_names(self, directory):
         spreadsheet = pd.ExcelFile(directory + \
-         "/15_Min/Homes 01-10_15min_2012-0819-0825 .xlsx")
-        names = spreadsheet.sheet_names
-        return [name.replace(" ", "_") for name in names]
+         "15_min/Homes 01-10_15min_2012-0819-0825 .xlsx")
+        return spreadsheet.sheet_names
+
 
 
 
