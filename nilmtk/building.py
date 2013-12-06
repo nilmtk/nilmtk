@@ -37,9 +37,9 @@ class Building(object):
 
         appliances : dict of DataFrames, optinal
             Each key is an appliance name string in the form `<appliance>_<N>`:
-            * `appliance` is a standard appliance name.  For a list of valid 
+            * `appliance` is a standard appliance name.  For a list of valid
                names, see nilmtk/docs/appliance_names.txt
-            * `N` is the index for that appliance within this building. 
+            * `N` is the index for that appliance within this building.
                Indexed from 0.
             Each value is a DataFrame shape (n_samples, n_features) where each
             column name is one of `apparent` | `active` | `reactive` | `voltage`
@@ -59,7 +59,7 @@ class Building(object):
         nominal_mains_voltage : float, optional
 
         map_appliance_to_room : dict, optional
-            e.g. {`tv_0`    : `livingroom_0`, 
+            e.g. {`tv_0`    : `livingroom_0`,
                   `fridge_0`: `kitchen_0`}
 
         map_appliance_to_upstream : dict
@@ -79,14 +79,14 @@ class Building(object):
         n_occupants = None
         rooms = None
         electric = namedtuple("electric", ["mains", "circuits", "appliances",
-                                           "appliance_estimates", 
+                                           "appliance_estimates",
                                            "nominal_mains_voltage",
                                            "map_appliance_to_room",
                                            "map_appliance_to_upstream",
                                            "map_circuit_to_mains"])
 
     def get_appliance(self, appliance_name, measurement="all"):
-        """ 
+        """
         Arguments
         ---------
         appliance_name : string
@@ -97,7 +97,7 @@ class Building(object):
         -------
         appliance_data : DataFrame
         """
-        raise NotImplementedError        
+        raise NotImplementedError
 
     def count_appliances(self, appliance_name):
         """
@@ -105,7 +105,7 @@ class Building(object):
         -------
         n_appliances : int
         """
-        raise NotImplementedError        
+        raise NotImplementedError
 
     def get_vampire_power(self):
         raise NotImplementedError
@@ -113,7 +113,7 @@ class Building(object):
     def get_diff_between_aggregate_and_appliances(self):
         raise NotImplementedError
 
-    def crop(self, start, end): 
+    def crop(self, start, end):
         """Reduce all timeseries to just these dates"""
         raise NotImplementedError
 
