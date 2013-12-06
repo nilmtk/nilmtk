@@ -1,1 +1,2 @@
-from nilmtk.dataset import *
+from .dataset import *
+from .redd import REDD

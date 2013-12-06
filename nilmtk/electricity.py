@@ -8,17 +8,17 @@ class Electricity(object):
         The power measurements taken from the level furthest upstream.
         The index is a timezone-aware pd.DateTimeIndex
         Use standard column names of the form `mains_<N>_meter_<K>_<measurement>`:
-        * `N` is the phase or split.  Indexed from 0.
-        * `K` is the numeric ID of the meter. Indexed from 0.
+        * `N` is the phase or split.  Indexed from 1.
+        * `K` is the numeric ID of the meter. Indexed from 1.
            Indexes into the `meters` dict.
         * `measurement` is one of `apparent` | `active` | `reactive` | `voltage`
         For example, if we had a dataset recorded in the UK where the home has
         only a single phase supply but uses two separate meters, the first of
         which measures active and reactive; the second of which measures only
         active, then we'd use:
-            * `mains_0_meter_0_active`
-            * `mains_0_meter_0_reactive`
-            * `mains_0_meter_1_active`
+            * `mains_1_meter_1_active`
+            * `mains_1_meter_1_reactive`
+            * `mains_1_meter_2_active`
 
     circuits : DataFrame, shape (n_samples, n_features), optional
         The power measurements taken downstream of the mains measurements but
@@ -26,18 +26,18 @@ class Electricity(object):
         The index is a timezone-aware pd.DateTimeIndex
         Use standard column names of the form `<circuit>_<N>_meter_<K>_<measurement>`:
         * `circuit` is the standard name for this circuit.
-        * `N` is the index for this circuit.  Indexed from 0.
-        * `K` is the numeric ID of the meter. Indexed from 0.
+        * `N` is the index for this circuit.  Indexed from 1.
+        * `K` is the numeric ID of the meter. Indexed from 1.
           Indexes into the `meters` dict.
         * `measurement` is one of `apparent` | `active` | `reactive` | `voltage`
-        For example: `lighting_0_apparent`
+        For example: `lighting_1_apparent`
 
     appliances : dict of DataFrames, optinal
         Each key is an appliance name string in the form `<appliance>_<N>`:
         * `appliance` is a standard appliance name.  For a list of valid
            names, see nilmtk/docs/appliance_names.txt
         * `N` is the index for that appliance within this building.
-           Indexed from 0.
+           Indexed from 1.
         Each value is a DataFrame shape (n_samples, n_features) where each
         column name is one of `apparent` | `active` | `reactive` | `voltage`
         and the index is a timezone-aware pd.DateTimeIndex
@@ -56,8 +56,8 @@ class Electricity(object):
     nominal_mains_voltage : float, optional
 
     map_appliance_to_room : dict, optional
-        e.g. {`tv_0`    : `livingroom_0`,
-              `fridge_0`: `kitchen_0`}
+        e.g. {`tv_1`    : `livingroom_1`,
+              `fridge_1`: `kitchen_1`}
 
     wiring : networkx.DiGraph
         Nodes appliance names or circuit names or mains names.
@@ -73,7 +73,7 @@ class Electricity(object):
           'model': 'EnviR', 
           'type': 'CT',
           'accuracy_class': 'C',
-          'used_by': [0, 1, 'fridge0', 'kettle0']}]
+          'used_by': [1, 2, 'fridge1', 'kettle1']}]
 
         `used_by` maps to a list of all the channels which use this
         class of meter.  This list may contain numeric meter IDs (the `K` 
