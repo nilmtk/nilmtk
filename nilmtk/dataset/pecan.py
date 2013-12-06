@@ -9,12 +9,14 @@ License:
 
 from .dataset import DataSet
 import pandas as pd
+from nilmtk.building import Building
 
 
 class Pecan(DataSet):
 
     def __init__(self):
-        super(Pecan, self).__init__()
+        self.buildings = {}
+
 
     def load(self, directory):
         """Load entire dataset into memory"""
@@ -77,9 +79,25 @@ class Pecan(DataSet):
         df = df.rename(columns=lambda x: x.replace("[kW]", "active"))
         df = df.rename(columns=lambda x: x.replace("[kVA]", "apparent"))
 
+        # Create a new building
+        building = Building()
 
-        # self.buildings[building] = DataFrame storing building data
-        raise NotImplementedError
+        # Add mains DataFrame
+        building.electric.mains = df.mains_0_active
+
+        # Getting a list of appliance names
+        appliance_names = list(set([a.split("_")[0] for a in df.columns \
+        if "mains" not in a]))
+
+        # Add appliances
+        building.electric.appliances = {}
+        for appliance in appliance_names:
+            building.electric.appliances[appliance] = df[[appliance + "_active", appliance + "_apparent"]]
+
+        # Adding this building to dict of buildings
+        self.buildings[building] = building
+
+        return self.buildings
 
     def load_building_names(self, directory):
         spreadsheet = pd.ExcelFile(directory + \
