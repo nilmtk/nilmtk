@@ -53,10 +53,30 @@ class Pecan(DataSet):
         # 2. If 'gen' is present, delete the column
         # 3. Delete 'Grid' column
         # 4. Lower case all appliance names
-        # 5. Appliance names should have separate active and apparent fields
+        # 5 Replace " " with "_" in appliance name
+        # 6. Appliance names should have separate active and apparent fields
         # (have a *)
 
-        df.rename
+        # 1
+        df = df.rename(columns={'use [kW]': 'mains_0_active'})
+
+        # 2
+        if "gen" in df.columns:
+            df.drop('gen [kW]', 1)
+
+        # 3
+        df.drop('Grid [kW]', 1)
+
+        # 4
+        df = df.rename(columns=lambda x: x.lower())
+
+        # 5
+        df = df.rename(columns=lambda x: x.replace(" ", "_"))
+
+        # 6
+        df = df.rename(columns=lambda x: x.replace("[kW]", "active"))
+        df = df.rename(columns=lambda x: x.replace("[kVA]", "apparent"))
+
 
         # self.buildings[building] = DataFrame storing building data
         raise NotImplementedError
