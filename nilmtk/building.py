@@ -3,19 +3,46 @@ class Building(object):
 
     Attributes
     ----------
-    aggregate : DataFrame
+    aggregate : DataFrame, shape (n_samples, n_features), optional
+        Using standard column names of the form `mains_<N>_<measurement>` where:
+        * `N` is the phase or split.  Indexed from 0.
+        * `measurement` is one of `apparent` | `active` | `reactive` | `voltage`
+        For example: `mains_0_apparent`
 
-    appliances : DataFrame
+    appliances : DataFrame, shape (n_samples, n_features), optional
+        Using standard column names of the form `<appliance>_<N>_<measurement>`:
+        * `appliance` is a standard appliance name.  For a list of valid names,
+           see nilmtk/docs/appliance_names.txt
+        * `N` is the index for that appliance within this building. 
+           Indexed from 0.
+        * `measurement` is one of `apparent` | `active` | `reactive` | `voltage`
+        For example: `tv_0_apparent` or `tv_2_apparent`
 
-    appliance_estimates : DataFrame
+    appliance_estimates : Panel (3D matrix), optional
+        Output from the NILM algorithm.
+        The first two dimensions are the same as for the appliance DataFrame
+        The third dimension describes, for each appliance and for each time:
+        * `power` : float. Estimated power consumption in Watts.
+        * `state` : int, optional.
+        * `confidence` : float [0,1], optional.
+        * `power_prob_dist` : object describing the probability dist, optional
+        * `state_prob_dist` : object describing the probability dist, optional
 
-    geo_location
+    geographic_coordinates : pair of floats, optional
+        (latitude, longitude)
 
-    n_occupants
+    n_occupants : int, or pair of ints, optional
+        Either the exact number of occupants (a single int) 
+        or a range (pair of ints).
 
-    nominal_mains_voltage
+    nominal_mains_voltage : float, optional
 
-    appliances_in_room
+    rooms : list of strings, optional
+        A list of room names. Use standard names for each room
+
+    map_appliance_to_room : dict
+        e.g. {`tv_0`    : `livingroom_0`, 
+              `fridge_0`: `kitchen_0`}
 
     """
 
