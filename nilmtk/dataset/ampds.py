@@ -6,22 +6,25 @@ from nilmtk.dataset import DataSet
 from nilmtk.utils import get_immediate_subdirectories
 from nilmtk.building import Building
 
-
-class AMPDS(DataSet):
-    """Load data from AMPDS."""
-
-    # Column name mapping
-    column_name_mapping = {
+ # Column name mapping
+column_name_mapping = {
         'V': 'voltage',
         'I': 'current',
         'f': 'frequency',
         'DPF': 'dpf',
         'APF': 'apf',
-        'P': 'active_power',
-        'Pt': 'active_energy',
-        'Q': 'reactive_power',
-        'Qt':
+        'P': 'power_active',
+        'Pt': 'energy_acive',
+        'Q': 'power_reactive',
+        'Qt': 'energy_reactive',
+        'S': 'power_apparent',
+        'St': 'energy_apparent'
         }
+
+class AMPDS(DataSet):
+    """Load data from AMPDS."""
+
+
 
     # Mapping of appliance names to CSV files containing them
     electricity_mapping = {
@@ -38,17 +41,9 @@ class AMPDS(DataSet):
                         'Conference (EPEC), 2013 IEEE, pp. 1-6, 2013.'
                         ]
 
-    def load_electricity(self, root_directory):
-        # Getting list of all the CSVs in the directory
-        # Each appliance (or mains) has got its own CSV
-        # Mains is named WHE.csv
-        list_of_files = glob.glob("%s*.csv" % root_directory)
-
-        # Path to electricity folder
-        electricity_folder = os.path.join(root_directory, 'electricity')
-
-        # Loading mains
-        df = pd.read_csv(os.path.join(electricity_folder, 'WHE.csv'))
+    def read_electricity_csv_and_standardize(self, csv_path):
+        # Loading appliance
+        df = pd.read_csv(csv_path)
 
         # Convert index to DateTime
         df.index = pd.to_datetime((df.TS.values * 1e9).astype(int))
@@ -57,11 +52,40 @@ class AMPDS(DataSet):
         df = df.drop('TS', 1)
 
         # Rename columns
+        df = df.rename(columns=lambda x: column_name_mapping[x])
+
+        return df
+
+    def load_electricity(self, root_directory):
+        # Getting list of all the CSVs in the directory
+        # Each appliance (or mains) has got its own CSV
+        # Mains is named WHE.csv
+
+        # Path to electricity folder
+        electricity_folder = os.path.join(root_directory, 'electricity')
+        # Borrowed from http://stackoverflow.com/a/8990026/743775
+        if os.path.isdir(electricity_folder):
+            electricity_folder = os.path.join(electricity_folder, "")
+        print(electricity_folder)
+
+        list_of_files = glob.glob("/%s*.csv" %electricity_folder)
+        print(list_of_files)
+
+        # Create new building
+        building = Building()
+
+        # Add mains
+        building.utility.electric.mains = self.read_electricity_csv_and_standardize(
+            os.path.join(electricity_folder, 'WHE.csv'))
+
+        print(list_of_files)
+        print(os.path.join(electricity_folder, 'WHE.csv'))
+        #Deleting mains from list_of_files
+        list_of_files.remove(os.path.join(electricity_folder, 'WHE.csv'))
 
         for csv_file in list_of_files:
-
-
-        return None
+            appliance_name = csv_file.split("/")[-1]
+            building.utility.electric.appliance[appliance_name] = self.read_electricity_csv_and_standardize(csv_file)
 
     def load_water(self, root_directory):
         return None
