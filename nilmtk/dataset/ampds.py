@@ -19,7 +19,18 @@ class AMPDS(DataSet):
                         'Conference (EPEC), 2013 IEEE, pp. 1-6, 2013.'
                         ]
 
+    def load_electricity(self, root_directory):
+        return None
+
+    def load_water(self, root_directory):
+        return None
+
+    def load_gas(self, root_directory):
+        return None
+
     def load(self, root_directory):
+        return None
+
 
 
 
