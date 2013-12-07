@@ -48,6 +48,8 @@ class Pecan(DataSet):
         for appliance in appliance_names:
             # Finding headers corresponding to the appliance
             names = [x for x in df.columns if x.split("_")[0] == appliance]
+
+            #TODO: Replace column names and remove the appliance name from them
             building.utility.electric.appliances[appliance] = df[names]
         return building
 
