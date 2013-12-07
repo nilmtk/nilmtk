@@ -17,13 +17,7 @@ class Building(object):
     rooms : list of strings, optional
         A list of room names. Use standard names for each room
 
-    electric : nilmtk Electricity object
-
-    gas : Series, optional
-        gas consumption in kWh
-
-    water : Series, optional
-        water consumption in cubic meters
+    utility :  nilmtk Utility object
 
     weather : DataFrame, optional
         index is a timezone-aware DateTimeIndex

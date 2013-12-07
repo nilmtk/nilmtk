@@ -1,6 +1,6 @@
-from electricity import Electricity
-from water import Water
-from gas import Gas
+from nilmtk.sensors.electricity import Electricity
+from nilmtk.sensors.water import Water
+from nilmtk.sensors.gas import Gas
 
 
 class Utility(object):
@@ -8,10 +8,13 @@ class Utility(object):
 
     Attributes
     ----------
+    electric : nilmtk Electricity object
 
-    electric
-    gas
-    water
+    gas : Series, optional
+        gas consumption in kWh
+
+    water : Series, optional
+        water consumption in cubic meters
     """
 
     def __init__(self):
