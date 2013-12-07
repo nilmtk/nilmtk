@@ -32,7 +32,7 @@ class Electricity(object):
         * `measurement` is one of `apparent` | `active` | `reactive` | `voltage`
         For example: `lighting_1_apparent`
 
-    appliances : dict of DataFrames, optinal
+    appliances : dict of DataFrames, optional
         Each key is an appliance name string in the form `<appliance>_<N>`:
         * `appliance` is a standard appliance name.  For a list of valid
            names, see nilmtk/docs/appliance_names.txt
@@ -69,14 +69,14 @@ class Electricity(object):
         Each element describes a class of meter used to record mains or
         circuit data.  For example:
 
-        [{'manufacturer': 'Current Cost', 
-          'model': 'EnviR', 
+        [{'manufacturer': 'Current Cost',
+          'model': 'EnviR',
           'type': 'CT',
           'accuracy_class': 'C',
           'used_by': [1, 2, 'fridge1', 'kettle1']}]
 
         `used_by` maps to a list of all the channels which use this
-        class of meter.  This list may contain numeric meter IDs (the `K` 
+        class of meter.  This list may contain numeric meter IDs (the `K`
         parameter in mains and circuit labels) and/or appliance names.
     """
 
