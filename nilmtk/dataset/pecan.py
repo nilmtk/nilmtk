@@ -7,11 +7,11 @@ Authors :
 License:
 '''
 
-from .dataset import DataSet
 import pandas as pd
+
+from nilmtk.dataset import DataSet
 from nilmtk.building import Building
 from nilmtk.utils import get_immediate_subdirectories
-
 
 import os
 
