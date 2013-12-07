@@ -11,12 +11,13 @@ from .dataset import DataSet
 import pandas as pd
 from nilmtk.building import Building
 
+import os
 
-class Pecan(DataSet):
+
+class Pecan_15min(DataSet):
 
     def __init__(self):
         self.buildings = {}
-
 
     def load(self, directory):
         """Load entire dataset into memory"""
@@ -43,11 +44,12 @@ class Pecan(DataSet):
     def print_summary_stats(self):
         raise NotImplementedError
 
-    def load_building(self, building, directory):
-        spreadsheet = pd.ExcelFile(directory + \
-         "15_min/Homes 01-10_15min_2012-0819-0825 .xlsx")
+    def load_building(self, a, building):
+        print (a)
+        spreadsheet = pd.ExcelFile(os.path.join(a,
+         "15_min/Homes 01-10_15min_2012-0819-0825 .xlsx"))
         df = spreadsheet.parse(building, index_col=0, date_parser=True)
-        print building
+        print (building)
 
         # Converting power from kW to W
         # Note some homes contain Voltage as well, need to multiply that
@@ -63,13 +65,14 @@ class Pecan(DataSet):
         # 6. Appliance names should have separate active and apparent fields
         # (have a *)
 
-
         # 1
         df = df.rename(columns={'use [kW]': 'mains_0_active'})
 
         if "LEG1V [V]" in df.columns:
-            df = df.rename(columns=lambda x: x.replace("LEG1V [V]", "mains_0_voltage"))
-            df = df.rename(columns=lambda x: x.replace("LEG2V [V]", "mains_1_voltage"))
+            df = df.rename(columns=lambda x: x.replace("LEG1V [V]",
+                                                "mains_0_voltage"))
+            df = df.rename(columns=lambda x: x.replace("LEG2V [V]",
+                                                "mains_1_voltage"))
 
 
         # 2
@@ -79,13 +82,9 @@ class Pecan(DataSet):
         # 3
         df = df.drop('Grid [kW]', 1)
 
-        print df.columns
-
         # 4
         if "Grid* [kVA]" in df.columns:
             df = df.drop('Grid* [kVA]', 1)
-
-
 
         # 4
         df = df.rename(columns=lambda x: x.lower())
@@ -103,16 +102,11 @@ class Pecan(DataSet):
         # 2  Leg1 [V] to be replaced by mains_0_voltage
         # 3  Leg2 [V] to be replaces by mains_1_voltage
 
-
-
-
-
-
         # Create a new building
         b = Building()
 
         # Add mains DataFrame
-        b.electric={}
+        b.electric = {}
 
         # Find columns containing mains in them
         mains_column_names = [x for x in df.columns if "mains" in x]
@@ -122,23 +116,20 @@ class Pecan(DataSet):
         appliance_names = list(set([a.split("_")[0] for a in df.columns \
         if "mains" not in a]))
 
-
         # Add appliances
         b.electric['appliances'] = {}
         for appliance in appliance_names:
             # Finding headers corresponding to the appliance
-            names = [x for x in df.columns if x.split("_")[0]==appliance]
+            names = [x for x in df.columns if x.split("_")[0] == appliance]
             b.electric['appliances'][appliance] = df[names]
 
         # Adding this building to dict of buildings
         building = building.replace(" ", "_")
         self.buildings[building] = b
 
-
-
     def load_building_names(self, directory):
-        spreadsheet = pd.ExcelFile(directory + \
-         "15_min/Homes 01-10_15min_2012-0819-0825 .xlsx")
+        spreadsheet = pd.ExcelFile(os.path.join(directory,
+         "15_min/Homes 01-10_15min_2012-0819-0825 .xlsx"))
         return spreadsheet.sheet_names
 
 
