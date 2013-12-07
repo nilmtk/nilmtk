@@ -3,10 +3,13 @@ nilmtk
 
 Non-Intrusive Load Monitoring Toolkit (nilmtk)
 
-Below is an illustration of what NILM, in general, can do.  Please note that nilmtk cannot do this yet!  But it will do soon!
+Below is an illustration of what NILM, in general, can do.  Please note that nilmtk cannot do this yet!  But we hope that it will do soon!
 
 <img src="https://dl.dropboxusercontent.com/u/75845627/misc/after_disagg.png" alt="Drawing" style="width: 40% height: 40%;"/>
 
+#####Current state of the project
+
+The project is in the very, very earliest stages.  *It does not do anything useful yet!*  If you'd like to help design the architecture please jump into the [issue queue](https://github.com/nilmtk/nilmtk/issues).  Otherwise, if you want something usable, then please check back in a month or two ;)
 
 
 #####Installing
