@@ -35,7 +35,7 @@ class Pecan(DataSet):
         mains_column_names = [x for x in df.columns if "mains" in x]
 
         #Adding mains
-        building.electric.mains = df[mains_column_names]
+        building.utility.electric.mains = df[mains_column_names]
         return building
 
     def add_appliances(self, building, df):
@@ -44,11 +44,11 @@ class Pecan(DataSet):
                             if "mains" not in a]))
 
         # Adding appliances
-        building.electric.appliances = {}
+        building.utility.electric.appliances = {}
         for appliance in appliance_names:
             # Finding headers corresponding to the appliance
             names = [x for x in df.columns if x.split("_")[0] == appliance]
-            building.electric.appliances[appliance] = df[names]
+            building.utility.electric.appliances[appliance] = df[names]
         return building
 
     def standardize(self, df):

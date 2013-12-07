@@ -1,9 +1,12 @@
 from __future__ import print_function, division
-import re, os, datetime
+import re
+import  os
+import datetime
 import pandas as pd
 from nilmtk.dataset import DataSet, load_labels
 from nilmtk.utils import get_immediate_subdirectories
 from nilmtk.building import Building
+
 
 def load_chan(building_dir, chan):
     """Returns DataFrame containing data for this channel"""
@@ -13,6 +16,7 @@ def load_chan(building_dir, chan):
     return pd.read_csv(filename, sep=' ', header=None, index_col=0,
                        parse_dates=True, date_parser=date_parser,
                        names=['active'], squeeze=True)
+
 
 class REDD(DataSet):
     """Load data from REDD."""
@@ -28,7 +32,8 @@ class REDD(DataSet):
     def load_building(self, root_directory, building_name):
         # Construct new Building and set known attributes
         building = Building()
-        building.geographic_coordinates = (42.360091, -71.09416) # MIT's coorindates
+        # MIT's coorindates
+        building.geographic_coordinates = (42.360091, -71.09416)
 
         # Load labels
         building_dir = os.path.join(root_directory, building_name)
@@ -45,14 +50,14 @@ class REDD(DataSet):
         # Make a DataFrame containing all mains channels
         df = pd.DataFrame(mains_chan_dict)
         df = df.tz_localize('UTC')
-        df = df.tz_convert('US/Eastern') # MIT is on the east coast!
+        df = df.tz_convert('US/Eastern')  # MIT is on the east coast!
         building.electric.mains = df
 
         # Load sub metered channels
         # TODO
         # Convert from REDD channel names to standardised names
         # Set up wiring
-        
+
         self.buildings[building_name] = building
 
     def load_building_names(self, root_directory):

@@ -9,6 +9,11 @@ from nilmtk.building import Building
 class AMPDS(DataSet):
     """Load data from AMPDS."""
 
+    # Mapping of appliance names to CSV files containing them
+    electricity_mapping = {
+
+        }
+
     def __init__(self):
         super(AMPDS, self).__init__()
         self.urls = ['http://ampds.org/']

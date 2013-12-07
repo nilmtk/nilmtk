@@ -1,5 +1,6 @@
-from collections import namedtuple
-from .electricity import Electricity
+from nilmtk.sensors.utility import Utility
+from nilmtk.sensors.ambient import Ambient
+
 
 class Building(object):
     """Represent a physical building (e.g. a domestic house).
@@ -34,9 +35,8 @@ class Building(object):
         self.geographic_coordinates = None
         self.n_occupants = None
         self.rooms = []
-        self.electric = Electricity()
-        self.gas = None
-        self.water = None
+        self.utility = Utility()
+        self.ambient = Ambient()
         self.weather = None
 
     def crop(self, start, end):
