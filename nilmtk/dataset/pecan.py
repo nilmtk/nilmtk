@@ -23,6 +23,34 @@ class Pecan(DataSet):
         self.urls = ['http://www.pecanstreet.org/']
         self.citations = None
 
+    def load(self, root_directory):
+        """Load entire dataset into memory"""
+        building_names = self.load_building_names(root_directory)
+        print (building_names)
+        for building_name in building_names:
+            self.load_building(root_directory, building_name)
+
+    def add_mains(self, building, df):
+        # Find columns containing mains in them
+        mains_column_names = [x for x in df.columns if "mains" in x]
+
+        #Adding mains
+        building.electric.mains = df[mains_column_names]
+        return building
+
+    def add_appliances(self, building, df):
+        # Getting a list of appliance names
+        appliance_names = list(set([a.split("_")[0] for a in df.columns
+                            if "mains" not in a]))
+
+        # Adding appliances
+        building.electric.appliances = {}
+        for appliance in appliance_names:
+            # Finding headers corresponding to the appliance
+            names = [x for x in df.columns if x.split("_")[0] == appliance]
+            building.electric.appliances[appliance] = df[names]
+        return building
+
     def standardize(self, df):
 
         # Converting power from kW to W
@@ -82,13 +110,6 @@ class Pecan_15min(Pecan):
     def __init__(self):
         super(Pecan_15min, self).__init__()
 
-    def load(self, root_directory):
-        """Load entire dataset into memory"""
-        building_names = self.load_building_names(root_directory)
-        print (building_names)
-        for building_name in building_names:
-            self.load_building(root_directory, building_name)
-
     def export(self, directory, format='REDD+', compact=False):
         """Export dataset to disk as REDD+.
 
@@ -117,22 +138,11 @@ class Pecan_15min(Pecan):
         # Create a new building
         building = Building()
 
-        # Find columns containing mains in them
-        mains_column_names = [x for x in df.columns if "mains" in x]
+        # Add mains
+        building = self.add_mains(building, df)
 
-        #Adding mains
-        building.electric.mains = df[mains_column_names]
-
-        # Getting a list of appliance names
-        appliance_names = list(set([a.split("_")[0] for a in df.columns
-                            if "mains" not in a]))
-
-        # Adding appliances
-        building.electric.appliances = {}
-        for appliance in appliance_names:
-            # Finding headers corresponding to the appliance
-            names = [x for x in df.columns if x.split("_")[0] == appliance]
-            building.electric.appliances[appliance] = df[names]
+        # Add appliances
+        building = self.add_appliances(building, df)
 
         # Adding this building to dict of buildings
         building_name = building_name.replace(" ", "_")
@@ -151,9 +161,6 @@ class Pecan_1min(Pecan):
         self.urls = ['http://www.pecanstreet.org/']
         self.citations = None
 
-    def load(self, root_directory):
-        return None
-
     def load_building(self, root_directory, building_name):
 
         # Each building has a week worth data
@@ -167,32 +174,17 @@ class Pecan_1min(Pecan):
             spreadsheet = pd.ExcelFile(os.path.join(building_folder,
                         "%s_1min_2012-09%s.xlsx" % (building_name, day)))
             temp_df = spreadsheet.parse('Sheet1', index_col=0, date_parser=True)
-            print temp_df.index
-            df.append(temp_df)
-            print df.index
+            df = df.append(temp_df)
         df = self.standardize(df)
-
-        ## TODO: Make common functions to avoid code repetition
 
         # Create a new building
         building = Building()
 
-        # Find columns containing mains in them
-        mains_column_names = [x for x in df.columns if "mains" in x]
+        # Add mains
+        building = self.add_mains(building, df)
 
-        #Adding mains
-        building.electric.mains = df[mains_column_names]
-
-        # Getting a list of appliance names
-        appliance_names = list(set([a.split("_")[0] for a in df.columns
-                            if "mains" not in a]))
-
-        # Adding appliances
-        building.electric.appliances = {}
-        for appliance in appliance_names:
-            # Finding headers corresponding to the appliance
-            names = [x for x in df.columns if x.split("_")[0] == appliance]
-            building.electric.appliances[appliance] = df[names]
+        # Add appliances
+        building = self.add_appliances(building, df)
 
         # Adding this building to dict of buildings
         building_name = building_name.replace(" ", "_")
