@@ -5,7 +5,11 @@ Non-Intrusive Load Monitoring Toolkit (nilmtk)
 
 Below is an illustration of what NILM, in general, can do.  Please note that nilmtk cannot do this yet!  But we hope that it will do soon!
 This image is from the following paper and since the main author is contributing to nilmtk, so no permission issues.
-Nipun Batra, Haimonti Dutta, Amarjeet Singh, “INDiC: Improved Non-Intrusive load monitoring using load Division and Calibration”, to appear at the 12th International Conference on Machine Learning and Applications (ICMLA’13) will be held in Miami, Florida, USA, December 4 – December 7, 2013 [Preprint] [IPython notebook]
+
+    Nipun Batra, Haimonti Dutta, Amarjeet Singh, “INDiC: Improved Non-Intrusive load monitoring using load Division and    Calibration”, to appear at the 12th International Conference on Machine Learning and Applications (ICMLA’13) will be held in Miami, Florida, USA, December 4 – December 7, 2013 
+[Preprint](http://nipunbatra.files.wordpress.com/2013/09/icmla.pdf) [IPython notebook](http://www.iiitd.edu.in/~amarjeet/Research/indic.html)	
+
+
 <img src="https://dl.dropboxusercontent.com/u/75845627/misc/after_disagg.png" alt="Drawing" style="width: 40% height: 40%;"/>
 
 #####Current state of the project
