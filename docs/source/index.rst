@@ -18,6 +18,14 @@ User Guide
 API
 ***	
 
+Building
+--------
+
+.. autosummary::
+   :toctree: generated/
+
+   building
+
 Contributing
 ************
 
