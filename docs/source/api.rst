@@ -1,3 +1,6 @@
+API Reference
+=============
+
 Building
 --------
 .. automodule:: building
