@@ -1,6 +1,6 @@
 from nilmtk.sensors.electricity import Electricity
-from nilmtk.sensors.water import Water
 from nilmtk.sensors.gas import Gas
+from nilmtk.sensors.water import Water
 
 
 class Utility(object):
