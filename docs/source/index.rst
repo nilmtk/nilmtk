@@ -24,6 +24,9 @@ Contributing
 Additional Resources
 ********************
 
+Contact
+*******
+
 Contents:
 
 .. toctree::
