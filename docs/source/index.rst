@@ -1,45 +1,13 @@
 nilmtk: Non intrusive load monitoring toolkit
 =============================================
 
-
-Quick Start
-***********
-
-Load some data::
-
-    print('test')
-    >>>test
-
-Tutorial
-********
-
-User Guide
-**********
-
-API
-***	
-
-Building
---------
-.. automodule:: building
-
-.. autoclass:: Building
-    :members:
- 
-Contributing
-************
-
-Additional Resources
-********************
-
-Contact
-*******
-
-Contents:
+Non intrusive load monitoring
 
 .. toctree::
-   :maxdepth: 2
+    :maxdepth: 3
 
+	api
+	userguide	
 
 
 Indices and tables
