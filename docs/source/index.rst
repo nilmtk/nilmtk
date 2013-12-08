@@ -9,6 +9,7 @@ Load some data::
 
     print('test')
     >>>test
+
 Tutorial
 ********
 
@@ -20,12 +21,11 @@ API
 
 Building
 --------
+.. automodule:: building
 
-.. autosummary::
-   :toctree: generated/
-
-   building
-
+.. autoclass:: Building
+    :members:
+ 
 Contributing
 ************
 
