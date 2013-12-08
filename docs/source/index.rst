@@ -11,6 +11,7 @@ Detailed
 
 
    api
+   userguide
    	
 
 
