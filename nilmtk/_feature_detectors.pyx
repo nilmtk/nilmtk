@@ -52,6 +52,13 @@ def steady_states(series,
     """Steady_state detector based on the definition of steady states given
     in Hart 1992 [1]_
 
+    It simply finds segments of 3 or more consecutive samples all of
+    which fall within a 15 Watt window. It works OK for very simple
+    appliances like toasters. But even something fairly simple but
+    with quite a lot of variance like a TV confuses it a lot. But this
+    steady_states() detector is very fast (both because the algo is
+    simple and because it's implemented in Cython ;)
+
     Parameters
     ----------
     series : pd.Series
