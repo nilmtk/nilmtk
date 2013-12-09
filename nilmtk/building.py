@@ -18,10 +18,9 @@ class Building(object):
         A list of room names. Use standard names for each room
 
     utility :  nilmtk Utility object
-
-    weather : DataFrame, optional
-        index is a timezone-aware DateTimeIndex
-        columns are names like `temperature` (degrees C) etc
+    
+    ambient : nilmtk Ambient object
+        Stores weather etc.
 
     """
 
@@ -31,7 +30,6 @@ class Building(object):
         self.rooms = []
         self.utility = Utility()
         self.ambient = Ambient()
-        self.weather = None
 
     def crop(self, start, end):
         """Reduce all timeseries to just these dates"""
