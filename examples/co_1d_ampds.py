@@ -69,6 +69,9 @@ print('Disaggregate!')
 # Predicting with the learnt model
 disaggregator.disaggregate(test_power_aggregate)
 
-
+# Accessing diaggregated data
+for appliance in disaggregator.predictions:
+    # Do something with self.predictions[appliance]
+    pass
 
 
