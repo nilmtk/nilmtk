@@ -14,7 +14,7 @@ column_name_mapping = {
         'DPF': 'dpf',
         'APF': 'apf',
         'P': 'power_active',
-        'Pt': 'energy_acive',
+        'Pt': 'energy_active',
         'Q': 'power_reactive',
         'Qt': 'energy_reactive',
         'S': 'power_apparent',
@@ -43,6 +43,7 @@ class AMPDS(DataSet):
                         ]
         self.building = Building()
         self.buildings['Home_01'] = self.building
+        self.nominal_voltage = 230
 
     def read_electricity_csv_and_standardize(self, csv_path):
         # Loading appliance
@@ -96,7 +97,6 @@ class AMPDS(DataSet):
         self.building.utility.electric.appliances = {}
         for csv_file in list_of_files:
             appliance_name = csv_file.split("/")[-1][:3]
-            print(appliance_name)
             self.building.utility.electric.appliances[appliance_name] = self.read_electricity_csv_and_standardize(csv_file)
 
 

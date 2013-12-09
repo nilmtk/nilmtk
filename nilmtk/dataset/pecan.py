@@ -164,6 +164,8 @@ class Pecan_1min(Pecan):
         self.citations = None
 
     def load_building(self, root_directory, building_name):
+        ''' Loads electrical data for specified building
+        '''
 
         # Each building has a week worth data
         # Files are named as follows:
