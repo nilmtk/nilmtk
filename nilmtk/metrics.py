@@ -1,41 +1,74 @@
+'''Metrics to compare disaggregation performance of various algorithms
+
+Following is the convention used consistently throughout all the metrics
+
+#TODO: Add all conventions
+
+'''
+
+
 import numpy as np
-from copy import deepcopy
 
 
-def compute_RE_MNE(power_states_dict, df_appliances_test):
+def mne(predicted_power, df_appliances_ground_truth):
+    '''Compute Mean Normalized Error
+
+    Parameters
+    ----------
+
+    predicted_power: Pandas DataFrame of type {"appliance" :
+         [array of predictd power]}
+
+    df_appliances_ground_truth: Pandas DataFrame of type {"appliance" :
+        [array of ground truth power]}
+
+    Returns
+    -------
+    mne: dict of type {"appliance" : MNE error}
     '''
-    INPUT
-    -----
-    power_states_dict is an ordered dictionary of the form
-    {0 : {'states':case_0_states, 'power': case_0_power},
-     1:.....
-    }
-     Here, each of case_i_states and case_i_power is also a dictionary
-     of the format
-     case_i_power={ 'refrigerator':[0,1,...]
-     }
 
-     OUTPUT
-     ------
+    mne = {}
+    numerator = {}
+    denominator = {}
 
-     '''
+    for appliance in predicted_power:
+        numerator[appliance] = np.sum(np.abs(predicted_power[appliance] -
+           df_appliances_ground_truth[appliance].values))
+        denominator[appliance] = np.sum(
+            df_appliances_ground_truth[appliance].values)
+        mne[appliance] = numerator[appliance] * 1.0 / denominator[appliance]
+    return mne
 
-    MNE = []
-    RE = []
 
-    for i in range(4):
-        # We have 4 cases
-        numerator={}
-        denominator={}
-        mne={}
-        re={}
-        for appliance in power_states_dict[0]['states']:
-            numerator[appliance]=np.sum(np.abs(power_states_dict[i]['power'][appliance]-    df_appliances_test[appliance].values))
-            denominator[appliance]=np.sum(df_appliances_test[appliance].values)
-            mne[appliance]=numerator[appliance]*1.0/denominator[appliance]
-            re[appliance]=np.std(power_states_dict[i]['power'][appliance]-  df_appliances_test[appliance].values)
+def re(predicted_power, df_appliances_ground_truth):
+    '''Compute RMS Error
 
-        MNE.append(deepcopy(mne))
-        RE.append(deepcopy(re))
+    Parameters
+    ----------
 
-    return [MNE,RE]
+    predicted_power: Pandas DataFrame of type {"appliance" :
+         [array of predictd power]}
+
+    df_appliances_ground_truth: Pandas DataFrame of type {"appliance" :
+        [array of ground truth power]}
+
+    Returns
+    -------
+    re: dict of type {"appliance" : MNE error}
+    '''
+
+    re = {}
+    numerator = {}
+    denominator = {}
+
+    for appliance in predicted_power:
+        numerator[appliance] = np.sum(np.abs(predicted_power[appliance] -
+           df_appliances_ground_truth[appliance].values))
+        denominator[appliance] = np.sum(
+            df_appliances_ground_truth[appliance].values)
+        re[appliance] = np.std(predicted_power[appliance] -
+        df_appliances_ground_truth[appliance].values)
+    return re
+
+
+
