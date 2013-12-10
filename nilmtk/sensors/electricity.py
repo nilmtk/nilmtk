@@ -7,8 +7,8 @@ class Electricity(object):
     mains : DataFrame, shape (n_samples, n_features), optional
         The power measurements taken from the level furthest upstream.
         The index is a timezone-aware pd.DateTimeIndex
-        Use standard column names of the form `mains_<N>_meter_<K>_
-        <measurement>`:
+        Use standard column names of the form 
+        `mains_<N>_meter_<K>_<measurement>` where:
 
         * `N` is the phase or split.  Indexed from 1.
         * `K` is the numeric ID of the meter. Indexed from 1.
@@ -38,7 +38,7 @@ class Electricity(object):
     appliances : dict of DataFrames, optional
         Each key is an appliance name string in the form `<appliance>_<N>`:
         * `appliance` is a standard appliance name.  For a list of valid
-           names, see nilmtk/docs/appliance_names.txt
+           names, see nilmtk/docs/standard_names/appliances.txt
         * `N` is the index for that appliance within this building.
            Indexed from 1.
         Each value is a DataFrame shape (n_samples, n_features) where each
@@ -81,6 +81,10 @@ class Electricity(object):
         `used_by` maps to a list of all the channels which use this
         class of meter.  This list may contain numeric meter IDs (the `K`
         parameter in mains and circuit labels) and/or appliance names.
+
+    appliance_metadata : dict of dicts, optional
+        Metadata describing each appliance.  e.g.
+        {'television_1': {'type': 'CRT', 'year of manufacture': 2001}}
     """
 
     def __init__(self):
