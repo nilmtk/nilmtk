@@ -1,0 +1,4 @@
+fridge
+fridge_freezer
+television
+...
