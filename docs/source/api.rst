@@ -29,7 +29,7 @@ Utility
 .. autoclass:: Utility
    :members:
 
-Utility has the following:
+Utility has the following modalities:
 
 Electricity
 ------------
