@@ -72,7 +72,7 @@ class CO_1d(object):
             Each attibute (column)
             is a series corresponding to an attribute of each appliance
             such as power_active. This attribute must be the same as
-            that used bu the mains
+            that used by the mains
 
         cluster_algo : string, optional
             Clustering algorithm used for learning the states of the appliances

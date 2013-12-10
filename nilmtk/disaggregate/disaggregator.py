@@ -7,52 +7,40 @@ class Disaggregator(object):
 
     __metaclass__ = ABCMeta
 
-    #------------- TRAINING ------------
-
     @abstractmethod
-    def train_on_appliances(self, appliances):
-        """Train on appliance data.
+    def train(self, mains=None, appliances=None):
+        """Train the disaggregation algorithm.
+
+        There are three training modes.  The mode will be selected based
+        on which arguments are provided.  The modes are:
+
+        * Supervised training on appliance data
+        * Supervised training on mains data, using simultaneously recorded
+          appliance data as the labels
+        * Unsupervised training on mains data only
+
+        The parameters are designed to accept the standard mains and 
+        appliance data structure used in nilmtk's `Electricity` class.
+
+        `train` can be called more than once during the lifetime of
+        the object to train on new data.
+
+        Some subclasses of Disaggregator will be trainable using more
+        than training mode.  In this case, call `train` multiple times
+        using different combinations of arguments.
 
         Parameters
         ----------
-        appliances : dict
-            Each key of the dict is an appliance name, 
-            each value of the dict is a list of filenames.
+        mains : pandas.DataFrame or pandas.Series, optional
+            Whole-house, aggregate power data in Watts.
+            index is a DataTimeIndex
+            column names use the nilmtk standard for mains data
 
-            For example:
-            {'fridge': 'fridge1.csv', 'fridge2.csv',
-             'kettle': 'kettle1.csv', 'kettle2.csv'}
-        """
-        return
+        appliances : dict of list of DataFrames, optional
+            Keys are appliance names, using nilmtk standards
+            Values are lists of DataFrames, one DataFrame per appliance, using
+            standard nilmtk names in columns for recorded parameters.
 
-    @abstractmethod
-    def train_supervised_on_aggregate(self, aggregate, appliances):
-        """Train on aggregate data, using simultaneously measured appliance
-        data to label features in the aggregate data.
-
-        Parameters
-        ----------
-        aggregate : pandas.DataFrame
-            The column names must conform to the nilmtk standard
-            for aggregate data.
-
-        appliances : pandas.DataFrame
-            The column names must conform to the nilmtk standard
-            for appliance data.
-
-        """
-        return
-
-    @abstractmethod
-    def train_unsupervised_on_aggregate(self, aggregate):
-        """Unsupervised training on aggregate data,
-        without any labels.
-
-        Parameters
-        ----------
-        aggregate : pandas.DataFrame
-            The column names must conform to the nilmtk standard
-            for aggregate data.
         """
         return
 
@@ -72,7 +60,10 @@ class Disaggregator(object):
         Returns
         -------
         appliance_estimates: Panel, shape (n_samples, n_appliances, [1,3])
-            Returns a 3D matrix (Panel). The third dimension represents
-            estimated power, estimated state, confidence [0,1]
+            Returns a 3D matrix (Panel). The third dimension represents 
+            some combination of:
+            * estimated power
+            * estimated state
+            * confidence [0,1]
         """
         return
