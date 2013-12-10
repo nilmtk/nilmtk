@@ -22,6 +22,11 @@ class Building(object):
     ambient : nilmtk Ambient object
         Stores weather etc.
 
+    external : DataFrame with measurements for external temperature,
+        sunshine, rain fall, wind etc.  (This attribute is called `external`
+        so that we can capture not just weather but any other external
+        measurements that we might be interested in.)
+
     """
 
     def __init__(self):
@@ -30,6 +35,7 @@ class Building(object):
         self.rooms = []
         self.utility = Utility()
         self.ambient = Ambient()
+        self.external = None
 
     def crop(self, start, end):
         """Reduce all timeseries to just these dates"""
