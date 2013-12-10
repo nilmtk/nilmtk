@@ -8,38 +8,40 @@ class Disaggregator(object):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def train(self, mains=None, appliances=None):
+    def train(self, buildings=None, appliances=None, 
+              external_sensors=None):
         """Train the disaggregation algorithm.
 
-        There are three training modes.  The mode will be selected based
-        on which arguments are provided.  The modes are:
+        There are three training modes:
 
         * Supervised training on appliance data
         * Supervised training on mains data, using simultaneously recorded
           appliance data as the labels
         * Unsupervised training on mains data only
 
-        The parameters are designed to accept the standard mains and 
-        appliance data structure used in nilmtk's `Electricity` class.
+        Some subclasses of Disaggregator will be trainable using more
+        than training mode.  In this case, `train` will attempt to use
+        all training modes available, in order to produce the best models.
 
         `train` can be called more than once during the lifetime of
-        the object to train on new data.
-
-        Some subclasses of Disaggregator will be trainable using more
-        than training mode.  In this case, call `train` multiple times
-        using different combinations of arguments.
+        the disaggregator object to train on new data.
 
         Parameters
         ----------
-        mains : pandas.DataFrame or pandas.Series, optional
-            Whole-house, aggregate power data in Watts.
-            index is a DataTimeIndex
-            column names use the nilmtk standard for mains data
+        buildings : a list of nilmtk Building objects, optional
+            These objects must contain aggregate whole-house data and can 
+            optionally contain simultaneously recorded appliance data and/or
+            ambient data.
 
-        appliances : dict of list of DataFrames, optional
-            Keys are appliance names, using nilmtk standards
-            Values are lists of DataFrames, one DataFrame per appliance, using
-            standard nilmtk names in columns for recorded parameters.
+        appliances : nilmtk Electricity object, optional
+            Use this for training the disaggrgator using appliance data recorded
+            without simultaneous aggregate data, for example from tracebase.
+            The `appliances` attribute in the `Electricity` object must be 
+            populated.
+
+        external_sensors :
+            External sensor data, e.g. weather data from the local 
+            metoffice weather station.
 
         """
         return
@@ -65,5 +67,8 @@ class Disaggregator(object):
             * estimated power
             * estimated state
             * confidence [0,1]
+
+        `disaggregate` also sets the `appliance_estimates` attribute of
+        `building.utility.electric`.
         """
         return
