@@ -18,7 +18,7 @@ class Building(object):
         A list of room names. Use standard names for each room
 
     utility :  nilmtk Utility object
-    
+
     ambient : nilmtk Ambient object
         Stores weather etc.
 

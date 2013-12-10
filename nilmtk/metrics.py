@@ -16,7 +16,7 @@ def mne(predicted_power, df_appliances_ground_truth):
     # TODO: Put the formula in terms of conventions and give a vanilla example
     explaining the same
 
-    Parameters
+    Attributes
     ----------
 
     predicted_power: Pandas DataFrame of type {appliance :
@@ -49,7 +49,7 @@ def re(predicted_power, df_appliances_ground_truth):
     # TODO: Put the formula in terms of conventions and give a vanilla example
     explaining the same
 
-    Parameters
+    Attributes
     ----------
 
     predicted_power: Pandas DataFrame of type {appliance :

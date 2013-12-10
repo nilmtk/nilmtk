@@ -23,11 +23,6 @@ Building
 
 A building consists of the following:
 
-Utility
--------
-.. automodule:: utility
-.. autoclass:: Utility
-   :members:
 
 Utility has the following modalities:
 
