@@ -8,8 +8,7 @@ class Disaggregator(object):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def train(self, buildings=None, appliances=None, 
-              external_sensors=None):
+    def train(self, buildings=None, appliances=None, external_sensors=None):
         """Train the disaggregation algorithm.
 
         There are three training modes:
@@ -20,7 +19,7 @@ class Disaggregator(object):
         * Unsupervised training on mains data only
 
         Some subclasses of Disaggregator will be trainable using more
-        than training mode.  In this case, `train` will attempt to use
+        than one training mode.  In this case, `train` will attempt to use
         all training modes available, in order to produce the best models.
 
         `train` can be called more than once during the lifetime of
