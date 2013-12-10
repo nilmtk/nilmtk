@@ -36,3 +36,8 @@ Electricity
 .. automodule:: electricity
 .. autoclass:: Electricity
    :members:
+
+Metrics
+-------
+.. automodule:: metrics
+   :members:

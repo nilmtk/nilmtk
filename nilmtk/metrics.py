@@ -13,18 +13,21 @@ import numpy as np
 def mne(predicted_power, df_appliances_ground_truth):
     '''Compute Mean Normalized Error
 
+    # TODO: Put the formula in terms of conventions and give a vanilla example
+    explaining the same
+
     Parameters
     ----------
 
-    predicted_power: Pandas DataFrame of type {"appliance" :
+    predicted_power: Pandas DataFrame of type {appliance :
          [array of predictd power]}
 
-    df_appliances_ground_truth: Pandas DataFrame of type {"appliance" :
+    df_appliances_ground_truth: Pandas DataFrame of type {appliance :
         [array of ground truth power]}
 
     Returns
     -------
-    mne: dict of type {"appliance" : MNE error}
+    mne: dict of type {appliance : MNE error}
     '''
 
     mne = {}
@@ -43,18 +46,21 @@ def mne(predicted_power, df_appliances_ground_truth):
 def re(predicted_power, df_appliances_ground_truth):
     '''Compute RMS Error
 
+    # TODO: Put the formula in terms of conventions and give a vanilla example
+    explaining the same
+
     Parameters
     ----------
 
-    predicted_power: Pandas DataFrame of type {"appliance" :
+    predicted_power: Pandas DataFrame of type {appliance :
          [array of predictd power]}
 
-    df_appliances_ground_truth: Pandas DataFrame of type {"appliance" :
+    df_appliances_ground_truth: Pandas DataFrame of type {appliance :
         [array of ground truth power]}
 
     Returns
     -------
-    re: dict of type {"appliance" : MNE error}
+    re: dict of type {appliance : MNE error}
     '''
 
     re = {}

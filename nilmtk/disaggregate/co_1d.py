@@ -6,6 +6,26 @@ from nilmtk.utils import find_nearest
 
 def decode_co(length_sequence, centroids, appliance_list, states,
              residual_power):
+    '''Decode a Combination Sequence and map K^N back to each of the K
+    appliances
+
+    Parameters
+    ----------
+
+    length_sequence: int, shape
+    Length of the series for which decoding needs to be done
+
+    centroids: dict, form: {appliance: [sorted list of power
+    in different states]}
+
+    appliance_list: list, form: [appliance_i...,]
+
+    states: nd.array, Contains the state in overall combinations (K^N), i.e.
+    at each time instance in [0, length_sequence] what is the state of overall
+    system [0, K^N-1]
+
+    residual_power: nd.array
+    '''
 
     co_states = {}
     co_power = {}
@@ -76,7 +96,8 @@ class CO_1d(object):
         states = np.zeros(length_sequence)
         residual_power = np.zeros(length_sequence)
         for i in range(length_sequence):
-            [states[i], residual_power[i]] = find_nearest(sum_combination,test_mains.values[i])
+            [states[i], residual_power[i]] = find_nearest(
+                sum_combination, test_mains.values[i])
         [predicted_states, predicted_power] = decode_co(length_sequence,
                             self.model, appliance_list, states, residual_power)
         self.predictions = pd.DataFrame(predicted_power)
