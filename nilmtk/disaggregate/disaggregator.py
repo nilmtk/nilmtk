@@ -8,7 +8,7 @@ class Disaggregator(object):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def train(self, buildings=None, appliances=None, external_sensors=None):
+    def train(self, buildings=None, appliances=None, environmental=None):
         """Train the disaggregation algorithm.
 
         There are three training modes:
@@ -38,7 +38,7 @@ class Disaggregator(object):
             The `appliances` attribute in the `Electricity` object must be 
             populated.
 
-        external_sensors :
+        environmental :
             External sensor data, e.g. weather data from the local 
             metoffice weather station.
 
@@ -46,7 +46,7 @@ class Disaggregator(object):
         return
 
     @abstractmethod
-    def disaggregate(self, building):
+    def disaggregate(self, building, environmental=None):
         """Runs non-intrusive load monitoring on the aggregate data from 
         the building.
 
