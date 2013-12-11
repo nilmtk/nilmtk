@@ -2,3 +2,4 @@ active
 apparent
 reactive
 voltage
+power_factor
