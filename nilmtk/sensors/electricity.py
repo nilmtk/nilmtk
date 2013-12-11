@@ -7,7 +7,7 @@ class Electricity(object):
     mains : DataFrame, shape (n_samples, n_features), optional
         The power measurements taken from the level furthest upstream.
         The index is a timezone-aware pd.DateTimeIndex
-        Use standard column names of the form 
+        Use standard column names of the form
         `mains_<N>_meter_<K>_<measurement>` where:
 
         * `N` is the phase or split.  Indexed from 1.
