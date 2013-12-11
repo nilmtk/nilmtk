@@ -3,10 +3,10 @@ import os
 import glob
 import pandas as pd
 from nilmtk.dataset import DataSet
-from nilmtk.utils import get_immediate_subdirectories
 from nilmtk.building import Building
 
- # Column name mapping
+
+# Column name mapping
 column_name_mapping = {
         'V': 'voltage',
         'I': 'current',
