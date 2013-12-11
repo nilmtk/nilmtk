@@ -31,6 +31,7 @@ If you want to get involved in development then:
 
 1. Pandas
 2. matplotlib
+3. numpy => 1.8
 
 #####Further info
 
