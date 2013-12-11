@@ -1,28 +1,88 @@
 '''Metrics to compare disaggregation performance of various algorithms
 
-Following is the convention used consistently throughout all the metrics
+Notation
+-----------
 
-#TODO: Add all conventions
+Below is the notation used to mathematically define each metric. 
 
-#TODO: Add more metrics
+:math:`T` - number of time slices.
+
+:math:`t` - a time slice.
+
+:math:`N` - number of appliances.
+
+:math:`n` - an appliance.
+
+:math:`y^{(n)}_t` -  ground truth power of feed :math:`n` in time slice :math:`t`.
 
 '''
 
 
 import numpy as np
 
+def feca(predicted_power, df_appliances_ground_truth):
+    '''Compute Fraction of Energy Correctly Assigned
 
-def mne(predicted_power, df_appliances_ground_truth):
-    '''Compute Mean Normalized Error
-
-    # TODO: Put the formula in terms of conventions and give a vanilla example
-    explaining the same
+    # TODO: Give a vanilla example
+    
+    .. math::
+        fraction = 
+        \\sum_n min \\left ( 
+        \\frac{\\sum_n y}{\\sum_{n,t} y}, 
+        \\frac{\\sum_n \\hat{y}}{\\sum_{n,t} \\hat{y}} 
+        \\right )
 
     Attributes
     ----------
 
     predicted_power: Pandas DataFrame of type {appliance :
          [array of predictd power]}
+
+    df_appliances_ground_truth: Pandas DataFrame of type {appliance :
+        [array of ground truth power]}
+
+    Returns
+    -------
+    re: float representing Fraction of Energy Correctly Assigned
+    '''
+
+    fraction = np.array([])
+
+    for appliance in predicted_power:
+        
+        appliance_energy_predicted = np.sum(predicted_power[appliance].values)
+        total_energy_predicted = np.sum(predicted_power.values)
+        
+        appliance_energy_ground_truth = np.sum(df_appliances_ground_truth[appliance].values)
+        total_energy_ground_truth = np.sum(df_appliances_ground_truth.values)
+        
+        print appliance_energy_predicted
+        print total_energy_predicted
+        print appliance_energy_ground_truth
+        print total_energy_ground_truth
+        
+        fraction = np.append(fraction, np.min(
+                                              appliance_energy_predicted/total_energy_predicted,
+                                              appliance_energy_ground_truth/total_energy_ground_truth
+                                              ))
+    return fraction
+
+def mne(predicted_power, df_appliances_ground_truth):
+    '''Compute Mean Normalized Error
+
+    # TODO: Give a vanilla example
+        
+    .. math::
+        error^{(n)} = 
+        \\frac
+        { \\sum_t {\\left | y_t^{(n)} - \\hat{y}_t^{(n)} \\right |} }
+        { \\sum_t y_t^{(n)} }
+
+    Attributes
+    ----------
+
+    predicted_power: Pandas DataFrame of type {appliance :
+         [array of predicted power]}
 
     df_appliances_ground_truth: Pandas DataFrame of type {appliance :
         [array of ground truth power]}
@@ -47,9 +107,11 @@ def mne(predicted_power, df_appliances_ground_truth):
 
 def re(predicted_power, df_appliances_ground_truth):
     '''Compute RMS Error
-
-    # TODO: Put the formula in terms of conventions and give a vanilla example
-    explaining the same
+    
+    # TODO: Give a vanilla example
+    
+    .. math::
+        error^{(n)} = \\sqrt{ \\frac{1}{T} \\sum_t{ \\left ( y_t - \\hat{y}_t \\right )^2 } }
 
     Attributes
     ----------
@@ -66,16 +128,10 @@ def re(predicted_power, df_appliances_ground_truth):
     '''
 
     re = {}
-    numerator = {}
-    denominator = {}
 
     for appliance in predicted_power:
-        numerator[appliance] = np.sum(np.abs(predicted_power[appliance] -
-           df_appliances_ground_truth[appliance].values))
-        denominator[appliance] = np.sum(
-            df_appliances_ground_truth[appliance].values)
         re[appliance] = np.std(predicted_power[appliance] -
-        df_appliances_ground_truth[appliance].values)
+            df_appliances_ground_truth[appliance].values)
     return re
 
 
