@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractmethod
 
+
 class Disaggregator(object):
     """Abstract Base Class for all Disaggregators.  This class
     defines the common interface to all Disaggregators.
@@ -28,18 +29,18 @@ class Disaggregator(object):
         Parameters
         ----------
         buildings : a list of nilmtk Building objects, optional
-            These objects must contain aggregate whole-house data and can 
+            These objects must contain aggregate whole-house data and can
             optionally contain simultaneously recorded appliance data and/or
             ambient data.
 
         appliances : nilmtk Electricity object, optional
-            Use this for training the disaggrgator using appliance data recorded
-            without simultaneous aggregate data, for example from tracebase.
-            The `appliances` attribute in the `Electricity` object must be 
-            populated.
+            Use this for training the disaggregator using appliance data
+            recorded without simultaneous aggregate data, for example from
+            tracebase.The `appliances` attribute in the `Electricity` object
+            must be populated.
 
         environmental :
-            External sensor data, e.g. weather data from the local 
+            External sensor data, e.g. weather data from the local
             metoffice weather station.
 
         """
@@ -47,11 +48,11 @@ class Disaggregator(object):
 
     @abstractmethod
     def disaggregate(self, building, environmental=None):
-        """Runs non-intrusive load monitoring on the aggregate data from 
+        """Runs non-intrusive load monitoring on the aggregate data from
         the building.
 
         We pass in an entire Building object because some Disaggregators
-        can take advantage of building metadata such a geo location to 
+        can take advantage of building metadata such a geo location to
         improve the estimates.
 
         Parameters
@@ -61,7 +62,7 @@ class Disaggregator(object):
         Returns
         -------
         appliance_estimates: Panel, shape (n_samples, n_appliances, [1,3])
-            Returns a 3D matrix (Panel). The third dimension represents 
+            Returns a 3D matrix (Panel). The third dimension represents
             some combination of:
             * estimated power
             * estimated state

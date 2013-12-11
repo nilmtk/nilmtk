@@ -27,6 +27,8 @@ sys.path.insert(0, os.path.abspath('../../nilmtk/nilmtk/sensors/'))
 
 sys.path.insert(0, os.path.abspath('sphinxext'))
 
+print sys.path
+
 
 
 
