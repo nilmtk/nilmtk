@@ -11,7 +11,9 @@ class Electricity(object):
 
         * `split` is the phase or split.  Indexed from 1.
         * `meter` is the numeric ID of the meter. Indexed from 1.
-        * `measurement` is one of `apparent` | `active` | `reactive` | `voltage`
+        * `measurement` is one of `apparent` | `active` etc (please see 
+          /docs/standard_names/measurements.txt for the full list)
+
         For example, if we had a dataset recorded in the UK where the home has
         only a single phase supply but uses two separate meters, the first of
         which measures active and reactive; the second of which measures only
@@ -25,11 +27,13 @@ class Electricity(object):
         upstream of the appliances.
         The index is a timezone-aware pd.DateTimeIndex
         Each column name is a CircuitName namedtuple with fields:
+
         * `circuit` is the standard name for this circuit.
         * `split` is the index for this circuit.  Indexed from 1.
         * `meter` is the numeric ID of the meter. Indexed from 1.
           Indexes into the `meters` dict.
-        * `measurement` is one of `apparent` | `active` | `reactive` | `voltage`
+        * `measurement` is one of `apparent` | `active` etc (please see 
+          /docs/standard_names/measurements.txt for the full list)
 
         For example: 
         `CircuitName(circuit='lighting', split=1, 
@@ -41,7 +45,9 @@ class Electricity(object):
            names, see nilmtk/docs/standard_names/appliances.txt
         * `instance` is the index for that appliance within this building.
            Indexed from 1.
-        * `measurement` is one of 'apparent' | 'active' | 'reactive' | 'voltage'
+        * `measurement` is one of `apparent` | `active` etc (please see 
+          /docs/standard_names/measurements.txt for the full list)
+
         For example, if a house has two TVs then use these two column names:
         `('tv', 1, 'active'), ('tv', 2, 'active')`
         Each value is a DataFrame shape (n_samples, n_features) where each
@@ -89,10 +95,13 @@ class Electricity(object):
           }`
 
     appliance_metadata : dict of dicts, optional
-        Metadata describing each appliance.  The permitted fields and values
+        Metadata describing each appliance.
+        Each key is an (<appliance name>, <instance>) tuple.
+        Each value is dict describing metadata for that appliance.
+        The permitted fields and values
         for each appliance name are described in `appliances.json`.  e.g.
 
-        `{ApplianceName(name='tv', instance=1): 
+        `{('tv', 1): 
             {'display': 'lcd', 
              'backlight': 'led'
              'screen size in inches': 42,
