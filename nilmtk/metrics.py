@@ -13,15 +13,54 @@ Below is the notation used to mathematically define each metric.
 
 :math:`n` - an appliance.
 
-:math:`y^{(n)}_t` -  ground truth power of feed :math:`n` in time slice :math:`t`.
+:math:`y^{(n)}_t` -  ground truth power of appliance :math:`n` in time slice :math:`t`.
+
+:math:`\\hat{y}^{(n)}_t` -  estimated power of appliance :math:`n` in time slice :math:`t`.
+
+:math:`z^{(n)}_t` - ground truth state of appliance :math:`n` in time slice :math:`t`.
+
+:math:`\\hat{z}^{(n)}_t` - estimated state of appliance :math:`n` in time slice :math:`t`.
+
+Functions
+-----------
 
 '''
 
 
 import numpy as np
 
-def feca(predicted_power, df_appliances_ground_truth):
-    '''Compute Fraction of Energy Correctly Assigned
+def error_energy(predicted_power, df_appliances_ground_truth):
+    '''Compute error in assigned energy
+
+    # TODO: Give a vanilla example
+    
+    .. math::
+        error^{(n)} = 
+        \\left | \\sum_t y^{(n)}_t - \\sum_t \\hat{y}^{(n)}_t \\right |
+
+    Attributes
+    ----------
+
+    predicted_power: Pandas DataFrame of type {appliance :
+         [array of predictd power]}
+
+    df_appliances_ground_truth: Pandas DataFrame of type {appliance :
+        [array of ground truth power]}
+
+    Returns
+    -------
+    re: float representing Fraction of Energy Correctly Assigned
+    '''
+    error = {}
+
+    for appliance in predicted_power:
+        ground_truth_energy = np.sum(df_appliances_ground_truth[appliance].values)
+        predicted_energy = np.sum(predicted_power[appliance].values)
+        error[appliance] = np.abs(predicted_energy - ground_truth_energy)
+    return error
+
+def fraction_energy_assigned_correctly(predicted_power, df_appliances_ground_truth):
+    '''Compute fraction of energy assigned correctly
 
     # TODO: Give a vanilla example
     
@@ -67,8 +106,39 @@ def feca(predicted_power, df_appliances_ground_truth):
                                               ))
     return fraction
 
-def mne(predicted_power, df_appliances_ground_truth):
-    '''Compute Mean Normalized Error
+def hamming_loss(predicted_state, ground_truth_state):
+    '''Compute Hamming loss
+
+    # TODO: Give a vanilla example
+    
+    .. math::
+        HammingLoss^{(n)} = 
+        \\frac{1}{T} \\sum_{t}
+        xor \\left ( z^{(n)}_t, \\hat{z}^{(n)}_t \\right )
+
+    Attributes
+    ----------
+
+    predicted_state: Pandas DataFrame of type {appliance :
+         [array of predicted states]}
+
+    ground_truth_state: Pandas DataFrame of type {appliance :
+        [array of ground truth states]}
+
+    Returns
+    -------
+    re: dict of type {appliance : HammingLoss}
+    '''
+    
+    loss = {}
+
+    for appliance in predicted_state:
+        loss[appliance] = np.sum(predicted_state[appliance].values == 
+                                 ground_truth_state[appliance].values)
+    return loss
+
+def mean_normalized_error_power(predicted_power, df_appliances_ground_truth):
+    '''Compute mean normalized error in assigned power
 
     # TODO: Give a vanilla example
         
@@ -105,8 +175,8 @@ def mne(predicted_power, df_appliances_ground_truth):
     return mne
 
 
-def re(predicted_power, df_appliances_ground_truth):
-    '''Compute RMS Error
+def rms_error_power(predicted_power, df_appliances_ground_truth):
+    '''Compute RMS error in assigned power
     
     # TODO: Give a vanilla example
     
