@@ -18,6 +18,7 @@ from setuptools import setup, find_packages, Extension
 from os.path import join
 import os
 import sys
+import warnings
 
 CYTHON_DIR = 'nilmtk'
 
@@ -54,22 +55,22 @@ FULLVERSION = VERSION
 if not ISRELEASED:
     FULLVERSION += '.dev'
     try:
-		import subprocess
-		try:
-		    pipe = subprocess.Popen(["git", "rev-parse", "--short", "HEAD"],
-		                            stdout=subprocess.PIPE).stdout
-		except OSError:
-		    # msysgit compatibility
-		    pipe = subprocess.Popen(["git.cmd", "rev-parse", "--short", "HEAD"],
-		                            stdout=subprocess.PIPE).stdout
-		rev = pipe.read().strip()
-		# makes distutils blow up on Python 2.7
-		if sys.version_info[0] >= 3:
-		    rev = rev.decode('ascii')
+	import subprocess
+	try:
+	    pipe = subprocess.Popen(["git", "rev-parse", "--short", "HEAD"],
+	                            stdout=subprocess.PIPE).stdout
+	except OSError:
+	    # msysgit compatibility
+	    pipe = subprocess.Popen(["git.cmd", "rev-parse", "--short", "HEAD"],
+	                            stdout=subprocess.PIPE).stdout
+	rev = pipe.read().strip()
+	# makes distutils blow up on Python 2.7
+	if sys.version_info[0] >= 3:
+	    rev = rev.decode('ascii')
 
-		FULLVERSION += "-%s" % rev
+	FULLVERSION += "-%s" % rev
     except:
-        warning.warn("WARNING: Couldn't get git revision")
+        warnings.warn("WARNING: Couldn't get git revision")
 else:
     FULLVERSION += QUALIFIER
 
