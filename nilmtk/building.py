@@ -15,7 +15,7 @@ class Building(object):
          Max number of occupants.
 
     rooms : dict of strings, optional
-        Keys are room names. Use standard names for each room from 
+        Keys are room names. Use standard names for each room from
         docs/standard_names/rooms.txt.
         Values are the number of each type of room in this building.
         For example:
@@ -24,7 +24,7 @@ class Building(object):
     utility :  nilmtk Utility object
 
     ambient : dict of nilmtk Ambient objects
-        Keys are pairs of the form 
+        Keys are pairs of the form
         (<room name>, <number of that room type (indexed from 0>)
         e.g. ('kitchen', 1) or ('bedroom', 3)
         If there are sensors which cover the whole house (or if

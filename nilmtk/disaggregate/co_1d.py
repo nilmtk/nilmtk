@@ -4,7 +4,6 @@ import numpy as np
 from nilmtk.utils import find_nearest
 
 
-
 def decode_co(length_sequence, centroids, appliance_list, states,
              residual_power):
     '''Decode a Combination Sequence and map K^N back to each of the K
