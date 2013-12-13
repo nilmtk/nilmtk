@@ -4,7 +4,7 @@ class Electricity(object):
     Attributes
     ----------
 
-    mains : DataFrame, shape (n_samples, n_features), optional
+    mains : DataFrame, shape (n_samples, n_features), np.float32, optional
         The power measurements taken from the level furthest upstream.
         The index is a timezone-aware pd.DateTimeIndex
         Each column name is a MainsName namedtuple with fields:
@@ -22,7 +22,7 @@ class Electricity(object):
             * `MainsName(split=1, meter=1, measurement='reactive')`
             * `MainsName(split=1, meter=2, measurement='active')`
 
-    circuits : DataFrame, shape (n_samples, n_features), optional
+    circuits : DataFrame, shape (n_samples, n_features), np.float32, optional
         The power measurements taken downstream of the mains measurements but
         upstream of the appliances.
         The index is a timezone-aware pd.DateTimeIndex
@@ -50,8 +50,10 @@ class Electricity(object):
 
         For example, if a house has two TVs then use these two column names:
         `('tv', 1, 'active'), ('tv', 2, 'active')`
-        Each value is a DataFrame shape (n_samples, n_features) where each
-        column name is one of `apparent` | `active` | `reactive` | `voltage`
+        
+        Each value is a np.float32 DataFrame of shape (n_samples, n_features) where each
+        column name is one of `apparent` | `active` | etc (please see 
+        /docs/standard_names/measurements.txt for the full list)
         and the index is a timezone-aware pd.DateTimeIndex.
         If multiple appliances are monitored on one channel (e.g. tv + dvd)
         then use a tuple of appliances as the column name, e.g.:
@@ -62,13 +64,13 @@ class Electricity(object):
         The index is a timezone-aware pd.DateTimeIndex
         The first two dimensions are the same as for the `appliances` DataFrame
         The third dimension describes, for each appliance and for each time:
-        * `power` : float. Estimated power consumption in Watts.
-        * `state` : int, optional.
-        * `confidence` : float [0,1], optional.
+        * `power` : np.float32. Estimated power consumption in Watts.
+        * `state` : np.int32, optional.
+        * `confidence` : np.float32 [0,1], optional.
         * `power_prob_dist` : object describing the probability dist, optional
         * `state_prob_dist` : object describing the probability dist, optional
 
-    nominal_mains_voltage : float, optional
+    nominal_mains_voltage : np.float32, optional
 
     appliances_in_each_room : dict, optional
         Each key is a (<room name>, <room instance>) tuple
