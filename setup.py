@@ -39,9 +39,58 @@ else:
                   [join(CYTHON_DIR, '_feature_detectors.c')]),
     ]
 
+#Version Check
+
+MAJOR = 0
+MINOR = 1
+MICRO = 0
+ISRELEASED = False
+VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
+QUALIFIER = ''
+
+FULLVERSION = VERSION
+if not ISRELEASED:
+    FULLVERSION += '.dev'
+    try:
+    	import os
+        import subprocess
+        try:
+            pipe = subprocess.Popen(["git", "rev-parse", "--short", "HEAD"],
+                                    stdout=subprocess.PIPE).stdout
+        except OSError:
+            # msysgit compatibility
+            pipe = subprocess.Popen(["git.cmd", "rev-parse", "--short", "HEAD"],
+                                    stdout=subprocess.PIPE).stdout
+        rev = pipe.read().strip()
+        # makes distutils blow up on Python 2.7
+        if sys.version_info[0] >= 3:
+            rev = rev.decode('ascii')
+
+        FULLVERSION += "-%s" % rev
+    except:
+        print("WARNING: Couldn't get git revision")
+else:
+    FULLVERSION += QUALIFIER
+
+def write_version_py(filename=None):
+    cnt = """\
+version = '%s'
+short_version = '%s'
+"""
+    if not filename:
+        filename = os.path.join(os.path.dirname(__file__), 'nilmtk', 'version.py')
+
+    a = open(filename, 'w')
+    try:
+        a.write(cnt % (FULLVERSION, VERSION))
+    finally:
+        a.close()
+write_version_py()        
+#End of Version Check
+
 setup(
     name='nilmtk',
-    version='0.001',
+    version=FULLVERSION,
     packages = find_packages(),
     ext_modules = ext_modules,
     install_requires = ['numpy', 'pandas', 'matplotlib', 'scikit-learn'],
