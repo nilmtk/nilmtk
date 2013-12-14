@@ -43,7 +43,9 @@ else:
     ]
 
 #Version Check
-
+"""
+Taken from Pandas Source , https://github.com/pydata/pandas/blob/master/setup.py
+"""
 MAJOR = 0
 MINOR = 1
 MICRO = 0
