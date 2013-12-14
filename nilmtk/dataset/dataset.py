@@ -115,8 +115,8 @@ class DataSet(object):
             utility = building.utility
             ambient = building.ambient
             representation["buildings"][building_name][
-                "utility"] = str(utility)
+                "utility"] = utility.to_json()
             representation["buildings"][building_name][
-                "ambient"] = str(ambient)
+                "ambient"] = to_json(ambient)
 
         return json.dumps(representation)

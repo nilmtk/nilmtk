@@ -26,7 +26,7 @@ class Utility(object):
 
     def to_json(self):
         representation = {}
-        representation["electric"] = str(self.electric)
-        representation["water"] = str(self.water)
-        representation["gas"] = str(self.gas)
+        representation["electric"] = self.electric.to_json()
+        representation["water"] = self.water.to_json()
+        representation["gas"] = self.gas.to_json()
         return json.dumps(representation)

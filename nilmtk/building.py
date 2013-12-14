@@ -50,6 +50,6 @@ class Building(object):
 
     def to_json(self):
         representation = {}
-        representation["utility"] = str(self.utility)
-        representation["ambient"] = str(self.ambient)
+        representation["utility"] = self.utility.to_json()
+        representation["ambient"] = self.ambient.to_json()
         return json.dumps(representation)

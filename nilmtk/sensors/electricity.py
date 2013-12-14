@@ -161,4 +161,5 @@ class Electricity(object):
         return ""
 
     def to_json(self):
-        return json.dumps({})
+        representation = {}
+        return json.dumps(representation)
