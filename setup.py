@@ -42,10 +42,13 @@ else:
                   [join(CYTHON_DIR, '_feature_detectors.c')]),
     ]
 
+"""
+Following Segment of this file were taken from the pandas project
+(https://github.com/pydata/pandas) which have been permitted for use under the
+BSD license.
+"""
 #Version Check
-"""
-Taken from Pandas Source , https://github.com/pydata/pandas/blob/master/setup.py
-"""
+
 MAJOR = 0
 MINOR = 1
 MICRO = 0
