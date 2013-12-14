@@ -43,9 +43,7 @@ else:
     ]
 
 """
-Following Segment of this file were taken from the pandas project
-(https://github.com/pydata/pandas) which have been permitted for use under the
-BSD license.
+Following Segment of this file was taken from the pandas project(https://github.com/pydata/pandas) 
 """
 #Version Check
 
