@@ -1,4 +1,5 @@
 class Electricity(object):
+
     """Store and process electricity for a building.
 
     Attributes
@@ -155,3 +156,9 @@ class Electricity(object):
     def plot_appliance_activity(self, source):
         """Plot a compact representation of all appliance activity."""
         raise NotImplementedError
+
+    def __str__(self):
+        return ""
+
+    def to_json(self):
+        return json.dumps({})

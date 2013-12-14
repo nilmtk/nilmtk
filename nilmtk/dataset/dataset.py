@@ -1,4 +1,5 @@
 import os
+import json
 
 """Base class for all datasets."""
 
@@ -18,21 +19,26 @@ def load_labels(data_dir):
     filename = os.path.join(data_dir, 'labels.dat')
     with open(filename) as labels_file:
         lines = labels_file.readlines()
-    
+
     labels = {}
     for line in lines:
         line = line.split(' ')
-        labels[int(line[0])] = line[1].strip() # TODO add error handling if line[0] not an int
+        # TODO add error handling if line[0] not an int
+        labels[int(line[0])] = line[1].strip()
 
     return labels
 
 
 class DataSet(object):
+
     """Base class for all datasets.  This class can be used
     for loading nilmtk's REDD+ data format.
 
     Attributes
     ----------
+    name : string,
+        Name of the dataset, eg. REDD, iAWE, BLUED
+
     buildings : dict
         Each key is a string representing the name of the building and is 
         preserved from the original dataset.  Each value is a 
@@ -51,6 +57,7 @@ class DataSet(object):
     # https://github.com/nilmtk/nilmtk/issues/12
 
     def __init__(self):
+        self.name = ""
         self.buildings = {}
         self.urls = []
         self.citations = []
@@ -91,3 +98,25 @@ class DataSet(object):
         # convert to standard appliance names
         # self.buildings[building] = DataFrame storing building data
         raise NotImplementedError
+
+    def to_json_temp(self):
+        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+
+    def to_json(self):
+        '''Returns the JSON representation of the building'''
+        representation = {}
+        representation["name"] = self.name
+        representation["buildings"] = {}
+        #representation["url"] = self.url
+        # Accessing list of buildings
+        for building_name in self.buildings:
+            representation["buildings"][building_name] = {}
+            building = self.buildings[building_name]
+            utility = building.utility
+            ambient = building.ambient
+            representation["buildings"][building_name][
+                "utility"] = str(utility)
+            representation["buildings"][building_name][
+                "ambient"] = str(ambient)
+
+        return json.dumps(representation)

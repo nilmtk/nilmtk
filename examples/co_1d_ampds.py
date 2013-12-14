@@ -1,8 +1,8 @@
 from nilmtk.dataset import ampds
 from nilmtk.disaggregate.co_1d import CO_1d
-from nilmtk.metrics
 import json
 import pandas as pd
+from pandas import HDFStore
 
 dataset = ampds.AMPDS()
 
@@ -17,6 +17,18 @@ dataset.load(PATH)
 
 # Get data of Home_01
 building = dataset.buildings['Home_01']
+
+# Storing the dataset in HDFS store
+store = HDFStore('store.h5', complevel=9)
+root = 'AMPds'
+for building in dataset.buildings:
+    utility = building.utility
+    electric = utility.electric
+    water = utility.water
+    gas = utility.gas
+
+    # Storing electricity information in 
+
 
 print('Loading data....')
 # Get mains data
@@ -47,7 +59,8 @@ for appliance in app:
 train_power_appliance = {}
 test_power_appliance = {}
 for appliance in app:
-    train_power_appliance[appliance] = train_appliance[appliance][DISAGG_FEATURE]
+    train_power_appliance[appliance] = train_appliance[
+        appliance][DISAGG_FEATURE]
     test_power_appliance[appliance] = test_appliance[appliance][DISAGG_FEATURE]
 
 # Creating appliances dataframe
@@ -64,7 +77,7 @@ with open('ampds_model_co.json') as f:
 
 print(model)
 disaggregator.model = model
-print("*"*80)
+print("*" * 80)
 
 print('Disaggregate!')
 # Predicting with the learnt model
@@ -74,5 +87,3 @@ disaggregator.disaggregate(test_power_aggregate)
 for appliance in disaggregator.predictions:
     # Do something with self.predictions[appliance]
     pass
-
-

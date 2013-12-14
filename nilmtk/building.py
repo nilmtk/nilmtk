@@ -1,8 +1,10 @@
 from nilmtk.sensors.utility import Utility
 from nilmtk.sensors.ambient import Ambient
+import json
 
 
 class Building(object):
+
     """Represent a physical building (e.g. a domestic house).
 
     Attributes
@@ -46,3 +48,8 @@ class Building(object):
         """Reduce all timeseries to just these dates"""
         raise NotImplementedError
 
+    def to_json(self):
+        representation = {}
+        representation["utility"] = str(self.utility)
+        representation["ambient"] = str(self.ambient)
+        return json.dumps(representation)
