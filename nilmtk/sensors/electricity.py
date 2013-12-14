@@ -162,4 +162,7 @@ class Electricity(object):
 
     def to_json(self):
         representation = {}
+        representation["mains"] = ""
+        representation["appliances"] = ""
+        representation["circuits"] = ""
         return json.dumps(representation)

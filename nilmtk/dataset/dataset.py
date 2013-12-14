@@ -103,7 +103,7 @@ class DataSet(object):
         return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
 
     def to_json(self):
-        '''Returns the JSON representation of the building'''
+        '''Returns the JSON representation of the dataset'''
         representation = {}
         representation["name"] = self.name
         representation["buildings"] = {}
@@ -117,6 +117,6 @@ class DataSet(object):
             representation["buildings"][building_name][
                 "utility"] = utility.to_json()
             representation["buildings"][building_name][
-                "ambient"] = to_json(ambient)
+                "ambient"] = ambient.to_json()
 
         return json.dumps(representation)
