@@ -42,6 +42,9 @@ else:
                   [join(CYTHON_DIR, '_feature_detectors.c')]),
     ]
 
+"""
+Following Segment of this file was taken from the pandas project(https://github.com/pydata/pandas) 
+"""
 #Version Check
 
 MAJOR = 0
