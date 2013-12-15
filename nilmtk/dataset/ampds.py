@@ -9,12 +9,13 @@ from collections import namedtuple
 
 Measurement = namedtuple('Measurement', ['physical_quantity', 'type'])
 ApplianceName = namedtuple('ApplianceName', ['name', 'instance'])
+MainsName = namedtuple('MainsName', ['split', 'meter'])
 
 # Column name mapping
 column_name_mapping = {
-    'V': Measurement('voltage', None),
-    'I': Measurement('current', None),
-    'f': Measurement('frequency', None),
+    'V': Measurement('voltage', ''),
+    'I': Measurement('current', ''),
+    'f': Measurement('frequency', ''),
     'DPF': Measurement('pf', 'd'),
     'APF': Measurement('pf', 'a'),
     'P': Measurement('power', 'active'),
@@ -64,7 +65,7 @@ class AMPDS(DataSet):
                           'Conference (EPEC), 2013 IEEE, pp. 1-6, 2013.'
                           ]
         self.building = Building()
-        self.buildings['Home_01'] = self.building
+        self.buildings['Building_1'] = self.building
         self.nominal_voltage = 230
 
     def read_electricity_csv_and_standardize(self, csv_path):
@@ -109,7 +110,8 @@ class AMPDS(DataSet):
         list_of_files = glob.glob("%s*.csv" % electricity_folder)
 
         # Add mains
-        self.building.utility.electric.mains = self.read_electricity_csv_and_standardize(
+        self.building.utility.electric.mains = {}
+        self.building.utility.electric.mains[MainsName(1, 1)] = self.read_electricity_csv_and_standardize(
             os.path.join(electricity_folder, 'WHE.csv'))
 
         # Deleting mains from list_of_files

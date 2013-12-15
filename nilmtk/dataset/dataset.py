@@ -1,5 +1,6 @@
 import os
 import json
+import pandas as pd
 
 """Base class for all datasets."""
 
@@ -68,8 +69,8 @@ class DataSet(object):
         for building in building_names:
             self.load_building(root_directory, building)
 
-    def export(self, directory, format='REDD+', compact=False):
-        """Export dataset to disk as REDD+.
+    def export(self, directory, format='HDF5', compact=False):
+        """Export dataset to disk as HDF5.
 
         Arguments
         ---------
@@ -82,7 +83,19 @@ class DataSet(object):
         compact : boolean, optional
             Defaults to false.  If True then only save change points.
         """
-        raise NotImplementedError
+        store = pd.HDFStore(os.path.join(directory, 'dataset.h5'))
+        for building_name in self.buildings:
+            building = self.buildings[building_name]
+            utility = building.utility
+            electric = utility.electric
+            mains = electric.mains
+            for main in mains:
+                store.put('/%s/utility/electric/mains/%d/%d/' %
+                          (building_name, main.split, main.meter), mains[main], table=True)
+            appliances = electric.appliances
+            for appliance in appliances:
+                store.put('%s/utility/electric/appliances/%s/%d/' %
+                          (building_name, appliance.name, appliance.instance), appliances[appliance], table=True)
 
     def print_summary_stats(self):
         raise NotImplementedError
