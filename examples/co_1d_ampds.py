@@ -3,36 +3,28 @@ from nilmtk.disaggregate.co_1d import CO_1d
 import json
 import pandas as pd
 from pandas import HDFStore
+from nilmtk.dataset.ampds import Measurement
+
 
 dataset = ampds.AMPDS()
 
 PATH = '/home/nipun/Desktop/AMPds/'
 
 # Feature to perform disaggregation on
-DISAGG_FEATURE = 'power_active'
+DISAGG_FEATURE = Measurement('power', 'active')
 
 
 # Load data
 dataset.load(PATH)
 
 # Get data of Home_01
-building = dataset.buildings['Home_01']
-
-# Storing the dataset in HDFS store
-store = HDFStore('store.h5', complevel=9)
-root = 'AMPds'
-for building in dataset.buildings:
-    utility = building.utility
-    electric = utility.electric
-    water = utility.water
-    gas = utility.gas
-
-    # Storing electricity information in
+building = dataset.buildings['Building_1']
 
 
 print('Loading data....')
 # Get mains data
-mains = building.utility.electric.mains
+mains = building.utility.electric.mains[
+    building.utility.electric.mains.keys()[0]]
 
 # Get appliances data
 app = building.utility.electric.appliances
@@ -70,6 +62,7 @@ df_train_appliances = pd.DataFrame(train_power_appliance)
 disaggregator = CO_1d()
 
 # Train
+disaggregator.train(train_power_aggregate, train_power_appliance)
 
 # Load learnt model from disk
 with open('ampds_model_co.json') as f:

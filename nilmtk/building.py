@@ -38,11 +38,12 @@ class Building(object):
     """
 
     def __init__(self):
-        self.geographic_coordinates = None
-        self.n_occupants = None
-        self.rooms = []
+        self.metadata = {}
+        #self.geographic_coordinates = None
+        #self.n_occupants = None
+        #self.rooms = []
         self.utility = Utility()
-        self.ambient = {}
+        self.ambient = Ambient()
 
     def crop(self, start, end):
         """Reduce all timeseries to just these dates"""

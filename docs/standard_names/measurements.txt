@@ -1,5 +1,5 @@
-active
-apparent
-reactive
-voltage
-power_factor
+<power, active>
+<power, apparent>
+<power, reactive>
+<voltage, >
+
