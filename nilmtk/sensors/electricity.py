@@ -12,16 +12,16 @@ class Electricity(object):
 
         * `split` is the phase or split.  Indexed from 1.
         * `meter` is the numeric ID of the meter. Indexed from 1.
-        * `measurement` is one of `apparent` | `active` etc (please see 
-          /docs/standard_names/measurements.txt for the full list)
+        * `measurement` is the namedtuple Measurement(physical_quantity=
+            'power', type='reactive')
 
         For example, if we had a dataset recorded in the UK where the home has
         only a single phase supply but uses two separate meters, the first of
-        which measures active and reactive; the second of which measures only
+        which measures active and reactive power; the second of which measures only
         active, then we'd use:
-            * `MainsName(split=1, meter=1, measurement='active')`
-            * `MainsName(split=1, meter=1, measurement='reactive')`
-            * `MainsName(split=1, meter=2, measurement='active')`
+            * `MainsName(split=1, meter=1, measurement=Measurement('power','active'))`
+            * `MainsName(split=1, meter=1, measurement=Measurement('power','reactive'))`
+            * `MainsName(split=1, meter=2, measurement=Measurement('power','active'))`
 
     circuits : DataFrame, shape (n_samples, n_features), np.float32, optional
         The power measurements taken downstream of the mains measurements but
@@ -33,12 +33,12 @@ class Electricity(object):
         * `split` is the index for this circuit.  Indexed from 1.
         * `meter` is the numeric ID of the meter. Indexed from 1.
           Indexes into the `meters` dict.
-        * `measurement` is one of `apparent` | `active` etc (please see 
-          /docs/standard_names/measurements.txt for the full list)
+        * `measurement` is namedtuple Measurement(physical_quantity=
+            'power', type='reactive')
 
         For example: 
         `CircuitName(circuit='lighting', split=1, 
-                     meter=3, measurement='apparent')`
+                     meter=3, measurement=Measurement('power','active'))`
 
     appliances : dict of DataFrames, optional
         Each key is an ApplianceName namedtuple with fields:
@@ -46,11 +46,11 @@ class Electricity(object):
            names, see nilmtk/docs/standard_names/appliances.txt
         * `instance` is the index for that appliance within this building.
            Indexed from 1.
-        * `measurement` is one of `apparent` | `active` etc (please see 
-          /docs/standard_names/measurements.txt for the full list)
+        * `measurement` is namedtuple Measurement(physical_quantity=
+            'power', type='reactive')
 
         For example, if a house has two TVs then use these two column names:
-        `('tv', 1, 'active'), ('tv', 2, 'active')`
+        `('tv', 1, Measurement('power','active')), ('tv', 2, Measurement('power','active'))`
         
         Each value is a np.float32 DataFrame of shape (n_samples, n_features) where each
         column name is one of `apparent` | `active` | etc (please see 
@@ -58,7 +58,7 @@ class Electricity(object):
         and the index is a timezone-aware pd.DateTimeIndex.
         If multiple appliances are monitored on one channel (e.g. tv + dvd)
         then use a tuple of appliances as the column name, e.g.:
-        `(('tv', 1, 'active'), ('dvd player', 1, 'active'))`
+        `(('tv', 1, Measurement('power','active')), ('dvd player', 1, Measurement('power','active')))`
 
     appliance_estimates : Panel (3D matrix), optional
         Output from the NILM algorithm.

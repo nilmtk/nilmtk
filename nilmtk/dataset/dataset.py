@@ -107,16 +107,11 @@ class DataSet(object):
         representation = {}
         representation["name"] = self.name
         representation["buildings"] = {}
-        #representation["url"] = self.url
+        representation["urls"] = self.urls
         # Accessing list of buildings
         for building_name in self.buildings:
             representation["buildings"][building_name] = {}
             building = self.buildings[building_name]
-            utility = building.utility
-            ambient = building.ambient
-            representation["buildings"][building_name][
-                "utility"] = utility.to_json()
-            representation["buildings"][building_name][
-                "ambient"] = ambient.to_json()
+            representation["buildings"][building_name] = building.to_json()
 
         return json.dumps(representation)
