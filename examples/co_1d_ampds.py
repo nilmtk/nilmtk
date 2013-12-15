@@ -27,7 +27,7 @@ for building in dataset.buildings:
     water = utility.water
     gas = utility.gas
 
-    # Storing electricity information in 
+    # Storing electricity information in
 
 
 print('Loading data....')
