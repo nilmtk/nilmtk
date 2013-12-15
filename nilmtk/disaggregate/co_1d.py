@@ -18,6 +18,9 @@ def transform_data(df_appliance):
     print length, "LENGTH"
     if length < MIN_POINT_THRESHOLD:
         status = False
+        print "^" * 80
+        print "^" * 80
+        print "I rock"
         return np.zeros((2000, 1))
     else:
         status = True
@@ -85,6 +88,7 @@ def apply_clustering(X):
             try:
                 sh_n = metrics.silhouette_score(
                     X, k_means_labels[n_clusters], metric='euclidean')
+                print sh_n - sh, "DELTA SH"
                 if sh_n > sh:
                     sh = sh_n
                     num_clus = n_clusters
@@ -96,7 +100,7 @@ def apply_clustering(X):
             if num_clus > -1:
                 return k_means_cluster_centers[num_clus]
             else:
-                Returns np.array([0])
+                return np.array([0])
             print "here i am"
 
     return k_means_cluster_centers[num_clus]
@@ -200,9 +204,18 @@ class CO_1d(object):
             # Now for each appliance we find the clusters
             cluster_centers = apply_clustering(gt_10[appliance])
             flattened = cluster_centers.flatten()
-            if 0 not in flattened.tolist():
-                np.append(flattened, 0)
+            flattened = np.append(flattened, 0)
             sorted_list = np.sort(flattened)
+            sorted_list = sorted_list.astype(np.int)
+            sorted_list = list(set(sorted_list.tolist()))
+            sorted_list.sort()
+
+            # Merge clusters
+            '''
+            for i in range(len(sorted_list)) - 1:
+                if sorted_list[i+1]-sorted_list[i]<MIN_CLUSTER_DISTANCE:
+                    sorted_list
+            '''
             centroids[appliance] = sorted_list
 
         self.model = centroids

@@ -64,13 +64,17 @@ disaggregator = CO_1d()
 # Train
 disaggregator.train(train_power_aggregate, train_power_appliance)
 
+'''
 # Load learnt model from disk
 with open('ampds_model_co.json') as f:
     model = json.load(f)
+'''
 
+'''
 print(model)
 disaggregator.model = model
 print("*" * 80)
+'''
 
 print('Disaggregate!')
 # Predicting with the learnt model
