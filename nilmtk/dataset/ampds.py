@@ -2,14 +2,15 @@ from __future__ import print_function, division
 import os
 import glob
 import pandas as pd
+
 from nilmtk.dataset import DataSet
 from nilmtk.building import Building
+from nilmtk.sensors.electricity import Measurement
+from nilmtk.sensors.electricity import ApplianceName
+from nilmtk.sensors.electricity import MainsName
 
 from collections import namedtuple
 
-Measurement = namedtuple('Measurement', ['physical_quantity', 'type'])
-ApplianceName = namedtuple('ApplianceName', ['name', 'instance'])
-MainsName = namedtuple('MainsName', ['split', 'meter'])
 
 # Column name mapping
 column_name_mapping = {

@@ -34,14 +34,14 @@ class Pecan(DataSet):
         # Find columns containing mains in them
         mains_column_names = [x for x in df.columns if "mains" in x]
 
-        #Adding mains
+        # Adding mains
         building.utility.electric.mains = df[mains_column_names]
         return building
 
     def add_appliances(self, building, df):
         # Getting a list of appliance names
         appliance_names = list(set([a.split("_")[0] for a in df.columns
-                            if "mains" not in a]))
+                                    if "mains" not in a]))
 
         # Adding appliances
         building.utility.electric.appliances = {}
@@ -49,7 +49,8 @@ class Pecan(DataSet):
             # Finding headers corresponding to the appliance
             names = [x for x in df.columns if x.split("_")[0] == appliance]
 
-            #TODO: Replace column names and remove the appliance name from them
+            # TODO: Replace column names and remove the appliance name from
+            # them
             building.utility.electric.appliances[appliance] = df[names]
         return building
 
@@ -62,7 +63,7 @@ class Pecan(DataSet):
 
         # Convert to standard appliance names
         # 1. Mains is use [kW]; replace space with mains_0_active
-        # 2. If voltage is present, rename the column and multiply it by 1e3
+        # 2. If voltage is present, rename the column and divide it by 1e3
         # 3. If 'gen' is present, delete the column; TODO think about where
         # to put this column
         # 4. Delete 'Grid' column; TODO same as #3
@@ -77,9 +78,9 @@ class Pecan(DataSet):
         # 2
         if "LEG1V [V]" in df.columns:
             df = df.rename(columns=lambda x: x.replace("LEG1V [V]",
-                                                "mains_1_voltage"))
+                                                       "mains_1_voltage"))
             df = df.rename(columns=lambda x: x.replace("LEG2V [V]",
-                                                "mains_2_voltage"))
+                                                       "mains_2_voltage"))
             df['mains_1_voltage'] = df['mains_1_voltage'] / 1e3
             df['mains_2_voltage'] = df['mains_2_voltage'] / 1e3
 
@@ -133,8 +134,8 @@ class Pecan_15min(Pecan):
 
     def load_building(self, root_directory, building_name):
         spreadsheet = pd.ExcelFile(os.path.join(root_directory,
-         "15_min/Homes 01-10_15min_2012-0819-0825 .xlsx"))
-        df = spreadsheet.parse(building_name, index_col=0, date_parser=True)
+                                                "15_min/Homes 01-10_15min_2012-0819-0825 .xlsx"))
+        df = spreadsheet.parse(building_name, index_col=0, date_parser=True).astype('float32')
         df = self.standardize(df)
 
         # Create a new building
@@ -152,7 +153,7 @@ class Pecan_15min(Pecan):
 
     def load_building_names(self, root_directory):
         spreadsheet = pd.ExcelFile(os.path.join(root_directory,
-         "15_min/Homes 01-10_15min_2012-0819-0825 .xlsx"))
+                                                "15_min/Homes 01-10_15min_2012-0819-0825 .xlsx"))
         return spreadsheet.sheet_names
 
 
@@ -176,8 +177,9 @@ class Pecan_1min(Pecan):
         df = pd.DataFrame()
         for day in ["03", "04", "05", "06", "07", "08", "09"]:
             spreadsheet = pd.ExcelFile(os.path.join(building_folder,
-                        "%s_1min_2012-09%s.xlsx" % (building_name, day)))
-            temp_df = spreadsheet.parse('Sheet1', index_col=0, date_parser=True)
+                                                    "%s_1min_2012-09%s.xlsx" % (building_name, day)))
+            temp_df = spreadsheet.parse(
+                'Sheet1', index_col=0, date_parser=True)
             df = df.append(temp_df)
         df = self.standardize(df)
 
@@ -196,14 +198,5 @@ class Pecan_1min(Pecan):
 
     def load_building_names(self, root_directory):
         dirs = get_immediate_subdirectories(os.path.join(root_directory,
-                                                        "1_min"))
+                                                         "1_min"))
         return dirs
-
-
-
-
-
-
-
-
-

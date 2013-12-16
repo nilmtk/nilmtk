@@ -1,3 +1,11 @@
+from collections import namedtuple
+
+
+Measurement = namedtuple('Measurement', ['physical_quantity', 'type'])
+ApplianceName = namedtuple('ApplianceName', ['name', 'instance'])
+MainsName = namedtuple('MainsName', ['split', 'meter'])
+
+
 class Electricity(object):
 
     """Store and process electricity for a building.

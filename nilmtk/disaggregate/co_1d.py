@@ -16,7 +16,7 @@ def transform_data(df_appliance):
     data_gt_10 = df_appliance[df_appliance > 10].values
     length = data_gt_10.size
     if length < MIN_POINT_THRESHOLD:
-        return np.zeros((2000, 1))
+        return np.zeros((MAX_POINT_THRESHOLD, 1))
 
     if length > MAX_POINT_THRESHOLD:
         # Subsample
