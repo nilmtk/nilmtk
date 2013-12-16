@@ -15,15 +15,8 @@ def transform_data(df_appliance):
 
     data_gt_10 = df_appliance[df_appliance > 10].values
     length = data_gt_10.size
-    print length, "LENGTH"
     if length < MIN_POINT_THRESHOLD:
-        status = False
-        print "^" * 80
-        print "^" * 80
-        print "I rock"
         return np.zeros((2000, 1))
-    else:
-        status = True
 
     if length > MAX_POINT_THRESHOLD:
         # Subsample
@@ -35,37 +28,17 @@ def transform_data(df_appliance):
     return temp.reshape(length, 1)
 
 
-def apply_clustering(X):
-    '''Applies clusterin on reduced data, i.e. data where power is greater than threshold
+def apply_clustering(X, max_num_clusters=3):
+    '''Applies clustering on reduced data, i.e. data where power is greater than threshold
 
 
     Returns
     -------
     centroids: list
         List
-    '''
+    
 
-    '''
-    print appliance_data, type(appliance_data)
-    num_clus = -1
-    sh = -1
-    k_means_cluster_centers = {}
-    k_means_labels = {}
-    for n_clusters in range(1, 3):
-        k_means = KMeans(init='k-means++',
-                         n_clusters=n_clusters, n_jobs=-1)
-        k_means.fit(appliance_data)
-        k_means_labels[n_clusters] = k_means.labels_
-        print k_means_labels
-        k_means_cluster_centers[n_clusters] = k_means.cluster_centers_[0][0]
-        print k_means_cluster_centers
-        sh_n = metrics.silhouette_score(
-            appliance_data, k_means_labels[n_clusters], metric='euclidean')
-        if sh_n > sh:
-            sh = sh_n
-            num_clus = n_clusters
-    '''
-    '''Finds whether 2 or 3 gives better Silhouellete coefficient
+    Finds whether 2 or 3 gives better Silhouellete coefficient
     Whichever is higher serves as the number of clusters for that
     appliance'''
     num_clus = -1
@@ -73,14 +46,11 @@ def apply_clustering(X):
     k_means_labels = {}
     k_means_cluster_centers = {}
     k_means_labels_unique = {}
-    # print X, type(X)
-    for n_clusters in range(1, 3):
+    for n_clusters in range(1, max_num_clusters):
 
         try:
             k_means = KMeans(init='k-means++', n_clusters=n_clusters)
-            print "Fitting %d" % n_clusters
             k_means.fit(X)
-
             k_means_labels[n_clusters] = k_means.labels_
             k_means_cluster_centers[n_clusters] = k_means.cluster_centers_
             print k_means_cluster_centers[n_clusters]
@@ -88,20 +58,19 @@ def apply_clustering(X):
             try:
                 sh_n = metrics.silhouette_score(
                     X, k_means_labels[n_clusters], metric='euclidean')
-                print sh_n - sh, "DELTA SH"
+
                 if sh_n > sh:
                     sh = sh_n
                     num_clus = n_clusters
             except Exception:
-                print "I think ai here....\n"
+
                 num_clus = n_clusters
         except Exception:
-            print num_clus
+
             if num_clus > -1:
                 return k_means_cluster_centers[num_clus]
             else:
                 return np.array([0])
-            print "here i am"
 
     return k_means_cluster_centers[num_clus]
 
@@ -193,6 +162,11 @@ class CO_1d(object):
 
         centroids = {}
         print centroids
+        num_appliances = len(train_appliances.keys())
+        if num_appliances > 15:
+            max_num_clusters = 2
+        else:
+            max_num_clusters = 3
         for appliance in train_appliances:
             print "*" * 80
             print appliance
@@ -202,7 +176,8 @@ class CO_1d(object):
             gt_10[appliance] = transform_data(train_appliances[appliance])
 
             # Now for each appliance we find the clusters
-            cluster_centers = apply_clustering(gt_10[appliance])
+            cluster_centers = apply_clustering(
+                gt_10[appliance], max_num_clusters)
             flattened = cluster_centers.flatten()
             flattened = np.append(flattened, 0)
             sorted_list = np.sort(flattened)
@@ -222,7 +197,11 @@ class CO_1d(object):
         return centroids
 
     def disaggregate(self, test_mains):
-        appliance_list = [appliance for appliance in self.model]
+        # Find put appliances which have more than one state. For others we do
+        # not need to decode; they have only a single state. This can simplify
+        # the amount of computations needed
+        appliance_list = [
+            appliance for appliance in self.model if len(self.model[appliance]) > 1]
         list_of_appliances_centroids = [self.model[appliance]
                                         for appliance in appliance_list]
         states_combination = list(itertools.product
@@ -239,4 +218,14 @@ class CO_1d(object):
                 sum_combination, test_mains.values[i])
         [predicted_states, predicted_power] = decode_co(length_sequence,
                                                         self.model, appliance_list, states, residual_power)
+
+        # Now predicting for appliances with a single state
+        single_state_appliance = [
+            appliance for appliance in self.model if appliance not in appliance_list]
+        for appliance in single_state_appliance:
+            predicted_states[appliance] = np.zeros(
+                length_sequence, dtype=np.int)
+            predicted_power[appliance] = np.zeros(
+                length_sequence, dtype=np.int)
+
         self.predictions = pd.DataFrame(predicted_power)

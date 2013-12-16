@@ -34,7 +34,7 @@ row = mains.index.size
 
 print('Dividing data into test and train')
 # Dividing the data into train and test (ratio 1:9)
-train_aggregate, test_aggregate = mains[:row / 10], mains[row / 10:]
+train_aggregate, test_aggregate = mains[:row / 10], mains[row / 10: row / 5]
 
 # Finding the active component of power for train and test aggregate (mains)
 train_power_aggregate = train_aggregate[DISAGG_FEATURE]
@@ -45,7 +45,7 @@ train_appliance = {}
 test_appliance = {}
 for appliance in app:
     train_appliance[appliance] = app[appliance][:row / 10]
-    test_appliance[appliance] = app[appliance][row / 10:]
+    test_appliance[appliance] = app[appliance][row / 10:row/5]
 
 # Finding the active component of power for appliances
 train_power_appliance = {}
@@ -79,8 +79,3 @@ print("*" * 80)
 print('Disaggregate!')
 # Predicting with the learnt model
 disaggregator.disaggregate(test_power_aggregate)
-
-# Accessing diaggregated data
-for appliance in disaggregator.predictions:
-    # Do something with self.predictions[appliance]
-    pass
