@@ -53,7 +53,6 @@ def apply_clustering(X, max_num_clusters=3):
             k_means.fit(X)
             k_means_labels[n_clusters] = k_means.labels_
             k_means_cluster_centers[n_clusters] = k_means.cluster_centers_
-            print k_means_cluster_centers[n_clusters]
             k_means_labels_unique[n_clusters] = np.unique(k_means_labels)
             try:
                 sh_n = metrics.silhouette_score(
@@ -161,16 +160,12 @@ class CO_1d(object):
         """
 
         centroids = {}
-        print centroids
         num_appliances = len(train_appliances.keys())
         if num_appliances > 15:
             max_num_clusters = 2
         else:
             max_num_clusters = 3
         for appliance in train_appliances:
-            print "*" * 80
-            print appliance
-            print "*" * 80
             # Finding the points where power consumption is greater than 10
             gt_10 = {}
             gt_10[appliance] = transform_data(train_appliances[appliance])
