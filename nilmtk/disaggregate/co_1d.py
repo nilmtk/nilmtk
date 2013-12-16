@@ -28,19 +28,27 @@ def transform_data(df_appliance):
     return temp.reshape(length, 1)
 
 
+def merge_clusters(appliance_centroids):
+    '''Merges clusters which are within a certain threshold in order to reduce the
+    complexity of the learnt model'''
+
+    # TODO: Implement
+    return appliance_centroids
+
+
 def apply_clustering(X, max_num_clusters=3):
     '''Applies clustering on reduced data, i.e. data where power is greater than threshold
 
-
     Returns
     -------
-    centroids: list
-        List
-    
+    centroids:
+        list
+        List of power in different states of an appliance
+    '''
 
-    Finds whether 2 or 3 gives better Silhouellete coefficient
-    Whichever is higher serves as the number of clusters for that
-    appliance'''
+    # Finds whether 2 or 3 gives better Silhouellete coefficient
+    # Whichever is higher serves as the number of clusters for that
+    # appliance
     num_clus = -1
     sh = -1
     k_means_labels = {}
@@ -104,6 +112,7 @@ def decode_co(length_sequence, centroids, appliance_list, states,
         nd.array
     '''
 
+    # TODO: Possible Cythonize/Vectorize in the future
     co_states = {}
     co_power = {}
     total_num_combinations = 1
@@ -180,18 +189,29 @@ class CO_1d(object):
             sorted_list = list(set(sorted_list.tolist()))
             sorted_list.sort()
 
-            # Merge clusters
-            '''
-            for i in range(len(sorted_list)) - 1:
-                if sorted_list[i+1]-sorted_list[i]<MIN_CLUSTER_DISTANCE:
-                    sorted_list
-            '''
+            # Merge clusters TODO
+            sorted_list = merge_clusters(sorted_list)
+
             centroids[appliance] = sorted_list
 
         self.model = centroids
         return centroids
 
     def disaggregate(self, test_mains):
+        '''Disaggregate the test data according to the model learnt previously
+
+        Parameters
+        ----------
+
+        test_mains : Pandas DataFrame
+            containing appliances as columns and their 1D power draw  as values
+            NB: All appliances must have the same index
+
+        Returns
+        -------
+
+        None
+         '''
         # Find put appliances which have more than one state. For others we do
         # not need to decode; they have only a single state. This can simplify
         # the amount of computations needed
