@@ -13,6 +13,55 @@ TODOS
 2. Handle Grid
 3. Handle Solar
 4. Handle Gen
+
+
+LIST OF APPLIANCE NAMES IN ALL Homes
+
+n [104]: list(unique)
+Out[104]: 
+[u'tvroom',
+ u'ksac',
+ u'garage/refrigerator',
+ u'office',
+ u'ai',
+ u'dryg',
+ u'bath',
+ u'genlight',
+ u'oven',
+ u'bedroom',
+ u'subl',
+ u'masterbed',
+ u'bathroom',
+ u'livingroom',
+ u'sprinkler',
+ u'disposal',
+ u'masterbath',
+ u'microwave',
+ u'drye',
+ u'smallappliance',
+ u'washer',
+ u'furnace',
+ u'gri',
+ u'lighting&plugs',
+ u'famroom',
+ u'dryer',
+ u'diningroom',
+ u'ove',
+ u'backyard',
+ u'cooktop',
+ u'refrigerator',
+ u'kitchen',
+ u'dishwasher',
+ u'theater',
+ u'washingmachine',
+ u'car',
+ u'air',
+ u'garage',
+ u'range',
+ u'waterheater',
+ u'security']
+
+
 '''
 
 import pandas as pd
@@ -98,7 +147,6 @@ class Pecan(DataSet):
         # 2
         if "LEG1V [V]" in df.columns:
             df = df.rename(columns={"LEG1V [V]": Measurement('voltage', '')})
-            
 
             # Adding voltage if it exists
             building.utility.electric.mains[
