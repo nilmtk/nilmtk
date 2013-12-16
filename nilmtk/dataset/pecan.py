@@ -5,6 +5,14 @@ These routines load Pecan Dataset into NILMTK Dataset format
 
 Authors :
 License:
+
+TODOS
+-----
+
+1. Handle LEG2V
+2. Handle Grid
+3. Handle Solar
+4. Handle Gen
 '''
 
 import pandas as pd
@@ -12,6 +20,9 @@ import pandas as pd
 from nilmtk.dataset import DataSet
 from nilmtk.building import Building
 from nilmtk.utils import get_immediate_subdirectories
+from nilmtk.sensors.electricity import Measurement
+from nilmtk.sensors.electricity import ApplianceName
+from nilmtk.sensors.electricity import MainsName
 
 import os
 
@@ -32,10 +43,12 @@ class Pecan(DataSet):
 
     def add_mains(self, building, df):
         # Find columns containing mains in them
-        mains_column_names = [x for x in df.columns if "mains" in x]
+        mains_column_names = [x for x in df.columns if x]
 
         # Adding mains
-        building.utility.electric.mains = df[mains_column_names]
+        building.utility.electric.mains = {}
+        building.utility.electric.mains[
+            MainsName(1, 1)] = df[mains_column_names]
         return building
 
     def add_appliances(self, building, df):
@@ -54,7 +67,7 @@ class Pecan(DataSet):
             building.utility.electric.appliances[appliance] = df[names]
         return building
 
-    def standardize(self, df):
+    def standardize(self, df, building):
 
         # Converting power from kW to W
         # Note some homes contain Voltage as well, need to multiply that
@@ -73,16 +86,31 @@ class Pecan(DataSet):
         # (have a *)
 
         # 1
-        df = df.rename(columns={'use [kW]': 'mains_0_active'})
+        df = df.rename(columns={'use [kW]': Measurement('power', 'active')})
+        print df.columns
+
+        # Adding Mains Power
+        building.utility.electric.mains = {}
+        building.utility.electric.mains[
+            MainsName(1, 1)] = df[[Measurement('power', 'active')]]
+        df = df.drop(Measurement('power', 'active'), 1)
 
         # 2
         if "LEG1V [V]" in df.columns:
             df = df.rename(columns=lambda x: x.replace("LEG1V [V]",
-                                                       "mains_1_voltage"))
+                                                       Measurement('voltage', '')))
+
+            # Adding voltage if it exists
+            building.utility.electric.mains[
+                MainsName(1, 1)][Measurement('voltage', '')] = df[Measurement('voltage', '')] / 1e3
+            df = df.drop(Measurement('voltage', ''), 1)
+            '''For now delete leg2
             df = df.rename(columns=lambda x: x.replace("LEG2V [V]",
-                                                       "mains_2_voltage"))
-            df['mains_1_voltage'] = df['mains_1_voltage'] / 1e3
-            df['mains_2_voltage'] = df['mains_2_voltage'] / 1e3
+                                                       "mains_2_voltage"))            
+            df['mains_2_voltage'] = df['mains_2_voltage'] / 1e3'''
+
+            # TODO: See what to do with this bit of information
+            df = df.drop('LEG2V [V]', 1)
 
         # 3
         if "gen [kW]" in df.columns:
@@ -105,7 +133,31 @@ class Pecan(DataSet):
         df = df.rename(columns=lambda x: x.replace("[kva]", "apparent"))
         df = df.rename(columns=lambda x: x.replace("*", ""))
 
-        return df
+        # List of appliance names
+        appliance_names = list(set([a.split("_")[0] for a in df.columns
+                                    if type(a) != type(Measurement('power', 'active'))]))
+
+        # Adding appliances
+        building.utility.electric.appliances = {}
+        for appliance in appliance_names:
+            # Finding headers corresponding to the appliance
+            names = [x for x in df.columns if x.split("_")[0] == appliance]
+
+            names_modified = [Measurement('power', x.split("_")[1])
+                              for x in names]
+            name_modification = {names[i]: names_modified[i] for i in range(len(names))}
+
+            # TODO: Replace column names and remove the appliance name from
+            # them
+            appliance_name = appliance[:-1]
+            appliance_instance = appliance[-1]
+            building.utility.electric.appliances[
+                ApplianceName(appliance_name, appliance_instance)] = df[names]
+            building.utility.electric.appliances[
+                ApplianceName(appliance_name, appliance_instance)] = building.utility.electric.appliances[
+                ApplianceName(appliance_name, appliance_instance)].rename(columns=name_modification)
+
+        return building
 
 
 class Pecan_15min(Pecan):
@@ -135,17 +187,13 @@ class Pecan_15min(Pecan):
     def load_building(self, root_directory, building_name):
         spreadsheet = pd.ExcelFile(os.path.join(root_directory,
                                                 "15_min/Homes 01-10_15min_2012-0819-0825 .xlsx"))
-        df = spreadsheet.parse(building_name, index_col=0, date_parser=True).astype('float32')
-        df = self.standardize(df)
+        df = spreadsheet.parse(building_name, index_col=0,
+                               date_parser=True).astype('float32')
 
         # Create a new building
         building = Building()
 
-        # Add mains
-        building = self.add_mains(building, df)
-
-        # Add appliances
-        building = self.add_appliances(building, df)
+        building = self.standardize(df, building)
 
         # Adding this building to dict of buildings
         building_name = building_name.replace(" ", "_")
