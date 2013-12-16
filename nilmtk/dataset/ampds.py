@@ -70,7 +70,7 @@ class AMPDS(DataSet):
 
     def read_electricity_csv_and_standardize(self, csv_path):
         # Loading appliance
-        df = pd.read_csv(csv_path)
+        df = pd.read_csv(csv_path).astype('float32')
 
         # Convert index to DateTime
         df.index = pd.to_datetime((df.TS.values * 1e9).astype(int))
@@ -85,7 +85,7 @@ class AMPDS(DataSet):
 
     def read_water_csv_and_standardize(self, csv_path):
         # Loading appliance
-        df = pd.read_csv(csv_path)
+        df = pd.read_csv(csv_path).astype('float32')
 
         # Convert index to DateTime
         df.index = pd.to_datetime((df.ts.values * 1e9).astype(int))
