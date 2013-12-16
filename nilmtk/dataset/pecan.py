@@ -97,8 +97,8 @@ class Pecan(DataSet):
 
         # 2
         if "LEG1V [V]" in df.columns:
-            df = df.rename(columns=lambda x: x.replace("LEG1V [V]",
-                                                       Measurement('voltage', '')))
+            df = df.rename(columns={"LEG1V [V]": Measurement('voltage', '')})
+            
 
             # Adding voltage if it exists
             building.utility.electric.mains[
@@ -229,16 +229,9 @@ class Pecan_1min(Pecan):
             temp_df = spreadsheet.parse(
                 'Sheet1', index_col=0, date_parser=True)
             df = df.append(temp_df)
-        df = self.standardize(df)
-
-        # Create a new building
         building = Building()
 
-        # Add mains
-        building = self.add_mains(building, df)
-
-        # Add appliances
-        building = self.add_appliances(building, df)
+        building = self.standardize(df, building)
 
         # Adding this building to dict of buildings
         building_name = building_name.replace(" ", "_")
