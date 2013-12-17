@@ -1,4 +1,0 @@
-<power, active>
-<power, apparent>
-<power, reactive>
-<voltage, >
