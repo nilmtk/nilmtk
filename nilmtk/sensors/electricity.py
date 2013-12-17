@@ -1,5 +1,5 @@
 from collections import namedtuple
-import copy
+import copy, json
 
 Measurement = namedtuple('Measurement', ['physical_quantity', 'type'])
 """
