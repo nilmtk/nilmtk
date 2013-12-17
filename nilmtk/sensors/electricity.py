@@ -11,6 +11,7 @@ type : string
 
 ApplianceName = namedtuple('ApplianceName', ['name', 'instance'])
 MainsName = namedtuple('MainsName', ['split', 'meter'])
+CircuitName = namedtuple('CircuitName', ['name', 'split', 'meter'])
 
 
 class Electricity(object):
@@ -48,22 +49,28 @@ class Electricity(object):
                       DataFrame(columns=[Measurement('power','active')])
                  }`
 
-    circuits : DataFrame, shape (n_samples, n_features), np.float32, optional
-        The power measurements taken downstream of the mains measurements but
-        upstream of the appliances.
-        The index is a timezone-aware pd.DateTimeIndex
-        Each column name is a CircuitName namedtuple with fields:
+    circuits : dict of DataFrames, optional
+        The power measurements taken from midstream.
+        Each key is a CircuitName namedtuple with fields:
 
-        * `circuit` is the standard name for this circuit.
+        * `name` is the standard name for this circuit.
         * `split` is the index for this circuit.  Indexed from 1.
         * `meter` is the numeric ID of the meter. Indexed from 1.
           Indexes into the `meters` dict.
-        * `measurement` is namedtuple Measurement(physical_quantity=
-            'power', type='reactive')
+
+        Each value is a DataFrame of shape (n_samples, n_features) 
+        where each column name is a Measurement namedtuple (please
+        definition of Measurement at the top of this file for a
+        description of what can go into a Measurement namedtuple).
+
+        DataFrame.index is a timezone-aware pd.DateTimeIndex.
+        Power values are of type np.float32.
+        DataFrame.name should be identical to the `circuits` dict key which 
+        maps to this DataFrame.
 
         For example: 
-        `CircuitName(circuit='lighting', split=1, 
-                     meter=3, measurement=Measurement('power','active'))`
+        `circuits = {CircuitName(circuit='lighting', split=1):
+                         DataFrame(columns=[Measurement('power','active')])}`
 
     appliances : dict of DataFrames, optional
         Each key is an ApplianceName namedtuple with fields:
@@ -97,7 +104,7 @@ class Electricity(object):
     appliance_estimates : Panel (3D matrix), optional
         Output from the NILM disaggregation algorithm.
         The index is a timezone-aware pd.DateTimeIndex
-        The first two dimensions are the same as for the `appliances` DataFrame
+        The first two dimensions are time and ApplianceName.
         The third dimension describes, for each appliance and for each time:
         * `power` : np.float32. Estimated power consumption in Watts.
         * `state` : np.int32, optional.
