@@ -20,23 +20,33 @@ class Electricity(object):
     Attributes
     ----------
 
-    mains : DataFrame, shape (n_samples, n_features), np.float32, optional
+    mains : dict of DataFrames, optional
         The power measurements taken from the level furthest upstream.
-        The index is a timezone-aware pd.DateTimeIndex
-        Each column name is a MainsName namedtuple with fields:
-
+        Each key is a MainsName namedtuple with keys:
         * `split` is the phase or split.  Indexed from 1.
         * `meter` is the numeric ID of the meter. Indexed from 1.
-        * `measurement` is the namedtuple Measurement(physical_quantity=
-            'power', type='reactive')
+
+        Each value is a DataFrame of shape (n_samples, n_features) 
+        where each column name is a Measurement namedtuple (please
+        definition of Measurement at the top of this file for a
+        description of what can go into a Measurement namedtuple).
+
+        DataFrame.index is a timezone-aware pd.DateTimeIndex.
+        Power values are of type np.float32.
+        DataFrame.name should be identical to the `mains` dict key which 
+        maps to this DataFrame.
 
         For example, if we had a dataset recorded in the UK where the home has
         only a single phase supply but uses two separate meters, the first of
         which measures active and reactive power; the second of which measures only
         active, then we'd use:
-            * `MainsName(split=1, meter=1, measurement=Measurement('power','active'))`
-            * `MainsName(split=1, meter=1, measurement=Measurement('power','reactive'))`
-            * `MainsName(split=1, meter=2, measurement=Measurement('power','active'))`
+
+        `mains = {MainsName(split=1, meter=1): 
+                      DataFrame(columns=[Measurement('power','active'),
+                                         Measurement('power','reactive')]),
+                  MainsName(split=1, meter=2):
+                      DataFrame(columns=[Measurement('power','active')])
+                 }`
 
     circuits : DataFrame, shape (n_samples, n_features), np.float32, optional
         The power measurements taken downstream of the mains measurements but
@@ -139,9 +149,9 @@ class Electricity(object):
     """
 
     def __init__(self):
-        self.mains = None
-        self.circuits = None
-        self.appliances = None
+        self.mains = {}
+        self.circuits = {}
+        self.appliances = {}
         self.appliance_estimates = None
         self.nominal_mains_voltage = None
         self.appliances_in_each = {}
