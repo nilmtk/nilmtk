@@ -38,14 +38,14 @@ class REDD(DataSet):
             'citations': ['J. Zico Kolter and Matthew J. Johnson.'
                           ' REDD: A public data set for energy disaggregation'
                           ' research. In proceedings of the SustKDD workshop on'
-                          ' Data Mining Applications in Sustainability, 2011.']
+                          ' Data Mining Applications in Sustainability, 2011.'],
+            'geographical_coordinates': (42.360091, -71.09416), # MIT's coorindates
+            'timezone': 'US/Eastern' # MIT is on the east coast
         }
 
     def load_building(self, root_directory, building_name):
         # Construct new Building and set known attributes
         building = Building()
-        # MIT's coorindates
-        building.geographic_coordinates = (42.360091, -71.09416)
 
         # Load labels
         building_dir = os.path.join(root_directory, building_name)
@@ -57,7 +57,7 @@ class REDD(DataSet):
         for mains_chan in mains_chans:
             col_name = MainsName(mains_chan, 1)
             df = load_chan(building_dir, mains_chan)
-            df = df.tz_convert('US/Eastern')  # MIT is on the east coast
+            df = df.tz_convert(self.metadata['timezone'])
             building.utility.electric.mains[col_name] = df
 
         # Load sub metered channels

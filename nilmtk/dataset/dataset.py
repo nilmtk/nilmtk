@@ -60,6 +60,12 @@ class DataSet(object):
             Academic citation(s) for this dataset
 
         nominal_voltage : float, optional
+
+        timezone : string
+
+        geographical_coordinates : pair (lat, long), optional
+            The geo location of the research institution.  Used as a fall back
+            if geo location isn't available for any individual building.
     
     """
 
