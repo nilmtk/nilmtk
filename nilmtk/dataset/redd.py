@@ -6,16 +6,16 @@ import pandas as pd
 from nilmtk.dataset import DataSet, load_labels
 from nilmtk.utils import get_immediate_subdirectories
 from nilmtk.building import Building
-
+from nilmtk.sensors.electricity import MainsName
 
 def load_chan(building_dir, chan):
     """Returns DataFrame containing data for this channel"""
     filename = os.path.join(building_dir, 'channel_{:d}.dat'.format(chan))
     print('Loading', filename)
     date_parser = lambda x: datetime.datetime.utcfromtimestamp(x)
-    return pd.read_csv(filename, sep=' ', header=None, index_col=0,
-                       parse_dates=True, date_parser=date_parser,
-                       names=['active'], squeeze=True).astype('float32')
+    df = pd.read_csv(filename, sep=' ', header=None, index_col=0,
+                     parse_dates=True, date_parser=date_parser,
+                     names=['active'], squeeze=True).astype('float32')
 
 
 class REDD(DataSet):
@@ -46,16 +46,12 @@ class REDD(DataSet):
         # Load mains
         mains_chans = [chan for chan, label in labels.iteritems()
                        if label == 'mains']
-        mains_chan_dict = {}
         for mains_chan in mains_chans:
-            col_name = 'mains_{:d}_meter_1_active'.format(mains_chan)
-            mains_chan_dict[col_name] = load_chan(building_dir, mains_chan)
-
-        # Make a DataFrame containing all mains channels
-        df = pd.DataFrame(mains_chan_dict)
-        df = df.tz_localize('UTC')
-        df = df.tz_convert('US/Eastern')  # MIT is on the east coast
-        building.electric.mains = df
+            col_name = MainsName(mains_chan, 1)
+            df = load_chan(building_dir, mains_chan)
+            df = df.tz_localize('UTC')
+            df = df.tz_convert('US/Eastern')  # MIT is on the east coast
+            building.utility.electric.mains[col_name] = df
 
         # Load sub metered channels
         # TODO
