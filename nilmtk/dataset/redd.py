@@ -23,11 +23,15 @@ class REDD(DataSet):
 
     def __init__(self):
         super(REDD, self).__init__()
-        self.urls = ['http://redd.csail.mit.edu']
-        self.citations = ['J. Zico Kolter and Matthew J. Johnson.'
+        self.metadata = {
+            'name': 'REDD',
+            'full_name': 'Reference Energy Disaggregation Data Set',
+            'urls': ['http://redd.csail.mit.edu'],
+            'citations': ['J. Zico Kolter and Matthew J. Johnson.'
                           ' REDD: A public data set for energy disaggregation'
                           ' research. In proceedings of the SustKDD workshop on'
                           ' Data Mining Applications in Sustainability, 2011.']
+        }
 
     def load_building(self, root_directory, building_name):
         # Construct new Building and set known attributes
@@ -50,7 +54,7 @@ class REDD(DataSet):
         # Make a DataFrame containing all mains channels
         df = pd.DataFrame(mains_chan_dict)
         df = df.tz_localize('UTC')
-        df = df.tz_convert('US/Eastern')  # MIT is on the east coast!
+        df = df.tz_convert('US/Eastern')  # MIT is on the east coast
         building.electric.mains = df
 
         # Load sub metered channels
