@@ -9,6 +9,8 @@ yoghurt maker
 
 mini vacuum cleaner charger
 
+kitchen outlets
+
 ----------
 # Heating
 
@@ -86,6 +88,7 @@ freezer
 
 fridge_freezer
   style: chest | upright
+  freezer is a separate thermal compartment: boolean
 
 wine cooler
 
@@ -95,7 +98,11 @@ ac
 # White goods
 
 clothes machine (meta appliance)
-  components: some combination of {spin dryer, tumble dryer, washing machine}
+  components: some combination of {spin dryer, tumble dryer, washing
+  machine}
+
+washer dryer (meta appliance)
+  components: always both {washing machine, tumble dryer}
 
 spin dryer
 

@@ -9,6 +9,14 @@ from nilmtk.utils import get_immediate_subdirectories
 from nilmtk.building import Building
 from nilmtk.sensors.electricity import MainsName, Measurement, ApplianceName
 
+appliance_name_mapping = {
+    'refrigerator': 'fridge', 
+    'dishwaser': 'dishwasher',
+    'kitchen_outlets': 'kitchen outlets',
+    'washer_dryer': 'washer dryer',
+    
+    
+}
 
 def load_chan(building_dir, chan):
     """Returns DataFrame containing data for this channel"""
@@ -101,6 +109,10 @@ class REDD(DataSet):
         for appliance_chan in appliance_chans:
             redd_appliance_name = labels[appliance_chan]
             appliancename = ApplianceName(name="", instance=1)
+            # TODO: Check MultiSupply appliances and handle them.
+            # Check that these are single appliances pulling from two splits?
+            # put all lighting channels into circuits
+            # what's bathroom_gfi?  handle it.
 
         # TODO
         # Convert from REDD channel names to standardised names
