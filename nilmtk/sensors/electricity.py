@@ -1,5 +1,5 @@
 from collections import namedtuple
-
+import copy
 
 Measurement = namedtuple('Measurement', ['physical_quantity', 'type'])
 """
@@ -112,47 +112,49 @@ class Electricity(object):
         * `power_prob_dist` : object describing the probability dist, optional
         * `state_prob_dist` : object describing the probability dist, optional
 
-    nominal_mains_voltage : np.float32, optional
+    metadata : dict, optional
 
-    appliances_in_each_room : dict, optional
-        Each key is a (<room name>, <room instance>) tuple
-        (as used in this `Building.rooms`).
-        Each value is a list of (<appliance name>, <instance>) tuples
-        e.g. `{('livingroom', 1): [('tv', 1), ('dvd', 2)]}`
+        nominal_mains_voltage : np.float32, optional
 
-    wiring : networkx.DiGraph
-        Nodes are ApplianceNames or CircuitNames or MainsNames.
-        Edges describe the wiring between mains, circuits and appliances.
-        Edge direction indicates the flow of energy.  i.e. edges point
-        towards loads.
+        appliances_in_each_room : dict, optional
+            Each key is a (<room name>, <room instance>) tuple
+            (as used in this `Building.rooms`).
+            Each value is a list of (<appliance name>, <instance>) tuples
+            e.g. `{('livingroom', 1): [('tv', 1), ('dvd', 2)]}`
 
-    meters : dict, optional
-        Maps from a tuple (<meter manufacturer>, <model>) to a list of 
-        all the channels which use that type of meter.  Types of meters
-        are described in `docs/standard_names/meters.json`.  e.g.:
-        `{
-           ('Current Cost', 'EnviR') : 
-             [
-                MainsName(split=1, meter=1, measurement='apparent'),
-                ApplianceName(name='boiler', instance=1, measurement='apparent')
-             ]
-          }`
+        wiring : networkx.DiGraph
+            Nodes are ApplianceNames or CircuitNames or MainsNames.
+            Edges describe the wiring between mains, circuits and appliances.
+            Edge direction indicates the flow of energy.  i.e. edges point
+            towards loads.
 
-    appliance_metadata : dict of dicts, optional
-        Metadata describing each appliance.
-        Each key is an (<appliance name>, <instance>) tuple.
-        Each value is dict describing metadata for that appliance.
-        The permitted fields and values
-        for each appliance name are described in `appliances.json`.  e.g.
+        meters : dict, optional
+            Maps from a tuple (<meter manufacturer>, <model>) to a list of 
+            all the channels which use that type of meter.  Types of meters
+            are described in `docs/standard_names/meters.json`.  e.g.:
+            `{
+               ('Current Cost', 'EnviR') : 
+                 [
+                    MainsName(split=1, meter=1, measurement='apparent'),
+                    ApplianceName(name='boiler', instance=1, measurement='apparent')
+                 ]
+              }`
 
-        `{('tv', 1): 
-            {'display': 'lcd', 
-             'backlight': 'led'
-             'screen size in inches': 42,
-             'year of manufacture': 2001,
-             'last time seen active': '3/4/2012'
-            }
-        }`
+        appliances : dict of dicts, optional
+            Metadata describing each appliance.
+            Each key is an ApplianceName(<appliance name>, <instance>) tuple.
+            Each value is dict describing metadata for that appliance.
+            The permitted fields and values
+            for each appliance name are described in `appliances.json`.  e.g.
+
+            `{('tv', 1): 
+                {'display': 'lcd', 
+                 'backlight': 'led'
+                 'screen size in inches': 42,
+                 'year of manufacture': 2001,
+                 'last time seen active': '3/4/2012'
+                }
+            }`
     """
 
     def __init__(self):
@@ -160,11 +162,7 @@ class Electricity(object):
         self.circuits = {}
         self.appliances = {}
         self.appliance_estimates = None
-        self.nominal_mains_voltage = None
-        self.appliances_in_each = {}
-        self.wiring = None
-        self.meters = {}
-        self.appliance_metadata = {}
+        self.metadata = {}
 
     def get_appliance(self, appliance_name, measurement="all"):
         """
@@ -202,7 +200,7 @@ class Electricity(object):
         return ""
 
     def to_json(self):
-        representation = {}
+        representation = copy.copy(self.metadata)
         representation["mains"] = ""
         representation["appliances"] = ""
         representation["circuits"] = ""
