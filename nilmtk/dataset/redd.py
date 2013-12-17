@@ -3,19 +3,27 @@ import re
 import  os
 import datetime
 import pandas as pd
+import numpy as np
 from nilmtk.dataset import DataSet, load_labels
 from nilmtk.utils import get_immediate_subdirectories
 from nilmtk.building import Building
 from nilmtk.sensors.electricity import MainsName
+from nilmtk.sensors.electricity import Measurement
 
 def load_chan(building_dir, chan):
     """Returns DataFrame containing data for this channel"""
     filename = os.path.join(building_dir, 'channel_{:d}.dat'.format(chan))
     print('Loading', filename)
-    date_parser = lambda x: datetime.datetime.utcfromtimestamp(x)
+    colname = Measurement('power','active')
+    # Don't use date_parser with pd.read_csv.  Instead load it all
+    # and then convert to datetime.  Thanks to Nipun for linking to
+    # this discussion where jreback gives this tip:
+    # https://github.com/pydata/pandas/issues/3757
     df = pd.read_csv(filename, sep=' ', header=None, index_col=0,
-                     parse_dates=True, date_parser=date_parser,
-                     names=['active'], squeeze=True).astype('float32')
+                     parse_dates=False, names=[colname], 
+                     dtype={colname:np.float32})
+    df.index = pd.to_datetime((df.index.values*1E9).astype(int), utc=True)
+    return df
 
 
 class REDD(DataSet):
@@ -49,7 +57,6 @@ class REDD(DataSet):
         for mains_chan in mains_chans:
             col_name = MainsName(mains_chan, 1)
             df = load_chan(building_dir, mains_chan)
-            df = df.tz_localize('UTC')
             df = df.tz_convert('US/Eastern')  # MIT is on the east coast
             building.utility.electric.mains[col_name] = df
 
