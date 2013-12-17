@@ -2,6 +2,13 @@ from collections import namedtuple
 
 
 Measurement = namedtuple('Measurement', ['physical_quantity', 'type'])
+"""
+physical_quantity : string
+    One of: {power, energy, voltage}
+type : string
+    One of: {active, reactive, apparent, ''}
+"""
+
 ApplianceName = namedtuple('ApplianceName', ['name', 'instance'])
 MainsName = namedtuple('MainsName', ['split', 'meter'])
 
@@ -54,22 +61,31 @@ class Electricity(object):
            names, see nilmtk/docs/standard_names/appliances.txt
         * `instance` is the index for that appliance within this building.
            Indexed from 1.
-        * `measurement` is namedtuple Measurement(physical_quantity=
-            'power', type='reactive')
 
-        For example, if a house has two TVs then use these two column names:
-        `('tv', 1, Measurement('power','active')), ('tv', 2, Measurement('power','active'))`
-        
-        Each value is a np.float32 DataFrame of shape (n_samples, n_features) where each
-        column name is one of `apparent` | `active` | etc (please see 
-        /docs/standard_names/measurements.txt for the full list)
-        and the index is a timezone-aware pd.DateTimeIndex.
+        For example, if a house has two TVs, whose power is recorded separately,
+        then use these two different keys: `('tv', 1)` and `('tv', 2)`
+
         If multiple appliances are monitored on one channel (e.g. tv + dvd)
-        then use a tuple of appliances as the column name, e.g.:
-        `(('tv', 1, Measurement('power','active')), ('dvd player', 1, Measurement('power','active')))`
+        then use a tuple of appliances as the key, e.g.:
+
+        `(('tv', 1), ('dvd player', 1))`
+        
+        Each value of the `appliances` dict is a DataFrame of 
+        shape (n_samples, n_features) where each column name is either:
+
+        * a Measurement namedtuple (please definition of Measurement at the top
+          of this file for a description of what can go into 
+          a Measurement namedtuple).
+        * Or 'state' (where 0 is 'off'). This is used when the ground-truth of
+          the appliance state is known; for example in the BLUEd dataset.
+
+        DataFrame.index is a timezone-aware pd.DateTimeIndex.
+        Power values are of type np.float32; `state` values are np.int32
+        DataFrame.name should be identical to the `appliances` dict key which 
+        maps to this DataFrame.
 
     appliance_estimates : Panel (3D matrix), optional
-        Output from the NILM algorithm.
+        Output from the NILM disaggregation algorithm.
         The index is a timezone-aware pd.DateTimeIndex
         The first two dimensions are the same as for the `appliances` DataFrame
         The third dimension describes, for each appliance and for each time:

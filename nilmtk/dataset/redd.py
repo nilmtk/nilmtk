@@ -15,7 +15,7 @@ def load_chan(building_dir, chan):
     date_parser = lambda x: datetime.datetime.utcfromtimestamp(x)
     return pd.read_csv(filename, sep=' ', header=None, index_col=0,
                        parse_dates=True, date_parser=date_parser,
-                       names=['active'], squeeze=True)
+                       names=['active'], squeeze=True).astype('float32')
 
 
 class REDD(DataSet):
