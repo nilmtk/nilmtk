@@ -6,31 +6,6 @@ import pandas as pd
 """Base class for all datasets."""
 
 
-def load_labels(data_dir):
-    """Loads data from labels.dat file.
-
-    Arguments
-    ---------
-    data_dir : str
-
-    Returns
-    -------
-    labels : dict
-        mapping channel numbers (ints) to appliance names (str)
-    """
-    filename = os.path.join(data_dir, 'labels.dat')
-    with open(filename) as labels_file:
-        lines = labels_file.readlines()
-
-    labels = {}
-    for line in lines:
-        line = line.split(' ')
-        # TODO add error handling if line[0] not an int
-        labels[int(line[0])] = line[1].strip()
-
-    return labels
-
-
 class DataSet(object):
 
     """Base class for all datasets.  This class can be used
@@ -63,15 +38,11 @@ class DataSet(object):
 
         timezone : string
 
-        geographical_coordinates : pair (lat, long), optional
+        geographic_coordinates : pair (lat, long), optional
             The geo location of the research institution.  Used as a fall back
             if geo location isn't available for any individual building.
     
     """
-
-    # TODO: before we can implement this, we need to decide
-    # how we're going to represent Buildings:
-    # https://github.com/nilmtk/nilmtk/issues/12
 
     def __init__(self):
         self.buildings = {}

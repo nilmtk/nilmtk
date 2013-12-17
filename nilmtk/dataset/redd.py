@@ -4,11 +4,11 @@ import  os
 import datetime
 import pandas as pd
 import numpy as np
-from nilmtk.dataset import DataSet, load_labels
+from nilmtk.dataset import DataSet
 from nilmtk.utils import get_immediate_subdirectories
 from nilmtk.building import Building
-from nilmtk.sensors.electricity import MainsName
-from nilmtk.sensors.electricity import Measurement
+from nilmtk.sensors.electricity import MainsName, Measurement, ApplianceName
+
 
 def load_chan(building_dir, chan):
     """Returns DataFrame containing data for this channel"""
@@ -26,6 +26,31 @@ def load_chan(building_dir, chan):
     return df
 
 
+def load_labels(data_dir):
+    """Loads data from labels.dat file.
+
+    Arguments
+    ---------
+    data_dir : str
+
+    Returns
+    -------
+    labels : dict
+        mapping channel numbers (ints) to appliance names (str)
+    """
+    filename = os.path.join(data_dir, 'labels.dat')
+    with open(filename) as labels_file:
+        lines = labels_file.readlines()
+
+    labels = {}
+    for line in lines:
+        line = line.split(' ')
+        # TODO add error handling if line[0] not an int
+        labels[int(line[0])] = line[1].strip()
+
+    return labels
+
+
 class REDD(DataSet):
     """Load data from REDD."""
 
@@ -39,9 +64,14 @@ class REDD(DataSet):
                           ' REDD: A public data set for energy disaggregation'
                           ' research. In proceedings of the SustKDD workshop on'
                           ' Data Mining Applications in Sustainability, 2011.'],
-            'geographical_coordinates': (42.360091, -71.09416), # MIT's coorindates
+            'geographic_coordinates': (42.360091, -71.09416), # MIT's coorindates
             'timezone': 'US/Eastern' # MIT is on the east coast
         }
+
+    def _pre_process_dataframe(self, df):
+        df = df.sort_index() # raw REDD data isn't always sorted
+        df = df.tz_convert(self.metadata['timezone'])
+        return df
 
     def load_building(self, root_directory, building_name):
         # Construct new Building and set known attributes
@@ -51,16 +81,27 @@ class REDD(DataSet):
         building_dir = os.path.join(root_directory, building_name)
         labels = load_labels(building_dir)
 
-        # Load mains
-        mains_chans = [chan for chan, label in labels.iteritems()
-                       if label == 'mains']
+        # Split channels into mains and appliances
+        mains_chans = []
+        appliance_chans = []
+        for chan, label in labels.iteritems():            
+            if label == 'mains':
+                mains_chans.append(chan)
+            else:
+                appliance_chans.append(chan)
+
+        # Load mains chans
         for mains_chan in mains_chans:
             col_name = MainsName(mains_chan, 1)
             df = load_chan(building_dir, mains_chan)
-            df = df.tz_convert(self.metadata['timezone'])
+            df = self._pre_process_dataframe(df)
             building.utility.electric.mains[col_name] = df
 
         # Load sub metered channels
+        for appliance_chan in appliance_chans:
+            redd_appliance_name = labels[appliance_chan]
+            appliancename = ApplianceName(name="", instance=1)
+
         # TODO
         # Convert from REDD channel names to standardised names
         # Set up wiring

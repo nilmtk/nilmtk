@@ -23,7 +23,7 @@ class Building(object):
         Values are nilmtk Ambient objects.
 
     metadata : dict
-        geographical_coordinates : pair of floats, optional
+        geographic_coordinates : pair of floats, optional
             (latitude, longitude)
             Only specify this if the geo location of the building is known.
             Otherwise leave this blank and users should fall back to using
