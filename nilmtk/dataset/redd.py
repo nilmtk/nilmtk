@@ -1,28 +1,37 @@
 from __future__ import print_function, division
 import re
-import  os
+import os
 import datetime
 import pandas as pd
 import numpy as np
+from collections import namedtuple
 from nilmtk.dataset import DataSet
 from nilmtk.utils import get_immediate_subdirectories
 from nilmtk.building import Building
-from nilmtk.sensors.electricity import MainsName, Measurement, ApplianceName
+from nilmtk.sensors.electricity import MainsName, Measurement, ApplianceName, MultiSupply
 
-appliance_name_mapping = {
-    'refrigerator': 'fridge', 
-    'dishwaser': 'dishwasher',
-    'kitchen_outlets': 'kitchen outlets',
-    'washer_dryer': 'washer dryer',
-    
-    
+# Maps from REDD name to:
+#   tuple : ('<nilmtk name>', <metadata dict>)
+ApplianceMetadata = namedtuple('ApplianceMetadata', ['name', 'metadata'])
+APPLIANCE_NAME_MAP = {
+    'oven': ApplianceMetadata('oven', {'fuel':'electricity', 'multisupply': True}),
+    'refrigerator': ApplianceMetadata('fridge', {}), 
+    'dishwaser': ApplianceMetadata('dishwasher', {}),
+    'kitchen_outlets': ApplianceMetadata('kitchen outlets', {}),
+    'washer_dryer': ApplianceMetadata('washer dryer', {'multisupply': True}),
+    'bathroom_gfi': ApplianceMetadata('bathroom misc', {}),
+    'electric_heat': ApplianceMetadata('space heater', {'fuel':'electricity'}),
+    'stove': ApplianceMetadata('hob', {'fuel':'electricity'})
 }
 
-def load_chan(building_dir, chan):
+# TODO: 
+# Check that these multisupply==True appliances really are multisupply!
+
+
+def load_chan(building_dir, chan, colname=Measurement('power','active')):
     """Returns DataFrame containing data for this channel"""
     filename = os.path.join(building_dir, 'channel_{:d}.dat'.format(chan))
     print('Loading', filename)
-    colname = Measurement('power','active')
     # Don't use date_parser with pd.read_csv.  Instead load it all
     # and then convert to datetime.  Thanks to Nipun for linking to
     # this discussion where jreback gives this tip:
@@ -89,6 +98,15 @@ class REDD(DataSet):
         building_dir = os.path.join(root_directory, building_name)
         labels = load_labels(building_dir)
 
+        # Convert appliance names from REDD to nilmtk standard names
+        appliance_metadata = {}
+        for chan, label in labels.iteritems():
+            nilmtk_appliance = APPLIANCE_NAME_MAP.get(label)
+            if nilmtk_appliance is not None:
+                labels[chan] = nilmtk_appliance.name
+                if nilmtk_appliance.metadata:
+                    appliance_metadata[nilmtk_appliance.name] = nilmtk_appliance.metadata
+
         # Split channels into mains and appliances
         mains_chans = []
         appliance_chans = []
@@ -100,22 +118,59 @@ class REDD(DataSet):
 
         # Load mains chans
         for mains_chan in mains_chans:
-            col_name = MainsName(mains_chan, 1)
+            mainsname = MainsName(split=mains_chan, meter=1)
             df = load_chan(building_dir, mains_chan)
             df = self._pre_process_dataframe(df)
-            building.utility.electric.mains[col_name] = df
+            building.utility.electric.mains[mainsname] = df
+
+        # Find MultiSupply appliances
+        # These are identified as appliances where metadata['multisupply']==True
+        # and where the channels are next to each other in the REDD labels.dat
+        multisupply_chans = {}
+        for i, chan in enumerate(appliance_chans[:-1]):
+            label = labels[chan]
+            next_chan = appliance_chans[i+1]
+            next_label = labels[next_chan]
+            metadata = appliance_metadata.get(label)
+            if (label == next_label and metadata and metadata.get('multisupply')):
+                multisupply_chans[chan] = 1
+                multisupply_chans[next_chan] = 2
 
         # Load sub metered channels
+        instances = {} # keep track of instances!
+        measurement = Measurement('power', 'active')
         for appliance_chan in appliance_chans:
-            redd_appliance_name = labels[appliance_chan]
-            appliancename = ApplianceName(name="", instance=1)
-            # TODO: Check MultiSupply appliances and handle them.
-            # Check that these are single appliances pulling from two splits?
-            # put all lighting channels into circuits
-            # what's bathroom_gfi?  handle it.
+            # Get appliance label and instance
+            label = labels[appliance_chan]
+            instance = instances.get(label, 1)
+            appliancename = ApplianceName(name=label, instance=instance)
+
+            # Increment instance. Handle multisupply appliances
+            multisupply = multisupply_chans.get(appliance_chan)
+            if multisupply is None:
+                # This is not a MultiSupply appliance
+                instances[label] = instance + 1
+                colname = measurement
+                df = load_chan(building_dir, appliance_chan, colname)
+                df = self._pre_process_dataframe(df)
+                df[colname].name = appliancename
+                building.utility.electric.appliances[appliancename] = df
+            else:
+                colname = MultiSupply(measurement, multisupply)
+                df = load_chan(building_dir, appliance_chan, colname)
+                df = self._pre_process_dataframe(df)
+                df[colname].name = appliancename
+                if multisupply == 1:
+                    building.utility.electric.appliances[appliancename] = df
+                else:
+                    building.utility.electric.appliances[appliancename] = \
+                     building.utility.electric.appliances[appliancename].join(df)
+                    instances[label] = instance + 1            
+
+            # TODO: put some channels into `circuits` if that's what we want to do
 
         # TODO
-        # Convert from REDD channel names to standardised names
+        # Store appliance_metadata for each appliance instance in electric.metadata['appliances']
         # Set up wiring
 
         self.buildings[building_name] = building

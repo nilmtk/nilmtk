@@ -50,6 +50,27 @@ slow cooker
 
 other cooking
 
+
+----------------
+## Space heating
+
+central heating boiler
+  fuel: electricity | gas | solid | oil
+
+space heater
+  fuel: electricity | gas | solid | oil
+  has fan: boolean
+
+heat pump
+  heat source: air | ground | water
+
+underfloor heating
+  fuel: electricity | gas | solid | oil | heat pump
+
+circulation pump
+
+
+-----------
 ## Bathroom
 
 water heater
@@ -62,20 +83,9 @@ hot tub
 
 jacuzzi
 
-## Space heating
+bathroom misc
 
-central heating boiler
-  fuel: electricity | gas | solid | oil
 
-storage heater
-
-heat pump
-  heat source: air | ground | water
-
-underfloor heating
-  fuel: electricity | gas | solid | oil | heat pump
-
-circulation pump
 
 ----------
 # Cooling
@@ -93,6 +103,7 @@ fridge_freezer
 wine cooler
 
 ac
+
 
 ---------------
 # White goods
@@ -144,6 +155,7 @@ digital picture frame
 
 video sender
 
+
 -----------------
 # Bedroom
 
@@ -159,6 +171,9 @@ electric blanket
 
 baby monitor
   type: tx | rx
+
+clothes iron
+
 
 ---------------
 # Office
@@ -184,8 +199,6 @@ external hard drive
 
 ups
 
-soldering iron
-
 phone/tablet/ebook charger
 
 paper shredder
@@ -193,13 +206,20 @@ paper shredder
 cordless phone
 
 
+--------------
+# Construction
+
+soldering iron
+
+power drill
+
+
 -------------------
 # Lighting
 
 light
   type: incandescent | led | cfl | linear fluorescent 
-
-clothes iron
+  dimmable: boolean
 
 
 -----------------
