@@ -123,29 +123,11 @@ class Electricity(object):
 
         nominal_mains_voltage : np.float32, optional
 
-        appliances_in_each_room : dict, optional
-            Each key is a (<room name>, <room instance>) tuple
-            (as used in this `Building.rooms`).
-            Each value is a list of (<appliance name>, <instance>) tuples
-            e.g. `{('livingroom', 1): [('tv', 1), ('dvd', 2)]}`
-
         wiring : networkx.DiGraph
             Nodes are ApplianceNames or CircuitNames or MainsNames.
             Edges describe the wiring between mains, circuits and appliances.
             Edge direction indicates the flow of energy.  i.e. edges point
             towards loads.
-
-        meters : dict, optional
-            Maps from a tuple (<meter manufacturer>, <model>) to a list of 
-            all the channels which use that type of meter.  Types of meters
-            are described in `docs/standard_names/meters.json`.  e.g.:
-            `{
-               ('Current Cost', 'EnviR') : 
-                 [
-                    MainsName(split=1, meter=1, measurement='apparent'),
-                    ApplianceName(name='boiler', instance=1, measurement='apparent')
-                 ]
-              }`
 
         appliances : dict of dicts, optional
             Metadata describing each appliance.
@@ -155,6 +137,11 @@ class Electricity(object):
             appliances over time (in which case the items should be in 
             chronological order so the last element of the list is always the
             most recent.
+
+            Some general fields:
+            'room': (<room name>, <room instance>) tuple (as used in this `Building.rooms`).
+            'meter': (<manufacturer>, <model>) tuple which maps into global Meters DB.
+
             The permitted fields and values for each appliance name are 
             described in `nilmtk/docs/standard_names/appliances.txt`.  e.g.
 
@@ -166,15 +153,18 @@ class Electricity(object):
                  'year of manufacture': 2001,
                  'active from': '3/4/2012',
                  'active until': '4/5/2013',
-                 'quantity installed': 1
+                 'quantity installed': 1,
+                 'room': ('livingroom', 1),
+                 'meter': ('Current Cost', 'IAM')
                 }],
              ('lights', 1):
-                 ['room': 'kitchen',
+                 ['room': ('kitchen', 1),
                   'placing': 'ceiling',
                   'lamp': 'tungsten',
                   'dimmable': True,
                   'nominal Wattage each': 50,
-                  'quantity installed': 10
+                  'quantity installed': 10,
+                  'meter': ('Current Cost', 'EnviR')
                   ]
             }`
     """

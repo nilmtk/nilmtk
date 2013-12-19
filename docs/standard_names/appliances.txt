@@ -217,10 +217,17 @@ power drill
 -------------------
 # Lighting
 
-light
-  type: incandescent | led | cfl | linear fluorescent 
-  dimmable: boolean
+see https://www.gov.uk/classifying-electric-lamps
 
+light
+  lamp: incandescent | led | fluorescent | discharge | vapour
+  lamp subtype: halogen | xenon | cfl | linear fluro | mercury |
+  sodial | metal halide | neon | UV | IR | photo flash
+  dimmable: boolean
+  dimmer type: triac | variac (SP?)
+  placing: ceiling | wall | table | floor-standing | decoration | night light | signage
+  nominal power per lamp: <float, Watts>
+  quantity installed: <int>
 
 -----------------
 # Misc
