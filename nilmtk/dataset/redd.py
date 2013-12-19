@@ -128,7 +128,7 @@ class REDD(DataSet):
         # Load mains chans
         for mains_chan in mains_chans:
             mainsname = MainsName(split=mains_chan, meter=1)
-            df = load_chan(building_dir, mains_chan)
+            df = load_chan(building_dir, mains_chan, colname=Measurement('power', 'apparent'))
             df = self._pre_process_dataframe(df)
             building.utility.electric.mains[mainsname] = df
 
@@ -137,7 +137,7 @@ class REDD(DataSet):
         # instances is a dict which maps:
         # {<'appliance name'>: 
         #  (<index of next appliance instance>, <i of next supply>)}
-        measurement = Measurement('power', 'apparent')
+        measurement = Measurement('power', 'active')
         for appliance_chan in appliance_chans:
             # Get appliance label and instance
             label = labels[appliance_chan]
@@ -160,8 +160,7 @@ class REDD(DataSet):
             else:
                 # This is not a DualSupply appliance
                 instances[label] = (instance + 1, 1)
-                colname = measurement
-                df = load_chan(building_dir, appliance_chan, colname)
+                df = load_chan(building_dir, appliance_chan, colname=measurement)
                 df = self._pre_process_dataframe(df)
                 df[colname].name = appliancename
                 building.utility.electric.appliances[appliancename] = df

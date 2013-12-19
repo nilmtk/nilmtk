@@ -139,9 +139,9 @@ def energy(series, max_sample_period=None, unit='kwh'):
     return _energy
 
 
-def usage_per_period(series, freq, tz_convert=None, on_power_theshold=5, 
-                     acceptable_dropout_rate=0.2, verbose=False, 
-                     energy_unit='kwh'):
+def usage_per_period(series, freq, tz_convert=None, on_power_threshold=5, 
+                     max_dropout_rate=0.2, verbose=False, 
+                     energy_unit='kwh', max_sample_period=None):
     """Calculate the usage (hours on and kwh) per time period.
 
     Parameters
@@ -154,13 +154,24 @@ def usage_per_period(series, freq, tz_convert=None, on_power_theshold=5,
     on_power_threshold : float or int, optional, default = 5
         Threshold which defines the distinction between "on" and "off".  Watts.
 
-    acceptable_dropout_rate : float (0,1), optional, default = 0.2
+    max_dropout_rate : float (0,1), optional, default = 0.2
         Remove any row which has a worse (larger) dropout rate.
     
     verbose : boolean, optional, default = False
         if True then print more information
     
     energy_unit : {'kwh', 'joules'}, optional
+
+    max_sample_period : float or int, optional 
+        The maximum allowed sample period in seconds.  If we find a
+        sample above `on_power_threshold` at time `t` and there are
+        more than `max_sample_period` seconds until the next sample
+        then we assume that the appliance has only been on for
+        `max_sample_period` seconds after time `t`.  This is used where,
+        for example, we have a wireless meter which is supposed to
+        report every `K` seconds and we assume that if we don't hear
+        from it for more than `max_sample_period=K*3` seconds then the
+        sensor (and appliance) have been turned off from the wall.
 
     Returns
     -------
@@ -172,7 +183,7 @@ def usage_per_period(series, freq, tz_convert=None, on_power_theshold=5,
             <`energy_unit`>
     """
 
-    assert(0 <= acceptable_dropout_rate <= 1)
+    assert(0 <= max_dropout_rate <= 1)
 
     date_range, boundaries = _indicies_of_periods(series.index,freq)
     period_range = date_range.to_period(freq=freq)
@@ -184,7 +195,7 @@ def usage_per_period(series, freq, tz_convert=None, on_power_theshold=5,
 
     MAX_SAMPLES_PER_PERIOD = _secs_per_period_alias(freq) / sample_period(series)
     MIN_SAMPLES_PER_PERIOD = (MAX_SAMPLES_PER_PERIOD *
-                              (1-acceptable_dropout_rate))
+                              (1-max_dropout_rate))
 
     for period_i, period in enumerate(period_range):
         try:
@@ -200,16 +211,20 @@ def usage_per_period(series, freq, tz_convert=None, on_power_theshold=5,
             if verbose:
                 dropout_rate = (1 - (data_for_period.size / 
                                      MAX_SAMPLES_PER_PERIOD))
-                print("Insufficient samples for",
+                print("Insufficient samples for ",
                       period.strftime('%Y-%m-%d'),
-                      "; samples =", data_for_period.size,
-                      "dropout_rate = {:.2%}".format(dropout_rate))
+                      "; n samples = ", data_for_period.size,
+                      "; dropout_rate = {:.2%}".format(dropout_rate), sep='')
                 print("                 start =", data_for_period.index[0])
                 print("                   end =", data_for_period.index[-1])
             continue
 
-        hours_on_series[period] = hours_on(data_for_period)
-        energy_series[period] = energy(data_for_period, unit=energy_unit)
+        hours_on_series[period] = hours_on(data_for_period, 
+                                           on_power_threshold=on_power_threshold,
+                                           max_sample_period=max_sample_period)
+        energy_series[period] = energy(data_for_period, 
+                                       max_sample_period=max_sample_period, 
+                                       unit=energy_unit)
 
     return pd.DataFrame({'hours_on': hours_on_series,
                          energy_unit: energy_series})
