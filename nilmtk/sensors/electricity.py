@@ -12,7 +12,7 @@ type : string
 ApplianceName = namedtuple('ApplianceName', ['name', 'instance'])
 MainsName = namedtuple('MainsName', ['split', 'meter'])
 CircuitName = namedtuple('CircuitName', ['name', 'split', 'meter'])
-MultiSupply = namedtuple('MultiSupply', ['measurement', 'supply'])
+DualSupply = namedtuple('DualSupply', ['measurement', 'supply'])
 
 class Electricity(object):
 
@@ -94,12 +94,12 @@ class Electricity(object):
         * a Measurement namedtuple (please definition of Measurement at the top
           of this file for a description of what can go into 
           a Measurement namedtuple).
-        * a MultiSupply namedtuple with fields:
+        * a DualSupply namedtuple with fields:
           * measurement : Measurement namedtuple
           * supply : int. Index of supply. Start from 1. Does not have to map
             directly to the index used to number the mains splits if this 
             information is not known.
-          MultiSupply is used for appliances like American ovens which are
+          DualSupply is used for appliances like American ovens which are
           are single appliances but pull power from both "splits".
         * Or 'state' (where 0 is 'off'). This is used when the ground-truth of
           the appliance state is known; for example in the BLUEd dataset.
@@ -148,6 +148,13 @@ class Electricity(object):
             Some general fields:
             'room': (<room name>, <room instance>) tuple (as used in this `Building.rooms`).
             'meter': (<manufacturer>, <model>) tuple which maps into global Meters DB.
+
+            DualSupply appliances may have a 'supply1' and 'supply2' key which 
+            maps to a string describing the main component supplied by that
+            supply.  e.g.
+            {('washer dryer', 1): 
+             {'supply1': 'motor', 'supply2': 'heating element'}
+            }
 
             The permitted fields and values for each appliance name are 
             described in `nilmtk/docs/standard_names/appliances.txt`.  e.g.

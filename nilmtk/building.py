@@ -38,6 +38,9 @@ class Building(object):
             Values are the number of each type of room in this building.
             For example:
             room = {'kitchen': 1, 'bedroom': 3, ...}
+
+        original_name : string, optional
+            The original name for this building from the original dataset
     """
 
     def __init__(self):

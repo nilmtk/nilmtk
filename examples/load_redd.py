@@ -14,7 +14,7 @@ print('Citation =', redd.metadata['citations'][0])
 print()
 print('Mains data:')
 
-building = redd.buildings['house_1']
+building = redd.buildings[1]
 for mainsname, df in building.utility.electric.mains.iteritems():
     print(mainsname)
     print(df.describe())

@@ -8,25 +8,27 @@ from collections import namedtuple
 from nilmtk.dataset import DataSet
 from nilmtk.utils import get_immediate_subdirectories
 from nilmtk.building import Building
-from nilmtk.sensors.electricity import MainsName, Measurement, ApplianceName, MultiSupply
+from nilmtk.sensors.electricity import MainsName, Measurement, ApplianceName, DualSupply
 
 # Maps from REDD name to:
 #   tuple : ('<nilmtk name>', <metadata dict>)
 ApplianceMetadata = namedtuple('ApplianceMetadata', ['name', 'metadata'])
 APPLIANCE_NAME_MAP = {
-    'oven': ApplianceMetadata('oven', {'fuel':'electricity', 'multisupply': True}),
+    'oven': ApplianceMetadata('oven', {'fuel':'electricity', 'dualsupply': True}),
     'refrigerator': ApplianceMetadata('fridge', {}), 
     'dishwaser': ApplianceMetadata('dishwasher', {}),
     'kitchen_outlets': ApplianceMetadata('kitchen outlets', {}),
-    'washer_dryer': ApplianceMetadata('washer dryer', {'multisupply': True}),
+    'washer_dryer': ApplianceMetadata('washer dryer', {'dualsupply': True}),
     'bathroom_gfi': ApplianceMetadata('bathroom misc', {}),
     'electric_heat': ApplianceMetadata('space heater', {'fuel':'electricity'}),
     'stove': ApplianceMetadata('hob', {'fuel':'electricity'})
 }
 
 # TODO: 
-# Check that these multisupply==True appliances really are multisupply!
+# Check that these dualsupply==True appliances really are dualsupply!
 
+# maps from house number to a list of dud REDD channel numbers
+DUD_CHANNELS = {1: [19]}
 
 def load_chan(building_dir, chan, colname=Measurement('power','active')):
     """Returns DataFrame containing data for this channel"""
@@ -93,10 +95,17 @@ class REDD(DataSet):
     def load_building(self, root_directory, building_name):
         # Construct new Building and set known attributes
         building = Building()
+        building.metadata['original_name'] = building_name
 
         # Load labels
+        building_number = int(building_name[-1])
         building_dir = os.path.join(root_directory, building_name)
         labels = load_labels(building_dir)
+
+        # Remove dud channels
+        dud_channels_for_building = DUD_CHANNELS.get(building_number)
+        for chan in dud_channels_for_building:
+            labels.pop(chan)
 
         # Convert appliance names from REDD to nilmtk standard names
         appliance_metadata = {}
@@ -123,57 +132,45 @@ class REDD(DataSet):
             df = self._pre_process_dataframe(df)
             building.utility.electric.mains[mainsname] = df
 
-        # Find MultiSupply appliances
-        # These are identified as appliances where metadata['multisupply']==True
-        # and where the channels are next to each other in the REDD labels.dat
-        multisupply_chans = {}
-        for i, chan in enumerate(appliance_chans[:-1]):
-            label = labels[chan]
-            next_chan = appliance_chans[i+1]
-            next_label = labels[next_chan]
-            metadata = appliance_metadata.get(label)
-            if (label == next_label and metadata and metadata.get('multisupply')):
-                multisupply_chans[chan] = 1
-                multisupply_chans[next_chan] = 2
-
         # Load sub metered channels
-        instances = {} # keep track of instances!
-        measurement = Measurement('power', 'active')
+        instances = {} 
+        # instances is a dict which maps:
+        # {<'appliance name'>: 
+        #  (<index of next appliance instance>, <i of next supply>)}
+        measurement = Measurement('power', 'apparent')
         for appliance_chan in appliance_chans:
             # Get appliance label and instance
             label = labels[appliance_chan]
-            instance = instances.get(label, 1)
+            instance, supply = instances.get(label, (1,1))
             appliancename = ApplianceName(name=label, instance=instance)
-
-            # Increment instance. Handle multisupply appliances
-            multisupply = multisupply_chans.get(appliance_chan)
-            if multisupply is None:
-                # This is not a MultiSupply appliance
-                instances[label] = instance + 1
+            metadata = appliance_metadata.get(label)
+            is_dualsupply = metadata and metadata.get('dualsupply')
+            if is_dualsupply:
+                colname = DualSupply(measurement, supply)
+                df = load_chan(building_dir, appliance_chan, colname)
+                df = self._pre_process_dataframe(df)
+                df[colname].name = appliancename
+                if supply == 1:
+                    building.utility.electric.appliances[appliancename] = df
+                    instances[label] = (instance, supply + 1)
+                else:
+                    building.utility.electric.appliances[appliancename] = \
+                     building.utility.electric.appliances[appliancename].join(df)
+                    instances[label] = (instance + 1, 1)
+            else:
+                # This is not a DualSupply appliance
+                instances[label] = (instance + 1, 1)
                 colname = measurement
                 df = load_chan(building_dir, appliance_chan, colname)
                 df = self._pre_process_dataframe(df)
                 df[colname].name = appliancename
                 building.utility.electric.appliances[appliancename] = df
-            else:
-                colname = MultiSupply(measurement, multisupply)
-                df = load_chan(building_dir, appliance_chan, colname)
-                df = self._pre_process_dataframe(df)
-                df[colname].name = appliancename
-                if multisupply == 1:
-                    building.utility.electric.appliances[appliancename] = df
-                else:
-                    building.utility.electric.appliances[appliancename] = \
-                     building.utility.electric.appliances[appliancename].join(df)
-                    instances[label] = instance + 1            
-
-            # TODO: put some channels into `circuits` if that's what we want to do
 
         # TODO
         # Store appliance_metadata for each appliance instance in electric.metadata['appliances']
         # Set up wiring
 
-        self.buildings[building_name] = building
+        self.buildings[building_number] = building
 
     def load_building_names(self, root_directory):
         dirs = get_immediate_subdirectories(root_directory)
