@@ -217,17 +217,25 @@ power drill
 -------------------
 # Lighting
 
-see https://www.gov.uk/classifying-electric-lamps
+see:
+* https://www.gov.uk/classifying-electric-lamps
+* http://en.wikipedia.org/wiki/Light_fixture
 
 light
-  lamp: incandescent | led | fluorescent | discharge | vapour
-  lamp subtype: halogen | xenon | cfl | linear fluro | mercury |
-  sodial | metal halide | neon | UV | IR | photo flash
+  lamp type (subtypes in brackets): 
+      incandescent (halogen | tungsten)
+      led
+      fluorescent (linear | compact | cold cathode)
+      gas discharge (mercury-vapor | metal-halide | sodium-vapor | neon)
+      arc (xenon)
   dimmable: boolean
   dimmer type: triac | variac (SP?)
-  placing: ceiling | wall | table | floor-standing | decoration | night light | signage
+  automatic control: timer | motion
+  energy rating: A++ | A+ | A | B | ...
+  fixture: ceiling | wall | table | floor-standing | floor-level | decoration | night light | signage | outdoor
   nominal power per lamp: <float, Watts>
-  quantity installed: <int>
+  quantity of lamps installed: <int>
+
 
 -----------------
 # Misc
