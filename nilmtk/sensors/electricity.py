@@ -73,6 +73,7 @@ class Electricity(object):
                          DataFrame(columns=[Measurement('power','active')])}`
 
     appliances : dict of DataFrames, optional
+        Power measurements taken from the furthest downstream in the dataset.
         Each key is an ApplianceName namedtuple with fields:
         * `name` is a standard appliance name.  For a list of valid
            names, see nilmtk/docs/standard_names/appliances.txt
@@ -107,6 +108,12 @@ class Electricity(object):
         Power values are of type np.float32; `state` values are np.int32
         DataFrame.name should be identical to the `appliances` dict key which 
         maps to this DataFrame.
+
+        Note that `appliances` always stores measurements from the meters
+        in the dataset placed furthest downstream.  So, for example, in the case
+        of the REDD dataset where we have measurements of 'mains' and 'circuits',
+        these 'circuits' channels are put into `Electricity.appliances` because
+        REDD's 'circuits' channels are the furthest downstream.
 
     appliance_estimates : Panel (3D matrix), optional
         Output from the NILM disaggregation algorithm.
@@ -147,25 +154,25 @@ class Electricity(object):
 
             `{('tv', 1): 
                 [{'original name in source dataset': 'Television LCD',
-                 'display': 'lcd', 
-                 'backlight': 'led'
-                 'screen size in inches': 42,
-                 'year of manufacture': 2001,
-                 'active from': '3/4/2012',
-                 'active until': '4/5/2013',
-                 'quantity installed': 1,
-                 'room': ('livingroom', 1),
-                 'meter': ('Current Cost', 'IAM')
+                  'display': 'lcd', 
+                  'backlight': 'led'
+                  'screen size in inches': 42,
+                  'year of manufacture': 2001,
+                  'active from': '3/4/2012',
+                  'active until': '4/5/2013',
+                  'quantity installed': 1,
+                  'room': ('livingroom', 1),
+                  'meter': ('Current Cost', 'IAM')
                 }],
              ('lights', 1):
-                 ['room': ('kitchen', 1),
+                [{'room': ('kitchen', 1),
                   'placing': 'ceiling',
                   'lamp': 'tungsten',
                   'dimmable': True,
                   'nominal Wattage each': 50,
                   'quantity installed': 10,
                   'meter': ('Current Cost', 'EnviR')
-                  ]
+                 }]
             }`
     """
 
