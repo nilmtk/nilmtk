@@ -1,1 +1,1 @@
-from .electricity import *
+from nilmtk.stats.electricity import *

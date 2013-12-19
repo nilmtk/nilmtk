@@ -1,1 +1,1 @@
-from .stats import *
+from nilmtk.stats import *

@@ -408,17 +408,7 @@ def _indicies_of_periods(datetime_index, freq, use_local_time=True):
     """
 
     if use_local_time:
-        datetime_index = copy.copy(datetime_index)
-        ts = datetime_index[0] # 'ts' = timestamp
-        # Calculate timezone offset relative to UTC
-        tz_offset = ts.replace(tzinfo=None) - ts.tz_convert('UTC').replace(tzinfo=None)
-        datetime_index = datetime_index.tz_convert('UTC') + tz_offset
-        # We end up with a datetime_index being tz-aware, localised to UTC
-        # but offset so that the UTC time is the same as the local time
-        # e.g. if, prior to conversion, 
-        #     datetime_index[0] = 12:00-04:00 US/Eastern
-        # then after conversion:
-        #     datetime_index[0] = 12:00+00:00 UTC
+        datetime_index = _tz_to_naive(datetime_index)
 
     periods = pd.period_range(datetime_index[0], datetime_index[-1], freq=freq)
 
@@ -454,3 +444,27 @@ def _indicies_of_periods(datetime_index, freq, use_local_time=True):
             n_rows_processed += last_i_for_period - first_i_for_period
 
     return periods, boundaries
+
+
+def _tz_to_naive(datetime_index):
+    """Converts a tz-aware DatetimeIndex into a tz-naive DatetimeIndex,
+    effectively baking the timezone into the internal representation.
+
+    Parameters
+    ----------
+    datetime_index : pandas.DatetimeIndex, tz-aware
+
+    Returns
+    -------
+    pandas.DatetimeIndex, tz-naive
+    """
+    # See http://stackoverflow.com/q/16628819/732596
+
+    # Calculate timezone offset relative to UTC
+    timestamp = datetime_index[0]
+    tz_offset = (timestamp.replace(tzinfo=None) - 
+                 timestamp.tz_convert('UTC').replace(tzinfo=None))
+    tz_offset_td64 = np.timedelta64(tz_offset)
+
+    # Now convert to naive DatetimeIndex
+    return pd.DatetimeIndex(datetime_index.values + tz_offset_td64)
