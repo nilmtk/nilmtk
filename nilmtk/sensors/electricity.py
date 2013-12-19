@@ -150,17 +150,32 @@ class Electricity(object):
         appliances : dict of dicts, optional
             Metadata describing each appliance.
             Each key is an ApplianceName(<appliance name>, <instance>) tuple.
-            Each value is dict describing metadata for that appliance.
-            The permitted fields and values
-            for each appliance name are described in `appliances.json`.  e.g.
+            Each value is list of dicts. Each dict describes metadata for that 
+            specific appliance.  Multiple dicts are used to express replacing 
+            appliances over time (in which case the items should be in 
+            chronological order so the last element of the list is always the
+            most recent.
+            The permitted fields and values for each appliance name are 
+            described in `nilmtk/docs/standard_names/appliances.txt`.  e.g.
 
             `{('tv', 1): 
-                {'display': 'lcd', 
+                [{'original name in source dataset': 'Television LCD',
+                 'display': 'lcd', 
                  'backlight': 'led'
                  'screen size in inches': 42,
                  'year of manufacture': 2001,
-                 'last time seen active': '3/4/2012'
-                }
+                 'active from': '3/4/2012',
+                 'active until': '4/5/2013',
+                 'quantity installed': 1
+                }],
+             ('lights', 1):
+                 ['room': 'kitchen',
+                  'placing': 'ceiling',
+                  'lamp': 'tungsten',
+                  'dimmable': True,
+                  'nominal Wattage each': 50,
+                  'quantity installed': 10
+                  ]
             }`
     """
 
