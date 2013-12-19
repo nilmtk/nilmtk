@@ -16,6 +16,10 @@ def sample_period(df):
     Find the sample period by finding the stats.mode of the 
     forward difference.  Only use the first 100 samples (for speed).
 
+    Parameters
+    ----------
+    df : pandas.DataFrame
+
     Returns
     -------
     period : float
@@ -29,6 +33,10 @@ def sample_period(df):
 
 def dropout_rate(df):
     """The proportion of samples that have been lost.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
 
     Returns
     -------
@@ -46,10 +54,9 @@ def hours_on(series, on_power_threshold=5, max_sample_period=None):
     """Returns a float representing the number of hours this channel
     has been above threshold.
 
-    Arguments
-    ---------
-
-    series : pd.Series
+    Parameters
+    ----------
+    series : pandas.Series
 
     on_power_threshold : float or int, optional, default = 5
         Threshold which defines the distinction between "on" and "off".  Watts.
@@ -69,6 +76,11 @@ def hours_on(series, on_power_threshold=5, max_sample_period=None):
     -------
     hours_above_threshold : float
 
+
+    See Also
+    --------
+    kwh
+    joules
     """
 
     i_above_threshold = np.where(series[:-1] >= on_power_threshold)[0]
@@ -81,56 +93,59 @@ def hours_on(series, on_power_threshold=5, max_sample_period=None):
     return secs_on / SEC_PER_HOUR
 
 
-def joules(series, max_sample_period=None):
-    """Returns a float representing the number of Joules this 
+def energy(series, max_sample_period=None, unit='kwh'):
+    """Returns a float representing the quantity of energy this 
     channel consumed.
 
-    Arguments
-    ---------
-
+    Parameters
+    ----------
     series : pd.Series
 
     max_sample_period : float or int, optional 
-        The maximum allowed sample period in seconds.  This is used
-        where, for example, we have a wireless meter which is supposed
-        to report every `K` seconds and we assume that if we don't
-        hear from it for more than `max_sample_period=K*3` seconds
-        then the sensor (and appliance) have been turned off from the
-        wall. If we find a sample above `on_power_threshold` at time
-        `t` and there are more than `max_sample_period` seconds until
-        the next sample then we assume that the appliance has only
-        been on for `max_sample_period` seconds after time `t`.
+        The maximum allowed sample period in seconds.  If we find a
+        sample above `on_power_threshold` at time `t` and there are
+        more than `max_sample_period` seconds until the next sample
+        then we assume that the appliance has only been on for
+        `max_sample_period` seconds after time `t`.  This is used where,
+        for example, we have a wireless meter which is supposed to
+        report every `K` seconds and we assume that if we don't hear
+        from it for more than `max_sample_period=K*3` seconds then the
+        sensor (and appliance) have been turned off from the wall.
+
+    unit : {'kwh', 'joules'}
 
     Returns
     -------
-    hours_above_threshold : float
+    _energy : float
 
-
+    See Also
+    --------
+    hours_on
     """
     td = np.diff(series.index.values)
     if max_sample_period is not None:
         td = np.where(td > max_sample_period, max_sample_period, td)
     td_secs = td / np.timedelta64(1, 's')
-    return (td_secs * series.values[:-1]).sum()
+    joules = (td_secs * series.values[:-1]).sum()
 
+    if unit == 'kwh':
+        JOULES_PER_KWH = 3600000
+        _energy = joules / JOULES_PER_KWH
+    elif unit == 'joules':
+        _energy = joules
+    else:
+        raise ValueError('unrecognised value for `unit`.')
 
-def kwh(series):
-    """Returns a float representing the number of kilowatt hours (kWh) this 
-    channel consumed.
-
-    Args:
-       series (pd.Series): optional.  Defaults to self.series
-    """
-    JOULES_PER_KWH = 3600000
-    return joules(series) / JOULES_PER_KWH
+    return _energy
 
 
 def usage_per_period(series, freq, tz_convert=None, on_power_theshold=5, 
-                     acceptable_dropout_rate=0.2, verbose=False):
+                     acceptable_dropout_rate=0.2, verbose=False, 
+                     energy_unit='kwh'):
     """Calculate the usage (hours on and kwh) per time period.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
     series : pd.Series
 
     freq : str
@@ -144,6 +159,8 @@ def usage_per_period(series, freq, tz_convert=None, on_power_theshold=5,
     
     verbose : boolean, optional, default = False
         if True then print more information
+    
+    energy_unit : {'kwh', 'joules'}, optional
 
     Returns
     -------
@@ -152,7 +169,7 @@ def usage_per_period(series, freq, tz_convert=None, on_power_theshold=5,
         Index is PeriodIndex (UTC).
         Columns:
             hours_on
-            kwh
+            <`energy_unit`>
     """
 
     assert(0 <= acceptable_dropout_rate <= 1)
@@ -162,8 +179,8 @@ def usage_per_period(series, freq, tz_convert=None, on_power_theshold=5,
     name = str(series.name)
     hours_on_series = pd.Series(index=period_range, dtype=np.float, 
                                 name=name+' hours on')
-    kwh_series = pd.Series(index=period_range, dtype=np.float, 
-                           name=name+' kWh')
+    energy_series = pd.Series(index=period_range, dtype=np.float, 
+                              name=name+' '+energy_unit)
 
     MAX_SAMPLES_PER_PERIOD = _secs_per_period_alias(freq) / sample_period(series)
     MIN_SAMPLES_PER_PERIOD = (MAX_SAMPLES_PER_PERIOD *
@@ -192,9 +209,10 @@ def usage_per_period(series, freq, tz_convert=None, on_power_theshold=5,
             continue
 
         hours_on_series[period] = hours_on(data_for_period)
-        kwh_series[period] = kwh(data_for_period)
+        energy_series[period] = energy(data_for_period, unit=energy_unit)
 
-    return pd.DataFrame({'hours_on': hours_on_series, 'kwh': kwh_series})
+    return pd.DataFrame({'hours_on': hours_on_series,
+                         energy_unit: energy_series})
 
 
 #------------------------ HELPER FUNCTIONS -------------------------
@@ -209,8 +227,8 @@ def _indicies_of_periods(datetime_index, freq):
     """Find which elements of `datetime_index` fall into each period
     of a regular date_range with frequency `freq`.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
     datetime_index : pd.tseries.index.DatetimeIndex
 
     freq : str
