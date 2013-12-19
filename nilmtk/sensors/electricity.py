@@ -156,6 +156,13 @@ class Electricity(object):
              {'supply1': 'motor', 'supply2': 'heating element'}
             }
 
+            Appliances which are not directly metered can be listed. For 
+            example, if a dataset records the lighting circuit (but
+            not each individual ceiling light) then we can specify each
+            ceiling light in `metadata['appliances']` and then specify
+            the wiring from the lighting circuit to each ceiling light in
+            the `metadata['wiring']` graph.
+
             The permitted fields and values for each appliance name are 
             described in `nilmtk/docs/standard_names/appliances.txt`.  e.g.
 
