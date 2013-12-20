@@ -10,7 +10,11 @@ import pandas as pd
 from matplotlib.dates import SEC_PER_HOUR
 import copy
 
-def sample_period(data):
+DEFAULT_MAX_DROPOUT_RATE = 0.4 # [0,1]
+DEFAULT_ON_POWER_THRESHOLD = 5 # watts
+
+
+def get_sample_period(data):
     """Estimate the sample period in seconds.
 
     Find the sample period by finding the stats.mode of the 
@@ -25,25 +29,23 @@ def sample_period(data):
     period : float
         Sample period in seconds.
     """
-    if isinstance(data, (pd.DataFrame, pd.Series)):
-        index = data.index
-    elif isinstance(data, pd.DatetimeIndex):
-        index = data
-    else:
-        raise TypeError('wrote type for `data`.')
-
+    index = _get_index(data)
     fwd_diff = np.diff(index.values[:100]).astype(np.float)
     mode_fwd_diff = stats.mode(fwd_diff)[0][0]
     period = mode_fwd_diff / 1E9
     return period
     
 
-def dropout_rate(df):
+def get_dropout_rate(data, sample_period=None):
     """The proportion of samples that have been lost.
 
     Parameters
     ----------
-    df : pandas.DataFrame
+    data : pandas.DataFrame or Series or DatetimeIndex
+
+    sample_period : int or float, optional
+        Sample period in seconds.  If not provided then will
+        calculate it.
 
     Returns
     -------
@@ -52,12 +54,17 @@ def dropout_rate(df):
         1 means that all samples have been lost and 
         0 means that no samples have been lost.
     """
-    duration = df.index[-1] - df.index[0]        
-    n_expected_samples = duration.total_seconds() / sample_period(df)
-    return 1 - (df.index.size / n_expected_samples)
+    if sample_period is None:
+        sample_period = get_sample_period(data)
+        
+    index = _get_index(data)
+    duration = index[-1] - index[0]        
+    n_expected_samples = duration.total_seconds() / sample_period
+    return 1 - (index.size / n_expected_samples)
 
 
-def hours_on(series, on_power_threshold=5, max_sample_period=None):
+def hours_on(series, on_power_threshold=DEFAULT_ON_POWER_THRESHOLD,
+             max_sample_period=None):
     """Returns a float representing the number of hours this channel
     has been above threshold.
 
@@ -148,8 +155,10 @@ def energy(series, max_sample_period=None, unit='kwh'):
     return _energy
 
 
-def usage_per_period(series, freq, tz_convert=None, on_power_threshold=5, 
-                     max_dropout_rate=0.4, verbose=False, 
+def usage_per_period(series, freq, 
+                     on_power_threshold=DEFAULT_ON_POWER_THRESHOLD, 
+                     max_dropout_rate=DEFAULT_MAX_DROPOUT_RATE, 
+                     verbose=False, 
                      energy_unit='kwh', max_sample_period=None):
     """Calculate the usage (hours on and kwh) per time period.
 
@@ -295,7 +304,7 @@ def usage_per_period(series, freq, tz_convert=None, on_power_threshold=5,
     energy_series = pd.Series(index=period_range, dtype=np.float, 
                               name=name+' '+energy_unit)
 
-    MAX_SAMPLES_PER_PERIOD = _secs_per_period_alias(freq) / sample_period(series)
+    MAX_SAMPLES_PER_PERIOD = _secs_per_period_alias(freq) / get_sample_period(series)
     MIN_SAMPLES_PER_PERIOD = (MAX_SAMPLES_PER_PERIOD *
                               (1-max_dropout_rate))
 
@@ -332,8 +341,8 @@ def usage_per_period(series, freq, tz_convert=None, on_power_threshold=5,
                          energy_unit: energy_series})
 
 
-def activity_distribution(series, on_power_threshold=5, bin_size='T', 
-                          timespan='D'):
+def activity_distribution(series, on_power_threshold=DEFAULT_ON_POWER_THRESHOLD, 
+                          bin_size='T', timespan='D'):
     """Returns a distribution describing when this appliance was turned
     on over repeating timespans.  For example, if you want to see
     which times of day this appliance was used, on average, then use 
@@ -397,7 +406,8 @@ def activity_distribution(series, on_power_threshold=5, bin_size='T',
     return distribution
 
 
-def on(series, max_sample_period=None, on_power_threshold=5):
+def on(series, max_sample_period=None, 
+       on_power_threshold=DEFAULT_ON_POWER_THRESHOLD):
     """Returns pd.Series with Boolean values indicating whether the
     appliance is on (True) or off (False).  Adds an 'off' entry if data
     is lost for more than self.max_sample_period.
@@ -540,6 +550,33 @@ def durations(on_series, on_or_off, ignore_n_off_samples=None,
     return durations
 
 
+def periods_with_sufficient_samples(datetime_index, freq, 
+                                    max_dropout_rate=DEFAULT_MAX_DROPOUT_RATE,
+                                    use_local_time=True):
+    """Find periods where the dropout rate is less than max_dropout_rate.
+
+    Returns
+    -------
+    set of Periods
+    """
+    good_periods = set()
+    periods, boundaries = _indicies_of_periods(datetime_index, freq=freq, 
+                                              use_local_time=use_local_time)
+    sample_period = get_sample_period(datetime_index)
+    for period in periods:
+        try:
+            start_i, end_i = boundaries[period]
+        except KeyError:
+            continue
+        index_for_period = datetime_index[start_i:end_i]
+        dropout_rate = get_dropout_rate(index_for_period, sample_period)
+        if dropout_rate < max_dropout_rate:
+            good_periods.add(period)
+
+    return good_periods
+
+
+
 #------------------------ HELPER FUNCTIONS -------------------------
 
 def _secs_per_period_alias(alias):
@@ -579,6 +616,7 @@ def _indicies_of_periods(datetime_index, freq, use_local_time=True):
         Each key is a pd.tseries.period.Period
         Each value is a tuple of ints:
         (<start index into `datetime_index` for period>, <end index>)
+        Periods for which no data exists will not have a key.
 
     Examples
     --------
@@ -626,7 +664,7 @@ def _indicies_of_periods(datetime_index, freq, use_local_time=True):
     # during the loop...
 
     # Find the minimum sample period.
-    MIN_SAMPLE_PERIOD = int(sample_period(datetime_index))
+    MIN_SAMPLE_PERIOD = int(get_sample_period(datetime_index))
     MAX_SAMPLES_PER_PERIOD = int(_secs_per_period_alias(freq) / MIN_SAMPLE_PERIOD)
     MAX_SAMPLES_PER_2_PERIODS = MAX_SAMPLES_PER_PERIOD * 2
     n_rows_processed = 0
@@ -681,3 +719,24 @@ def _tz_to_naive(datetime_index):
 
     # Now convert to naive DatetimeIndex
     return pd.DatetimeIndex(datetime_index.values + tz_offset_td64)
+
+
+def _get_index(data):
+    """
+    Parameters
+    ----------
+    data : pandas.DataFrame or Series or DatetimeIndex
+    
+    Returns
+    -------
+    index : the index for the DataFrame or Series
+    """
+
+    if isinstance(data, (pd.DataFrame, pd.Series)):
+        index = data.index
+    elif isinstance(data, pd.DatetimeIndex):
+        index = data
+    else:
+        raise TypeError('wrote type for `data`.')
+    return index
+
