@@ -91,6 +91,7 @@ def hours_on(series, on_power_threshold=5, max_sample_period=None):
     """
 
     i_above_threshold = np.where(series[:-1] >= on_power_threshold)[0]
+    # now calculate timedelta ('td') above threshold...
     td_above_thresh = (series.index[i_above_threshold+1].values -
                        series.index[i_above_threshold].values)
     if max_sample_period is not None:
@@ -129,11 +130,12 @@ def energy(series, max_sample_period=None, unit='kwh'):
     --------
     hours_on
     """
-    td = np.diff(series.index.values)
+    timedelta = np.diff(series.index.values)
     if max_sample_period is not None:
-        td = np.where(td > max_sample_period, max_sample_period, td)
-    td_secs = td / np.timedelta64(1, 's')
-    joules = (td_secs * series.values[:-1]).sum()
+        timedelta = np.where(timedelta > max_sample_period, 
+                             max_sample_period, timedelta)
+    timedelta_secs = timedelta / np.timedelta64(1, 's') # convert to seconds
+    joules = (timedelta_secs * series.values[:-1]).sum()
 
     if unit == 'kwh':
         JOULES_PER_KWH = 3600000
@@ -394,6 +396,148 @@ def activity_distribution(series, on_power_threshold=5, bin_size='T',
 
     return distribution
 
+
+def on(series, max_sample_period=None, on_power_threshold=5):
+    """Returns pd.Series with Boolean values indicating whether the
+    appliance is on (True) or off (False).  Adds an 'off' entry if data
+    is lost for more than self.max_sample_period.
+
+    Parameters
+    ----------
+    series : pandas.Series
+
+    on_power_threshold : float, optional, default=5
+        Threshold which defines the difference between 'on' and 'off'. Watts.
+
+    max_sample_period : float or int, optional 
+        The maximum allowed sample period in seconds.  If we find a
+        sample above `on_power_threshold` at time `t` and there are
+        more than `max_sample_period` seconds until the next sample
+        then we assume that the appliance has only been on for
+        `max_sample_period` seconds after time `t`.  This is used where,
+        for example, we have a wireless meter which is supposed to
+        report every `K` seconds and we assume that if we don't hear
+        from it for more than `max_sample_period=K*3` seconds then the
+        sensor (and appliance) have been turned off from the wall.
+
+    Returns
+    -------
+    pandas.Series
+        index is the same as for input `series`
+        values are booleans
+    """
+    when_on = series >= on_power_threshold
+
+    if max_sample_period is not None:
+        # add an 'off' entry whenever data is lost for > self.max_sample_period
+        time_delta = np.diff(series.index.values)
+        dropout_dates = series.index[:-1][time_delta > max_sample_period]
+        max_sample_period_secs = max_sample_period / np.timedelta64(1, 's')
+        insert_offs = pd.Series(False, 
+                                index=dropout_dates +
+                                      pd.DateOffset(seconds=max_sample_period_secs))
+        when_on = when_on.append(insert_offs)
+        when_on = when_on.sort_index()
+
+    return when_on
+
+
+def on_off_events(on_series, ignore_n_off_samples=None):
+    """Detects on/off switch events.
+
+    Parameters
+    ----------
+    on_series : pd.Series
+        Series of booleans indicating if the appliance is on or off.
+        Produced, for example, by `on()`.
+
+    ignore_n_off_samples : int, optional
+        Ignore this number of off samples.  For example, if the input
+        is [0, 100, 0, 100, 100, 0, 0] then the single zero with 100
+        either side could be ignored if ignore_n_off_samples = 1,
+        hence only one on-event and one off-event would be reported.
+
+    Returns
+    -------
+    events : pd.Series
+        Index is the same as the input `on_series`.
+        Values are np.int8:
+         1 == turn-on event
+        -1 == turn-off event
+
+    Example
+    -------
+    >>> series = pd.Series([0, 0, 100, 100, 100, 0])
+    >>> on_off_events(series)
+    2:  1
+    5: -1
+
+    """
+    if ignore_n_off_samples is not None:
+        on_smoothed = pd.rolling_max(on_series, window=ignore_n_off_samples+1) 
+        on_smoothed.iloc[:ignore_n_off_samples] = on_series.iloc[:ignore_n_off_samples].values
+        on_series = on_smoothed.dropna()
+
+    on_series = on_series.astype(np.int8)
+    events = on_series[1:] - on_series.shift(1)[1:]
+
+    if ignore_n_off_samples is not None:
+        i_off_events = np.where(events == -1)[0] # indicies of off-events
+        for i in range(ignore_n_off_samples):
+            events.iloc[i_off_events-i] = 0
+        events.iloc[i_off_events-ignore_n_off_samples] = -1
+
+    events = events[events != 0]
+    events.name = 'on/off events for ' + str(events.name)
+    return events
+
+
+def durations(on_series, on_or_off, ignore_n_off_samples=None, 
+              sample_period=None):
+    """The length of every on or off duration (in seconds).
+
+    Parameters
+    ----------
+    on_series : pd.Series
+        Series of booleans indicating if the appliance is on or off.
+        Produced, for example, by `on()`.
+
+    on_or_off : {'on', 'off'}
+
+    ignore_n_off_samples : int, optional
+        Ignore this number of off samples.  For example, if the input
+        is [0, 100, 0, 100, 100, 0, 0] then the single zero with 100
+        either side could be ignored if ignore_n_off_samples = 1,
+        hence only one on-event and one off-event would be reported.
+
+    sample_period : int, optional
+        Required if `ignore_n_off_samples` is not None. Sample period
+        in seconds.  See `sample_period()`.
+
+    Returns
+    -------
+    pd.Series
+        Index is the datetime at which the event starts.
+        Values are the length of every on or off duration (in seconds).
+
+    See also
+    --------
+    on_off_events()
+    on()
+    sample_period()
+
+    """
+    events = on_off_events(on_series, ignore_n_off_samples)
+    delta_time_array = np.diff(events.index.values).astype(int) / 1E9
+    delta_time = pd.Series(delta_time_array, index=events.index[:-1])
+    diff_for_mode = 1 if on_or_off == 'on' else -1
+    events_for_mode = events == diff_for_mode
+    durations = delta_time[events_for_mode]
+    if ignore_n_off_samples is not None:
+        durations = durations[durations > sample_period*ignore_n_off_samples]
+
+    durations.name = 'seconds ' + on_or_off + ' for ' + str(on_series.name)
+    return durations
 
 
 #------------------------ HELPER FUNCTIONS -------------------------
