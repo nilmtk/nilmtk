@@ -160,7 +160,8 @@ class REDD(DataSet):
             else:
                 # This is not a DualSupply appliance
                 instances[label] = (instance + 1, 1)
-                df = load_chan(building_dir, appliance_chan, colname=measurement)
+                colname = measurement
+                df = load_chan(building_dir, appliance_chan, colname=colname)
                 df = self._pre_process_dataframe(df)
                 df[colname].name = appliancename
                 building.utility.electric.appliances[appliancename] = df

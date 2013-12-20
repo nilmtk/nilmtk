@@ -330,6 +330,72 @@ def usage_per_period(series, freq, tz_convert=None, on_power_threshold=5,
                          energy_unit: energy_series})
 
 
+def activity_distribution(series, on_power_threshold=5, bin_size='T', 
+                          timespan='D'):
+    """Returns a distribution describing when this appliance was turned
+    on over repeating timespans.  For example, if you want to see
+    which times of day this appliance was used, on average, then use 
+    bin_size='T' (minutely) or bin_size='H' (hourly) and
+    timespan='D' (daily).
+
+    Parameters
+    ----------
+    series : pandas.Series
+
+    on_power_threshold : float, optional, default=5
+        Threshold which defines the difference between 'on' and 'off'. Watts.
+
+    bin_size, timespan : str
+        offset alias (e.g. 'T' or 'D')
+        For valid offset aliases, see:
+        http://pandas.pydata.org/pandas-docs/dev/timeseries.html#offset-aliases
+
+    Returns
+    -------
+    pandas.Series
+        One row for each bin in a timespan.
+        The values count the number of times this appliance has been on at
+        that particular time of the timespan.
+        Times are handled in local time.
+        The index uses specific dates. For example, if `timespan='D'` then
+        the index might be from '2012/1/1 00:00' to '2012/1/1 59:59'. In this
+        example, ignore the '2012/1/1'.
+    """
+
+    # Create a pd.Series with PeriodIndex
+    binned_data = series.resample(bin_size, how='max').to_period()
+    binned_data = binned_data > on_power_threshold
+
+    timespans, boundaries = _indicies_of_periods(binned_data.index.to_timestamp(),
+                                                 freq=timespan)
+
+    first_timespan = timespans[0]
+    bins = pd.period_range(first_timespan.start_time, 
+                           first_timespan.end_time,
+                           freq=bin_size)
+    distribution = pd.Series(0, index=bins)
+
+    bins_per_timespan = int(round(_secs_per_period_alias(timespan) /
+                                  _secs_per_period_alias(bin_size)))
+
+    for span in timespans:
+        try:
+            start_index, end_index = boundaries[span]
+        except KeyError:
+            print("No data for", span)
+            continue
+        else:
+            data_for_timespan = binned_data[start_index:end_index]
+
+        bins_since_first_timespan = (first_timespan - span) * bins_per_timespan
+        data_shifted = data_for_timespan.shift(bins_since_first_timespan, 
+                                               bin_size)
+        distribution = distribution.add(data_shifted, fill_value = 0)
+
+    return distribution
+
+
+
 #------------------------ HELPER FUNCTIONS -------------------------
 
 def _secs_per_period_alias(alias):
@@ -459,6 +525,9 @@ def _tz_to_naive(datetime_index):
     pandas.DatetimeIndex, tz-naive
     """
     # See http://stackoverflow.com/q/16628819/732596
+
+    if datetime_index.tzinfo is None:
+        return datetime_index
 
     # Calculate timezone offset relative to UTC
     timestamp = datetime_index[0]
