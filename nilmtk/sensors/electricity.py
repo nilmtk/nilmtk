@@ -143,9 +143,13 @@ class Electricity(object):
             specific appliance.  Multiple dicts are used to express replacing 
             appliances over time (in which case the items should be in 
             chronological order so the last element of the list is always the
-            most recent.
+            most recent.)  Each dict has 'general' appliance fields (which
+            all appliances can have) and fields which are specific to that
+            class of appliance.
 
-            Some general fields:
+            General fields
+            --------------
+
             'room': (<room name>, <room instance>) tuple (as used in this `Building.rooms`).
             'meter': (<manufacturer>, <model>) tuple which maps into global Meters DB.
 
@@ -156,6 +160,13 @@ class Electricity(object):
              {'supply1': 'motor', 'supply2': 'heating element'}
             }
 
+            Appliance-specific fields
+            -------------------------
+            The permitted fields and values for each appliance name are 
+            described in `nilmtk/docs/standard_names/appliances.txt`.  e.g.
+
+            Appliances not directly metered
+            -------------------------------
             Appliances which are not directly metered can be listed. For 
             example, if a dataset records the lighting circuit (but
             not each individual ceiling light) then we can specify each
@@ -163,9 +174,8 @@ class Electricity(object):
             the wiring from the lighting circuit to each ceiling light in
             the `metadata['wiring']` graph.
 
-            The permitted fields and values for each appliance name are 
-            described in `nilmtk/docs/standard_names/appliances.txt`.  e.g.
-
+            Example
+            -------
             `{('tv', 1): 
                 [{'original name in source dataset': 'Television LCD',
                   'display': 'lcd', 

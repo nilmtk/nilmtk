@@ -19,6 +19,7 @@ cooker (meta appliance)
 
 oven
   fuel: electricity | gas | solid | oil
+  dualsupply: boolean
 
 hob
   fuel: electricity | gas | solid | oil
@@ -114,15 +115,18 @@ clothes machine (meta appliance)
 
 washer dryer (meta appliance)
   components: always both {washing machine, tumble dryer}
+  dualsupply: boolean
 
 spin dryer
 
 tumble dryer
+  dualsupply: boolean
 
 washing machine
+  dualsupply: boolean
 
 dishwasher
-
+  dualsupply: boolean
 
 ------------------------------
 # Entertainment
