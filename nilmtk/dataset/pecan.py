@@ -205,6 +205,13 @@ class Pecan(DataSet):
                 ApplianceName(appliance_name, appliance_instance)] = building.utility.electric.appliances[
                 ApplianceName(appliance_name, appliance_instance)].rename(columns=name_modification)
 
+            building.utility.electric.appliances[
+                ApplianceName(appliance_name, appliance_instance)] = building.utility.electric.appliances[
+                ApplianceName(appliance_name, appliance_instance)].astype('float32')
+        building.utility.electric.mains[
+            MainsName(1, 1)] = building.utility.electric.mains[
+            MainsName(1, 1)].astype('float32')
+
         return building
 
 
@@ -277,6 +284,7 @@ class Pecan_1min(Pecan):
             temp_df = spreadsheet.parse(
                 'Sheet1', index_col=0, date_parser=True)
             df = df.append(temp_df)
+
         building = Building()
 
         building = self.standardize(df, building)
