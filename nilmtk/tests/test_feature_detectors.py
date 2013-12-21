@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 """
-   Copyright 2013 Jack Kelly (aka Daniel)
+   Copyright 2013 nilmtk authors
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.

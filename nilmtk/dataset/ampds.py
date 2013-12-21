@@ -58,16 +58,21 @@ class AMPDS(DataSet):
 
     def __init__(self):
         super(AMPDS, self).__init__()
-        self.urls = ['http://ampds.org/']
-        self.citations = ['Stephen Makonin, Fred Popowich, Lyn Bartram, '
-                          'Bob Gill, and Ivan V. Bajic,'
-                          'AMPds: A Public Dataset for Load Disaggregation and'
-                          'Eco-Feedback Research, in Electrical Power and Energy'
-                          'Conference (EPEC), 2013 IEEE, pp. 1-6, 2013.'
-                          ]
+        self.metadata = {
+            'name': 'AMPds',
+            'full_name': 'The Almanac of Minutely Power Dataset'
+                         ' (incl. water and natural gas consumption)',
+            'urls': ['http://ampds.org/'],
+            'citations': ['Stephen Makonin, Fred Popowich, Lyn Bartram,'
+                          ' Bob Gill, and Ivan V. Bajic,'
+                          ' AMPds: A Public Dataset for Load Disaggregation and'
+                          ' Eco-Feedback Research, in Electrical Power and Energy'
+                          ' Conference (EPEC), 2013 IEEE, pp. 1-6, 2013.'
+                      ],
+            'nominal_voltage': 230
+        }
         self.building = Building()
         self.buildings['Building_1'] = self.building
-        self.nominal_voltage = 230
 
     def read_electricity_csv_and_standardize(self, csv_path):
         # Loading appliance

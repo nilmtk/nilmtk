@@ -1,10 +1,18 @@
 from collections import namedtuple
-
+import copy, json
 
 Measurement = namedtuple('Measurement', ['physical_quantity', 'type'])
+"""
+physical_quantity : string
+    One of: {power, energy, voltage}
+type : string
+    One of: {active, reactive, apparent, ''}
+"""
+
 ApplianceName = namedtuple('ApplianceName', ['name', 'instance'])
 MainsName = namedtuple('MainsName', ['split', 'meter'])
-
+CircuitName = namedtuple('CircuitName', ['name', 'split', 'meter'])
+DualSupply = namedtuple('DualSupply', ['measurement', 'supply'])
 
 class Electricity(object):
 
@@ -13,65 +21,104 @@ class Electricity(object):
     Attributes
     ----------
 
-    mains : DataFrame, shape (n_samples, n_features), np.float32, optional
+    mains : dict of DataFrames, optional
         The power measurements taken from the level furthest upstream.
-        The index is a timezone-aware pd.DateTimeIndex
-        Each column name is a MainsName namedtuple with fields:
-
+        Each key is a MainsName namedtuple with keys:
         * `split` is the phase or split.  Indexed from 1.
         * `meter` is the numeric ID of the meter. Indexed from 1.
-        * `measurement` is the namedtuple Measurement(physical_quantity=
-            'power', type='reactive')
+
+        Each value is a DataFrame of shape (n_samples, n_features) 
+        where each column name is a Measurement namedtuple (please
+        definition of Measurement at the top of this file for a
+        description of what can go into a Measurement namedtuple).
+
+        DataFrame.index is a timezone-aware pd.DateTimeIndex.
+        Power values are of type np.float32.
+        DataFrame.name should be identical to the `mains` dict key which 
+        maps to this DataFrame.
 
         For example, if we had a dataset recorded in the UK where the home has
         only a single phase supply but uses two separate meters, the first of
         which measures active and reactive power; the second of which measures only
         active, then we'd use:
-            * `MainsName(split=1, meter=1, measurement=Measurement('power','active'))`
-            * `MainsName(split=1, meter=1, measurement=Measurement('power','reactive'))`
-            * `MainsName(split=1, meter=2, measurement=Measurement('power','active'))`
 
-    circuits : DataFrame, shape (n_samples, n_features), np.float32, optional
-        The power measurements taken downstream of the mains measurements but
-        upstream of the appliances.
-        The index is a timezone-aware pd.DateTimeIndex
-        Each column name is a CircuitName namedtuple with fields:
+        `mains = {MainsName(split=1, meter=1): 
+                      DataFrame(columns=[Measurement('power','active'),
+                                         Measurement('power','reactive')]),
+                  MainsName(split=1, meter=2):
+                      DataFrame(columns=[Measurement('power','active')])
+                 }`
 
-        * `circuit` is the standard name for this circuit.
+    circuits : dict of DataFrames, optional
+        The power measurements taken from midstream.
+        Each key is a CircuitName namedtuple with fields:
+
+        * `name` is the standard name for this circuit.
         * `split` is the index for this circuit.  Indexed from 1.
         * `meter` is the numeric ID of the meter. Indexed from 1.
           Indexes into the `meters` dict.
-        * `measurement` is namedtuple Measurement(physical_quantity=
-            'power', type='reactive')
+
+        Each value is a DataFrame of shape (n_samples, n_features) 
+        where each column name is a Measurement namedtuple (please
+        definition of Measurement at the top of this file for a
+        description of what can go into a Measurement namedtuple).
+
+        DataFrame.index is a timezone-aware pd.DateTimeIndex.
+        Power values are of type np.float32.
+        DataFrame.name should be identical to the `circuits` dict key which 
+        maps to this DataFrame.
 
         For example: 
-        `CircuitName(circuit='lighting', split=1, 
-                     meter=3, measurement=Measurement('power','active'))`
+        `circuits = {CircuitName(circuit='lighting', split=1):
+                         DataFrame(columns=[Measurement('power','active')])}`
 
     appliances : dict of DataFrames, optional
+        Power measurements taken from the furthest downstream in the dataset.
         Each key is an ApplianceName namedtuple with fields:
         * `name` is a standard appliance name.  For a list of valid
            names, see nilmtk/docs/standard_names/appliances.txt
         * `instance` is the index for that appliance within this building.
            Indexed from 1.
-        * `measurement` is namedtuple Measurement(physical_quantity=
-            'power', type='reactive')
 
-        For example, if a house has two TVs then use these two column names:
-        `('tv', 1, Measurement('power','active')), ('tv', 2, Measurement('power','active'))`
-        
-        Each value is a np.float32 DataFrame of shape (n_samples, n_features) where each
-        column name is one of `apparent` | `active` | etc (please see 
-        /docs/standard_names/measurements.txt for the full list)
-        and the index is a timezone-aware pd.DateTimeIndex.
+        For example, if a house has two TVs, whose power is recorded separately,
+        then use these two different keys: `('tv', 1)` and `('tv', 2)`
+
         If multiple appliances are monitored on one channel (e.g. tv + dvd)
-        then use a tuple of appliances as the column name, e.g.:
-        `(('tv', 1, Measurement('power','active')), ('dvd player', 1, Measurement('power','active')))`
+        then use a tuple of appliances as the key, e.g.:
+
+        `(('tv', 1), ('dvd player', 1))`
+        
+        Each value of the `appliances` dict is a DataFrame of 
+        shape (n_samples, n_features) where each column name is either:
+
+        * a Measurement namedtuple (please definition of Measurement at the top
+          of this file for a description of what can go into 
+          a Measurement namedtuple).
+        * a DualSupply namedtuple with fields:
+          * measurement : Measurement namedtuple
+          * supply : int. Index of supply. Start from 1. Does not have to map
+            directly to the index used to number the mains splits if this 
+            information is not known.
+          DualSupply is used for appliances like American ovens which are
+          are single appliances but pull power from both "splits".
+        * Or 'state' (where 0 is 'off'). This is used when the ground-truth of
+          the appliance state is known; for example in the BLUEd dataset.
+
+        DataFrame.index is a timezone-aware pd.DateTimeIndex.
+        Power values are of type np.float32; `state` values are np.int32
+        DataFrame.name should be identical to the `appliances` dict key which 
+        maps to this DataFrame.
+
+        Note that `appliances` always stores measurements from the meters
+        in the dataset placed furthest downstream.  So, for example, in the case
+        of the REDD dataset where we have measurements of 'mains' and 'circuits',
+        these 'circuits' channels are put into `Electricity.appliances` because
+        REDD's 'circuits' channels are the furthest downstream.
 
     appliance_estimates : Panel (3D matrix), optional
-        Output from the NILM algorithm.
+        Output from the NILM disaggregation algorithm.
         The index is a timezone-aware pd.DateTimeIndex
-        The first two dimensions are the same as for the `appliances` DataFrame
+        The first two dimensions are time and ApplianceName.
         The third dimension describes, for each appliance and for each time:
         * `power` : np.float32. Estimated power consumption in Watts.
         * `state` : np.int32, optional.
@@ -79,59 +126,86 @@ class Electricity(object):
         * `power_prob_dist` : object describing the probability dist, optional
         * `state_prob_dist` : object describing the probability dist, optional
 
-    nominal_mains_voltage : np.float32, optional
+    metadata : dict, optional
 
-    appliances_in_each_room : dict, optional
-        Each key is a (<room name>, <room instance>) tuple
-        (as used in this `Building.rooms`).
-        Each value is a list of (<appliance name>, <instance>) tuples
-        e.g. `{('livingroom', 1): [('tv', 1), ('dvd', 2)]}`
+        nominal_mains_voltage : np.float32, optional
 
-    wiring : networkx.DiGraph
-        Nodes are ApplianceNames or CircuitNames or MainsNames.
-        Edges describe the wiring between mains, circuits and appliances.
-        Edge direction indicates the flow of energy.  i.e. edges point
-        towards loads.
+        wiring : networkx.DiGraph
+            Nodes are ApplianceNames or CircuitNames or MainsNames.
+            Edges describe the wiring between mains, circuits and appliances.
+            Edge direction indicates the flow of energy.  i.e. edges point
+            towards loads.
 
-    meters : dict, optional
-        Maps from a tuple (<meter manufacturer>, <model>) to a list of 
-        all the channels which use that type of meter.  Types of meters
-        are described in `docs/standard_names/meters.json`.  e.g.:
-        `{
-           ('Current Cost', 'EnviR') : 
-             [
-                MainsName(split=1, meter=1, measurement='apparent'),
-                ApplianceName(name='boiler', instance=1, measurement='apparent')
-             ]
-          }`
+        appliances : dict of dicts, optional
+            Metadata describing each appliance.
+            Each key is an ApplianceName(<appliance name>, <instance>) tuple.
+            Each value is list of dicts. Each dict describes metadata for that 
+            specific appliance.  Multiple dicts are used to express replacing 
+            appliances over time (in which case the items should be in 
+            chronological order so the last element of the list is always the
+            most recent.)  Each dict has 'general' appliance fields (which
+            all appliances can have) and fields which are specific to that
+            class of appliance.
 
-    appliance_metadata : dict of dicts, optional
-        Metadata describing each appliance.
-        Each key is an (<appliance name>, <instance>) tuple.
-        Each value is dict describing metadata for that appliance.
-        The permitted fields and values
-        for each appliance name are described in `appliances.json`.  e.g.
+            General fields
+            --------------
 
-        `{('tv', 1): 
-            {'display': 'lcd', 
-             'backlight': 'led'
-             'screen size in inches': 42,
-             'year of manufacture': 2001,
-             'last time seen active': '3/4/2012'
+            'room': (<room name>, <room instance>) tuple (as used in this `Building.rooms`).
+            'meter': (<manufacturer>, <model>) tuple which maps into global Meters DB.
+
+            DualSupply appliances may have a 'supply1' and 'supply2' key which 
+            maps to a string describing the main component supplied by that
+            supply.  e.g.
+            {('washer dryer', 1): 
+             {'supply1': 'motor', 'supply2': 'heating element'}
             }
-        }`
+
+            Appliance-specific fields
+            -------------------------
+            The permitted fields and values for each appliance name are 
+            described in `nilmtk/docs/standard_names/appliances.txt`.  e.g.
+
+            Appliances not directly metered
+            -------------------------------
+            Appliances which are not directly metered can be listed. For 
+            example, if a dataset records the lighting circuit (but
+            not each individual ceiling light) then we can specify each
+            ceiling light in `metadata['appliances']` and then specify
+            the wiring from the lighting circuit to each ceiling light in
+            the `metadata['wiring']` graph.
+
+            Example
+            -------
+            `{('tv', 1): 
+                [{'original name in source dataset': 'Television LCD',
+                  'display': 'lcd', 
+                  'backlight': 'led'
+                  'screen size in inches': 42,
+                  'year of manufacture': 2001,
+                  'active from': '3/4/2012',
+                  'active until': '4/5/2013',
+                  'quantity installed': 1,
+                  'room': ('livingroom', 1),
+                  'meter': ('Current Cost', 'IAM')
+                }],
+             ('lights', 1):
+                [{'room': ('kitchen', 1),
+                  'placing': 'ceiling',
+                  'lamp': 'tungsten',
+                  'dimmable': True,
+                  'nominal Wattage each': 50,
+                  'quantity installed': 10,
+                  'meter': ('Current Cost', 'EnviR')
+                 }]
+            }`
     """
 
     def __init__(self):
-        self.mains = None
-        self.circuits = None
-        self.appliances = None
+        self.mains = {}
+        self.circuits = {}
+        self.appliances = {}
         self.appliance_estimates = None
-        self.nominal_mains_voltage = None
-        self.appliances_in_each = {}
-        self.wiring = None
-        self.meters = {}
-        self.appliance_metadata = {}
+        self.metadata = {}
 
     def get_appliance(self, appliance_name, measurement="all"):
         """
@@ -169,7 +243,7 @@ class Electricity(object):
         return ""
 
     def to_json(self):
-        representation = {}
+        representation = copy.copy(self.metadata)
         representation["mains"] = ""
         representation["appliances"] = ""
         representation["circuits"] = ""

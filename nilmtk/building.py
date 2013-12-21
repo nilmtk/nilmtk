@@ -1,6 +1,6 @@
 from nilmtk.sensors.utility import Utility
 from nilmtk.sensors.ambient import Ambient
-import json
+import json, copy
 
 
 class Building(object):
@@ -9,19 +9,6 @@ class Building(object):
 
     Attributes
     ----------
-
-    geographic_coordinates : pair of floats, optional
-        (latitude, longitude)
-
-    n_occupants : int, optional
-         Max number of occupants.
-
-    rooms : dict of strings, optional
-        Keys are room names. Use standard names for each room from
-        docs/standard_names/rooms.txt.
-        Values are the number of each type of room in this building.
-        For example:
-        room = {'kitchen': 1, 'bedroom': 3, ...}
 
     utility :  nilmtk Utility object
 
@@ -35,13 +22,29 @@ class Building(object):
         then use the key 'building'.
         Values are nilmtk Ambient objects.
 
+    metadata : dict
+        geographic_coordinates : pair of floats, optional
+            (latitude, longitude)
+            Only specify this if the geo location of the building is known.
+            Otherwise leave this blank and users should fall back to using
+            the geo location specified for the dataset as a whole.
+
+        n_occupants : int, optional
+             Max number of occupants.
+
+        rooms : dict of strings, optional
+            Keys are room names. Use standard names for each room from
+            docs/standard_names/rooms.txt.
+            Values are the number of each type of room in this building.
+            For example:
+            room = {'kitchen': 1, 'bedroom': 3, ...}
+
+        original_name : string, optional
+            The original name for this building from the original dataset
     """
 
     def __init__(self):
         self.metadata = {}
-        #self.geographic_coordinates = None
-        #self.n_occupants = None
-        #self.rooms = []
         self.utility = Utility()
         self.ambient = Ambient()
 
@@ -50,7 +53,7 @@ class Building(object):
         raise NotImplementedError
 
     def to_json(self):
-        representation = {}
+        representation = copy.copy(self.metadata)
         representation["utility"] = self.utility.to_json()
         representation["ambient"] = self.ambient.to_json()
         return json.dumps(representation)

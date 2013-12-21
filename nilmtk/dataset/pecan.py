@@ -80,8 +80,14 @@ class Pecan(DataSet):
 
     def __init__(self):
         super(Pecan, self).__init__()
-        self.urls = ['http://www.pecanstreet.org/']
-        self.citations = None
+        self.metadata = {
+            'name': 'Pecan Street',
+            'urls': ['http://www.pecanstreet.org/',
+                     'http://www.pecanstreet.org/2013/04/with-free-sample-data'
+                     '-set-pecan-street-research-institute-expands-access-to'
+                     '-world-class-energy-use-data-to-global'
+                     '-university-researchers/']
+        }
 
     def load(self, root_directory):
         """Load entire dataset into memory"""
@@ -220,25 +226,6 @@ class Pecan_15min(Pecan):
     def __init__(self):
         super(Pecan_15min, self).__init__()
 
-    def export(self, directory, format='REDD+', compact=False):
-        """Export dataset to disk as REDD+.
-
-        Arguments
-        ---------
-        directory : str
-            Output directory
-
-        format : str, optional
-            `REDD+` or `HDF5`
-
-        compact : boolean, optional
-            Defaults to false.  If True then only save change points.
-        """
-        raise NotImplementedError
-
-    def print_summary_stats(self):
-        raise NotImplementedError
-
     def load_building(self, root_directory, building_name):
         spreadsheet = pd.ExcelFile(os.path.join(root_directory,
                                                 "15_min/Homes 01-10_15min_2012-0819-0825 .xlsx"))
@@ -264,8 +251,9 @@ class Pecan_1min(Pecan):
 
     def __init__(self):
         super(Pecan_1min, self).__init__()
-        self.urls = ['http://www.pecanstreet.org/']
-        self.citations = None
+        self.metadata = {
+            'urls': ['http://www.pecanstreet.org/']
+        }
 
     def load_building(self, root_directory, building_name):
         ''' Loads electrical data for specified building
