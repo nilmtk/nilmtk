@@ -20,7 +20,8 @@ import os
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-'''sys.path.insert(0, os.path.abspath('.'))
+'''
+sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../../nilmtk/'))
 sys.path.insert(0, os.path.abspath('../../nilmtk/nilmtk/'))
 sys.path.insert(0, os.path.abspath('../../nilmtk/nilmtk'))
@@ -56,14 +57,18 @@ def all_from(folder='', abspath=None):
                 add.add(root)
                 break
     for i in add:
-        sys.path.append(i)
+        if i not in sys.path:
+            sys.path.append(i)
+            print "adding", i
+            print "/n"
 
+all_from('../../../nilmtk/')
 all_from('../../nilmtk/')
 
 
 from nilmtk.mock import Mock
 
-MOCK_MODULES = ['numpy', 'scipy', 'matplotlib',
+MOCK_MODULES = ['numpy', 'scipy', 'matplotlib', 'scipy.stats'
                 'matplotlib.pyplot', 'scipy.interpolate']
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = Mock()
