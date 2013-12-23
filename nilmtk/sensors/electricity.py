@@ -1,5 +1,6 @@
 from collections import namedtuple
-import copy, json
+import copy
+import json
 
 Measurement = namedtuple('Measurement', ['physical_quantity', 'type'])
 """
@@ -14,6 +15,7 @@ MainsName = namedtuple('MainsName', ['split', 'meter'])
 CircuitName = namedtuple('CircuitName', ['name', 'split', 'meter'])
 DualSupply = namedtuple('DualSupply', ['measurement', 'supply'])
 
+
 class Electricity(object):
 
     """Store and process electricity for a building.
@@ -24,6 +26,7 @@ class Electricity(object):
     mains : dict of DataFrames, optional
         The power measurements taken from the level furthest upstream.
         Each key is a MainsName namedtuple with keys:
+
         * `split` is the phase or split.  Indexed from 1.
         * `meter` is the numeric ID of the meter. Indexed from 1.
 
@@ -69,6 +72,7 @@ class Electricity(object):
         maps to this DataFrame.
 
         For example: 
+
         `circuits = {CircuitName(circuit='lighting', split=1):
                          DataFrame(columns=[Measurement('power','active')])}`
 
