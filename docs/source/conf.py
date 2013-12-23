@@ -38,6 +38,26 @@ import sys
 import os.path
 
 
+class Mock(object):
+
+    __all__ = []
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def __call__(self, *args, **kwargs):
+        return Mock()
+
+    @classmethod
+    def __getattr__(cls, name):
+        if name in ('__file__', '__path__'):
+            return '/dev/null'
+        elif name[0] == name[0].upper():
+            return type(name, (), {})
+        else:
+            return Mock()
+
+
 def all_from(folder='', abspath=None):
     """add all dirs under `folder` to sys.path if any .py files are found.
     Use an abspath if you'd rather do it that way.
@@ -66,7 +86,7 @@ all_from('../../../nilmtk/')
 all_from('../../nilmtk/')
 
 
-from nilmtk.mock import Mock
+#from nilmtk.mock import Mock
 
 MOCK_MODULES = ['numpy', 'scipy', 'matplotlib', 'scipy.stats'
                 'matplotlib.pyplot', 'scipy.interpolate']
