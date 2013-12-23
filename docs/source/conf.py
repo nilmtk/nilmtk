@@ -58,6 +58,7 @@ def all_from(folder='', abspath=None):
         sys.path.append(i)
 
 all_from('../../nilmtk/')
+all_from('/usr/local/lib/python2.7/dist-packages/')
 
 
 # -- General configuration -----------------------------------------------
