@@ -23,6 +23,7 @@ sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../../nilmtk/'))
 sys.path.insert(0, os.path.abspath('../../nilmtk/nilmtk'))
 sys.path.insert(0, os.path.abspath('../../nilmtk/nilmtk/sensors/'))
+sys.path.insert(0, '/usr/local/lib/python2.7/dist-packages/')
 
 
 sys.path.insert(0, os.path.abspath('sphinxext'))
