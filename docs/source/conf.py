@@ -16,12 +16,12 @@
 import sys
 import os
 
-import mock
+from nilmtk.mock import Mock
 
 MOCK_MODULES = ['numpy', 'scipy', 'matplotlib',
                 'matplotlib.pyplot', 'scipy.interpolate']
 for mod_name in MOCK_MODULES:
-	sys.modules[mod_name] = mock.Mock()
+    sys.modules[mod_name] = Mock()
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -47,7 +47,7 @@ def all_from(folder='', abspath=None):
     """add all dirs under `folder` to sys.path if any .py files are found.
     Use an abspath if you'd rather do it that way.
 
-    Uses the current working directory as the location of using.py. 
+    Uses the current working directory as the location of using.py.
     Keep in mind that os.walk goes *all the way* down the directory tree.
     With that, try not to use this on something too close to '/'
 
