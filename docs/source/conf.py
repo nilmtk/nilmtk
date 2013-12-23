@@ -19,17 +19,45 @@ import os
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-sys.path.insert(0, os.path.abspath('.'))
+'''sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../../nilmtk/'))
 sys.path.insert(0, os.path.abspath('../../nilmtk/nilmtk/'))
 sys.path.insert(0, os.path.abspath('../../nilmtk/nilmtk'))
 sys.path.insert(0, os.path.abspath('../../nilmtk/nilmtk/sensors/'))
 sys.path.insert(0, '/usr/local/lib/python2.7/dist-packages/')
+'''
 
 
 sys.path.insert(0, os.path.abspath('sphinxext'))
 
 print sys.path
+
+import sys
+import os.path
+
+
+def all_from(folder='', abspath=None):
+    """add all dirs under `folder` to sys.path if any .py files are found.
+    Use an abspath if you'd rather do it that way.
+
+    Uses the current working directory as the location of using.py. 
+    Keep in mind that os.walk goes *all the way* down the directory tree.
+    With that, try not to use this on something too close to '/'
+
+    """
+    add = set(sys.path)
+    if abspath is None:
+        cwd = os.path.abspath(os.path.curdir)
+        abspath = os.path.join(cwd, folder)
+    for root, dirs, files in os.walk(abspath):
+        for f in files:
+            if f[-3:] in '.py':
+                add.add(root)
+                break
+    for i in add:
+        sys.path.append(i)
+
+all_from('../../nilmtk/')
 
 
 # -- General configuration -----------------------------------------------
