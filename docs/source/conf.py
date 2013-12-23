@@ -16,12 +16,6 @@
 import sys
 import os
 
-from nilmtk.mock import Mock
-
-MOCK_MODULES = ['numpy', 'scipy', 'matplotlib',
-                'matplotlib.pyplot', 'scipy.interpolate']
-for mod_name in MOCK_MODULES:
-    sys.modules[mod_name] = Mock()
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -65,6 +59,14 @@ def all_from(folder='', abspath=None):
         sys.path.append(i)
 
 all_from('../../nilmtk/')
+
+
+from nilmtk.mock import Mock
+
+MOCK_MODULES = ['numpy', 'scipy', 'matplotlib',
+                'matplotlib.pyplot', 'scipy.interpolate']
+for mod_name in MOCK_MODULES:
+    sys.modules[mod_name] = Mock()
 
 
 # -- General configuration -----------------------------------------------
