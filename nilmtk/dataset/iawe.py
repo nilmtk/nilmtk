@@ -1,7 +1,7 @@
 '''
 iAWE Dataset Loader
 
-These routines load Pecan Dataset into NILMTK Dataset format
+These routines load iAWE Dataset into NILMTK Dataset format
 
 Authors :
 License:
@@ -43,7 +43,7 @@ import os
 import MySQLdb
 import pandas.io.sql as psql
 mysql_conn = {}
-mysql_conn['jplug'] = MySQLdb.connect(
+mysql_conn['jplug'] =MySQLdb.connect(
     user='root', passwd='password', db='jplug')
 mysql_conn['smart'] = MySQLdb.connect(
     user='root', passwd='password', db='smart_meter')
@@ -135,7 +135,7 @@ class IAWE(DataSet):
         self.building.utility.electric.mains[
             MainsName(2, 1)] = data[['W2', 'f', 'VLN']]
         self.building.utility.electric.mains[
-                MainsName(2, 1)].rename(columns=lambda x: column_mapping[x], inplace=True)
+            MainsName(2, 1)].rename(columns=lambda x: column_mapping[x], inplace=True)
 
     def add_appliances(self):
 

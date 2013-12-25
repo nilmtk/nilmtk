@@ -68,7 +68,9 @@ class DataSet(object):
         compact : boolean, optional
             Defaults to false.  If True then only save change points.
         """
-        store = pd.HDFStore(os.path.join(directory, 'dataset.h5'))
+        store = pd.HDFStore(
+            os.path.join(directory, 'dataset.h5'), complevel=9)
+        print store
         for building_name in self.buildings:
             building = self.buildings[building_name]
             utility = building.utility
@@ -76,13 +78,14 @@ class DataSet(object):
             mains = electric.mains
             for main in mains:
                 store.put('/%s/utility/electric/mains/%d/%d/' %
-                          (building_name, main.split, main.meter), 
+                          (building_name, main.split, main.meter),
                           mains[main], table=True)
             appliances = electric.appliances
             for appliance in appliances:
                 store.put('%s/utility/electric/appliances/%s/%d/' %
-                          (building_name, appliance.name, appliance.instance), 
+                          (building_name, appliance.name, appliance.instance),
                           appliances[appliance], table=True)
+        store.close()
 
     def print_summary_stats(self):
         raise NotImplementedError

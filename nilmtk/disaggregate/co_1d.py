@@ -8,6 +8,10 @@ from sklearn.cluster import KMeans
 
 MAX_POINT_THRESHOLD = 2000
 MIN_POINT_THRESHOLD = 20
+SEED = 42
+
+# Fix the seed for repeatibility of experiments
+np.random.seed(SEED)
 
 
 def transform_data(df_appliance):

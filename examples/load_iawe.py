@@ -14,4 +14,4 @@ ampds.load_gas(PATH)
 # Load everything
 dataset = iawe.IAWE()
 dataset.add_mains()
-#dataset.add_appliances()
+dataset.add_appliances()
