@@ -2,6 +2,10 @@ import os
 import json
 import copy
 import pandas as pd
+from nilmtk.building import Building
+from nilmtk.sensors.electricity import MainsName
+from nilmtk.sensors.electricity import ApplianceName
+from nilmtk.sensors.electricity import Measurement
 
 """Base class for all datasets."""
 
@@ -54,6 +58,73 @@ class DataSet(object):
         for building in building_names:
             self.load_building(root_directory, building)
 
+    def load_hdf5(self, directory):
+        """Imports dataset from HDF5 store into NILMTK object
+
+        Arguments
+        ----------
+
+        directory : str
+            Directory where the HDF5 store is located
+
+        """
+        store = pd.HDFStore(
+            os.path.join(directory, 'dataset.h5'))
+        self.buildings = {}
+
+        # Finding all keys stored in the HDF5 store
+        keys = store.keys()
+
+        # Finding the buildings
+        building_names = list(set([key.split("/")[1] for key in keys]))
+
+        # Loading the structured information for each building
+        for building_name in building_names:
+
+            # Create a new building and add it to buildings
+            b = Building()
+            self.buildings[building_name] = b
+
+            # Find the keys which start with this particular building
+            keys_building = [key for key in keys if building_name in key]
+
+            # Loading utilites
+            keys_utilities = [
+                key for key in keys_building if "utility" in key]
+
+            # Load electric if len(keys_utilities)>0
+
+            if len(keys_utilities) > 0:
+                # Load electric
+                keys_electric = [
+                    key for key in keys_utilities if "electric" in key]
+
+                # Loading mains
+                keys_mains = [
+                    key for key in keys_electric if "mains" in key]
+
+                if len(keys_mains) > 0:
+                    b.utility.electric.mains = {}
+                    for key in keys_mains:
+                        mains_split = key.split("/")[-2]
+                        mains_instance = key.split("/")[-1]
+                        mains_name = MainsName(mains_split, mains_instance)
+                        b.utility.electric.mains[mains_name] = store[key]
+
+                # Loading appliances
+                keys_appliances = [
+                    key for key in keys_electric if "appliances" in key]
+
+                if len(keys_appliances) > 0:
+                    b.utility.electric.appliances = {}
+                    for key in keys_appliances:
+                        appliance_name = key.split("/")[-2]
+                        appliance_instance = key.split("/")[-1]
+                        appliance_name = ApplianceName(
+                            appliance_name, appliance_instance)
+                        b.utility.electric.appliances[
+                            appliance_name] = store[key]
+
     def export(self, directory, format='HDF5', compact=False):
         """Export dataset to disk as HDF5.
 
@@ -70,7 +141,6 @@ class DataSet(object):
         """
         store = pd.HDFStore(
             os.path.join(directory, 'dataset.h5'), complevel=9)
-        print store
         for building_name in self.buildings:
             building = self.buildings[building_name]
             utility = building.utility

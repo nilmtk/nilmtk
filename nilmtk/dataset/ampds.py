@@ -68,11 +68,14 @@ class AMPDS(DataSet):
                           ' AMPds: A Public Dataset for Load Disaggregation and'
                           ' Eco-Feedback Research, in Electrical Power and Energy'
                           ' Conference (EPEC), 2013 IEEE, pp. 1-6, 2013.'
-                      ],
+                          ],
             'nominal_voltage': 230
         }
         self.building = Building()
         self.buildings['Building_1'] = self.building
+
+    def load_hdf5(self,directory):
+        super(AMPDS, self).load_hdf5(directory)
 
     def read_electricity_csv_and_standardize(self, csv_path):
         # Loading appliance

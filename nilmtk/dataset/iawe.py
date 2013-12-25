@@ -37,13 +37,12 @@ from nilmtk.utils import get_immediate_subdirectories
 from nilmtk.sensors.electricity import Measurement
 from nilmtk.sensors.electricity import ApplianceName
 from nilmtk.sensors.electricity import MainsName
-
 import os
-
 import MySQLdb
 import pandas.io.sql as psql
+
 mysql_conn = {}
-mysql_conn['jplug'] =MySQLdb.connect(
+mysql_conn['jplug'] = MySQLdb.connect(
     user='root', passwd='password', db='jplug')
 mysql_conn['smart'] = MySQLdb.connect(
     user='root', passwd='password', db='smart_meter')
@@ -116,6 +115,9 @@ class IAWE(DataSet):
         for building_name in building_names:
             self.load_building(root_directory, building_name)
 
+    def load_hdf5(self, directory):
+        super(IAWE, self).load_hdf5(directory)
+
     def add_mains(self):
         query = 'select W1, W2, f, VLN, timestamp from smart_meter_data ;'
         data = psql.frame_query(query, mysql_conn['smart'])
@@ -169,3 +171,22 @@ class IAWE(DataSet):
             self.building.utility.electric.appliances[
                 appliance] = self.building.utility.electric.appliances[appliance].astype('float32')
         '''
+
+        # Adding motor data which was collected using Current Cost
+        df = pd.read_csv('/home/nipun/Copy/motor_data_complete.csv',
+                         names=['timestamp', 'power'])
+        df.timestamp = df.timestamp.astype('int32')
+        df.power = df.power.astype('int32')
+        df.index = pd.to_datetime(df.timestamp * 1e9)
+        df = df.drop('timestamp', 1)
+
+        # Filtering out insanely large values collected from some other
+        # experiments
+        df = df[df.power < 1000]
+
+        # Renaming the column
+        df = df.rename[{'power': Measurement('power', 'active')}]
+
+        # Adding power to appliances
+        self.building.utility.electric.appliances[
+            ApplianceName('motor', 1)] = df

@@ -13,67 +13,61 @@ TODOS
 2. Handle Grid
 3. Handle Solar
 4. Handle Gen
-
-
-LIST OF APPLIANCE NAMES IN ALL Homes
-
-n [104]: list(unique)
-Out[104]: 
-[u'tvroom',
- u'ksac',
- u'garage/refrigerator',
- u'office',
- u'ai',
- u'dryg',
- u'bath',
- u'genlight',
- u'oven',
- u'bedroom',
- u'subl',
- u'masterbed',
- u'bathroom',
- u'livingroom',
- u'sprinkler',
- u'disposal',
- u'masterbath',
- u'microwave',
- u'drye',
- u'smallappliance',
- u'washer',
- u'furnace',
- u'gri',
- u'lighting&plugs',
- u'famroom',
- u'dryer',
- u'diningroom',
- u'ove',
- u'backyard',
- u'cooktop',
- u'refrigerator',
- u'kitchen',
- u'dishwasher',
- u'theater',
- u'washingmachine',
- u'car',
- u'air',
- u'garage',
- u'range',
- u'waterheater',
- u'security']
-
-
 '''
 
 import pandas as pd
-
 from nilmtk.dataset import DataSet
 from nilmtk.building import Building
 from nilmtk.utils import get_immediate_subdirectories
 from nilmtk.sensors.electricity import Measurement
 from nilmtk.sensors.electricity import ApplianceName
 from nilmtk.sensors.electricity import MainsName
-
 import os
+
+# Mapping between appliances actual name
+appliance_name_mapping = {
+    'ksac': 'misc',
+    'tvroom': 'misc',
+    'garage/refrigerator': 'refrigerator',
+    'office': 'computer',
+    'dryg': 'dryer_gas',
+    'bath': 'bathroom',
+    'genlight': 'lighting',
+    'oven': 'oven',
+    'bedroom': 'misc',
+    'subl': 'subpanel',
+    'masterbed': 'misc',
+    'bathroom': 'bathroom',
+    'livingroom': 'misc',
+    'sprinkler': 'sprinkler',
+    'disposal': 'disposal',
+    'masterbath':
+    'bathroom',
+    'microwave': 'microwave',
+    'drye': 'dryer_electric',
+    'smallappliance': 'misc',
+    'washer': 'washer',
+    'furnace': 'furnace',
+    'gri': 'grid',
+    'lighting&plugs': 'plugs',
+    'famroom': 'misc',
+    'dryer': 'dryer',
+    'diningroom': 'misc',
+    'ove': 'oven',
+    'backyard': 'misc',
+    'cooktop': 'cooktop',
+    'refrigerator': 'fridge',
+    'kitchen': 'kitchen',
+    'dishwasher': 'dishwasher',
+    'theater': 'theater',
+    'washingmachine': 'washingmachine',
+    'car': 'car',
+    'air': 'ac',
+    'garage': 'misc',
+    'range': 'range',
+    'waterheater': 'waterheater',
+    'security': 'security'
+}
 
 
 class Pecan(DataSet):
@@ -203,7 +197,7 @@ class Pecan(DataSet):
 
             # TODO: Replace column names and remove the appliance name from
             # them
-            appliance_name = appliance[:-1]
+            appliance_name = appliance_name_mapping[appliance[:-1]]
             appliance_instance = appliance[-1]
             building.utility.electric.appliances[
                 ApplianceName(appliance_name, appliance_instance)] = df[names]
