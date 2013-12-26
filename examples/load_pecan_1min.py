@@ -22,7 +22,7 @@ pecan_1min.load_building_names('/home/nipun/Desktop/PECAN/')
 pecan_1min.load_building('/home/nipun/Desktop/PECAN/', 'Home 01')
 
 # Accessing Home 01 Building
-building = pecan_1min.buildings['Home_01']
+building = pecan_1min.buildings[1]
 
 # Loading all buildings data
 dataset = pecan.Pecan_1min()
@@ -42,7 +42,7 @@ t2 = time.time()
 print("Runtime to importing from HDF5 = {:.2f}".format(t2 - t1))
 
 # Doing analysis on Home_10
-b = dataset.buildings['Home_10']
+b = dataset.buildings[10]
 
 train, test = train_test_split(b)
 

@@ -69,7 +69,7 @@ class AMPDS(DataSet):
             'nominal_voltage': 230
         }
         self.building = Building()
-        self.buildings['Building_1'] = self.building
+        self.buildings[1] = self.building
 
     def load_hdf5(self, directory):
         super(AMPDS, self).load_hdf5(directory)

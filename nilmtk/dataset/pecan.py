@@ -214,8 +214,8 @@ class Pecan(DataSet):
                     ApplianceName(appliance_name, appliance_instance)] = building.utility.electric.appliances[
                     ApplianceName(appliance_name, appliance_instance)].astype('float32')
             building.utility.electric.mains[
-            MainsName(1, 1)] = building.utility.electric.mains[
-            MainsName(1, 1)].astype('float32')
+                MainsName(1, 1)] = building.utility.electric.mains[
+                MainsName(1, 1)].astype('float32')
 
         return building
 
@@ -238,7 +238,8 @@ class Pecan_15min(Pecan):
 
         # Adding this building to dict of buildings
         building_name = building_name.replace(" ", "_")
-        self.buildings[building_name] = building
+        building_number = int(building_name[-2:])
+        self.buildings[building_number] = building
 
     def load_building_names(self, root_directory):
         spreadsheet = pd.ExcelFile(os.path.join(root_directory,
@@ -278,7 +279,8 @@ class Pecan_1min(Pecan):
 
         # Adding this building to dict of buildings
         building_name = building_name.replace(" ", "_")
-        self.buildings[building_name] = building
+        building_number = int(building_name[-2:])
+        self.buildings[building_number] = building
 
     def load_building_names(self, root_directory):
         dirs = get_immediate_subdirectories(os.path.join(root_directory,

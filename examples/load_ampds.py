@@ -4,6 +4,7 @@ from nilmtk.cross_validation import train_test_split
 from nilmtk.disaggregate.co_1d import CO_1d
 from nilmtk.metrics import rms_error_power
 from nilmtk.metrics import mean_normalized_error_power
+from nilmtk.sensors.electricity import Measurement
 import time
 import pandas as pd
 
@@ -41,8 +42,8 @@ t2 = time.time()
 print("Runtime to import from HDF5 = {:.2f}".format(t2 - t1))
 
 # Dividing the data into train and test
-b = dataset.buildings['Building_1']
-train, test = train_test_split(b)
+b = dataset.buildings[1]
+train, test = train_test_split(b, test_size=.005)
 
 # Initializing CO 1D Disaggregator
 disaggregator = CO_1d()

@@ -7,6 +7,7 @@ import numpy as np
 from sklearn import metrics
 from sklearn.cluster import KMeans
 
+MAX_VALUES_TO_CONSIDER = 100
 MAX_POINT_THRESHOLD = 2000
 MIN_POINT_THRESHOLD = 20
 SEED = 42
@@ -230,9 +231,28 @@ class CO_1d(object):
         for i in range(0, len(states_combination)):
             sum_combination[i] = sum(states_combination[i])
 
-        [states, residual_power] = find_nearest_vectorized(
-            sum_combination, test_mains.values)
-        length_sequence=len(test_mains.index)
+        # We get a memory error if there are too many samples in test_mains; so
+        # we divide them into chunks and do the processing on smaller chunks
+        # and later combine these chunks
+        nvalues = len(test_mains.index)
+        print nvalues
+        start = 0
+        states = np.array([])
+        residual_power = np.array([])
+        while start + min(nvalues, MAX_VALUES_TO_CONSIDER) - 1 < nvalues:
+            [states_temp, residual_power_temp] = find_nearest_vectorized(
+                sum_combination, test_mains.values[start:start + MAX_VALUES_TO_CONSIDER])
+            states = np.append(states, states_temp)
+            residual_power = np.append(residual_power, residual_power_temp)
+            start += MAX_VALUES_TO_CONSIDER
+            print(start)
+        # If some values are still left
+        [states_temp, residual_power_temp] = find_nearest_vectorized(
+            sum_combination, test_mains.values[start:nvalues])
+        states = np.append(states, states_temp)
+        residual_power = np.append(residual_power, residual_power_temp)
+        
+        length_sequence = len(test_mains.index)
         [predicted_states, predicted_power] = decode_co(length_sequence,
                                                         self.model, appliance_list, states, residual_power)
 

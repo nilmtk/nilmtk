@@ -76,17 +76,19 @@ class DataSet(object):
         keys = store.keys()
 
         # Finding the buildings
-        building_names = list(set([key.split("/")[1] for key in keys]))
+        building_numbers = list(set([key.split("/")[1] for key in keys]))
+        print(building_numbers)
 
         # Loading the structured information for each building
-        for building_name in building_names:
+        for building_number in building_numbers:
 
             # Create a new building and add it to buildings
             b = Building()
-            self.buildings[building_name] = b
+            self.buildings[int(building_number)] = b
 
             # Find the keys which start with this particular building
-            keys_building = [key for key in keys if building_name in key]
+            keys_building = [
+                key for key in keys if key.split("/")[1] == building_number]
 
             # Loading utilites
             keys_utilities = [
@@ -141,20 +143,21 @@ class DataSet(object):
         """
         store = pd.HDFStore(
             os.path.join(directory, 'dataset.h5'), complevel=9, complib='zlib')
-        for building_name in self.buildings:
-            print(building_name)
-            building = self.buildings[building_name]
+        for building_number in self.buildings:
+            print(building_number)
+            building = self.buildings[building_number]
             utility = building.utility
             electric = utility.electric
             mains = electric.mains
             for main in mains:
-                store.put('/%s/utility/electric/mains/%d/%d/' %
-                          (building_name, main.split, main.meter),
+                store.put('/%d/utility/electric/mains/%d/%d/' %
+                          (building_number, main.split, main.meter),
                           mains[main], table=True)
             appliances = electric.appliances
             for appliance in appliances:
-                store.put('%s/utility/electric/appliances/%s/%d/' %
-                          (building_name, appliance.name, appliance.instance),
+                store.put('%d/utility/electric/appliances/%s/%d/' %
+                          (building_number, appliance.name,
+                           appliance.instance),
                           appliances[appliance], table=True)
         store.close()
 

@@ -183,9 +183,10 @@ class IAWE(DataSet):
         # Filtering out insanely large values collected from some other
         # experiments
         df = df[df.power < 1000]
+        df=df.dropna()
 
         # Renaming the column
-        df = df.rename[{'power': Measurement('power', 'active')}]
+        df.columns = [Measurement('power', 'active')]
 
         # Adding power to appliances
         self.building.utility.electric.appliances[

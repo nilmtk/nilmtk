@@ -31,7 +31,7 @@ t2 = time.time()
 print("Runtime to importing from HDF5 = {:.2f}".format(t2 - t1))
 
 # Doing analysis on Home_10
-b = dataset.buildings['Home_10']
+b = dataset.buildings[10]
 
 train, test = train_test_split(b)
 

@@ -46,6 +46,7 @@ def proportion_of_energy_submetered(electricity,
             kwh_per_day = usage_per_period(df.icol(0), freq='D',
                                            max_dropout_rate=max_dropout_rate)['kwh']
             kwh_per_day = kwh_per_day.dropna()
+            print(kwh_per_day)
             chan_kwh_per_day.append(kwh_per_day)
             good_days_list.append(set(kwh_per_day.index))
         return chan_kwh_per_day
