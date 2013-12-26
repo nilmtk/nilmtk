@@ -175,7 +175,7 @@ class CO_1d(object):
 
         centroids = {}
         num_appliances = len(train_appliances.keys())
-        if num_appliances > 15:
+        if num_appliances > 12:
             max_num_clusters = 2
         else:
             max_num_clusters = 3
@@ -232,7 +232,7 @@ class CO_1d(object):
 
         [states, residual_power] = find_nearest_vectorized(
             sum_combination, test_mains.values)
-
+        length_sequence=len(test_mains.index)
         [predicted_states, predicted_power] = decode_co(length_sequence,
                                                         self.model, appliance_list, states, residual_power)
 

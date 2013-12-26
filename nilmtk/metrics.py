@@ -187,7 +187,7 @@ def rms_error_power(predicted_power, df_appliances_ground_truth):
     ----------
 
     predicted_power: Pandas DataFrame of type {appliance :
-         [array of predictd power]}
+         [array of predicted power]}
 
     df_appliances_ground_truth: Pandas DataFrame of type {appliance :
         [array of ground truth power]}

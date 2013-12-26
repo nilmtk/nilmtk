@@ -140,8 +140,9 @@ class DataSet(object):
             Defaults to false.  If True then only save change points.
         """
         store = pd.HDFStore(
-            os.path.join(directory, 'dataset.h5'), complevel=9)
+            os.path.join(directory, 'dataset.h5'), complevel=9, complib='zlib')
         for building_name in self.buildings:
+            print(building_name)
             building = self.buildings[building_name]
             utility = building.utility
             electric = utility.electric

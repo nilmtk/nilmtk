@@ -23,6 +23,7 @@ from nilmtk.sensors.electricity import Measurement
 from nilmtk.sensors.electricity import ApplianceName
 from nilmtk.sensors.electricity import MainsName
 import os
+from collections import defaultdict
 
 # Mapping between appliances actual name
 appliance_name_mapping = {
@@ -66,7 +67,8 @@ appliance_name_mapping = {
     'garage': 'misc',
     'range': 'range',
     'waterheater': 'waterheater',
-    'security': 'security'
+    'security': 'security',
+    'ai': 'ac'
 }
 
 
@@ -187,6 +189,7 @@ class Pecan(DataSet):
 
         # Adding appliances
         building.utility.electric.appliances = {}
+        building_appliance_count = defaultdict(int)
         for appliance in appliance_names:
             # Finding headers corresponding to the appliance
             names = [x for x in df.columns if x.split("_")[0] == appliance]
@@ -197,18 +200,20 @@ class Pecan(DataSet):
 
             # TODO: Replace column names and remove the appliance name from
             # them
-            appliance_name = appliance_name_mapping[appliance[:-1]]
-            appliance_instance = appliance[-1]
-            building.utility.electric.appliances[
-                ApplianceName(appliance_name, appliance_instance)] = df[names]
-            building.utility.electric.appliances[
-                ApplianceName(appliance_name, appliance_instance)] = building.utility.electric.appliances[
-                ApplianceName(appliance_name, appliance_instance)].rename(columns=name_modification)
+            if appliance[:-1] in appliance_name_mapping.keys():
+                appliance_name = appliance_name_mapping[appliance[:-1]]
+                building_appliance_count[appliance_name] += 1
+                appliance_instance = building_appliance_count[appliance_name]
+                building.utility.electric.appliances[
+                    ApplianceName(appliance_name, appliance_instance)] = df[names]
+                building.utility.electric.appliances[
+                    ApplianceName(appliance_name, appliance_instance)] = building.utility.electric.appliances[
+                    ApplianceName(appliance_name, appliance_instance)].rename(columns=name_modification)
 
-            building.utility.electric.appliances[
-                ApplianceName(appliance_name, appliance_instance)] = building.utility.electric.appliances[
-                ApplianceName(appliance_name, appliance_instance)].astype('float32')
-        building.utility.electric.mains[
+                building.utility.electric.appliances[
+                    ApplianceName(appliance_name, appliance_instance)] = building.utility.electric.appliances[
+                    ApplianceName(appliance_name, appliance_instance)].astype('float32')
+            building.utility.electric.mains[
             MainsName(1, 1)] = building.utility.electric.mains[
             MainsName(1, 1)].astype('float32')
 
