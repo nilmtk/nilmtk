@@ -22,3 +22,22 @@ def find_nearest(array, value):
     idx = (np.abs(array - value)).argmin()
     diff = array[idx] - value
     return [idx, -diff]
+
+
+def find_nearest_non_vectorized(known_array, test_array):
+    indices = np.zeros(len(test_array))
+    residual = np.zeros(len(test_array))
+    for i in xrange(len(test_array)):
+        [indices[i], residual[i]] = find_nearest(known_array, test_array[i])
+    return [indices, residual]
+
+
+def find_nearest_vectorized(known_array, test_array):
+
+    # Recipe borrowed from
+    # http://stackoverflow.com/questions/20780017/numpy-vectorize-finding-closest-value-in-an-array-for-each-element-in-another-a
+
+    differences = (test_array.reshape(1, -1) - known_array.reshape(-1, 1))
+    indices = np.abs(differences).argmin(axis=0)
+    residual = np.diagonal(differences[indices, ])
+    return [indices, residual]

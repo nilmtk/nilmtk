@@ -1,6 +1,7 @@
 from __future__ import print_function
 from nilmtk.dataset import ampds
 from nilmtk.cross_validation import train_test_split
+from nilmtk.disaggregate.co_1d import CO_1d
 import time
 
 
@@ -40,4 +41,6 @@ print("Runtime to import from HDF5 = {:.2f}".format(t2 - t1))
 b = dataset.buildings['Building_1']
 train, test = train_test_split(b)
 
-
+# Initializing CO 1D Disaggregator
+disaggregator = CO_1d()
+disaggregator.train()

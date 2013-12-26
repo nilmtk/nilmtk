@@ -1,4 +1,5 @@
 from nilmtk.utils import find_nearest
+from nilmtk.utils import find_nearest_vectorized
 
 import pandas as pd
 import itertools
@@ -229,12 +230,9 @@ class CO_1d(object):
         for i in range(0, len(states_combination)):
             sum_combination[i] = sum(states_combination[i])
 
-        length_sequence = len(test_mains.values)
-        states = np.zeros(length_sequence)
-        residual_power = np.zeros(length_sequence)
-        for i in range(length_sequence):
-            [states[i], residual_power[i]] = find_nearest(
-                sum_combination, test_mains.values[i])
+        [states, residual_power] = find_nearest_vectorized(
+            sum_combination, test_mains.values)
+
         [predicted_states, predicted_power] = decode_co(length_sequence,
                                                         self.model, appliance_list, states, residual_power)
 
