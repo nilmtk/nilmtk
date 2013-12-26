@@ -9,9 +9,6 @@ from nilmtk.sensors.electricity import Measurement
 from nilmtk.sensors.electricity import ApplianceName
 from nilmtk.sensors.electricity import MainsName
 
-from collections import namedtuple
-
-
 # Column name mapping
 column_name_mapping = {
     'V': Measurement('voltage', ''),
@@ -74,12 +71,15 @@ class AMPDS(DataSet):
         self.building = Building()
         self.buildings['Building_1'] = self.building
 
-    def load_hdf5(self,directory):
+    def load_hdf5(self, directory):
         super(AMPDS, self).load_hdf5(directory)
 
     def read_electricity_csv_and_standardize(self, csv_path):
         # Loading appliance
         df = pd.read_csv(csv_path).astype('float32')
+
+        # Convert timestamp to ints
+        df.TS = df.TS.astype('int')
 
         # Convert index to DateTime
         df.index = pd.to_datetime((df.TS.values * 1e9).astype(int))
@@ -95,6 +95,9 @@ class AMPDS(DataSet):
     def read_water_csv_and_standardize(self, csv_path):
         # Loading appliance
         df = pd.read_csv(csv_path).astype('float32')
+
+        # Convert timestamp to type int
+        df.ts = df.ts.astype('int')
 
         # Convert index to DateTime
         df.index = pd.to_datetime((df.ts.values * 1e9).astype(int))
