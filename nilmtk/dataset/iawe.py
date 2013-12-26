@@ -106,7 +106,7 @@ class IAWE(DataSet):
             'name': 'iAWE',
             'urls': ['http://www.energy.iiitd.edu.in/iawe']}
         self.building = Building()
-        self.buildings['Home_01'] = self.building
+        self.buildings[1] = self.building
 
     def load(self):
         """Load entire dataset into memory"""
@@ -183,7 +183,7 @@ class IAWE(DataSet):
         # Filtering out insanely large values collected from some other
         # experiments
         df = df[df.power < 1000]
-        df=df.dropna()
+        df = df.dropna()
 
         # Renaming the column
         df.columns = [Measurement('power', 'active')]
