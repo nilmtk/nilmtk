@@ -78,7 +78,7 @@ column_mapping = {
 }
 
 
-def query_database_jplug(jplug):
+def query_database_jplug(self, jplug):
     query = 'select active_power,timestamp from jplug_data where mac="%s";' % (
         jplug)
     data = psql.frame_query(query, mysql_conn['jplug'])
@@ -86,8 +86,10 @@ def query_database_jplug(jplug):
     print 'Now converting index'
     data = data[data.timestamp < 1381069800]
     data.timestamp = data.timestamp.astype('int')
-    data.index = pd.to_datetime((data.timestamp.values * 1E9).astype(int))
+    data.index = pd.to_datetime(
+        (data.timestamp.values * 1E9).astype(int), utc=True)
     data = data.drop('timestamp', 1)
+    data = data.tz_convert(self.metadata['timezone'])
     # Get the data starting from June 7, 2013
     data = data[pd.Timestamp('2013-06-07'):pd.Timestamp('2014-01-01')]
     print 'Now downsampling'
@@ -104,7 +106,9 @@ class IAWE(DataSet):
         super(IAWE, self).__init__()
         self.metadata = {
             'name': 'iAWE',
-            'urls': ['http://www.energy.iiitd.edu.in/iawe']}
+            'urls': ['http://www.energy.iiitd.edu.in/iawe'],
+            'timezone': 'Asia/Kolkata'
+        }
         self.building = Building()
         self.buildings[1] = self.building
 
@@ -125,8 +129,10 @@ class IAWE(DataSet):
         print 'Now converting index'
         data = data[data.timestamp < 1381069800]
         data.timestamp = data.timestamp.astype('int')
-        data.index = pd.to_datetime((data.timestamp.values * 1E9).astype(int))
+        data.index = pd.to_datetime(
+            (data.timestamp.values * 1E9).astype(int), utc=True)
         data = data.drop('timestamp', 1)
+        data = data.tz_convert(self.metadata['timezone'])
         data = data[pd.Timestamp('2013-06-07'):pd.Timestamp('2014-01-01')]
 
         self.building.utility.electric.mains = {}
@@ -146,7 +152,7 @@ class IAWE(DataSet):
             print jplug
             if jplug_mapping[jplug] not in self.building.utility.electric.appliances.keys():
                 self.building.utility.electric.appliances[
-                    jplug_mapping[jplug]] = query_database_jplug(jplug)
+                    jplug_mapping[jplug]] = query_database_jplug(self, jplug)
 
                 print self.building.utility.electric.appliances[
                     jplug_mapping[jplug]]
@@ -154,7 +160,7 @@ class IAWE(DataSet):
             # different times
             else:
                 self.building.utility.electric.appliances[jplug_mapping[jplug]] = pd.concat(
-                    [self.building.utility.electric.appliances[jplug_mapping[jplug]], query_database_jplug(jplug)])
+                    [self.building.utility.electric.appliances[jplug_mapping[jplug]], query_database_jplug(self, jplug)])
 
         # Drop cost and mac columns from the data
         '''for appliance in self.building.utility.electric.appliances.keys():
@@ -177,8 +183,10 @@ class IAWE(DataSet):
                          names=['timestamp', 'power'])
         df.timestamp = df.timestamp.astype('int32')
         df.power = df.power.astype('int32')
-        df.index = pd.to_datetime(df.timestamp * 1e9)
+        df.index = pd.to_datetime(
+            (df.timestamp.values * 1E9).astype(int), utc=True)
         df = df.drop('timestamp', 1)
+        df = df.tz_convert(self.metadata['timezone'])
 
         # Filtering out insanely large values collected from some other
         # experiments

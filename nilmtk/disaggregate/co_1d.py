@@ -251,7 +251,7 @@ class CO_1d(object):
             sum_combination, test_mains.values[start:nvalues])
         states = np.append(states, states_temp)
         residual_power = np.append(residual_power, residual_power_temp)
-        
+
         length_sequence = len(test_mains.index)
         [predicted_states, predicted_power] = decode_co(length_sequence,
                                                         self.model, appliance_list, states, residual_power)
