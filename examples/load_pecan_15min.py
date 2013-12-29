@@ -5,6 +5,7 @@ from nilmtk.metrics import *
 import time
 from nilmtk.sensors.electricity import Measurement
 from nilmtk.disaggregate.co_1d import CO_1d
+from nilmtk.disaggregate.fhmm_exact import FHMM
 
 import pandas as pd
 
@@ -31,12 +32,12 @@ t2 = time.time()
 print("Runtime to importing from HDF5 = {:.2f}".format(t2 - t1))
 
 # Doing analysis on Home_10
-b = dataset.buildings[10]
+b = dataset.buildings[9]
 
 train, test = train_test_split(b)
 
 # Initializing CO 1D Disaggregator
-disaggregator = CO_1d()
+disaggregator = FHMM()
 train_mains = train.utility.electric.mains[
     train.utility.electric.mains.keys()[0]][DISAGG_FEATURE]
 
