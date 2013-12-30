@@ -133,6 +133,7 @@ class Electricity(object):
     metadata : dict, optional
 
         nominal_mains_voltage : np.float32, optional
+            The nominal mains voltage in volts.
 
         wiring : networkx.DiGraph
             Nodes are ApplianceNames or CircuitNames or MainsNames.
