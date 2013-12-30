@@ -135,11 +135,20 @@ class Electricity(object):
         nominal_mains_voltage : np.float32, optional
             The nominal mains voltage in volts.
 
-        wiring : networkx.DiGraph
+        mains_wiring : networkx.DiGraph
             Nodes are ApplianceNames or CircuitNames or MainsNames.
-            Edges describe the wiring between mains, circuits and appliances.
+            Edges describe the power wiring between mains, circuits and 
+            appliances.
             Edge direction indicates the flow of energy.  i.e. edges point
             towards loads.
+
+        control_connections : networkx.DiGraph
+            Each node is an ApplianceName.
+            Edges represent data / audio / video / control connections between
+            appliances.  Edges can be single-directional or bi-directional.
+            For example, a dvd player would have an edge pointing towards the
+            tv.  A wifi router would have bi-directional edges to laptops,
+            printers, smart TVs etc.
 
         appliances : dict of dicts, optional
             Metadata describing each appliance.
