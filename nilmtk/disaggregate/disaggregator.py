@@ -29,20 +29,19 @@ class Disaggregator(object):
         Parameters
         ----------
         buildings : a list of nilmtk Building objects, optional
-            These objects must contain aggregate whole-house data and can
-            optionally contain simultaneously recorded appliance data and/or
-            ambient data.
+            Each `Building` must contain aggregate whole-house data. 
+            Each `Building` can optionally contain simultaneously 
+            recorded appliance data and/or ambient data.
 
-        appliances : nilmtk Electricity object, optional
+        appliances : a list of nilmtk Electricity objects, optional
             Use this for training the disaggregator using appliance data
             recorded without simultaneous aggregate data, for example from
-            tracebase.The `appliances` attribute in the `Electricity` object
-            must be populated.
+            tracebase.  The `appliances` attribute in each the `Electricity` 
+            object must be populated.
 
         environmental :
             External sensor data, e.g. weather data from the local
             metoffice weather station.
-
         """
         return
 
