@@ -41,6 +41,10 @@ class Building(object):
 
         original_name : string, optional
             The original name for this building from the original dataset
+
+        periods_unoccupied : list, optional
+            A list of pd.Periods when this building was empty for more than a
+            day (e.g. holidays).
     """
 
     def __init__(self):

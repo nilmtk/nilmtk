@@ -130,19 +130,21 @@ class Electricity(object):
         * `power_prob_dist` : object describing the probability dist, optional
         * `state_prob_dist` : object describing the probability dist, optional
 
-    metadata : dict, optional
+    metadata : dict, optional.  All this information should be ground-truth, 
+        not automatically inferred.  Automatically inferred data should go into
+        `inferred_metadata`.
 
         nominal_mains_voltage : np.float32, optional
             The nominal mains voltage in volts.
 
-        mains_wiring : networkx.DiGraph
+        mains_wiring : networkx.DiGraph, optional
             Nodes are ApplianceNames or CircuitNames or MainsNames.
             Edges describe the power wiring between mains, circuits and 
             appliances.
             Edge direction indicates the flow of energy.  i.e. edges point
             towards loads.
 
-        control_connections : networkx.DiGraph
+        control_connections : networkx.DiGraph, optional
             Each node is an ApplianceName.
             Edges represent data / audio / video / control connections between
             appliances.  Edges can be single-directional or bi-directional.
@@ -150,9 +152,10 @@ class Electricity(object):
             tv.  A wifi router would have bi-directional edges to laptops,
             printers, smart TVs etc.
 
-        appliances : dict of dicts, optional
-            Metadata describing each appliance.
-            Each key is an ApplianceName(<appliance name>, <instance>) tuple.
+        appliances : dict, optional
+            Metadata describing each appliance.  This should be ground truth data,
+            not automatically inferred information.
+            Each key is an ApplianceName(<appliance name>, <instance>) namedtuple.
             Each value is list of dicts. Each dict describes metadata for that 
             specific appliance.  Multiple dicts are used to express replacing 
             appliances over time (in which case the items should be in 
@@ -161,18 +164,31 @@ class Electricity(object):
             all appliances can have) and fields which are specific to that
             class of appliance.
 
-            General fields
-            --------------
+            General fields (all of which are optional)
+            ------------------------------------------
 
             'room': (<room name>, <room instance>) tuple (as used in this `Building.rooms`).
+
             'meter': (<manufacturer>, <model>) tuple which maps into global Meters DB.
 
-            DualSupply appliances may have a 'supply1' and 'supply2' key which 
-            maps to a string describing the main component supplied by that
-            supply.  e.g.
-            {('washer dryer', 1): 
-             {'supply1': 'motor', 'supply2': 'heating element'}
-            }
+            'start date', 'end date': datetime to represent the period during which
+                this appliance configuration was active. Set 'start date' to 0
+                if this appliance was active from the start of the dataset. Set
+                'end date' to 0 if this appliance is still active at the end of 
+                the dataset.
+
+            Any machine-readable field specified in the communally-defined 
+            appliance controlled vocabulary may be overridden.
+    
+            DualSupply appliances may have a 'supply1' and 'supply2'
+            key which maps to a list of strings describing the main
+            components supplied by that supply.  e.g.
+
+            {('washer dryer', 1): {'supply1': ['motor'], 
+                                   'supply2': ['heating element']} }
+
+            Valid component names are specified on the wiki at 
+            electricity-disaggregation.org.
 
             Appliance-specific fields
             -------------------------
@@ -186,7 +202,7 @@ class Electricity(object):
             not each individual ceiling light) then we can specify each
             ceiling light in `metadata['appliances']` and then specify
             the wiring from the lighting circuit to each ceiling light in
-            the `metadata['wiring']` graph.
+            the `metadata['mains_wiring']` graph.
 
             Example
             -------
@@ -196,8 +212,8 @@ class Electricity(object):
                   'backlight': 'led'
                   'screen size in inches': 42,
                   'year of manufacture': 2001,
-                  'active from': '3/4/2012',
-                  'active until': '4/5/2013',
+                  'start date': '3/4/2012',
+                  'end date': '4/5/2013',
                   'quantity installed': 1,
                   'room': ('livingroom', 1),
                   'meter': ('Current Cost', 'IAM')
@@ -212,6 +228,16 @@ class Electricity(object):
                   'meter': ('Current Cost', 'EnviR')
                  }]
             }`
+
+        metadata_authorship_date : datetime, optional
+            The controlled vocabulary specified on the energy-disaggregation.org
+            wiki will evolve with time.  Hence state the date when the metadata
+            was authored.
+
+    inferred_metadata : dict, optional
+        Has the same structure as `metadata` but contains information which has
+        been automatically inferred from the data.
+
     """
 
     def __init__(self):
@@ -220,6 +246,7 @@ class Electricity(object):
         self.appliances = {}
         self.appliance_estimates = None
         self.metadata = {}
+        self.inferred_metadata = {}
 
     def get_appliance(self, appliance_name, measurement="all"):
         """
