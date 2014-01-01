@@ -79,9 +79,7 @@ def compute_means_fhmm(list_means):
 
     #list_of_appliances_centroids=[ [appliance[i][0] for i in range(len(appliance))] for appliance in list_B]
     states_combination = list(itertools.product(*list_means))
-    print states_combination
     num_combinations = len(states_combination)
-    print num_combinations
     means_stacked = np.array([sum(x) for x in states_combination])
     means = np.reshape(means_stacked, (num_combinations, 1))
     cov = np.tile(5 * np.identity(1), (num_combinations, 1, 1))
@@ -137,7 +135,9 @@ def decode_hmm(length_sequence, centroids, appliance_list, states):
     hmm_states = {}
     hmm_power = {}
     total_num_combinations = 1
+
     for appliance in appliance_list:
+
         total_num_combinations *= len(centroids[appliance])
 
     for appliance in appliance_list:
@@ -145,13 +145,18 @@ def decode_hmm(length_sequence, centroids, appliance_list, states):
         hmm_power[appliance] = np.zeros(length_sequence)
 
     for i in range(length_sequence):
+
         factor = total_num_combinations
         for appliance in appliance_list:
+
             # assuming integer division (will cause errors in Python 3x)
             factor = factor // len(centroids[appliance])
 
             temp = int(states[i]) / factor
             hmm_states[appliance][i] = temp % len(centroids[appliance])
+            hmm_power[appliance][i] = centroids[
+                appliance][hmm_states[appliance][i]]
+    return [hmm_states, hmm_power]
 
 
 def transform_data(df_appliance):
@@ -205,13 +210,11 @@ class FHMM(object):
 
         learnt_model = OrderedDict()
         for appliance in train_appliances:
+            print("Training for ",appliance)
             learnt_model[appliance] = hmm.GaussianHMM(
                 2, "full")
-            print "Learning model for appliance", appliance
-            print [train_appliances[appliance].values]
-            #print [train_appliances[appliance].values].shape
+
             length = train_appliances[appliance].values.size
-            print length
             temp = train_appliances[appliance].values.reshape(length, 1)
             learnt_model[appliance].fit([temp])
 
@@ -225,7 +228,6 @@ class FHMM(object):
             new_learnt_models[appliance].means_ = means
             new_learnt_models[appliance].covars_ = covars
 
-        raw_input('Now I am going to hang!!')
         learnt_model_combined = create_combined_hmm(new_learnt_models)
         self.individual = new_learnt_models
         self.model = learnt_model_combined
@@ -248,10 +250,19 @@ class FHMM(object):
         # Find put appliances which have more than one state. For others we do
         # not need to decode; they have only a single state. This can simplify
         # the amount of computations needed
-
-        learnt_states = self.model.predict(test_mains.values)
+        length = test_mains.values.size
+        temp = test_mains.values.reshape(length, 1)
+        learnt_states = self.model.predict(temp)
+        means = OrderedDict()
+        for appliance in self.individual:
+            means[appliance] = self.individual[appliance].means_
+        means_copy = deepcopy(means)
+        for appliance in means:
+            means_copy[appliance] = means[
+                appliance].astype(int).flatten().tolist()
+            means_copy[appliance].sort()
 
         [decoded_states, decoded_power] = decode_hmm(
-            len(learnt_states), self.individual, [appliance for appliance in self.model], learnt_states)
+            len(learnt_states), means_copy, means_copy.keys(), learnt_states)
 
         self.predictions = pd.DataFrame(decoded_power)

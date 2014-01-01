@@ -5,6 +5,8 @@ from nilmtk.disaggregate.fhmm_exact import FHMM
 from nilmtk.metrics import rms_error_power
 from nilmtk.metrics import mean_normalized_error_power
 from nilmtk.sensors.electricity import Measurement
+from nilmtk.stats.electricity.building import top_k_appliances
+from nilmtk.preprocessing import filter_top_k_appliances
 import time
 import pandas as pd
 
@@ -27,12 +29,18 @@ dataset.load_hdf5(EXPORT_PATH)
 t2 = time.time()
 print("Runtime to import from HDF5 = {:.2f}".format(t2 - t1))
 
-# Dividing the data into train and test
+# Experiment on first (and only) building
 b = dataset.buildings[1]
-train, test = train_test_split(b, test_size=.95)
+
+# Filtering to include only top 6 appliances
+b = filter_top_k_appliances(b, 6)
+
+# Dividing the data into train and test
+train, test = train_test_split(b)
 
 # Again subdivide data into train, test for testing on even smaller data
-train, test = train_test_split(train, test_size=.5)
+#train, test = train_test_split(train, test_size=.5)
+
 
 # Initializing FHMM Disaggregator
 disaggregator = FHMM()

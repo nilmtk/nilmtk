@@ -3,6 +3,9 @@
 from __future__ import print_function, division
 from single import DEFAULT_MAX_DROPOUT_RATE, usage_per_period
 import numpy as np
+import pandas as pd
+
+from nilmtk.sensors.electricity import Measurement
 
 
 def find_common_measurements(electricity):
@@ -138,13 +141,18 @@ def top_k_appliances(electricity, k=3, how=np.mean, order='desc'):
 
     Returns
     -------
-    top_k : List
+    top_k : pd.Series
+        appliance:contribution
+
+    # TODO: Allow arbitrary functions
+    # TODO: Handle case when number of appliances is less than default k=3
     """
     # Finding number of mains
     num_mains = len(electricity.mains.keys())
+    print(num_mains)
 
     # If more than 1 mains exists, add them up
-    combined_mains = electricity.mains.keys()[electricity.mains.keys()[0]]
+    combined_mains = electricity.mains[electricity.mains.keys()[0]]
     if num_mains > 1:
         for i in xrange(1, num_mains):
             combined_mains += electricity.mains.keys()[electricity.mains.keys()[i]]
@@ -154,5 +162,38 @@ def top_k_appliances(electricity, k=3, how=np.mean, order='desc'):
     if len(common_measurements) == 0:
         print('Cannot proceed further; no common attribute')
     else:
-        # Choose the first attribute for comparison
-        common_measurement=common_measurements[0]
+
+        if Measurement('power', 'active') in common_measurements:
+            common_measurement = Measurement('power', 'active')
+        else:
+            # Choose the first attribute for comparison
+            common_measurement = common_measurements[0]
+
+        print("Common Measurement: ", common_measurement)
+
+        # Applying function over all appliances
+        series_appliances = {}
+        for appliance in electricity.appliances:
+            print(appliance, electricity.appliances[
+                appliance][common_measurement].mean())
+            series_appliances[appliance] = electricity.appliances[
+                appliance][common_measurement].mean()
+
+        series_appliances = pd.Series(series_appliances)
+        # print(series_appliances)
+
+        # Applying function over all mains summed up
+        series_mains = combined_mains[common_measurement].mean()
+
+        # Contribution per appliance
+        series_appliances_contribution = series_appliances / series_mains
+    print(series_mains, "Mains")
+    print(series_appliances_contribution)
+
+    if order == 'asc':
+        # Sorting
+        series_appliances_contribution.sort()
+    else:
+        series_appliances_contribution.sort(ascending=False)
+
+    return series_appliances_contribution.head(k)

@@ -6,7 +6,7 @@ EXPORT_LOCATION = '/home/nipun/Desktop/temp/iawe/'
 # Load everything
 dataset = iawe.IAWE()
 dataset.add_mains()
-#dataset.add_appliances()
+dataset.add_appliances()
 
 # Exporting the dataset into HDF5
 dataset.export(EXPORT_LOCATION)
