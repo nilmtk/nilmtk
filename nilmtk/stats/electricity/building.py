@@ -5,9 +5,8 @@ from single import DEFAULT_MAX_DROPOUT_RATE, usage_per_period
 import numpy as np
 
 
-
-def proportion_of_energy_submetered(electricity, 
-                                    max_dropout_rate=DEFAULT_MAX_DROPOUT_RATE, 
+def proportion_of_energy_submetered(electricity,
+                                    max_dropout_rate=DEFAULT_MAX_DROPOUT_RATE,
                                     require_matched_measurements=True):
     """Reports the proportion of energy in a building that is submetered.
 
@@ -30,13 +29,14 @@ def proportion_of_energy_submetered(electricity,
         1 = all energy submetered
        >1 = more energy submetered than is recorded on the mains channels!
     """
-    
+
     # TODO: Handle circuits.
     # TODO: Check if all channels share at least one Measurement (e.g. ('power', 'active'))
     #       and handle `require_matched_measurements`
     # TODO: handle dataframes with more than one column (don't use df.icol(0))
 
-    # for each channel, find set of 'good_days' where dropout_rate < max_dropout_rate
+    # for each channel, find set of 'good_days' where dropout_rate <
+    # max_dropout_rate
     good_days_list = []
 
     def get_kwh_per_day_per_chan(dictionary):
@@ -87,7 +87,7 @@ def average_energy(electricity,
     raise NotImplementedError
 
 
-def average_energy_per_appliance(electricity, 
+def average_energy_per_appliance(electricity,
                                  max_dropout_rate=DEFAULT_MAX_DROPOUT_RATE):
     """Reports the average energy consumed by each appliance.
 
@@ -106,3 +106,24 @@ def average_energy_per_appliance(electricity,
     """
     raise NotImplementedError
 
+
+def top_k_appliances(electricity, k=3, how=np.mean, order='desc'):
+    """Reports the top k appliances by 'how' attribute
+
+    Parameters
+    ----------
+    electricity : nilmtk.sensors.electricity.Electricity
+    k : Number of results to be returned, int
+        Default value:3
+    how : Function by which to order top k appliances
+        Default: numpy.mean
+    order :  Order whether top k from highest (desc) or from lowest (asc)
+
+    Returns
+    -------
+    top_k : List
+    """
+    # Finding number of mains
+    num_mains=len(electricity.mains.keys())
+
+    # If more than 1 mains exists, add them up
