@@ -5,6 +5,23 @@ from single import DEFAULT_MAX_DROPOUT_RATE, usage_per_period
 import numpy as np
 
 
+def find_common_measurements(electricity):
+
+    # Measurements in first mains
+    measurements = set(electricity.mains[electricity.mains.keys()[0]].columns)
+
+    # Finding intersection with other mains
+    for main in electricity.mains.keys():
+        measurements = measurements.intersection(
+            electricity.mains[main].columns)
+
+    # Finding intersection with appliances
+    for appliance in electricity.appliances:
+        measurements = measurements.intersection(
+            electricity.appliances[appliance].columns)
+    return list(measurements)
+
+
 def proportion_of_energy_submetered(electricity,
                                     max_dropout_rate=DEFAULT_MAX_DROPOUT_RATE,
                                     require_matched_measurements=True):
@@ -124,6 +141,18 @@ def top_k_appliances(electricity, k=3, how=np.mean, order='desc'):
     top_k : List
     """
     # Finding number of mains
-    num_mains=len(electricity.mains.keys())
+    num_mains = len(electricity.mains.keys())
 
     # If more than 1 mains exists, add them up
+    combined_mains = electricity.mains.keys()[electricity.mains.keys()[0]]
+    if num_mains > 1:
+        for i in xrange(1, num_mains):
+            combined_mains += electricity.mains.keys()[electricity.mains.keys()[i]]
+
+    # Finding common measurements
+    common_measurements = find_common_measurements(electricity)
+    if len(common_measurements) == 0:
+        print('Cannot proceed further; no common attribute')
+    else:
+        # Choose the first attribute for comparison
+        common_measurement=common_measurements[0]
