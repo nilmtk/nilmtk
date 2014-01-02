@@ -9,6 +9,7 @@ from nilmtk.stats.electricity.building import top_k_appliances
 from nilmtk.preprocessing import filter_top_k_appliances
 import time
 import pandas as pd
+import matplotlib.pyplot as plt
 
 
 PATH = '/home/nipun/Desktop/AMPds/'
@@ -53,6 +54,7 @@ train_mains = train.utility.electric.mains[
 app = train.utility.electric.appliances
 train_appliances = pd.DataFrame({appliance: app[appliance][DISAGG_FEATURE] for appliance in app if DISAGG_FEATURE in app[appliance]})
 
+
 # Train
 t1 = time.time()
 disaggregator.train(train_mains, train_appliances)
@@ -79,3 +81,13 @@ re = rms_error_power(predicted_power, ground_truth_power)
 
 # Mean Normalized Error
 mne = mean_normalized_error_power(predicted_power, ground_truth_power)
+
+# Plot results
+for appliance in predicted_power:
+	print(appliance)
+    plt.figure()
+    fig, axes = plt.subplots(nrows=2, sharex=True)
+    predicted_power[appliance].plot(ax=axes[0])
+    axes[0].set_title("Predicted power for %s" % (appliance.name))
+    ground_truth_power[appliance].plot(ax=axes[1])
+    axes[1].set_title("Ground trurh power for %s" % (appliance.name))
