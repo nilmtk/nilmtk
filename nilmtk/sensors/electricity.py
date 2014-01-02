@@ -1,6 +1,7 @@
 from collections import namedtuple
 import copy
 import json
+import pandas as pd
 
 Measurement = namedtuple('Measurement', ['physical_quantity', 'type'])
 """
@@ -247,6 +248,43 @@ class Electricity(object):
         self.appliance_estimates = None
         self.metadata = {}
         self.inferred_metadata = {}
+
+    def get_dataframe_of_appliances(self, 
+                                    measurement=Measurement('power', 'active')):
+        """Get a pandas.DataFrame of all appliance data.
+
+        If any DualSupply appliances are present then sum together the two
+        supplies (after checking if `dualsupply.measurement == measurement`).
+
+        Arguments
+        ---------
+        measurement : Measurement, optional
+            default=Measurement('power', 'active')
+
+        Returns
+        -------
+        pandas.DataFrame
+            Index is the same as the index used in the appliances DataFrames.
+            Each column name is an ApplianceName namedtuple.
+        """
+        appliance_dict = {
+            appliance_name: appliance_df[measurement] 
+            for appliance_name, appliance_df in self.appliances.iteritems()
+            if measurement in appliance_df}
+
+        # Handle DualSupply appliances
+        for appliance_name, appliance_df in self.appliances.iteritems():
+            dual_supply_columns = []
+            for column_name in appliance_df:                
+                if (isinstance(column_name, DualSupply) and 
+                    column_name.measurement == measurement):
+                    dual_supply_columns.append(appliance_df[column_name])
+
+            if dual_supply_columns:
+                appliance_dict[appliance_name] = (dual_supply_columns[0] + 
+                                                  dual_supply_columns[1])
+
+        return pd.DataFrame(appliance_dict)
 
     def get_appliance(self, appliance_name, measurement="all"):
         """
