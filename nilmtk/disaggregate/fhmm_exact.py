@@ -62,10 +62,15 @@ def sort_learnt_parameters(startprob, means, covars, transmat):
 
 
 def compute_A_fhmm(list_A):
-    '''
-    Input: list_pi: List of PI's of individual learnt HMMs
-    Output: Combined Pi for the FHMM
-    '''
+    """
+    Parameters
+    -----------
+    list_pi : List of PI's of individual learnt HMMs
+
+    Returns
+    --------
+    result : Combined Pi for the FHMM
+    """
     result = list_A[0]
     for i in range(len(list_A) - 1):
         result = np.kron(result, list_A[i + 1])
@@ -73,9 +78,9 @@ def compute_A_fhmm(list_A):
 
 
 def compute_means_fhmm(list_means):
-    '''
+    """
     Returns [mu, sigma]
-    '''
+    """
 
     #list_of_appliances_centroids=[ [appliance[i][0] for i in range(len(appliance))] for appliance in list_B]
     states_combination = list(itertools.product(*list_means))
@@ -128,9 +133,9 @@ def return_sorting_mapping(means):
 
 
 def decode_hmm(length_sequence, centroids, appliance_list, states):
-    '''
+    """
     Decodes the HMM state sequence
-    '''
+    """
     power_states_dict = {}
     hmm_states = {}
     hmm_power = {}
@@ -159,24 +164,6 @@ def decode_hmm(length_sequence, centroids, appliance_list, states):
     return [hmm_states, hmm_power]
 
 
-def transform_data(df_appliance):
-    '''Subsamples if needed and converts to scikit-learn understandable format'''
-
-    data_gt_10 = df_appliance[df_appliance > 10].values
-    length = data_gt_10.size
-    if length < MIN_POINT_THRESHOLD:
-        return np.zeros((MAX_POINT_THRESHOLD, 1))
-
-    if length > MAX_POINT_THRESHOLD:
-        # Subsample
-        temp = data_gt_10[
-            np.random.randint(0, len(data_gt_10), MAX_POINT_THRESHOLD)]
-        return temp.reshape(MAX_POINT_THRESHOLD, 1)
-    else:
-        temp = data_gt_10
-    return temp.reshape(length, 1)
-
-
 class FHMM(object):
 
     def __init__(self):
@@ -199,9 +186,6 @@ class FHMM(object):
             is a series corresponding to an attribute of each appliance
             such as power_active. This attribute must be the same as
             that used by the mains
-
-        cluster_algo : string, optional
-            Clustering algorithm used for learning the states of the appliances
 
         num_states :  dict
             Dictionary corresponding to number of states for each appliance
