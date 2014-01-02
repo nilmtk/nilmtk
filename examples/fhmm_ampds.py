@@ -20,7 +20,9 @@ ampds.load_electricity(PATH)
 ampds.load_water(PATH)
 ampds.load_gas(PATH)
 '''
-
+import resource
+megs = 4000
+resource.setrlimit(resource.RLIMIT_AS, (megs * 1048576L, -1L))
 
 # Loading data from HDF5 store
 dataset = ampds.AMPDS()
@@ -33,7 +35,7 @@ print("Runtime to import from HDF5 = {:.2f}".format(t2 - t1))
 b = dataset.buildings[1]
 
 # Filtering to include only top 6 appliances
-b = filter_top_k_appliances(b, 6)
+b = filter_top_k_appliances(b, 8)
 
 # Dividing the data into train and test
 train, test = train_test_split(b)
@@ -52,11 +54,19 @@ app = train.utility.electric.appliances
 train_appliances = pd.DataFrame({appliance: app[appliance][DISAGG_FEATURE] for appliance in app if DISAGG_FEATURE in app[appliance]})
 
 # Train
+t1 = time.time()
 disaggregator.train(train_mains, train_appliances)
+t2 = time.time()
+print("Runtime to train = {:.2f}".format(t2 - t1))
+
 
 # Disaggregate
+t1 = time.time()
 disaggregator.disaggregate(test.utility.electric.mains[
     test.utility.electric.mains.keys()[0]][DISAGG_FEATURE])
+t2 = time.time()
+print("Runtime to disaggregate = {:.2f}".format(t2 - t1))
+
 
 # Metrics
 

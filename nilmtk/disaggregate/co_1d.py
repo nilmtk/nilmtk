@@ -265,4 +265,4 @@ class CO_1d(object):
             predicted_power[appliance] = np.zeros(
                 length_sequence, dtype=np.int)
 
-        self.predictions = pd.DataFrame(predicted_power)
+        self.predictions = pd.DataFrame(predicted_power, index=test_mains.index)

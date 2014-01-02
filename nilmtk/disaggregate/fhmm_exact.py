@@ -210,7 +210,7 @@ class FHMM(object):
 
         learnt_model = OrderedDict()
         for appliance in train_appliances:
-            print("Training for ",appliance)
+            print("Training for ", appliance)
             learnt_model[appliance] = hmm.GaussianHMM(
                 2, "full")
 
@@ -233,7 +233,7 @@ class FHMM(object):
         self.model = learnt_model_combined
 
     def disaggregate(self, test_mains):
-        '''Disaggregate the test data according to the model learnt previously
+        """Disaggregate the test data according to the model learnt previously
 
         Parameters
         ----------
@@ -246,10 +246,8 @@ class FHMM(object):
         -------
 
         None
-         '''
-        # Find put appliances which have more than one state. For others we do
-        # not need to decode; they have only a single state. This can simplify
-        # the amount of computations needed
+        """
+
         length = test_mains.values.size
         temp = test_mains.values.reshape(length, 1)
         learnt_states = self.model.predict(temp)
@@ -265,4 +263,4 @@ class FHMM(object):
         [decoded_states, decoded_power] = decode_hmm(
             len(learnt_states), means_copy, means_copy.keys(), learnt_states)
 
-        self.predictions = pd.DataFrame(decoded_power)
+        self.predictions = pd.DataFrame(decoded_power, index=test_mains.index)
