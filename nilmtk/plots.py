@@ -21,10 +21,12 @@ def plot_series(series, ax=None, label=None, date_format='%d/%m/%y %H:%M:%S', **
     date_format : str, optional, default='%d/%m/%y %H:%M:%S'
     """
     if ax is None:
-        ax = plt.gca()
-    ax.xaxis.axis_date(tz=series.index.tzinfo)
-    ax.xaxis.set_major_formatter(mdates.DateFormatter(date_format))
+        fig, ax = plt.subplots(1)
     x = _to_ordinalf_np_vectorized(series.index.to_pydatetime())
     ax.plot(x, series, label=label, **kwargs)
+    ax.xaxis.set_major_formatter(mdates.DateFormatter(date_format, 
+                                                      tz=series.index.tzinfo))
     ax.set_ylabel('watts')
+    fig.autofmt_xdate()
+    plt.draw()
     return ax
