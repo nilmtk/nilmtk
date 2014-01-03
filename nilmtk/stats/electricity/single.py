@@ -582,8 +582,18 @@ def periods_with_sufficient_samples(datetime_index, freq,
     return good_periods
 
 
-def start_end_time(data):
+def start_end_datetime(data):
     """Returns the first and the last time for which data is recorded
+
+    Parameters
+    ----------
+    data : pandas.DataFrame or Series or DatetimeIndex
+
+    Returns
+    -------
+    start_end_datetimes : List
+        Contains two elements- start and end timestamps 
+
     """
     index = _get_index(data)
     return [index[0], index[-1]]
