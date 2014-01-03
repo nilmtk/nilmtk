@@ -1,8 +1,33 @@
 """ Contains preprocessing modules"""
 import pandas as pd
+import numpy as np
 
+from nilmtk.stats.electricity.building import
 from nilmtk.stats.electricity.building import top_k_appliances
 from copy import deepcopy
+
+
+def filter_contribution_less_than_x(building, x=5):
+    """Filters out appliances which contribute less than x%
+
+    Parameters
+    ----------
+    building : nilmtk.Building
+    x : float, default :5
+
+    Returns
+    -------
+    building_copy : nilmtk.Building
+    """
+    contribution_df = find_appliances_contribution(electricity)
+    more_than_x_df = contribution_df[contribution_df > (x * 1.0 / 100)]
+    building_copy = deepcopy(building)
+    appliances_dict = building.utility.electric.appliances
+    appliances_filtered = {appliance_name: appliance_df
+                           for appliance_name, appliance_df in appliances_dict.iteritems()
+                           if appliance_name in more_than_x_df.columns}
+    building_copy.utility.electric.appliances = appliances_filtered
+    return building_copy
 
 
 def filter_top_k_appliances(building, k=5):

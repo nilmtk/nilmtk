@@ -183,13 +183,10 @@ def find_appliances_contribution(electricity, how=np.mean):
         # Applying function over all appliances
         series_appliances = {}
         for appliance in electricity.appliances:
-            print(appliance, electricity.appliances[
-                appliance][common_measurement].mean())
             series_appliances[appliance] = electricity.appliances[
                 appliance][common_measurement].mean()
 
         series_appliances = pd.Series(series_appliances)
-        # print(series_appliances)
 
         # Applying function over all mains summed up
         series_mains = combined_mains[common_measurement].mean()
@@ -227,8 +224,6 @@ def top_k_appliances(electricity, k=3, how=np.mean, order='desc'):
     # TODO: Handle case when number of appliances is less than default k=3
     """
     series_appliances_contribution = find_appliances_contribution(electricity)
-    print(series_mains, "Mains")
-    print(series_appliances_contribution)
 
     if order == 'asc':
         # Sorting
