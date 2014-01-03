@@ -6,27 +6,27 @@ from copy import deepcopy
 
 
 def filter_top_k_appliances(building, k=5):
-	"""Filters and keeps only the top k appliance data
+    """Filters and keeps only the top k appliance data
 
-	Parameters
-	----------
-	building : nilmtk.Building
-	k : int, default: 5
-		Top 'k' appliances to keep
+    Parameters
+    ----------
+    building : nilmtk.Building
+    k : int, default: 5
+        Top 'k' appliances to keep
 
-	Returns
-	-------
-	building_copy : nilmtk.Building
-	"""
+    Returns
+    -------
+    building_copy : nilmtk.Building
+    """
 
-	top_k = top_k_appliances(building.utility.electric, k=k).index
-	building_copy = deepcopy(building)
-	appliances_dict = building.utility.electric.appliances
-	appliances_filtered = {appliance: appliances_dict[appliance] for appliance in appliances_dict if appliance in top_k}
-	building_copy.utility.electric.appliances = appliances_filtered
-	return building_copy
-
-
+    top_k = top_k_appliances(building.utility.electric, k=k).index
+    building_copy = deepcopy(building)
+    appliances_dict = building.utility.electric.appliances
+    appliances_filtered = {appliance_name: appliance_df
+                           for appliance_name, appliance_df in appliances_dict.iteritems()
+                           if appliance_name in top_k}
+    building_copy.utility.electric.appliances = appliances_filtered
+    return building_copy
 
 
 def downsample(building, rule='1T', how='mean'):
