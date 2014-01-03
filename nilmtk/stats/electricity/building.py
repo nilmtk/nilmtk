@@ -146,37 +146,19 @@ def average_energy_per_appliance(electricity,
     raise NotImplementedError
 
 
-def top_k_appliances(electricity, k=3, how=np.mean, order='desc'):
-    """Reports the top k appliances by 'how' attribute
+def find_appliances_contribution(electricity, how=np.mean):
+    """Reports dataframe of form (appliance : contribution) type
 
     Parameters
     ----------
-    electricity:
-        nilmtk.sensors.electricity.Electricity
-    k:
-        Number of results to be returned, int
-        Default value:
-            3
-    how:
-        Function by which to order top k appliances
-        Default:
-            numpy.mean
-    order:
-        Order whether top k from highest(desc) or from lowest(asc)
+    electricity : nilmtk.sensors.Elictricity
 
     Returns
     -------
-    top_k:
-        pd.Series
-        appliance:
-            contribution
-
-    # TODO: Allow arbitrary functions
-    # TODO: Handle case when number of appliances is less than default k=3
+    series_contribution: pandas.DataFrame
     """
     # Finding number of mains
     num_mains = len(electricity.mains.keys())
-    print(num_mains)
 
     # If more than 1 mains exists, add them up
     combined_mains = electricity.mains[electricity.mains.keys()[0]]
@@ -214,6 +196,37 @@ def top_k_appliances(electricity, k=3, how=np.mean, order='desc'):
 
         # Contribution per appliance
         series_appliances_contribution = series_appliances / series_mains
+
+
+def top_k_appliances(electricity, k=3, how=np.mean, order='desc'):
+    """Reports the top k appliances by 'how' attribute
+
+    Parameters
+    ----------
+    electricity:
+        nilmtk.sensors.electricity.Electricity
+    k:
+        Number of results to be returned, int
+        Default value:
+            3
+    how:
+        Function by which to order top k appliances
+        Default:
+            numpy.mean
+    order:
+        Order whether top k from highest(desc) or from lowest(asc)
+
+    Returns
+    -------
+    top_k:
+        pd.Series
+        appliance:
+            contribution
+
+    # TODO: Allow arbitrary functions
+    # TODO: Handle case when number of appliances is less than default k=3
+    """
+    series_appliances_contribution = find_appliances_contribution(electricity)
     print(series_mains, "Mains")
     print(series_appliances_contribution)
 
