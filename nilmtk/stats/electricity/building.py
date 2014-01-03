@@ -96,6 +96,23 @@ def proportion_of_energy_submetered(electricity,
     return np.mean(proportion_per_day)
 
 
+def start_end_datetimes_channels(electricity):
+    """Finds the start and end datetimes of all electricity channels. 
+    It can be used to find common start and end times for different 
+    channels to be used in preprocessing filters
+
+    Parameters
+    ----------
+    electricity : nilmtk.utility.electricity
+
+    Returns
+    -------
+    start_end_datetimes_dict : dictionary  
+        {channel: [start_timestamp, end_timestamp]}
+    """
+    return None
+
+
 def average_energy(electricity,
                    max_dropout_rate=DEFAULT_MAX_DROPOUT_RATE):
     """
@@ -116,11 +133,13 @@ def average_energy_per_appliance(electricity,
 
     Parameters
     ----------
-    electricity : nilmtk.sensors.electricity.Electricity
+    electricity:
+        nilmtk.sensors.electricity.Electricity
 
     Returns
     -------
-    av_energy : pd.Series
+    av_energy:
+        pd.Series
         Each element of the index is an ApplianceName
         Values are average energy in kWh per day
     """
@@ -132,17 +151,25 @@ def top_k_appliances(electricity, k=3, how=np.mean, order='desc'):
 
     Parameters
     ----------
-    electricity : nilmtk.sensors.electricity.Electricity
-    k : Number of results to be returned, int
-        Default value:3
-    how : Function by which to order top k appliances
-        Default: numpy.mean
-    order :  Order whether top k from highest (desc) or from lowest (asc)
+    electricity:
+        nilmtk.sensors.electricity.Electricity
+    k:
+        Number of results to be returned, int
+        Default value:
+            3
+    how:
+        Function by which to order top k appliances
+        Default:
+            numpy.mean
+    order:
+        Order whether top k from highest(desc) or from lowest(asc)
 
     Returns
     -------
-    top_k : pd.Series
-        appliance:contribution
+    top_k:
+        pd.Series
+        appliance:
+            contribution
 
     # TODO: Allow arbitrary functions
     # TODO: Handle case when number of appliances is less than default k=3
