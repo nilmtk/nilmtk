@@ -1,5 +1,5 @@
 from __future__ import print_function
-from nilmtk.dataset import ampds
+from nilmtk.dataset import DataSet
 from nilmtk.cross_validation import train_test_split
 from nilmtk.disaggregate.fhmm_exact import FHMM
 from nilmtk.metrics import rms_error_power
@@ -10,23 +10,19 @@ from nilmtk.preprocessing import filter_top_k_appliances
 import time
 import pandas as pd
 import matplotlib.pyplot as plt
+import resource
 
 
 PATH = '/home/nipun/Desktop/AMPds/'
 EXPORT_PATH = '/home/nipun/Desktop/temp/ampds/'
 DISAGG_FEATURE = Measurement('power', 'active')
-'''
-# Loading data for Home 01
-ampds.load_electricity(PATH)
-ampds.load_water(PATH)
-ampds.load_gas(PATH)
-'''
-import resource
+
+# Setting the limits to 5 GB RAM usage
 megs = 5000
 resource.setrlimit(resource.RLIMIT_AS, (megs * 1048576L, -1L))
 
 # Loading data from HDF5 store
-dataset = ampds.AMPDS()
+dataset = DataSet()
 t1 = time.time()
 dataset.load_hdf5(EXPORT_PATH)
 t2 = time.time()
@@ -64,7 +60,7 @@ print("Runtime to train = {:.2f} seconds".format(t2 - t1))
 
 # Disaggregate
 t1 = time.time()
-disaggregator.disaggregate()
+disaggregator.disaggregate(test)
 t2 = time.time()
 print("Runtime to disaggregate = {:.2f} seconds".format(t2 - t1))
 
