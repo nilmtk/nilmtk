@@ -6,6 +6,18 @@ from copy import deepcopy
 
 
 def filter_top_k_appliances(building, k=5):
+	"""Filters and keeps only the top k appliance data
+
+	Parameters
+	----------
+	building : nilmtk.Building
+	k : int, default: 5
+		Top 'k' appliances to keep
+
+	Returns
+	-------
+	building_copy : nilmtk.Building
+	"""
     top_k = top_k_appliances(building.utility.electric, k=k).index
     building_copy = deepcopy(building)
     appliances_dict = building.utility.electric.appliances
