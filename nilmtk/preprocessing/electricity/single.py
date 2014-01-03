@@ -1,5 +1,10 @@
 """Preprocessing functions for a single appliance / mains / circuit DataFrame"""
 
+from __future__ import print_function, division
+import numpy as np
+import pandas as pd
+from copy import deepcopy
+
 def insert_zeros(single_appliance_dataframe, max_sample_period=None):
     """Some individual appliance monitors (IAM) get turned off occasionally.
     This might happen, for example, in the case where a hoover's IAM is 
@@ -40,7 +45,19 @@ def insert_zeros(single_appliance_dataframe, max_sample_period=None):
         `max_sample_period` seconds after the last sample of the on-segment.
     
     """
-    raise NotImplementedError
+
+    df_with_zeros = deepcopy(single_appliance_dataframe)
+
+    timedeltas = np.diff(df_with_zeros.index.values) / np.timedelta64(1, 's')
+    dropout_dates = df_with_zeros.index[:-1][timedeltas > max_sample_period]
+    # TODO: we should only add a 0 if the preceeding value is > 0
+    insert_offs = pd.Series(0,
+                            index=dropout_dates +
+                            pd.DateOffset(seconds=max_sample_period))
+    df_with_zeros = df_with_zeros.append(insert_offs)
+    df_with_zeros = df_with_zeros.sort_index()
+
+    return df_with_zeros
 
 
 def replace_nans_with_zeros(multiple_appliances_dataframe, max_sample_period):

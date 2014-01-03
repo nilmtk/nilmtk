@@ -444,12 +444,11 @@ def on(series, max_sample_period=None,
 
     if max_sample_period is not None:
         # add an 'off' entry whenever data is lost for > self.max_sample_period
-        time_delta = np.diff(series.index.values)
+        time_delta = np.diff(series.index.values) / np.timedelta64(1, 's')
         dropout_dates = series.index[:-1][time_delta > max_sample_period]
-        max_sample_period_secs = max_sample_period / np.timedelta64(1, 's')
         insert_offs = pd.Series(False,
                                 index=dropout_dates +
-                                pd.DateOffset(seconds=max_sample_period_secs))
+                                pd.DateOffset(seconds=max_sample_period))
         when_on = when_on.append(insert_offs)
         when_on = when_on.sort_index()
 
