@@ -1,5 +1,8 @@
 from nilmtk.utils import find_nearest
 from nilmtk.utils import find_nearest_vectorized
+from nilmtk.disaggregate import Disaggregator
+from nilmtk.sensors.electricity import Measurement
+
 
 import pandas as pd
 import itertools
@@ -143,15 +146,16 @@ def decode_co(length_sequence, centroids, appliance_list, states,
     return [co_states, co_power]
 
 
-class CO_1d(object):
+class CO_1d(Disaggregator):
 
     def __init__(self):
 
         self.model = {}
         self.predictions = pd.DataFrame()
 
-    def train(self, train_mains, train_appliances, cluster_algo='kmeans++',
-              num_states=None):
+    def train(self, building, aggregate='mains', submetered='appliances',
+              disagg_features=[Measurement('power', 'active')],
+              environmental=None):
         """Train using 1d CO. Places the learnt model in `model` attribute
 
         Attributes
@@ -174,6 +178,13 @@ class CO_1d(object):
             This can be passed by the user
         """
 
+        # Get a dataframe of appliances; Since the algorithm is 1D, we need
+        # only the first Measurement
+        train_appliances = building.utility.electric.get_dataframe_of_appliances(
+            measurement=disagg_features[0])
+
+        train_mains = building.utility.electric.get_dataframe_of_mains(
+            measurement=disagg_features[0])
         centroids = {}
         num_appliances = len(train_appliances.keys())
         if num_appliances > 12:
@@ -203,7 +214,7 @@ class CO_1d(object):
         self.model = centroids
         return centroids
 
-    def disaggregate(self, test_mains):
+    def disaggregate(self, test):
         '''Disaggregate the test data according to the model learnt previously
 
         Parameters
@@ -218,6 +229,8 @@ class CO_1d(object):
 
         None
          '''
+        test_mains = building.utility.electric.get_dataframe_of_mains(
+            measurement=disagg_features[0])
         # Find put appliances which have more than one state. For others we do
         # not need to decode; they have only a single state. This can simplify
         # the amount of computations needed
@@ -265,4 +278,5 @@ class CO_1d(object):
             predicted_power[appliance] = np.zeros(
                 length_sequence, dtype=np.int)
 
-        self.predictions = pd.DataFrame(predicted_power, index=test_mains.index)
+        self.predictions = pd.DataFrame(
+            predicted_power, index=test_mains.index)

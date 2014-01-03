@@ -121,7 +121,7 @@ class DataSet(object):
                     b.utility.electric.appliances = {}
                     for key in keys_appliances:
                         appliance_name = key.split("/")[-2]
-                        appliance_instance = key.split("/")[-1]
+                        appliance_instance = int(key.split("/")[-1])
                         appliance_name = ApplianceName(
                             appliance_name, appliance_instance)
                         b.utility.electric.appliances[
@@ -150,6 +150,8 @@ class DataSet(object):
             electric = utility.electric
             mains = electric.mains
             for main in mains:
+                print building_number, type(building_number)
+                print main.split, type()
                 store.put('/%d/utility/electric/mains/%d/%d/' %
                           (building_number, main.split, main.meter),
                           mains[main], table=True)

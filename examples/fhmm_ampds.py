@@ -22,7 +22,7 @@ ampds.load_water(PATH)
 ampds.load_gas(PATH)
 '''
 import resource
-megs = 4000
+megs = 5000
 resource.setrlimit(resource.RLIMIT_AS, (megs * 1048576L, -1L))
 
 # Loading data from HDF5 store
@@ -35,8 +35,8 @@ print("Runtime to import from HDF5 = {:.2f}".format(t2 - t1))
 # Experiment on first (and only) building
 b = dataset.buildings[1]
 
-# Filtering to include only top 6 appliances
-b = filter_top_k_appliances(b, 8)
+# Filtering to include only top 8 appliances
+b = filter_top_k_appliances(b, 3)
 
 # Dividing the data into train and test
 train, test = train_test_split(b)
@@ -57,17 +57,16 @@ train_appliances = pd.DataFrame({appliance: app[appliance][DISAGG_FEATURE] for a
 
 # Train
 t1 = time.time()
-disaggregator.train(train_mains, train_appliances)
+disaggregator.train(train, disagg_features=[DISAGG_FEATURE])
 t2 = time.time()
-print("Runtime to train = {:.2f}".format(t2 - t1))
+print("Runtime to train = {:.2f} seconds".format(t2 - t1))
 
 
 # Disaggregate
 t1 = time.time()
-disaggregator.disaggregate(test.utility.electric.mains[
-    test.utility.electric.mains.keys()[0]][DISAGG_FEATURE])
+disaggregator.disaggregate()
 t2 = time.time()
-print("Runtime to disaggregate = {:.2f}".format(t2 - t1))
+print("Runtime to disaggregate = {:.2f} seconds".format(t2 - t1))
 
 
 # Metrics
@@ -84,10 +83,10 @@ mne = mean_normalized_error_power(predicted_power, ground_truth_power)
 
 # Plot results
 for appliance in predicted_power:
-	print(appliance)
-    plt.figure()
     fig, axes = plt.subplots(nrows=2, sharex=True)
     predicted_power[appliance].plot(ax=axes[0])
-    axes[0].set_title("Predicted power for %s" % (appliance.name))
+    axes[0].set_title("Predicted power for %s instance %d" %
+                      (appliance.name, appliance.instance))
     ground_truth_power[appliance].plot(ax=axes[1])
-    axes[1].set_title("Ground trurh power for %s" % (appliance.name))
+    axes[1].set_title("Ground truth power for %s instance %d" %
+                      (appliance.name, appliance.instance))

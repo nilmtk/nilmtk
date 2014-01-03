@@ -1,5 +1,6 @@
 from nilmtk.utils import find_nearest
 from nilmtk.utils import find_nearest_vectorized
+from nilmtk.sensors.electricity import Measurement
 
 import pandas as pd
 import itertools
@@ -79,7 +80,9 @@ def compute_A_fhmm(list_A):
 
 def compute_means_fhmm(list_means):
     """
-    Returns [mu, sigma]
+    Returns 
+    -------
+    [mu, cov]
     """
 
     #list_of_appliances_centroids=[ [appliance[i][0] for i in range(len(appliance))] for appliance in list_B]
@@ -92,10 +95,15 @@ def compute_means_fhmm(list_means):
 
 
 def compute_pi_fhmm(list_pi):
-    '''
-    Input: list_pi: List of PI's of individual learnt HMMs
-    Output: Combined Pi for the FHMM
-    '''
+    """
+    Parameters
+    -----------
+    list_pi : List of PI's of individual learnt HMMs
+
+    Returns
+    -------
+    result : Combined Pi for the FHMM
+    """
     result = list_pi[0]
     for i in range(len(list_pi) - 1):
         result = np.kron(result, list_pi[i + 1])
@@ -171,26 +179,18 @@ class FHMM(object):
         self.model = {}
         self.predictions = pd.DataFrame()
 
-    def train(self, train_mains, train_appliances, cluster_algo='kmeans++',
-              num_states=None):
-        """Train using 1d CO. Places the learnt model in `model` attribute
-
-        Attributes
-        ----------
-
-        train_mains : 1d Pandas series (indexed on DateTime) corresponding to an
-            attribute of mains such as power_active, power_reactive etc.
-
-        train_appliances : Pandas DataFrame (indexed on DateTime);
-            Each attibute (column)
-            is a series corresponding to an attribute of each appliance
-            such as power_active. This attribute must be the same as
-            that used by the mains
-
-        num_states :  dict
-            Dictionary corresponding to number of states for each appliance
-            This can be passed by the user
+    def train(self, building, aggregate='mains', submetered='appliances',
+              disagg_features=[Measurement('power', 'active')],
+              environmental=None):
+        """Train using 1d FHMM. Places the learnt model in `model` attribute
         """
+         # Get a dataframe of appliances; Since the algorithm is 1D, we need
+        # only the first Measurement
+        train_appliances = building.utility.electric.get_dataframe_of_appliances(
+            measurement=disagg_features[0])
+
+        train_mains = building.utility.electric.get_dataframe_of_mains(
+            measurement=disagg_features[0])
 
         learnt_model = OrderedDict()
         for appliance in train_appliances:
@@ -216,22 +216,13 @@ class FHMM(object):
         self.individual = new_learnt_models
         self.model = learnt_model_combined
 
-    def disaggregate(self, test_mains):
+    def disaggregate(self, building, disagg_features=[Measurement('power', 'active')],
+                     environmental=None):
         """Disaggregate the test data according to the model learnt previously
-
-        Parameters
-        ----------
-
-        test_mains : Pandas DataFrame
-            containing appliances as columns and their 1D power draw  as values
-            NB: All appliances must have the same index
-
-        Returns
-        -------
-
-        None
+        Performs 1D FHMM disaggregation        
         """
-
+        test_mains = building.utility.electric.get_dataframe_of_mains(
+            measurement=disagg_features[0])
         length = test_mains.values.size
         temp = test_mains.values.reshape(length, 1)
         learnt_states = self.model.predict(temp)

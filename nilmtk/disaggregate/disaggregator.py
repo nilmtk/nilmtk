@@ -1,7 +1,9 @@
 from abc import ABCMeta, abstractmethod
 from nilmtk.sensors.electricity import Measurement
 
+
 class Disaggregator(object):
+
     """Abstract Base Class for all Disaggregators.  This class
     defines the common interface to all Disaggregators.
     """
@@ -9,8 +11,8 @@ class Disaggregator(object):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def train(self, building, aggregate='mains', submetered='appliances', 
-              disagg_features=[Measurement('power', 'active')], 
+    def train(self, building, aggregate='mains', submetered='appliances',
+              disagg_features=[Measurement('power', 'active')],
               environmental=None):
         """Train the disaggregation algorithm.
 
@@ -46,7 +48,8 @@ class Disaggregator(object):
         return
 
     @abstractmethod
-    def disaggregate(self, building, disagg_features=None, environmental=None):
+    def disaggregate(self, building, disagg_features=[Measurement('power', 'active')],
+            environmental=None):
         """Runs non-intrusive load monitoring on the aggregate data from
         the building.
 
