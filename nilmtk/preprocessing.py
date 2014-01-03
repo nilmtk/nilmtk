@@ -18,12 +18,15 @@ def filter_top_k_appliances(building, k=5):
 	-------
 	building_copy : nilmtk.Building
 	"""
-    top_k = top_k_appliances(building.utility.electric, k=k).index
-    building_copy = deepcopy(building)
-    appliances_dict = building.utility.electric.appliances
-    appliances_filtered = {appliance: appliances_dict[appliance] for appliance in appliances_dict if appliance in top_k}
-    building_copy.utility.electric.appliances = appliances_filtered
-    return building_copy
+
+	top_k = top_k_appliances(building.utility.electric, k=k).index
+	building_copy = deepcopy(building)
+	appliances_dict = building.utility.electric.appliances
+	appliances_filtered = {appliance: appliances_dict[appliance] for appliance in appliances_dict if appliance in top_k}
+	building_copy.utility.electric.appliances = appliances_filtered
+	return building_copy
+
+
 
 
 def downsample(building, rule='1T', how='mean'):

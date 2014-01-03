@@ -1,20 +1,8 @@
-'''
+"""
 iAWE Dataset Loader
 
 These routines load iAWE Dataset into NILMTK Dataset format
 
-Authors :
-License:
-
-
-'''
-
-'''
-Geyser did not work!- So '001EC00CC4A1' is ignored
-'''
-
-
-'''
 Iron June 6-
 kitchen_misc June 6-
 AC June 1
@@ -26,7 +14,7 @@ TV from 001EEC00D7A1D June 13 to June 23;
 water_filter July 13
 TV from 001EC00E6BBD July 10 to ..
 
-'''
+"""
 
 
 import pandas as pd
@@ -83,20 +71,15 @@ def query_database_jplug(self, jplug):
         jplug)
     data = psql.frame_query(query, mysql_conn['jplug'])
     data = data.astype('float32')
-    print 'Now converting index'
     data = data[data.timestamp < 1381069800]
     data.timestamp = data.timestamp.astype('int')
     data.index = pd.to_datetime(
         (data.timestamp.values * 1E9).astype(int), utc=True)
     data = data.drop('timestamp', 1)
+
     data = data.tz_convert(self.metadata['timezone'])
     # Get the data starting from June 7, 2013
     data = data[pd.Timestamp('2013-06-07'):pd.Timestamp('2014-01-01')]
-    print 'Now downsampling'
-    print data.describe()
-    print jplug_mapping[jplug]
-    print "*" * 80
-    # data.resample('1Min')
     return data
 
 
@@ -115,7 +98,6 @@ class IAWE(DataSet):
     def load(self):
         """Load entire dataset into memory"""
         building = self.load_building_names(root_directory)
-        print (building_names)
         for building_name in building_names:
             self.load_building(root_directory, building_name)
 
@@ -126,12 +108,12 @@ class IAWE(DataSet):
         query = 'select W1, W2, f, VLN, timestamp from smart_meter_data ;'
         data = psql.frame_query(query, mysql_conn['smart'])
         data = data.astype('float32')
-        print 'Now converting index'
         data = data[data.timestamp < 1381069800]
         data.timestamp = data.timestamp.astype('int')
         data.index = pd.to_datetime(
             (data.timestamp.values * 1E9).astype(int), utc=True)
         data = data.drop('timestamp', 1)
+        data = data.sort_index()
         data = data.tz_convert(self.metadata['timezone'])
         data = data[pd.Timestamp('2013-06-07'):pd.Timestamp('2014-01-01')]
 
@@ -149,34 +131,25 @@ class IAWE(DataSet):
 
         self.building.utility.electric.appliances = {}
         for jplug in jplug_mapping:
-            print jplug
             if jplug_mapping[jplug] not in self.building.utility.electric.appliances.keys():
                 self.building.utility.electric.appliances[
                     jplug_mapping[jplug]] = query_database_jplug(self, jplug)
 
-                print self.building.utility.electric.appliances[
-                    jplug_mapping[jplug]]
             # Needed for appliances which are measured using multiple jPlugs at
             # different times
             else:
                 self.building.utility.electric.appliances[jplug_mapping[jplug]] = pd.concat(
                     [self.building.utility.electric.appliances[jplug_mapping[jplug]], query_database_jplug(self, jplug)])
 
-        # Drop cost and mac columns from the data
-        '''for appliance in self.building.utility.electric.appliances.keys():
+            # Sort values
             self.building.utility.electric.appliances[
-                appliance].drop(['Cost', 'mac'], 1, inplace=True)
-        '''
+                jplug_mapping[jplug]] =self.building.utility.electric.appliances[
+                jplug_mapping[jplug]].sort_index()
+
         # Renaming measurements of columns
         for appliance in self.building.utility.electric.appliances.keys():
             self.building.utility.electric.appliances[appliance] = self.building.utility.electric.appliances[
                 appliance].rename(columns=lambda x: column_mapping[x])
-
-        # Setting precision as 32 bits to save memory
-        '''for appliance in self.building.utility.electric.appliances.keys():
-            self.building.utility.electric.appliances[
-                appliance] = self.building.utility.electric.appliances[appliance].astype('float32')
-        '''
 
         # Adding motor data which was collected using Current Cost
         df = pd.read_csv('/home/nipun/Copy/motor_data_complete.csv',
@@ -186,6 +159,7 @@ class IAWE(DataSet):
         df.index = pd.to_datetime(
             (df.timestamp.values * 1E9).astype(int), utc=True)
         df = df.drop('timestamp', 1)
+        df = df.sort_index()
         df = df.tz_convert(self.metadata['timezone'])
 
         # Filtering out insanely large values collected from some other

@@ -7,13 +7,10 @@ import itertools
 import numpy as np
 from sklearn import metrics
 from sklearn import hmm
-from copy import deepcopy
 
+from copy import deepcopy
 from collections import OrderedDict
 
-MAX_VALUES_TO_CONSIDER = 100
-MAX_POINT_THRESHOLD = 2000
-MIN_POINT_THRESHOLD = 20
 SEED = 42
 
 # Fix the seed for repeatibility of experiments
@@ -39,7 +36,14 @@ def sort_covars(mapping, covars):
 
 
 def sort_transition_matrix(mapping, A):
-    """ Sorts the transition matrix according to power means; as returned by mapping
+    """ Sorts the transition matrix according to increasing order of 
+    power means; as returned by mapping
+
+    Parameters
+    ----------
+    mapping : 
+    A : numpy.array of shape (k, k)
+        transition matrix
     """
     num_elements = len(A)
     A_new = np.zeros((num_elements, num_elements))
@@ -216,8 +220,9 @@ class FHMM(object):
         self.individual = new_learnt_models
         self.model = learnt_model_combined
 
-    def disaggregate(self, building, disagg_features=[Measurement('power', 'active')],
-                     environmental=None):
+    def disaggregate(
+        self, building, disagg_features=[Measurement('power', 'active')],
+            environmental=None):
         """Disaggregate the test data according to the model learnt previously
         Performs 1D FHMM disaggregation        
         """

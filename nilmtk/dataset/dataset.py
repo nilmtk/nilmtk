@@ -144,14 +144,13 @@ class DataSet(object):
         store = pd.HDFStore(
             os.path.join(directory, 'dataset.h5'), complevel=9, complib='zlib')
         for building_number in self.buildings:
-            print(building_number)
+            print("Writing data for %d" %(building_number))
             building = self.buildings[building_number]
             utility = building.utility
             electric = utility.electric
             mains = electric.mains
             for main in mains:
-                print building_number, type(building_number)
-                print main.split, type()
+
                 store.put('/%d/utility/electric/mains/%d/%d/' %
                           (building_number, main.split, main.meter),
                           mains[main], table=True)
