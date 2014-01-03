@@ -169,31 +169,31 @@ def find_appliances_contribution(electricity, how=np.mean):
     # Finding common measurements
     common_measurements = find_common_measurements(electricity)
     if len(common_measurements) == 0:
-        print('Cannot proceed further; no common attribute')
+        raise Exception('Cannot proceed further; no common attribute')
+
+    if Measurement('power', 'active') in common_measurements:
+        common_measurement = Measurement('power', 'active')
     else:
+        # Choose the first attribute for comparison
+        common_measurement = common_measurements[0]
 
-        if Measurement('power', 'active') in common_measurements:
-            common_measurement = Measurement('power', 'active')
-        else:
-            # Choose the first attribute for comparison
-            common_measurement = common_measurements[0]
+    print("Common Measurement: ", common_measurement)
 
-        print("Common Measurement: ", common_measurement)
+    # Applying function over all appliances
+    series_appliances = {}
+    for appliance in electricity.appliances:
+        series_appliances[appliance] = electricity.appliances[
+            appliance][common_measurement].mean()
 
-        # Applying function over all appliances
-        series_appliances = {}
-        for appliance in electricity.appliances:
-            series_appliances[appliance] = electricity.appliances[
-                appliance][common_measurement].mean()
+    series_appliances = pd.Series(series_appliances)
 
-        series_appliances = pd.Series(series_appliances)
+    # Applying function over all mains summed up
+    series_mains = combined_mains[common_measurement].mean()
 
-        # Applying function over all mains summed up
-        series_mains = combined_mains[common_measurement].mean()
-
-        # Contribution per appliance
-        series_appliances_contribution = series_appliances / series_mains
-
+    # Contribution per appliance
+    series_appliances_contribution = series_appliances / series_mains
+    
+    return series_appliances_contribution
 
 def top_k_appliances(electricity, k=3, how=np.mean, order='desc'):
     """Reports the top k appliances by 'how' attribute
