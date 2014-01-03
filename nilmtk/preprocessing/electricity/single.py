@@ -45,16 +45,19 @@ def insert_zeros(single_appliance_dataframe, max_sample_period=None):
         `max_sample_period` seconds after the last sample of the on-segment.
     
     """
+    # TODO: handle DataFrame
 
     df_with_zeros = deepcopy(single_appliance_dataframe)
 
     timedeltas = np.diff(df_with_zeros.index.values) / np.timedelta64(1, 's')
-    dropout_dates = df_with_zeros.index[:-1][timedeltas > max_sample_period]
-    # TODO: we should only add a 0 if the preceeding value is > 0
-    insert_offs = pd.Series(0,
-                            index=dropout_dates +
-                            pd.DateOffset(seconds=max_sample_period))
-    df_with_zeros = df_with_zeros.append(insert_offs)
+    readings_before_gaps = df_with_zeros[:-1][timedeltas > max_sample_period]
+    # we only add a 0 if the preceeding value is > 0
+    readings_before_gaps = readings_before_gaps[readings_before_gaps > 0]
+    
+    zeros = pd.Series(0,
+                      index=readings_before_gaps.index +
+                      pd.DateOffset(seconds=max_sample_period))
+    df_with_zeros = df_with_zeros.append(zeros)
     df_with_zeros = df_with_zeros.sort_index()
 
     return df_with_zeros
