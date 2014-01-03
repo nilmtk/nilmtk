@@ -2,7 +2,6 @@
 import pandas as pd
 import numpy as np
 
-from nilmtk.stats.electricity.building import
 from nilmtk.stats.electricity.building import top_k_appliances
 from copy import deepcopy
 
