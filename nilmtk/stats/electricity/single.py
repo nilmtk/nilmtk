@@ -31,7 +31,9 @@ def get_sample_period(data):
     """
     index = _get_index(data)
     fwd_diff = np.diff(index.values[:100]).astype(np.float)
-    mode_fwd_diff = stats.mode(fwd_diff)[0][0]
+    # return fwd_diff
+    mode_fwd_diff = np.mean(fwd_diff)
+    #mode_fwd_diff = stats.mode(fwd_diff)[0][0]
     period = mode_fwd_diff / 1E9
     return period
 
@@ -752,7 +754,6 @@ def _get_index(data):
     -------
     index : the index for the DataFrame or Series
     """
-
     if isinstance(data, (pd.DataFrame, pd.Series)):
         index = data.index
     elif isinstance(data, pd.DatetimeIndex):

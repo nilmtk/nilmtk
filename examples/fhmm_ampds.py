@@ -6,7 +6,7 @@ from nilmtk.metrics import rms_error_power
 from nilmtk.metrics import mean_normalized_error_power
 from nilmtk.sensors.electricity import Measurement
 from nilmtk.stats.electricity.building import top_k_appliances
-from nilmtk.preprocessing import filter_top_k_appliances
+from nilmtk.preprocessing.electricity.building import filter_top_k_appliances
 import time
 import pandas as pd
 import matplotlib.pyplot as plt

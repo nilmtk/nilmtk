@@ -67,10 +67,9 @@ column_mapping = {
 
 
 def query_database_jplug(self, jplug):
-    query = 'select active_power,timestamp from jplug_data where mac="%s";' % (
+    query = 'select active_power,voltage,timestamp from jplug_data where mac="%s";' % (
         jplug)
     data = psql.frame_query(query, mysql_conn['jplug'])
-    data = data.astype('float32')
     data = data[data.timestamp < 1381069800]
     data.timestamp = data.timestamp.astype('int')
     data.index = pd.to_datetime(
@@ -80,6 +79,8 @@ def query_database_jplug(self, jplug):
     data = data.tz_convert(self.metadata['timezone'])
     # Get the data starting from June 7, 2013
     data = data[pd.Timestamp('2013-06-07'):pd.Timestamp('2014-01-01')]
+    data = data.dropna()
+    data = data.astype('float32')
     return data
 
 
@@ -105,9 +106,8 @@ class IAWE(DataSet):
         super(IAWE, self).load_hdf5(directory)
 
     def add_mains(self):
-        query = 'select W1, W2, f, VLN, timestamp from smart_meter_data ;'
+        query = 'select W1, W2, f, VLN, timestamp from smart_meter_data;'
         data = psql.frame_query(query, mysql_conn['smart'])
-        data = data.astype('float32')
         data = data[data.timestamp < 1381069800]
         data.timestamp = data.timestamp.astype('int')
         data.index = pd.to_datetime(
@@ -116,6 +116,8 @@ class IAWE(DataSet):
         data = data.sort_index()
         data = data.tz_convert(self.metadata['timezone'])
         data = data[pd.Timestamp('2013-06-07'):pd.Timestamp('2014-01-01')]
+        data = data.dropna()
+        data = data.astype('float32')
 
         self.building.utility.electric.mains = {}
         self.building.utility.electric.mains[
@@ -131,6 +133,7 @@ class IAWE(DataSet):
 
         self.building.utility.electric.appliances = {}
         for jplug in jplug_mapping:
+            print(jplug_mapping[jplug])
             if jplug_mapping[jplug] not in self.building.utility.electric.appliances.keys():
                 self.building.utility.electric.appliances[
                     jplug_mapping[jplug]] = query_database_jplug(self, jplug)
@@ -143,7 +146,7 @@ class IAWE(DataSet):
 
             # Sort values
             self.building.utility.electric.appliances[
-                jplug_mapping[jplug]] =self.building.utility.electric.appliances[
+                jplug_mapping[jplug]] = self.building.utility.electric.appliances[
                 jplug_mapping[jplug]].sort_index()
 
         # Renaming measurements of columns

@@ -76,7 +76,7 @@ class AMPDS(DataSet):
 
     def read_electricity_csv_and_standardize(self, csv_path):
         # Loading appliance
-        df = pd.read_csv(csv_path).astype('float32')
+        df = pd.read_csv(csv_path)
 
         # Convert timestamp to ints
         df.TS = df.TS.astype('int')
@@ -89,12 +89,13 @@ class AMPDS(DataSet):
 
         # Rename columns
         df = df.rename(columns=lambda x: column_name_mapping[x])
+        df = df.astype('float32')
 
         return df
 
     def read_water_csv_and_standardize(self, csv_path):
         # Loading appliance
-        df = pd.read_csv(csv_path).astype('float32')
+        df = pd.read_csv(csv_path)
 
         # Convert timestamp to type int
         df.ts = df.ts.astype('int')
@@ -107,7 +108,7 @@ class AMPDS(DataSet):
 
         # Rename columns
         #df = df.rename(columns=lambda x: column_name_mapping[x])
-
+        df=df.astype('float32')
         return df
 
     def load_electricity(self, root_directory):

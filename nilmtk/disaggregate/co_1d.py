@@ -1,6 +1,6 @@
 from nilmtk.utils import find_nearest
 from nilmtk.utils import find_nearest_vectorized
-from nilmtk.disaggregate import Disaggregator
+from nilmtk.disaggregate.disaggregator import Disaggregator
 from nilmtk.sensors.electricity import Measurement
 
 

@@ -48,7 +48,8 @@ class Disaggregator(object):
         return
 
     @abstractmethod
-    def disaggregate(self, building, disagg_features=[Measurement('power', 'active')],
+    def disaggregate(
+        self, building, disagg_features=[Measurement('power', 'active')],
             environmental=None):
         """Runs non-intrusive load monitoring on the aggregate data from
         the building.

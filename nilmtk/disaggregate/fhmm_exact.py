@@ -1,5 +1,6 @@
 from nilmtk.utils import find_nearest
 from nilmtk.utils import find_nearest_vectorized
+from nilmtk.disaggregate.disaggregator import Disaggregator
 from nilmtk.sensors.electricity import Measurement
 
 import pandas as pd
@@ -176,7 +177,7 @@ def decode_hmm(length_sequence, centroids, appliance_list, states):
     return [hmm_states, hmm_power]
 
 
-class FHMM(object):
+class FHMM(Disaggregator):
 
     def __init__(self):
 

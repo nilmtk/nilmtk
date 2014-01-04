@@ -144,7 +144,7 @@ class DataSet(object):
         store = pd.HDFStore(
             os.path.join(directory, 'dataset.h5'), complevel=9, complib='zlib')
         for building_number in self.buildings:
-            print("Writing data for %d" %(building_number))
+            print("Writing data for %d" % (building_number))
             building = self.buildings[building_number]
             utility = building.utility
             electric = utility.electric
