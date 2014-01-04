@@ -214,7 +214,9 @@ class CO_1d(Disaggregator):
         self.model = centroids
         return centroids
 
-    def disaggregate(self, test):
+    def disaggregate(
+        self, building, disagg_features=[Measurement('power', 'active')],
+            environmental=None):
         '''Disaggregate the test data according to the model learnt previously
 
         Parameters

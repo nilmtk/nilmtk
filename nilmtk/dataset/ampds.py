@@ -108,7 +108,7 @@ class AMPDS(DataSet):
 
         # Rename columns
         #df = df.rename(columns=lambda x: column_name_mapping[x])
-        df=df.astype('float32')
+        df = df.astype('float32')
         return df
 
     def load_electricity(self, root_directory):

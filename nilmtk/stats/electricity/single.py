@@ -31,9 +31,7 @@ def get_sample_period(data):
     """
     index = _get_index(data)
     fwd_diff = np.diff(index.values[:100]).astype(np.float)
-    # return fwd_diff
-    mode_fwd_diff = np.mean(fwd_diff)
-    #mode_fwd_diff = stats.mode(fwd_diff)[0][0]
+    mode_fwd_diff = stats.mode(fwd_diff)[0][0]
     period = mode_fwd_diff / 1E9
     return period
 

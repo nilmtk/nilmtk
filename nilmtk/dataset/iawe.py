@@ -1,19 +1,5 @@
 """
 iAWE Dataset Loader
-
-These routines load iAWE Dataset into NILMTK Dataset format
-
-Iron June 6-
-kitchen_misc June 6-
-AC June 1
-Fridge June 6
-washing_machine June 1
-laptop *
-AC 2 June 6
-TV from 001EEC00D7A1D June 13 to June 23; 
-water_filter July 13
-TV from 001EC00E6BBD July 10 to ..
-
 """
 
 
