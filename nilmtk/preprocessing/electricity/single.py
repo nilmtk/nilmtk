@@ -4,7 +4,9 @@ from __future__ import print_function, division
 import numpy as np
 import pandas as pd
 from copy import deepcopy
+
 from nilmtk.stats.electricity.single import get_sample_period
+from nilmtk.sensors.electricity import Measurement
 
 
 def insert_zeros(single_appliance_dataframe, max_sample_period=None):
@@ -87,3 +89,41 @@ def normalise_power(power, voltage, nominal_voltage):
     """
     power_normalized = ((nominal_voltage / voltage) ** 2) * power
     return power_normalized
+
+
+def remove_implausible_entries(channel_df, measurement,
+                               min_threshold=None, max_threshold=None):
+    """
+    It is sometimes observed that sometimes sensors may give implausible
+    entries. eg. Voltage of 0.0 makes no sense or power of an appliance 
+    to be 1MW makes no sense. These records must be filtered out. This
+    method filters out values outside a given range.
+
+    Parameters
+    ----------
+    channel_df : pandas.DataFrame
+        Corresponds to either an appliance or mains or circuit which 
+        contains `measurement` as one of the columns
+
+    measurement : nilmtk.sensors.electricity.Measurement
+    min_threshold: float
+    max_threshold: float
+
+    Returns
+    -------
+    implausible_entries_dropped : pandas.DataFrame
+    """
+
+    assert(measurement in channel_df.columns)
+    # Atleast one of min_threshold or max_threshold must be there
+    assert((min_threshold is not None) or (max_threshold is not None))
+
+    if min_threshold is None:
+        min_threshold = channel_df[measurement].min()
+    if max_threshold is None:
+        max_threshold = channel_df[measurement].max()
+
+    s = channel_df[measurement]
+    implausible_entries_dropped = channel_df[
+        (s > min_threshold) & (s < max_threshold)]
+    return implausible_entries_dropped
