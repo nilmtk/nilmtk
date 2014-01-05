@@ -9,6 +9,7 @@ import itertools
 import numpy as np
 from sklearn import metrics
 from sklearn.cluster import KMeans
+from copy import deepcopy
 
 MAX_VALUES_TO_CONSIDER = 100
 MAX_POINT_THRESHOLD = 2000
@@ -152,6 +153,13 @@ class CO_1d(Disaggregator):
 
         self.model = {}
         self.predictions = pd.DataFrame()
+
+    def export(self, filename):
+        model_copy = {}
+        for appliance, appliance_states in self.model:
+            model_copy["%s_%d" % appliance] = appliance_states
+        with open(filename, 'a+') as f:
+            f.write(str(model_copy))
 
     def train(self, building, aggregate='mains', submetered='appliances',
               disagg_features=[Measurement('power', 'active')],
