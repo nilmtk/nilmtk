@@ -86,6 +86,19 @@ def replace_nans_with_zeros(multiple_appliances_dataframe, max_sample_period):
 
 def normalise_power(power, voltage, nominal_voltage):
     """
+    Normalizes the power draw as per Hart's paper.
+    TODO: Add more information about normalization
+
+    Parameters
+    ----------
+    power : pd.Series
+    voltage : pd.Series
+    nominal_voltage :float
+        Rated voltage supply in the country
+
+    Returns
+    -------
+    power_normalized : pd.Series
     """
     power_normalized = ((nominal_voltage / voltage) ** 2) * power
     return power_normalized
