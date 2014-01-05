@@ -1,5 +1,5 @@
 from __future__ import print_function
-from nilmtk.dataset import iawe
+from nilmtk.dataset import iawe, DataSet
 from nilmtk.stats.electricity.building import top_k_appliances
 from nilmtk.stats.electricity.single import get_sample_period
 
@@ -14,7 +14,7 @@ dataset.add_appliances()
 dataset.export(EXPORT_LOCATION)
 
 # Importing dataset from the exported location
-dataset = iawe.IAWE()
+dataset = DataSet()
 dataset.load_hdf5(EXPORT_LOCATION)
 
 # First building

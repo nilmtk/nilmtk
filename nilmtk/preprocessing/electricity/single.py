@@ -6,6 +6,7 @@ import pandas as pd
 from copy import deepcopy
 from nilmtk.stats.electricity.single import get_sample_period
 
+
 def insert_zeros(single_appliance_dataframe, max_sample_period=None):
     """Some individual appliance monitors (IAMs) get turned off.
     This might happen, for example, in the case where a hoover's IAM is 
@@ -50,7 +51,8 @@ def insert_zeros(single_appliance_dataframe, max_sample_period=None):
     if max_sample_period is None:
         max_sample_period = get_sample_period(single_appliance_dataframe) * 4
 
-    # Make a copy (the copied dataframe is what we return, after inserting zeros)
+    # Make a copy (the copied dataframe is what we return, after inserting
+    # zeros)
     df_with_zeros = deepcopy(single_appliance_dataframe)
 
     # Get the length of time between each pair of consecutive samples. Seconds.
@@ -58,12 +60,13 @@ def insert_zeros(single_appliance_dataframe, max_sample_period=None):
     readings_before_gaps = df_with_zeros[:-1][timedeltas > max_sample_period]
 
     # we only add a 0 if the recorded value just before the gap is > 0
-    readings_before_gaps = readings_before_gaps[readings_before_gaps.sum(axis=1) > 0]
+    readings_before_gaps = readings_before_gaps[
+        readings_before_gaps.sum(axis=1) > 0]
 
     # Make a DataFrame of zeros, ready for insertion
-    dates_to_insert_zeros = (readings_before_gaps.index + 
+    dates_to_insert_zeros = (readings_before_gaps.index +
                              pd.DateOffset(seconds=max_sample_period))
-    zeros = pd.DataFrame(data=0, index=dates_to_insert_zeros, 
+    zeros = pd.DataFrame(data=0, index=dates_to_insert_zeros,
                          columns=df_with_zeros.columns, dtype=np.float32)
 
     # Insert the dataframe of zeros into the data.
@@ -77,3 +80,10 @@ def replace_nans_with_zeros(multiple_appliances_dataframe, max_sample_period):
     all NaNs in these gaps with zeros.  
     But leave NaNs is gaps <= max_sample_period."""
     raise NotImplementedError
+
+
+def normalise_power(power, voltage, nominal_voltage):
+    """
+    """
+    power_normalized = ((nominal_voltage / voltage) ** 2) * power
+    return power_normalized
