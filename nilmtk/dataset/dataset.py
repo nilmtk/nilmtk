@@ -107,8 +107,8 @@ class DataSet(object):
                 if len(keys_mains) > 0:
                     b.utility.electric.mains = {}
                     for key in keys_mains:
-                        mains_split = key.split("/")[-2]
-                        mains_instance = key.split("/")[-1]
+                        mains_split = int(key.split("/")[-2])
+                        mains_instance = int(key.split("/")[-1])
                         mains_name = MainsName(mains_split, mains_instance)
                         b.utility.electric.mains[mains_name] = store[key]
 
@@ -142,17 +142,29 @@ class DataSet(object):
             electric = utility.electric
             mains = electric.mains
             for main in mains:
+                dir_path = os.path.join(os.path.abspath(directory),
+                                        "/%d/utility/electric/mains/%d_%d.csv"
+                                        % (building_number, main.split,
+                                           main.meter))
+                os.makedirs(dir_path)
+                temp = mains[main].copy()
+                temp.index = (temp.index.astype(int) / 1e9).astype(int)
+                temp.rename(columns=lambda x: "%s_%s" %
+                            (x.physical_quantity, x.type), inplace=True)
+                temp.to_csv(dir_path, index_label="timestamp")
 
-                store.put('/%d/utility/electric/mains/%d/%d/' %
-                          (building_number, main.split, main.meter),
-                          mains[main], table=True)
             appliances = electric.appliances
             for appliance in appliances:
-                store.put('%d/utility/electric/appliances/%s/%d/' %
-                          (building_number, appliance.name,
-                           appliance.instance),
-                          appliances[appliance], table=True)
-
+                dir_path = os.path.join(os.path.abspath(directory),
+                                        "/%d/utility/electric/appliances/%d_%d.csv"
+                                        % (building_number, appliance.name,
+                                           appliance.instance))
+                os.makedirs(dir_path)
+                temp = mains[main].copy()
+                temp.index = (temp.index.astype(int) / 1e9).astype(int)
+                temp.rename(columns=lambda x: "%s_%s" %
+                            (x.physical_quantity, x.type), inplace=True)
+                temp.to_csv(dir_path, index_label="timestamp")
 
     def export(self, directory, format='HDF5', compact=False):
         """Export dataset to disk as HDF5.
