@@ -277,6 +277,7 @@ class Electricity(object):
         ---------
         measurement : Measurement, optional
             default=Measurement('power', 'active')
+            if `measurement=None` then just get the first column per DataFrame.
 
         Returns
         -------
@@ -284,22 +285,27 @@ class Electricity(object):
             Index is the same as the index used in the appliances DataFrames.
             Each column name is an ApplianceName namedtuple.
         """
-        appliance_dict = {
-            appliance_name: appliance_df[measurement]
-            for appliance_name, appliance_df in self.appliances.iteritems()
-            if measurement in appliance_df}
+        if measurement is None:
+            appliance_dict = {
+                appliance_name: appliance_df.icol[0]
+                for appliance_name, appliance_df in self.appliances.iteritems()}
+        else:
+            appliance_dict = {
+                appliance_name: appliance_df[measurement]
+                for appliance_name, appliance_df in self.appliances.iteritems()
+                if measurement in appliance_df}
 
-        # Handle DualSupply appliances
-        for appliance_name, appliance_df in self.appliances.iteritems():
-            dual_supply_columns = []
-            for column_name in appliance_df:
-                if (isinstance(column_name, DualSupply) and
-                        column_name.measurement == measurement):
-                    dual_supply_columns.append(appliance_df[column_name])
+            # Handle DualSupply appliances
+            for appliance_name, appliance_df in self.appliances.iteritems():
+                dual_supply_columns = []
+                for column_name in appliance_df:
+                    if (isinstance(column_name, DualSupply) and
+                            column_name.measurement == measurement):
+                        dual_supply_columns.append(appliance_df[column_name])
 
-            if dual_supply_columns:
-                appliance_dict[appliance_name] = (dual_supply_columns[0] +
-                                                  dual_supply_columns[1])
+                if dual_supply_columns:
+                    appliance_dict[appliance_name] = (dual_supply_columns[0] +
+                                                      dual_supply_columns[1])
 
         return pd.DataFrame(appliance_dict)
 
