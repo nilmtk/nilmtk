@@ -84,3 +84,28 @@ def downsample(building, rule='1T', how='mean'):
             mains_name] = mains_df.resample(rule, how)
 
     return building_copy
+
+
+def filter_out_implausible_values(building, measurement,
+                                  min_threshold=None, max_threshold=None):
+    """Filters out values in appliances, circuits and mains which have measurement
+    as one of the attribute. Filtering is done by min and max threshold for a
+    measurement
+
+    Parameters
+    ----------
+    building :nilmtk.Building
+    measurement :nilmtk.sensor.electricity.Measurement
+    min_threshold : float, default=None
+    max_threshold :float, deafult=None
+
+    Returns
+    -------
+    building_copy : nilmtk.Building
+
+    See also
+    ---------
+    nilmtk.preprocessing.electricity.single.remove_implausible_entries"""
+
+    building_copy = deepcopy(building)
+    # Filtering mains

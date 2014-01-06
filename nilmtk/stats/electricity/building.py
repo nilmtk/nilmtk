@@ -9,19 +9,29 @@ from nilmtk.sensors.electricity import Measurement
 
 
 def find_common_measurements(electricity):
+    """Finds common measurement contained in all electricity streams
+
+    Parameters
+    ----------
+    electricity : nilmtk.sensors.electricity
+
+    Returns
+    -------
+    list of common measurements
+    """
 
     # Measurements in first mains
-    measurements = set(electricity.mains[electricity.mains.keys()[0]].columns)
+    measurements = set(electricity.mains.values()[0].columns)
 
     # Finding intersection with other mains
-    for main in electricity.mains.keys():
+    for main in electricity.mains.itervalues():
         measurements = measurements.intersection(
-            electricity.mains[main].columns)
+            main.columns)
 
     # Finding intersection with appliances
-    for appliance in electricity.appliances:
+    for appliance in electricity.appliances.itervalues():
         measurements = measurements.intersection(
-            electricity.appliances[appliance].columns)
+            appliance.columns)
     return list(measurements)
 
 
@@ -192,8 +202,9 @@ def find_appliances_contribution(electricity, how=np.mean):
 
     # Contribution per appliance
     series_appliances_contribution = series_appliances / series_mains
-    
+
     return series_appliances_contribution
+
 
 def top_k_appliances(electricity, k=3, how=np.mean, order='desc'):
     """Reports the top k appliances by 'how' attribute

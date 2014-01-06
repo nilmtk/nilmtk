@@ -28,3 +28,7 @@ for mains_name, mains in building.utility.electric.mains.iteritems():
 for appliance_name, appliance in building.utility.electric.appliances.iteritems():
     print ('{}: {:.2f} seconds'.format(
         appliance_name, get_sample_period(appliance)))
+
+# Fixing implausible voltage values
+
+# Finding appliance usage
