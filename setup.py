@@ -20,7 +20,7 @@ import os
 import sys
 import warnings
 
-CYTHON_DIR = 'nilmtk'
+CYTHON_DIR = 'nilmtk/disaggregate/feature_detectors'
 
 try:
     # This trick adapted from 
@@ -33,12 +33,12 @@ else:
 
 if use_cython:
     sources = [join(CYTHON_DIR, '_feature_detectors.pyx')]
-    extensions = [Extension("nilmtk._feature_detectors", 
+    extensions = [Extension("nilmtk.disaggregate._feature_detectors", 
                             sources=sources)]
     ext_modules = cythonize(extensions)
 else:
     ext_modules = [
-        Extension("nilmtk._feature_detectors", 
+        Extension("nilmtk.disaggregate._feature_detectors", 
                   [join(CYTHON_DIR, '_feature_detectors.c')]),
     ]
 
@@ -58,20 +58,20 @@ FULLVERSION = VERSION
 if not ISRELEASED:
     FULLVERSION += '.dev'
     try:
-	import subprocess
-	try:
-	    pipe = subprocess.Popen(["git", "rev-parse", "--short", "HEAD"],
-	                            stdout=subprocess.PIPE).stdout
-	except OSError:
-	    # msysgit compatibility
-	    pipe = subprocess.Popen(["git.cmd", "rev-parse", "--short", "HEAD"],
-	                            stdout=subprocess.PIPE).stdout
-	rev = pipe.read().strip()
-	# makes distutils blow up on Python 2.7
-	if sys.version_info[0] >= 3:
-	    rev = rev.decode('ascii')
+        import subprocess
+        try:
+            pipe = subprocess.Popen(["git", "rev-parse", "--short", "HEAD"],
+                                    stdout=subprocess.PIPE).stdout
+        except OSError:
+            # msysgit compatibility
+            pipe = subprocess.Popen(["git.cmd", "rev-parse", "--short", "HEAD"],
+                                    stdout=subprocess.PIPE).stdout
+        rev = pipe.read().strip()
+        # makes distutils blow up on Python 2.7
+        if sys.version_info[0] >= 3:
+            rev = rev.decode('ascii')
 
-	FULLVERSION += "-%s" % rev
+        FULLVERSION += "-%s" % rev
     except:
         warnings.warn("WARNING: Couldn't get git revision")
 else:
