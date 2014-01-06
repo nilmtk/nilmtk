@@ -16,32 +16,92 @@
 import sys
 import os
 
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
+'''
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../../nilmtk/'))
+sys.path.insert(0, os.path.abspath('../../nilmtk/nilmtk/'))
 sys.path.insert(0, os.path.abspath('../../nilmtk/nilmtk'))
 sys.path.insert(0, os.path.abspath('../../nilmtk/nilmtk/sensors/'))
+sys.path.insert(0, '/usr/local/lib/python2.7/dist-packages/')
+'''
 
 
 sys.path.insert(0, os.path.abspath('sphinxext'))
 
 print sys.path
 
+import sys
+import os.path
 
 
+class Mock(object):
+
+    __all__ = []
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def __call__(self, *args, **kwargs):
+        return Mock()
+
+    @classmethod
+    def __getattr__(cls, name):
+        if name in ('__file__', '__path__'):
+            return '/dev/null'
+        elif name[0] == name[0].upper():
+            return type(name, (), {})
+        else:
+            return Mock()
 
 
-# -- General configuration -----------------------------------------------------
+def all_from(folder='', abspath=None):
+    """add all dirs under `folder` to sys.path if any .py files are found.
+    Use an abspath if you'd rather do it that way.
 
+    Uses the current working directory as the location of using.py.
+    Keep in mind that os.walk goes *all the way* down the directory tree.
+    With that, try not to use this on something too close to '/'
+
+    """
+    add = set(sys.path)
+    if abspath is None:
+        cwd = os.path.abspath(os.path.curdir)
+        abspath = os.path.join(cwd, folder)
+    for root, dirs, files in os.walk(abspath):
+        for f in files:
+            if f[-3:] in '.py':
+                add.add(root)
+                break
+    for i in add:
+        if i not in sys.path:
+            sys.path.append(i)
+            print "adding", i
+            print "/n"
+
+all_from('../../../nilmtk/')
+all_from('../../nilmtk/')
+
+
+#from nilmtk.mock import Mock
+
+MOCK_MODULES = ['numpy', 'scipy', 'matplotlib', 'scipy.stats'
+                'matplotlib.pyplot', 'scipy.interpolate']
+for mod_name in MOCK_MODULES:
+    sys.modules[mod_name] = Mock()
+
+
+# -- General configuration -----------------------------------------------
 # If your documentation needs a minimal Sphinx version, state it here.
 #needs_sphinx = '1.0'
-
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.mathjax', 'sphinx.ext.ifconfig', 'sphinx.ext.viewcode',
-			'sphinx.ext.intersphinx', 'numpydoc', 'inheritance_diagram', 'ipython_console_highlighting']
+extensions = [
+    'sphinx.ext.autodoc', 'sphinx.ext.mathjax', 'sphinx.ext.ifconfig', 'sphinx.ext.viewcode',
+    'sphinx.ext.intersphinx', 'numpydoc', 'inheritance_diagram', 'ipython_console_highlighting']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['ntemplates']
@@ -103,7 +163,7 @@ pygments_style = 'sphinx'
 #modindex_common_prefix = []
 
 
-# -- Options for HTML output ---------------------------------------------------
+# -- Options for HTML output ---------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
@@ -185,24 +245,24 @@ html_last_updated_fmt = '%b %d, %Y'
 htmlhelp_basename = 'nilmtkdoc'
 
 
-# -- Options for LaTeX output --------------------------------------------------
+# -- Options for LaTeX output --------------------------------------------
 
 latex_elements = {
-# The paper size ('letterpaper' or 'a4paper').
-#'papersize': 'letterpaper',
+    # The paper size ('letterpaper' or 'a4paper').
+    #'papersize': 'letterpaper',
 
-# The font size ('10pt', '11pt' or '12pt').
-#'pointsize': '10pt',
+    # The font size ('10pt', '11pt' or '12pt').
+    #'pointsize': '10pt',
 
-# Additional stuff for the LaTeX preamble.
-#'preamble': '',
+    # Additional stuff for the LaTeX preamble.
+    #'preamble': '',
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'nilmtk.tex', u'nilmtk Documentation',
-   u'nilmtk authors', 'manual'),
+    ('index', 'nilmtk.tex', u'nilmtk Documentation',
+     u'nilmtk authors', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -226,7 +286,7 @@ latex_documents = [
 #latex_domain_indices = True
 
 
-# -- Options for manual page output --------------------------------------------
+# -- Options for manual page output --------------------------------------
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
@@ -239,15 +299,15 @@ man_pages = [
 #man_show_urls = False
 
 
-# -- Options for Texinfo output ------------------------------------------------
+# -- Options for Texinfo output ------------------------------------------
 
 # Grouping the document tree into Texinfo files. List of tuples
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'nilmtk', u'nilmtk Documentation',
-   u'nilmtk authors', 'nilmtk', 'One line description of project.',
-   'Miscellaneous'),
+    ('index', 'nilmtk', u'nilmtk Documentation',
+     u'nilmtk authors', 'nilmtk', 'One line description of project.',
+     'Miscellaneous'),
 ]
 
 # Documents to append as an appendix to all manuals.

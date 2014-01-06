@@ -30,6 +30,7 @@ Functions
 import numpy as np
 import pandas as pd
 
+
 def error_energy(predicted_power, df_appliances_ground_truth):
     '''Compute error in assigned energy
 
@@ -55,10 +56,12 @@ def error_energy(predicted_power, df_appliances_ground_truth):
     error = {}
 
     for appliance in predicted_power:
-        ground_truth_energy = np.sum(df_appliances_ground_truth[appliance].values)
+        ground_truth_energy = np.sum(
+            df_appliances_ground_truth[appliance].values)
         predicted_energy = np.sum(predicted_power[appliance].values)
         error[appliance] = np.abs(predicted_energy - ground_truth_energy)
     return error
+
 
 def fraction_energy_assigned_correctly(predicted_power, df_appliances_ground_truth):
     '''Compute fraction of energy assigned correctly
@@ -89,11 +92,12 @@ def fraction_energy_assigned_correctly(predicted_power, df_appliances_ground_tru
     fraction = np.array([])
 
     for appliance in predicted_power:
-        
+
         appliance_energy_predicted = np.sum(predicted_power[appliance].values)
         total_energy_predicted = np.sum(predicted_power.values)
-        
-        appliance_energy_ground_truth = np.sum(df_appliances_ground_truth[appliance].values)
+
+        appliance_energy_ground_truth = np.sum(
+            df_appliances_ground_truth[appliance].values)
         total_energy_ground_truth = np.sum(df_appliances_ground_truth.values)
 
         fraction = np.append(fraction, np.min(
@@ -101,6 +105,38 @@ def fraction_energy_assigned_correctly(predicted_power, df_appliances_ground_tru
                                               appliance_energy_ground_truth/total_energy_ground_truth
                                               ))
     return np.sum(fraction)
+
+
+def hamming_loss(predicted_state, ground_truth_state):
+    '''Compute Hamming loss
+
+    # TODO: Give a vanilla example
+    
+    .. math::
+        HammingLoss^{(n)} = 
+        \\frac{1}{T} \\sum_{t}
+        xor \\left ( z^{(n)}_t, \\hat{z}^{(n)}_t \\right )
+
+    Attributes
+    ----------
+
+    predicted_state: Pandas DataFrame of type {appliance :
+         [array of predicted states]}
+
+    ground_truth_state: Pandas DataFrame of type {appliance :
+        [array of ground truth states]}
+
+    Returns
+    -------
+    re: dict of type {appliance : HammingLoss}
+    '''
+
+    loss = {}
+
+    for appliance in predicted_state:
+        loss[appliance] = np.sum(predicted_state[appliance].values ==
+                                 ground_truth_state[appliance].values)
+    return loss
 
 def mean_normalized_error_power(predicted_power, df_appliances_ground_truth):
     '''Compute mean normalized error in assigned power
@@ -133,7 +169,7 @@ def mean_normalized_error_power(predicted_power, df_appliances_ground_truth):
 
     for appliance in predicted_power:
         numerator[appliance] = np.sum(np.abs(predicted_power[appliance] -
-           df_appliances_ground_truth[appliance].values))
+                                             df_appliances_ground_truth[appliance].values))
         denominator[appliance] = np.sum(
             df_appliances_ground_truth[appliance].values)
         mne[appliance] = numerator[appliance] * 1.0 / denominator[appliance]
@@ -146,13 +182,13 @@ def rms_error_power(predicted_power, df_appliances_ground_truth):
     # TODO: Give a vanilla example
     
     .. math::
-        error^{(n)} = \\sqrt{ \\frac{1}{T} \\sum_t{ \\left ( y_t - \\hat{y}_t \\right )^2 } }
+            error^{(n)} = \\sqrt{ \\frac{1}{T} \\sum_t{ \\left ( y_t - \\hat{y}_t \\right )^2 } }
 
     Attributes
     ----------
 
     predicted_power: Pandas DataFrame of type {appliance :
-         [array of predictd power]}
+         [array of predicted power]}
 
     df_appliances_ground_truth: Pandas DataFrame of type {appliance :
         [array of ground truth power]}
@@ -165,8 +201,8 @@ def rms_error_power(predicted_power, df_appliances_ground_truth):
     re = {}
 
     for appliance in predicted_power:
-        re[appliance] = np.std(predicted_power[appliance] -
-            df_appliances_ground_truth[appliance].values)
+        re[appliance] = np.std(predicted_power[appliance] - 
+                               df_appliances_ground_truth[appliance].values)
         
     return re
 

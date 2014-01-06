@@ -1,7 +1,9 @@
 from abc import ABCMeta, abstractmethod
+from nilmtk.sensors.electricity import Measurement
 
 
 class Disaggregator(object):
+
     """Abstract Base Class for all Disaggregators.  This class
     defines the common interface to all Disaggregators.
     """
@@ -9,7 +11,9 @@ class Disaggregator(object):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def train(self, buildings=None, appliances=None, environmental=None):
+    def train(self, building, aggregate='mains', submetered='appliances',
+              disagg_features=[Measurement('power', 'active')],
+              environmental=None):
         """Train the disaggregation algorithm.
 
         There are three training modes:
@@ -28,26 +32,25 @@ class Disaggregator(object):
 
         Parameters
         ----------
-        buildings : a list of nilmtk Building objects, optional
-            These objects must contain aggregate whole-house data and can
-            optionally contain simultaneously recorded appliance data and/or
-            ambient data.
+        building : a nilmtk Building object
 
-        appliances : nilmtk Electricity object, optional
-            Use this for training the disaggregator using appliance data
-            recorded without simultaneous aggregate data, for example from
-            tracebase.The `appliances` attribute in the `Electricity` object
-            must be populated.
+        aggregate : 'mains' | 'circuits', optional
+
+        submetered : 'appliances' | 'circuits', optional
+
+        disagg_features : list of Measurements, optional
+            default=[Measurement('power', 'active')]
 
         environmental :
             External sensor data, e.g. weather data from the local
             metoffice weather station.
-
         """
         return
 
     @abstractmethod
-    def disaggregate(self, building, environmental=None):
+    def disaggregate(
+        self, building, disagg_features=[Measurement('power', 'active')],
+            environmental=None):
         """Runs non-intrusive load monitoring on the aggregate data from
         the building.
 
@@ -59,9 +62,11 @@ class Disaggregator(object):
         ----------
         building : Building
 
+        disagg_features : list of Measurements
+
         Returns
         -------
-        appliance_estimates: Panel, shape (n_samples, n_appliances, [1,3])
+        appliance_estimates: DataFrame or Panel, shape (n_samples, n_appliances, [1,3])
             Returns a 3D matrix (Panel). The third dimension represents
             some combination of:
             * estimated power
