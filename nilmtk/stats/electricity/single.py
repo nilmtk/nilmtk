@@ -7,7 +7,9 @@ from __future__ import print_function, division
 import scipy.stats as stats
 import numpy as np
 import pandas as pd
-from matplotlib.dates import SEC_PER_HOUR
+from matplotlib.dates import SEC_PER_HOUR, SEC_PER_DAY
+import matplotlib.dates as mdates
+import matplotlib.pyplot as plt
 import copy
 
 DEFAULT_MAX_DROPOUT_RATE = 0.4  # [0,1]
@@ -18,7 +20,7 @@ def get_sample_period(data):
     """Estimate the sample period in seconds.
 
     Find the sample period by finding the stats.mode of the 
-    forward difference.  Only use the first 100 samples (for speed).
+    time deltas.  Only use the first 100 samples (for speed).
 
     Parameters
     ----------
@@ -26,14 +28,14 @@ def get_sample_period(data):
 
     Returns
     -------
-    period : float
-        Sample period in seconds.
+    period_secs : float
+        Sample period_secs in seconds.
     """
     index = _get_index(data)
-    fwd_diff = np.diff(index.values[:100]).astype(np.float)
-    mode_fwd_diff = stats.mode(fwd_diff)[0][0]
-    period = mode_fwd_diff / 1E9
-    return period
+    time_delta_ns = np.diff(index.values[:100]).astype(np.float)
+    mode_time_delta_ns = stats.mode(time_delta_ns)[0][0]
+    period_secs = mode_time_delta_ns / 1E9
+    return period_secs
 
 
 def get_dropout_rate(data, sample_period=None):
@@ -62,6 +64,45 @@ def get_dropout_rate(data, sample_period=None):
     n_expected_samples = duration.total_seconds() / sample_period
     return 1 - (index.size / n_expected_samples)
 
+def plot_missing_samples(data, ax=None, fig=None, max_sample_period=None, 
+                         bottom=0.1, height=0.8, color='k'):
+    """
+    Parameters
+    ----------
+    data : pandas.DataFrame or Series or DatetimeIndex
+
+    max_sample_period : int or float, optional
+        Maximum allowed sample period in seconds.  
+        If not provided then will use sample period * 4.
+    """
+    index = _get_index(data)
+    if ax is None:
+        ax = plt.gca()
+        fig = plt.gcf()
+        ax.set_title("Missing samples")  
+        ax.xaxis.axis_date(index.tzinfo)
+        ax.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m/%y %H:%M:%S',
+                                                          tz=index.tzinfo))
+        ax.set_xlim([index[0], index[-1]])
+        fig.autofmt_xdate()
+
+    if max_sample_period is None:
+        max_sample_period = get_sample_period(index) * 4
+    
+    timedeltas_sec = np.diff(index.values) / np.timedelta64(1, 's')
+    overlong_timedeltas = timedeltas_sec > max_sample_period
+    
+    gap_starts = index[:-1][overlong_timedeltas]
+    gap_ends = index[1:][overlong_timedeltas]
+
+    for start, end in zip(gap_starts, gap_ends):
+        rect = plt.Rectangle(xy=(start, bottom), # bottom left corner
+                             width=(end - start).total_seconds() / SEC_PER_DAY,
+                             height=height, color=color)
+        ax.add_patch(rect)
+
+    plt.draw()
+    return ax, fig
 
 def hours_on(series, on_power_threshold=DEFAULT_ON_POWER_THRESHOLD,
              max_sample_period=None):

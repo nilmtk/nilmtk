@@ -1,7 +1,7 @@
 """Statistics for applying to an entire building"""
 
 from __future__ import print_function, division
-from single import DEFAULT_MAX_DROPOUT_RATE, usage_per_period
+from single import DEFAULT_MAX_DROPOUT_RATE, usage_per_period, plot_missing_samples
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -244,18 +244,3 @@ def top_k_appliances(electricity, k=3, how=np.mean, order='desc'):
         series_appliances_contribution.sort(ascending=False)
 
     return series_appliances_contribution.head(k)
-
-def plot_dropouts(electricity, ax=None):
-    if ax is None:
-        ax = plt.gca()
-        
-    # TODO:
-    # find start and end dates of whole dataset (write a sep method for this)
-    # resolution = how much time each pixel on the plot represents.
-    # for each channel:
-    #    implement stats.location_of_missing_samples(). Returns a Series where
-    #    index is the datetime of each missing sample and all values are True
-    #    Then just resample(resolution, how='sum').  This should give us what we need to plot
-    #    
-
-    return ax
