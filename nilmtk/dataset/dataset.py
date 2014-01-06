@@ -146,6 +146,8 @@ class DataSet(object):
                                         "/%d/utility/electric/mains/%d_%d.csv"
                                         % (building_number, main.split,
                                            main.meter))
+                print(dir_path)
+                print("*"*80)
                 os.makedirs(dir_path)
                 temp = mains[main].copy()
                 temp.index = (temp.index.astype(int) / 1e9).astype(int)
