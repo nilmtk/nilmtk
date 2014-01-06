@@ -2,6 +2,7 @@ from __future__ import print_function
 from nilmtk.dataset import iawe, DataSet
 from nilmtk.stats.electricity.building import top_k_appliances
 from nilmtk.stats.electricity.single import get_sample_period
+from nilmtk.preprocessing.electricity.building import filter_out_implausible_values
 
 EXPORT_LOCATION = '/home/nipun/Desktop/temp/iawe/'
 
@@ -30,5 +31,6 @@ for appliance_name, appliance in building.utility.electric.appliances.iteritems(
         appliance_name, get_sample_period(appliance)))
 
 # Fixing implausible voltage values
-
+building_voltage_filtered = filter_out_implausible_values(
+    building, Measurement('voltage', ''), 160, 260)
 # Finding appliance usage

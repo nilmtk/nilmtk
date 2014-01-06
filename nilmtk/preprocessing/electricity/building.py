@@ -4,6 +4,8 @@ import numpy as np
 
 from nilmtk.stats.electricity.building import find_appliances_contribution
 from nilmtk.stats.electricity.building import top_k_appliances
+
+from nilmtk.preprocessing.electricity.single import remove_implausible_entries
 from copy import deepcopy
 
 
@@ -108,4 +110,18 @@ def filter_out_implausible_values(building, measurement,
     nilmtk.preprocessing.electricity.single.remove_implausible_entries"""
 
     building_copy = deepcopy(building)
-    # Filtering mains
+    # Filtering appliances
+    for appliance_name, appliance_df in building.utility.electric.appliances.iteritems():
+        if measurement in appliance_df.columns:
+            building_copy.utility.electric.appliances[
+                appliance_name] = remove_implausible_entries(appliance_df, measurement,
+                                                             min_threshold, max_threshold)
+
+    # Filtering mains data
+    for mains_name, mains_df in building.utility.electric.mains.iteritems():
+        if measurement in mains_df.columns:
+            building_copy.utility.electric.mains[
+                mains_name] = remove_implausible_entries(mains_df, measurement,
+                                                         min_threshold, max_threshold)
+
+    return building_copy
