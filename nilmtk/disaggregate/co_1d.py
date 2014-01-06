@@ -1,7 +1,7 @@
 from nilmtk.utils import find_nearest
 from nilmtk.utils import find_nearest_vectorized
 from nilmtk.disaggregate.disaggregator import Disaggregator
-from nilmtk.sensors.electricity import Measurement
+from nilmtk.sensors.electricity import Measurement, ApplianceName
 
 
 import pandas as pd
@@ -10,6 +10,7 @@ import numpy as np
 from sklearn import metrics
 from sklearn.cluster import KMeans
 from copy import deepcopy
+import json
 
 MAX_VALUES_TO_CONSIDER = 100
 MAX_POINT_THRESHOLD = 2000
@@ -154,12 +155,24 @@ class CO_1d(Disaggregator):
         self.model = {}
         self.predictions = pd.DataFrame()
 
-    def export(self, filename):
+    def export_model(self, filename):
         model_copy = {}
-        for appliance, appliance_states in self.model:
-            model_copy["%s_%d" % appliance] = appliance_states
-        with open(filename, 'a+') as f:
-            f.write(str(model_copy))
+        for appliance, appliance_states in self.model.iteritems():
+            model_copy[
+                "{}_{}".format(appliance.name, appliance.instance)] = appliance_states
+        j = json.dumps(model_copy)
+        with open(filename, 'w+') as f:
+            f.write(j)
+
+    def import_model(self, filename):
+        with open(filename, 'r') as f:
+            temp = json.loads(f.read())
+        for appliance, centroids in temp.iteritems():
+            appliance_name = appliance.split("_")[0].encode("ascii")
+            appliance_instance = int(appliance.split("_")[1])
+            appliance_name_instance = ApplianceName(
+                appliance_name, appliance_instance)
+            self.model[appliance_name_instance] = centroids
 
     def train(self, building, aggregate='mains', submetered='appliances',
               disagg_features=[Measurement('power', 'active')],
