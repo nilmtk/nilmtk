@@ -103,9 +103,14 @@ class REDD(DataSet):
         labels = load_labels(building_dir)
 
         # Remove dud channels
-        dud_channels_for_building = DUD_CHANNELS.get(building_number)
-        for chan in dud_channels_for_building:
-            labels.pop(chan)
+        try:
+            dud_channels_for_building = DUD_CHANNELS[building_number]
+        except KeyError:
+            # DUD_CHANNELS doesn't specify dud channels for all buildings
+            pass
+        else:
+            for dud_chan in dud_channels_for_building:
+                labels.pop(dud_chan)
 
         # Convert appliance names from REDD to nilmtk standard names
         appliance_metadata = {}
