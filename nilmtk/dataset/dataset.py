@@ -77,7 +77,6 @@ class DataSet(object):
 
         # Finding the buildings
         building_numbers = list(set([key.split("/")[1] for key in keys]))
-        print(building_numbers)
 
         # Loading the structured information for each building
         for building_number in building_numbers:
@@ -126,6 +125,34 @@ class DataSet(object):
                             appliance_name, appliance_instance)
                         b.utility.electric.appliances[
                             appliance_name] = store[key]
+
+    def export_csv(self, directory):
+        """For now just created this function separately
+
+        NB: Needs to be written!! Don't expect this to run at the moment
+
+        Parameters
+        ----------
+        directory : Complete path where to export the data 
+        """
+        for building_number in self.buildings:
+            print("Writing data for %d" % (building_number))
+            building = self.buildings[building_number]
+            utility = building.utility
+            electric = utility.electric
+            mains = electric.mains
+            for main in mains:
+
+                store.put('/%d/utility/electric/mains/%d/%d/' %
+                          (building_number, main.split, main.meter),
+                          mains[main], table=True)
+            appliances = electric.appliances
+            for appliance in appliances:
+                store.put('%d/utility/electric/appliances/%s/%d/' %
+                          (building_number, appliance.name,
+                           appliance.instance),
+                          appliances[appliance], table=True)
+
 
     def export(self, directory, format='HDF5', compact=False):
         """Export dataset to disk as HDF5.
