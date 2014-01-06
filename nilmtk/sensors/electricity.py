@@ -345,6 +345,9 @@ class Electricity(object):
         raise NotImplementedError
 
     def plot_missing_samples(self, ax=None, fig=None):
+        # TODO: set start and end time for whole dataset (build a new method to do this)
+        # TODO: docstrings!
+
         i = 0
         n = len(self.appliances) + len(self.mains)
         colours = [plt.cm.Blues(c) for c in np.linspace(0.3, 0.9, n)]
@@ -360,9 +363,6 @@ class Electricity(object):
             i += 1
 
         i -= 1
-        # TODO: set start and end time for whole dataset (build a new method to do this)
-        # TODO: lines to separate each appliance
-        # TODO: use appliance names in y-labels and hover
 
         ax.set_yticks(np.arange(0.5, i+1.5))
 
