@@ -70,6 +70,9 @@ class DataSet(object):
             Directory where the HDF5 store is located
 
         """
+        # Load metadata
+        with open(os.path.join(directory, 'metadata.json'), 'r') as metadata_fp:
+            self.metadata = json.loads(metadata_fp.read())
         store = pd.HDFStore(
             os.path.join(directory, 'dataset.h5'))
         self.buildings = {}
@@ -190,7 +193,7 @@ class DataSet(object):
             temp.rename(columns=column_mapping[column], inplace=True)
             temp.to_csv(os.path.join(dir_path, namedtuple_map[df_type
                                                               ](df_name)),
-                        float_format= '%.2f',
+                        float_format='%.2f',
                         index_label="timestamp")
 
         for building_number in self.buildings:
@@ -233,6 +236,13 @@ class DataSet(object):
         compact : boolean, optional
             Defaults to false.  If True then only save change points.
         """
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        with open(os.path.join(directory, 'metadata.json'), 'w') as metadata_fp:
+            metadata_fp.write(json.dumps(self.metadata))
+
+        # Store metadata
+
         store = pd.HDFStore(
             os.path.join(directory, 'dataset.h5'), complevel=9, complib='zlib')
         for building_number in self.buildings:
