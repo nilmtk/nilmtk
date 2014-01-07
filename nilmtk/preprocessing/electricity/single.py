@@ -108,7 +108,7 @@ def normalise_power(power, voltage, nominal_voltage):
     NALMs use step changes in the normalized power as the
     signature."
     (equation 4, page 8 of Hart 1992)
-    
+
     Parameters
     ----------
     power : pd.Series
@@ -160,3 +160,31 @@ def remove_implausible_entries(channel_df, measurement,
     implausible_entries_dropped = channel_df[
         (s > min_threshold) & (s < max_threshold)]
     return implausible_entries_dropped
+
+
+def filter_datetime_single(channel_df, start_datetime=None, end_datetime=None):
+    """
+    Filtering out a channel outside certain datetimes
+
+    Parameters
+    ----------
+    channel_df : pandas.DataFrame
+        Corresponds to either an appliance or mains or circuit         
+    
+    start_datetime :string, 'dd-mm-yyyy hh:mm:ss'
+    end_datetime : string, 'dd-mm-yyyy hh:mm:ss'
+
+    Returns
+    -------
+    pandas.DataFrame
+    """
+
+    # Atleast one of start_datetime or end_datetime must be there
+    assert((start_datetime is not None) or (end_datetime is not None))
+
+    if start_datetime is None:
+        start_datetime = channel_df.index.values[0]
+    if end_datetime is None:
+        end_datetime = channel_df.index.values[0]
+
+    return channel_df[pd.Timestamp(start_datetime):pd.Timestamp(end_datetime)]

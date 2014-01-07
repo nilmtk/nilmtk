@@ -6,6 +6,8 @@ from nilmtk.stats.electricity.building import find_appliances_contribution
 from nilmtk.stats.electricity.building import top_k_appliances
 
 from nilmtk.preprocessing.electricity.single import remove_implausible_entries
+from nilmtk.preprocessing.electricity.single import filter_dates_single
+
 from copy import deepcopy
 
 
@@ -88,20 +90,34 @@ def downsample(building, rule='1T', how='mean'):
     return building_copy
 
 
-def filter_dates(building, start_date=None, end_date=None):
+def filter_datetime(building, start_datetime=None, end_datetime=None):
     """Filters out all data falling outside the start and the end date
 
     Parameters
     ----------
     building : nilmtk.Building
-    start_date :string, 'dd-mm-yyyy'
-    end_date : string, 'dd-mm-yyyy'
+    start_datetime :string, 'dd-mm-yyyy hh:mm:ss'
+    end_datetime : string, 'dd-mm-yyyy hh:mm:ss'
 
     Returns
     -------
     building_copy : nilmtk.Building
     """
-    raise NotImplementedError
+    building_copy = deepcopy(building)
+    # Filtering appliances
+    for appliance_name, appliance_df in building.utility.electric.appliances.iteritems():
+        if measurement in appliance_df.columns:
+            building_copy.utility.electric.appliances[
+                appliance_name] = filter_datetime_single(appliance_df, start_datetime,
+                                                         end_datetime)
+
+    # Filtering mains data
+    for mains_name, mains_df in building.utility.electric.mains.iteritems():
+        if measurement in mains_df.columns:
+            building_copy.utility.electric.mains[
+                mains_name] = filter_datetime_single(mains_df, start_datetime, end_datetime)
+
+    return building_copy
 
 
 def filter_out_implausible_values(building, measurement,
