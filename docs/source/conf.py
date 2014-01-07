@@ -29,6 +29,7 @@ sys.path.insert(0, os.path.abspath('../../nilmtk/nilmtk/sensors/'))
 sys.path.insert(0, '/usr/local/lib/python2.7/dist-packages/')
 '''
 
+print(os.path.abspath(os.path.join('..', 'sphinxext')))
 
 sys.path.insert(0, os.path.abspath('sphinxext'))
 # sys.path.append('/usr/local/lib/python2.7/dist-packages/matplotlib/sphinxext')
@@ -102,8 +103,8 @@ for mod_name in MOCK_MODULES:
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = [
     'sphinx.ext.autodoc', 'sphinx.ext.mathjax', 'sphinx.ext.ifconfig', 'sphinx.ext.viewcode',
-    'sphinx.ext.intersphinx', 'numpydoc', 'ipython_console_highlighting']
-#    'inheritance_diagram',
+    'sphinx.ext.intersphinx', 'numpydoc', 'ipython_console_highlighting',
+    'inheritance_diagram']
 #    'matplotlib.sphinxext.plot_directive',
 #    'matplotlib.sphinxext.ipython_directive']
 
