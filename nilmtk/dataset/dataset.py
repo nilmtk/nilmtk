@@ -135,7 +135,7 @@ class DataSet(object):
         ----------
         directory : Complete path where to export the data 
         """
-        
+
         # Mapping from {Appliance/Mains/Circuit}Name to CSV name
         namedtuple_map = {'mains': lambda x: "%d_%d.csv" %
                           (x.split, x.meter),
