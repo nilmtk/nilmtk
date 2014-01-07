@@ -162,7 +162,7 @@ def remove_implausible_entries(channel_df, measurement,
     return implausible_entries_dropped
 
 
-def filter_dates_single(channel_df, start_datetime=None, end_datetime=None):
+def filter_datetime_single(channel_df, start_datetime=None, end_datetime=None):
     """
     Filtering out a channel outside certain datetimes
 
@@ -171,8 +171,8 @@ def filter_dates_single(channel_df, start_datetime=None, end_datetime=None):
     channel_df : pandas.DataFrame
         Corresponds to either an appliance or mains or circuit         
     
-    start_datetime: ''
-    end_datetime: ''
+    start_datetime :string, 'dd-mm-yyyy hh:mm:ss'
+    end_datetime : string, 'dd-mm-yyyy hh:mm:ss'
 
     Returns
     -------

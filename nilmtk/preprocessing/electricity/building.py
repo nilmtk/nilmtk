@@ -90,14 +90,14 @@ def downsample(building, rule='1T', how='mean'):
     return building_copy
 
 
-def filter_dates(building, start_datetime=None, end_datetime=None):
+def filter_datetime(building, start_datetime=None, end_datetime=None):
     """Filters out all data falling outside the start and the end date
 
     Parameters
     ----------
     building : nilmtk.Building
-    start_datetime :string, 'dd-mm-yyyy'
-    end_datetime : string, 'dd-mm-yyyy'
+    start_datetime :string, 'dd-mm-yyyy hh:mm:ss'
+    end_datetime : string, 'dd-mm-yyyy hh:mm:ss'
 
     Returns
     -------
@@ -108,14 +108,14 @@ def filter_dates(building, start_datetime=None, end_datetime=None):
     for appliance_name, appliance_df in building.utility.electric.appliances.iteritems():
         if measurement in appliance_df.columns:
             building_copy.utility.electric.appliances[
-                appliance_name] = filter_dates_single(appliance_df, start_datetime,
-                                                      end_datetime)
+                appliance_name] = filter_datetime_single(appliance_df, start_datetime,
+                                                         end_datetime)
 
     # Filtering mains data
     for mains_name, mains_df in building.utility.electric.mains.iteritems():
         if measurement in mains_df.columns:
             building_copy.utility.electric.mains[
-                mains_name] = filter_dates_single(mains_df, start_datetime, end_datetime)
+                mains_name] = filter_datetime_single(mains_df, start_datetime, end_datetime)
 
     return building_copy
 
