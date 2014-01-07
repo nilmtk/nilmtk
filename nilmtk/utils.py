@@ -1,6 +1,6 @@
 import os
 import numpy as np
-
+import pandas as pd
 
 def get_immediate_subdirectories(dir):
     # From Richie Hindle's StackOverflow answer:
@@ -57,3 +57,10 @@ def find_nearest_searchsorted(known_array, test_array):
     residual = test_array - known_array[indices]
 
     return [indices, residual]
+
+
+def secs_per_period_alias(alias):
+    """Seconds for each Pandas period alias."""
+    dr = pd.date_range('00:00', periods=2, freq=alias)
+    return (dr[-1] - dr[0]).total_seconds()
+

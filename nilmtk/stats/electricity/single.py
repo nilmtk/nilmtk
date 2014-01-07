@@ -11,6 +11,7 @@ from matplotlib.dates import SEC_PER_HOUR, SEC_PER_DAY
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import copy
+from nilmtk.utils import secs_per_period_alias
 
 DEFAULT_MAX_DROPOUT_RATE = 0.4  # [0,1]
 DEFAULT_ON_POWER_THRESHOLD = 5  # watts
@@ -255,12 +256,6 @@ def timestamps_of_missing_samples(data, max_sample_period=None,
     return pd.DatetimeIndex(missing_samples_list)
 
 
-def _secs_per_period_alias(alias):
-    """Seconds for each period length."""
-    dr = pd.date_range('00:00', periods=2, freq=alias)
-    return (dr[-1] - dr[0]).total_seconds()
-
-
 def missing_samples_per_period(data, rule, max_sample_period=None,
                                   window_start=None, window_end=None):
     """
@@ -295,8 +290,8 @@ def missing_samples_per_period(data, rule, max_sample_period=None,
         pass
     
     sample_period_secs = get_sample_period(data)
-    n_expected_samples_per_period = (_secs_per_period_alias(rule) / 
-                                   sample_period_secs)
+    n_expected_samples_per_period = (secs_per_period_alias(rule) / 
+                                     sample_period_secs)
     if n_expected_samples_per_period < 1.0:
         raise ValueError('Date period specified by rule is shorter than'
                          ' sample period!')
