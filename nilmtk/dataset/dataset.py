@@ -6,6 +6,8 @@ from nilmtk.building import Building
 from nilmtk.sensors.electricity import MainsName
 from nilmtk.sensors.electricity import ApplianceName
 from nilmtk.sensors.electricity import Measurement
+from nilmtk.sensors.electricity import DualSupply
+from nilmtk.sensors.electricity import get_two_dataframes_of_dualsupply
 
 """Base class for all datasets."""
 
@@ -192,8 +194,22 @@ class DataSet(object):
                 create_path_df(building_number, main_name, main_df, 'mains')
 
             for appliance_name, appliance_df in appliances.iteritems():
-                create_path_df(building_number, appliance_name, appliance_df,
-                               'appliances')
+                if isinstance(appliance_df.columns[0], DualSupply):
+                    [df_1, df_2, split_1,
+                        split_2] = get_two_dataframes_of_dualsupply(appliance_df)
+                    app_name_1 = ApplianceName(
+                        appliance_name.name, appliance_name.instance * 2 - 1)
+                    app_name_2 = ApplianceName(
+                        appliance_name.name, appliance_name.instance * 2)
+                    create_path_df(building_number, app_name_1,
+                                   df_1, "appliances")
+                    create_path_df(building_number, app_name_2,
+                                   df_2, "appliances")
+                else:
+                    create_path_df(
+                        building_number, appliance_name, appliance_df,
+                        'appliances')
+
             for circuit_name, circuit_df in circuits.iteritems():
                 create_path_df(building_number, circuit_name, circuit_df,
                                'circuit')

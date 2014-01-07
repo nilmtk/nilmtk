@@ -21,6 +21,31 @@ CircuitName = namedtuple('CircuitName', ['name', 'split', 'meter'])
 DualSupply = namedtuple('DualSupply', ['measurement', 'supply'])
 
 
+def get_two_dataframes_of_dualsupply(appliance_df):
+    """Creates two appliance dataframes from a dual supply
+
+    Parameters
+    ----------
+    appliance_df :
+
+    Returns
+    -------
+    df_1
+    df_2
+    
+    """
+    df_1 = pd.DataFrame(index=appliance_df.index)
+    df_2 = pd.DataFrame(index=appliance_df.index)
+    split_1_supply, split_2_supply = appliance_df.columns[
+        0].supply, appliance_df.columns[1].supply
+    for column in appliance_df.columns:
+        if column.supply == split_1_supply:
+            df_1[column.measurement] = appliance_df[[column]]
+        else:
+            df_2[column.measurement] = appliance_df[[column]]
+    return [df_1, df_2, split_1_supply, split_2_supply]
+
+
 class Electricity(object):
 
     """Store and process electricity for a building.
@@ -343,7 +368,7 @@ class Electricity(object):
     def plot_appliance_activity(self, source):
         """Plot a compact representation of all appliance activity."""
         raise NotImplementedError
-    
+
     def get_start_and_end_dates(self):
         """Returns the start and end dates covering the data in
         appliances, circuits and mains.
@@ -362,7 +387,7 @@ class Electricity(object):
 
                 df_end = df.index[-1]
                 if end is None or df_end > end:
-                    end = df_end            
+                    end = df_end
 
         return [start, end]
 
@@ -375,18 +400,20 @@ class Electricity(object):
         ylabels = []
         i = 0
         for appliance_name, appliance_df in self.appliances.iteritems():
-            ax, fig = plot_missing_samples(appliance_df, ax, fig, bottom=i+0.1, color=colours[i])
+            ax, fig = plot_missing_samples(
+                appliance_df, ax, fig, bottom=i + 0.1, color=colours[i])
             ylabels.append((appliance_name.name, appliance_name.instance))
             i += 1
 
         for mains_name, mains_df in self.mains.iteritems():
-            ax, fig = plot_missing_samples(mains_df, ax, fig, bottom=i+0.1, color=colours[i])
+            ax, fig = plot_missing_samples(
+                mains_df, ax, fig, bottom=i + 0.1, color=colours[i])
             ylabels.append(('mains', mains_name.split, mains_name.meter))
             i += 1
 
         i -= 1
 
-        ax.set_yticks(np.arange(0.5, i+1.5))
+        ax.set_yticks(np.arange(0.5, i + 1.5))
         ax.set_xlim(self.get_start_and_end_dates())
 
         def formatter(x, pos):
@@ -405,7 +432,7 @@ class Electricity(object):
         #    implement stats.location_of_missing_samples(). Returns a Series where
         #    index is the datetime of each missing sample and all values are True
         #    Then just resample(resolution, how='sum').  This should give us what we need to plot
-        #    
+        #
         raise NotImplementedError
 
     def plot_missing_samples(self, ax=None, fig=None, how='rectangles'):
@@ -422,7 +449,6 @@ class Electricity(object):
         }
 
         return map_how_to_functions[how](ax, fig)
-
 
     def __str__(self):
         return ""
