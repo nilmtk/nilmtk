@@ -130,20 +130,8 @@ class DataSet(object):
         """Exports dataset in nilmtk standard on-disk format. 
         The format is as follows:
 
-            ├── building_1
-            │   ├── metadata.json
-            │   └── utility
-            │       └── electricity
-            │           ├── appliances
-            │           │   ├── ac_1.csv
-            │           │   └── tv_1.csv
-            │           ├── circuits
-            │           │   └── lights_1.csv
-            │           └── mains
-            │               ├── mains_1_1.csv
-            │               ├── mains_1_2.csv
-            │               └── mains_2_1.csv
-            └── building_2
+        TODO: Python complains if we put non-ascii stuff here, so
+        cannot add tree output
 
         Parameters
         ----------
