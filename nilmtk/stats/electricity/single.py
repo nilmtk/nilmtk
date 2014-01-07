@@ -165,7 +165,31 @@ def get_gap_starts_and_gap_ends(data, max_sample_period,
         pass
     
     index = _get_index(data)
+    index = reframe_index(index, window_start, window_end)
+    timedeltas_sec = np.diff(index.values) / np.timedelta64(1, 's')
+    overlong_timedeltas = timedeltas_sec > max_sample_period
+    gap_starts = index[:-1][overlong_timedeltas]
+    gap_ends = index[1:][overlong_timedeltas]        
 
+    return gap_starts, gap_ends
+
+
+def reframe_index(index, window_start=None, window_end=None):
+    """
+    Parameters
+    ----------
+    index : pd.DatetimeIndex
+
+    window_start, window_end : pd.Timestamp
+        The start and end of the window of interest.  If this window
+        is larger than the duration of `data` then gaps will be
+        appended to the front / back as necessary.  If this window
+        is shorter than the duration of `data` data will be cropped.
+
+    Returns
+    -------
+    index : pd.DatetimeIndex
+    """
     # Handle window...
     if window_start is not None:
         if window_start >= index[0]:
@@ -179,12 +203,7 @@ def get_gap_starts_and_gap_ends(data, max_sample_period,
         else:
             index = index.insert(len(index), window_end)
 
-    timedeltas_sec = np.diff(index.values) / np.timedelta64(1, 's')
-    overlong_timedeltas = timedeltas_sec > max_sample_period
-    gap_starts = index[:-1][overlong_timedeltas]
-    gap_ends = index[1:][overlong_timedeltas]        
-
-    return gap_starts, gap_ends
+    return index
 
 
 def timestamps_of_missing_samples(data, max_sample_period=None,
@@ -236,6 +255,12 @@ def timestamps_of_missing_samples(data, max_sample_period=None,
     return pd.DatetimeIndex(missing_samples_list)
 
 
+def _secs_per_period_alias(alias):
+    """Seconds for each period length."""
+    dr = pd.date_range('00:00', periods=2, freq=alias)
+    return (dr[-1] - dr[0]).total_seconds()
+
+
 def missing_samples_per_period(data, rule, max_sample_period=None,
                                   window_start=None, window_end=None):
     """
@@ -263,11 +288,29 @@ def missing_samples_per_period(data, rule, max_sample_period=None,
         timezone=data.index.tzinfo
         Values are the number of dropped in that time period.
     """
-    missing_samples = timestamps_of_missing_samples(data, max_sample_period,
-                                                    window_start, window_end)
+    try:
+        data = data.dropna()
+    except AttributeError:
+        # if data is DatetimeIndex then it has no `dropna()` method
+        pass
+    
+    sample_period_secs = get_sample_period(data)
+    n_expected_samples_per_period = (_secs_per_period_alias(rule) / 
+                                   sample_period_secs)
+    if n_expected_samples_per_period < 1.0:
+        raise ValueError('Date period specified by rule is shorter than'
+                         ' sample period!')
 
-    series = pd.Series(1, index=missing_samples)
-    return series.resample(rule=rule, how='sum')
+    index = _get_index(data)
+    index = reframe_index(index, window_start, window_end)
+    n_samples_per_period = (pd.Series(1, index=index)
+                            .resample(rule=rule, how='sum')
+                            .fillna(0))
+
+    dropout_rate_per_period = 1 - (n_samples_per_period / 
+                                   n_expected_samples_per_period)
+
+    return dropout_rate_per_period
 
 
 def hours_on(series, on_power_threshold=DEFAULT_ON_POWER_THRESHOLD,
