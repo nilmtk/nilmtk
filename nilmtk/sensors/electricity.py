@@ -3,8 +3,6 @@ import copy
 import json
 import pandas as pd
 import numpy as np
-from nilmtk.stats.electricity.single import plot_missing_samples
-from matplotlib.ticker import FuncFormatter
 import matplotlib.pyplot as plt
 
 Measurement = namedtuple('Measurement', ['physical_quantity', 'type'])
@@ -390,65 +388,6 @@ class Electricity(object):
                     end = df_end
 
         return [start, end]
-
-    def _plot_missing_sample_using_rectanges(self, ax=None, fig=None):
-        # TODO: docstrings!
-        # TODO: better default date format
-
-        n = len(self.appliances) + len(self.mains)
-        colours = [plt.cm.Blues(c) for c in np.linspace(0.3, 0.9, n)]
-        ylabels = []
-        i = 0
-        for appliance_name, appliance_df in self.appliances.iteritems():
-            ax, fig = plot_missing_samples(
-                appliance_df, ax, fig, bottom=i + 0.1, color=colours[i])
-            ylabels.append((appliance_name.name, appliance_name.instance))
-            i += 1
-
-        for mains_name, mains_df in self.mains.iteritems():
-            ax, fig = plot_missing_samples(
-                mains_df, ax, fig, bottom=i + 0.1, color=colours[i])
-            ylabels.append(('mains', mains_name.split, mains_name.meter))
-            i += 1
-
-        i -= 1
-
-        ax.set_yticks(np.arange(0.5, i + 1.5))
-        ax.set_xlim(self.get_start_and_end_dates())
-
-        def formatter(x, pos):
-            x = int(x)
-            return ylabels[x]
-
-        ax.yaxis.set_major_formatter(FuncFormatter(formatter))
-        for item in ax.get_yticklabels():
-            item.set_fontsize(10)
-
-    def _plot_missing_sample_using_bitmap(self, ax=None, fig=None):
-        # Alternative strategy for doing this as a bitmap image:
-        # find start and end dates of whole dataset (write a sep method for this)
-        # resolution = how much time each pixel on the plot represents.
-        # for each channel:
-        #    implement stats.location_of_missing_samples(). Returns a Series where
-        #    index is the datetime of each missing sample and all values are True
-        #    Then just resample(resolution, how='sum').  This should give us what we need to plot
-        #
-        raise NotImplementedError
-
-    def plot_missing_samples(self, ax=None, fig=None, how='rectangles'):
-        """
-        Arguments
-        ---------
-        how : {'bitmap', 'rectangles'}
-        """
-        # TODO: docstring!
-
-        map_how_to_functions = {
-            'bitmap': self._plot_missing_sample_using_bitmap,
-            'rectangles': self._plot_missing_sample_using_rectanges
-        }
-
-        return map_how_to_functions[how](ax, fig)
 
     def __str__(self):
         return ""

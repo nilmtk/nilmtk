@@ -1,13 +1,14 @@
 """Statistics for applying to an entire building"""
 
 from __future__ import print_function, division
-from single import DEFAULT_MAX_DROPOUT_RATE, usage_per_period, plot_missing_samples
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib.ticker import FuncFormatter
 
 from nilmtk.sensors.electricity import Measurement
-
+from single import DEFAULT_MAX_DROPOUT_RATE, usage_per_period
+import single
 
 def find_common_measurements(electricity):
     """Finds common measurement contained in all electricity streams
@@ -245,3 +246,64 @@ def top_k_appliances(electricity, k=3, how=np.mean, order='desc'):
         series_appliances_contribution.sort(ascending=False)
 
     return series_appliances_contribution.head(k)
+
+
+def _plot_missing_sample_using_rectanges(electricity, ax=None, fig=None):
+    # TODO: docstrings!
+    # TODO: better default date format
+
+    n = len(electricity.appliances) + len(electricity.mains)
+    colours = [plt.cm.Blues(c) for c in np.linspace(0.3, 0.9, n)]
+    ylabels = []
+    i = 0
+    for appliance_name, appliance_df in electricity.appliances.iteritems():
+        ax, fig = single.plot_missing_samples(
+            appliance_df, ax, fig, bottom=i + 0.1, color=colours[i])
+        ylabels.append((appliance_name.name, appliance_name.instance))
+        i += 1
+
+    for mains_name, mains_df in electricity.mains.iteritems():
+        ax, fig = single.plot_missing_samples(
+            mains_df, ax, fig, bottom=i + 0.1, color=colours[i])
+        ylabels.append(('mains', mains_name.split, mains_name.meter))
+        i += 1
+
+    i -= 1
+
+    ax.set_yticks(np.arange(0.5, i + 1.5))
+    ax.set_xlim(electricity.get_start_and_end_dates())
+
+    def formatter(x, pos):
+        x = int(x)
+        return ylabels[x]
+
+    ax.yaxis.set_major_formatter(FuncFormatter(formatter))
+    for item in ax.get_yticklabels():
+        item.set_fontsize(10)
+
+
+def _plot_missing_sample_using_bitmap(electricity, ax=None, fig=None):
+    # Alternative strategy for doing this as a bitmap image:
+    # find start and end dates of whole dataset (write a sep method for this)
+    # resolution = how much time each pixel on the plot represents.
+    # for each channel:
+    #    implement stats.location_of_missing_samples(). Returns a Series where
+    #    index is the datetime of each missing sample and all values are True
+    #    Then just resample(resolution, how='sum').  This should give us what we need to plot
+    #
+    raise NotImplementedError
+
+def plot_missing_samples(electricity, ax=None, fig=None, how='rectangles'):
+    """
+    Arguments
+    ---------
+    how : {'bitmap', 'rectangles'}
+    """
+    # TODO: docstring!
+
+    map_how_to_functions = {
+        'bitmap': _plot_missing_sample_using_bitmap,
+        'rectangles': _plot_missing_sample_using_rectanges
+    }
+
+    return map_how_to_functions[how](electricity, ax, fig)
