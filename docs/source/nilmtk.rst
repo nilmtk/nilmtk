@@ -26,7 +26,7 @@ nilmtk.building module
 
 A building is a physical entity and its description is given below.
 
-.. automodule:: nilmtk.building
+.. automodule:: building
     :members:
     :undoc-members:
     :show-inheritance:
