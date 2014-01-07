@@ -63,7 +63,7 @@ class DataSet(object):
     def load_hdf5(self, directory):
         """Imports dataset from HDF5 store into NILMTK object
 
-        Arguments
+        Parameters
         ----------
 
         directory : str
@@ -225,8 +225,8 @@ class DataSet(object):
     def export(self, directory, format='HDF5', compact=False):
         """Export dataset to disk as HDF5.
 
-        Arguments
-        ---------
+        Parameters
+        ----------
         directory : str
             Output directory
 

@@ -48,8 +48,8 @@ def load_chan(building_dir, chan, colname=Measurement('power','active')):
 def load_labels(data_dir):
     """Loads data from labels.dat file.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
     data_dir : str
 
     Returns

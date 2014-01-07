@@ -29,15 +29,9 @@ sys.path.insert(0, os.path.abspath('../../nilmtk/nilmtk/sensors/'))
 sys.path.insert(0, '/usr/local/lib/python2.7/dist-packages/')
 '''
 
-print(os.path.abspath(os.path.join('..', 'sphinxext')))
-
-sys.path.insert(0, os.path.join('..', os.path.abspath('sphinxext')))
-
-print sys.path
-
-import sys
-import os.path
-
+sphinxext_path = os.path.abspath(os.path.join('..', 'sphinxext'))
+sys.path.insert(0, sphinxext_path)
+# print sys.path
 
 class Mock(object):
 
@@ -87,8 +81,6 @@ def all_from(folder='', abspath=None):
 all_from(os.path.join('..', '..', '..', 'nilmtk'))
 all_from(os.path.join('..', '..', 'nilmtk'))
 
-#from nilmtk.mock import Mock
-
 # MOCK_MODULES = ['numpy', 'scipy', 'matplotlib', 'scipy.stats'
 #                'matplotlib.pyplot', 'scipy.interpolate']
 # for mod_name in MOCK_MODULES:
@@ -107,10 +99,10 @@ extensions = [
     'sphinx.ext.intersphinx', 
     'sphinx.ext.todo', 
     'sphinx.ext.viewcode', 
-#    'numpydoc', 
-#    'ipython_console_highlighting',
-#    'ipython_directive',
-#    'inheritance_diagram'
+    'numpydoc',
+    'ipython_console_highlighting',
+    'ipython_directive',
+    'inheritance_diagram'
 ]
 #    'matplotlib.sphinxext.plot_directive']
 #    'matplotlib.sphinxext.ipython_directive']

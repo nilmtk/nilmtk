@@ -299,8 +299,8 @@ class Electricity(object):
         If any DualSupply appliances are present then sum together the two
         supplies (after checking if `dualsupply.measurement == measurement`).
 
-        Arguments
-        ---------
+        Parameters
+        ----------
         measurement : Measurement, optional
             default=Measurement('power', 'active')
             if `measurement=None` then just get the first column per DataFrame.
@@ -337,11 +337,11 @@ class Electricity(object):
 
     def get_appliance(self, appliance_name, measurement="all"):
         """
-        Arguments
-        ---------
+        Parameters
+        ----------
         appliance_name : string
         measurement : string or list of strings, optional
-            apparent | active | reactive | voltage | all
+            {'apparent', 'active', 'reactive', 'voltage', 'all'}
 
         Returns
         -------

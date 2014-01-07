@@ -18,7 +18,7 @@
 
 from __future__ import print_function, division
 import unittest, time
-import nilmtk.feature_detectors as fd
+import nilmtk.disaggregate.feature_detectors as fd
 import numpy as np
 import pandas as pd
 

@@ -6,7 +6,7 @@ from nilmtk.stats.electricity.building import find_appliances_contribution
 from nilmtk.stats.electricity.building import top_k_appliances
 
 from nilmtk.preprocessing.electricity.single import remove_implausible_entries
-from nilmtk.preprocessing.electricity.single import filter_dates_single
+from nilmtk.preprocessing.electricity.single import filter_datetime_single
 
 from copy import deepcopy
 
