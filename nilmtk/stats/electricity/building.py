@@ -5,10 +5,11 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FuncFormatter
-
+import matplotlib.dates as mdates
+from collections import OrderedDict
 from nilmtk.sensors.electricity import Measurement
-from single import DEFAULT_MAX_DROPOUT_RATE, usage_per_period
-import single
+from nilmtk.stats.electricity.single import DEFAULT_MAX_DROPOUT_RATE, usage_per_period
+import nilmtk.stats.electricity.single as single
 
 def find_common_measurements(electricity):
     """Finds common measurement contained in all electricity streams
@@ -248,7 +249,7 @@ def top_k_appliances(electricity, k=3, how=np.mean, order='desc'):
     return series_appliances_contribution.head(k)
 
 
-def _plot_missing_sample_using_rectanges(electricity, ax=None, fig=None):
+def plot_missing_samples_using_rectangles(electricity, ax=None, fig=None):
     # TODO: docstrings!
     # TODO: better default date format
 
@@ -282,28 +283,67 @@ def _plot_missing_sample_using_rectanges(electricity, ax=None, fig=None):
         item.set_fontsize(10)
 
 
-def _plot_missing_sample_using_bitmap(electricity, ax=None, fig=None):
-    # Alternative strategy for doing this as a bitmap image:
-    # find start and end dates of whole dataset (write a sep method for this)
-    # resolution = how much time each pixel on the plot represents.
-    # for each channel:
-    #    implement stats.location_of_missing_samples(). Returns a Series where
-    #    index is the datetime of each missing sample and all values are True
-    #    Then just resample(resolution, how='sum').  This should give us what we need to plot
-    #
-    raise NotImplementedError
-
-def plot_missing_samples(electricity, ax=None, fig=None, how='rectangles'):
+def plot_missing_samples_using_bitmap(electricity, ax=None, 
+                                     fig_width=800, add_colorbar=True, 
+                                     cmap=plt.cm.Blues):
     """
-    Arguments
-    ---------
-    how : {'bitmap', 'rectangles'}
+    Parameters
+    ----------
+
+    fig_width : int, default=800
+        The width of the plotted figure, in pixels
     """
-    # TODO: docstring!
+    # TODO: docstring!!! 
 
-    map_how_to_functions = {
-        'bitmap': _plot_missing_sample_using_bitmap,
-        'rectangles': _plot_missing_sample_using_rectanges
-    }
+    if ax is None:
+        ax = plt.gca()
 
-    return map_how_to_functions[how](electricity, ax, fig)
+    dataset_start, dataset_end = electricity.get_start_and_end_dates()
+    sec_per_pixel = (dataset_end - dataset_start).total_seconds() / fig_width
+    rule_code = '{:d}S'.format(int(round(sec_per_pixel)))
+
+    missing_samples_per_period = OrderedDict()
+    for dict_of_dfs in [electricity.appliances, 
+                        electricity.circuits, 
+                        electricity.mains]:
+        for name, df in dict_of_dfs.iteritems():
+            try:
+                name_str = (name.name, name.instance)
+            except:
+                name_str = ('mains', name.split, name.meter)
+
+            missing_samples_per_period[name_str] = (
+                single.missing_samples_per_period(
+                    data=df, rule=rule_code,
+                    window_start=dataset_start, window_end=dataset_end))
+    
+    df = pd.DataFrame(missing_samples_per_period)
+    img = np.transpose(df.values)
+    start_datenum = mdates.date2num(df.index[0])
+    end_datenum = mdates.date2num(df.index[-1])
+    im = ax.imshow(img, aspect='auto', interpolation='none', origin='lower',
+                   extent=(start_datenum, end_datenum, 0, df.columns.size),
+                   cmap=cmap)
+
+    if add_colorbar:
+        plt.colorbar(im)
+
+    ax.set_yticks(np.arange(0.5, len(df.columns)+0.5))
+
+    def formatter(x, pos):
+        x = int(x)
+        return df.columns[x]
+
+    ax.yaxis.set_major_formatter(FuncFormatter(formatter))
+    ax.set_title('Proportion of lost samples')
+    for item in ax.get_yticklabels():
+        item.set_fontsize(8)
+
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m/%y', 
+                                                      tz=df.index.tzinfo))
+    # Plot horizontal lines separating appliances
+    for i in range(1,img.shape[0]):
+        ax.plot([start_datenum, end_datenum], [i, i], color='grey', linewidth=1)
+
+    return ax
+

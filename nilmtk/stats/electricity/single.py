@@ -191,18 +191,20 @@ def reframe_index(index, window_start=None, window_end=None):
     -------
     index : pd.DatetimeIndex
     """
+    tz = index.tzinfo
+
     # Handle window...
     if window_start is not None:
         if window_start >= index[0]:
             index = index[index >= window_start]
         else:
-            index = index.insert(0, window_start)
+            index = index.insert(0, window_start).tz_localize('UTC').tz_convert(tz)
 
     if window_end is not None:
         if window_end <= index[-1]:
             index = index[index <= window_end]
         else:
-            index = index.insert(len(index), window_end)
+            index = index.insert(len(index), window_end).tz_localize('UTC').tz_convert(tz)
 
     return index
 
