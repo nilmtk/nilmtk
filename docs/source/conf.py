@@ -83,8 +83,8 @@ def all_from(folder='', abspath=None):
             print "adding", i
             print "/n"
 
-all_from('../../../nilmtk/')
-all_from('../../nilmtk/')
+#all_from('../../../nilmtk/')
+all_from(os.path.join('..', '..', 'nilmtk'))
 
 #from nilmtk.mock import Mock
 
