@@ -129,16 +129,13 @@ class DataSet(object):
                             appliance_name] = store[key]
 
     def export_csv(self, directory):
-        """Exports dataset in nilmtk standard on-disk format. 
-        The format is as follows:
-
-        TODO: Python complains if we put non-ascii stuff here, so
-        cannot add tree output
-
+        """Exports dataset in nilmtk standard on-disk CSV format. 
+               
         Parameters
         ----------
         directory : Complete path where to export the data 
         """
+
         # Mapping from {Appliance/Mains/Circuit}Name to CSV name
         namedtuple_map = {'mains': lambda x: "%d_%d.csv" %
                           (x.split, x.meter),
@@ -154,10 +151,22 @@ class DataSet(object):
                            % (building_number),
                            'circuits': lambda x: "building_%d/utility/electric/circuits/"
                            % (building_number)
-
                            }
+        # Mapping from {Measurement/DualSupply} to CSV column header
+        column_mapping = {'dual': lambda x: "%s_%s_%d" %
+                          (x.measurement.physical_quantity,
+                           x.measurement.type, x.supply),
+                          'single': lambda x: "%s_%s" %
+                          (x.physical_quantity, x.type)
+                          }
 
-        def create_path_df(building_number, df_name, df, type):
+        # Write metadata
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        with open(os.path.join(directory, 'metadata.json'), 'w') as metadata_fp:
+            metadata_fp.write(json.dumps(self.metadata))
+
+        def create_path_df(building_number, df_name, df, df_type, column):
             """Creates corresponding path in the nilmtk folder hierarchy for df,
              if the path does not exist. Also, saves the dataset in epoch unix 
              timestamped CSVs. CSV name correpsond to namedtuple_map
@@ -168,18 +177,20 @@ class DataSet(object):
             df_name : nilmtk.sensor.electricity.{appliance/mains/circuits}Name
             df : pandas.DataFrame consisting of DatetimeIndex and nilmtk.sensors.
             utility.electric.Measurement as columns
-            type : string, one of ['mains', 'appliances','circuits'] 
-
+            df_type : string, one of ['mains', 'appliances','circuits'] 
+            column: string, one of ['dual', 'single']
             """
+
             dir_path = os.path.join(
-                directory, folder_path_map[type](building_number))
+                directory, folder_path_map[df_type](building_number))
             if not os.path.exists(dir_path):
                 os.makedirs(dir_path)
             temp = df.copy()
             temp.index = (df.index.astype(int) / 1e9).astype(int)
-            temp.rename(columns=lambda x: "%s_%s" %
-                        (x.physical_quantity, x.type), inplace=True)
-            temp.to_csv(os.path.join(dir_path, namedtuple_map[type](df_name)),
+            temp.rename(columns=column_mapping[column], inplace=True)
+            temp.to_csv(os.path.join(dir_path, namedtuple_map[df_type
+                                                              ](df_name)),
+                        float_format= '%.2f',
                         index_label="timestamp")
 
         for building_number in self.buildings:
@@ -191,28 +202,22 @@ class DataSet(object):
             appliances = electric.appliances
             circuits = electric.circuits
             for main_name, main_df in mains.iteritems():
-                create_path_df(building_number, main_name, main_df, 'mains')
+                create_path_df(building_number, main_name,
+                               main_df, 'mains', 'single')
 
             for appliance_name, appliance_df in appliances.iteritems():
                 if isinstance(appliance_df.columns[0], DualSupply):
-                    [df_1, df_2, split_1,
-                        split_2] = get_two_dataframes_of_dualsupply(appliance_df)
-                    app_name_1 = ApplianceName(
-                        appliance_name.name, appliance_name.instance * 2 - 1)
-                    app_name_2 = ApplianceName(
-                        appliance_name.name, appliance_name.instance * 2)
-                    create_path_df(building_number, app_name_1,
-                                   df_1, "appliances")
-                    create_path_df(building_number, app_name_2,
-                                   df_2, "appliances")
+                    create_path_df(
+                        building_number, appliance_name, appliance_df,
+                        'appliances', 'dual')
                 else:
                     create_path_df(
                         building_number, appliance_name, appliance_df,
-                        'appliances')
+                        'appliances', 'single')
 
             for circuit_name, circuit_df in circuits.iteritems():
                 create_path_df(building_number, circuit_name, circuit_df,
-                               'circuit')
+                               'circuit', 'single')
 
     def export(self, directory, format='HDF5', compact=False):
         """Export dataset to disk as HDF5.
