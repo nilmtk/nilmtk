@@ -72,9 +72,10 @@ def all_from(folder='', abspath=None):
     if abspath is None:
         cwd = os.path.abspath(os.path.curdir)
         abspath = os.path.join(cwd, folder)
+        abspath = os.path.abspath(abspath)
     for root, dirs, files in os.walk(abspath):
         for f in files:
-            if f[-3:] in '.py':
+            if f.endswith('.py'):
                 add.add(root)
                 break
     for i in add:
