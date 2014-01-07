@@ -79,7 +79,6 @@ def proportion_of_energy_submetered(electricity,
             kwh_per_day = usage_per_period(df.icol(0), freq='D',
                                            max_dropout_rate=max_dropout_rate)['kwh']
             kwh_per_day = kwh_per_day.dropna()
-            print(kwh_per_day)
             chan_kwh_per_day.append(kwh_per_day)
             good_days_list.append(set(kwh_per_day.index))
         return chan_kwh_per_day
@@ -283,7 +282,7 @@ def plot_missing_samples_using_rectangles(electricity, ax=None, fig=None):
         item.set_fontsize(10)
 
 
-def plot_missing_samples_using_bitmap(electricity, ax=None, 
+def plot_missing_samples_using_bitmap(electricity, ax=None, fig=None,
                                      fig_width=800, add_colorbar=True, 
                                      cmap=plt.cm.Blues):
     """
@@ -297,6 +296,8 @@ def plot_missing_samples_using_bitmap(electricity, ax=None,
 
     if ax is None:
         ax = plt.gca()
+    if fig is None:
+        fig = plt.gcf()
 
     dataset_start, dataset_end = electricity.get_start_and_end_dates()
     sec_per_pixel = (dataset_end - dataset_start).total_seconds() / fig_width
@@ -313,7 +314,7 @@ def plot_missing_samples_using_bitmap(electricity, ax=None,
                 name_str = ('mains', name.split, name.meter)
 
             missing_samples_per_period[name_str] = (
-                single.missing_samples_per_period(
+                single.dropout_rate_per_period(
                     data=df, rule=rule_code,
                     window_start=dataset_start, window_end=dataset_end))
     
@@ -341,6 +342,8 @@ def plot_missing_samples_using_bitmap(electricity, ax=None,
 
     ax.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m/%y', 
                                                       tz=df.index.tzinfo))
+
+    fig.autofmt_xdate()
     # Plot horizontal lines separating appliances
     for i in range(1,img.shape[0]):
         ax.plot([start_datenum, end_datenum], [i, i], color='grey', linewidth=1)

@@ -16,7 +16,6 @@ from nilmtk.utils import secs_per_period_alias
 DEFAULT_MAX_DROPOUT_RATE = 0.4  # [0,1]
 DEFAULT_ON_POWER_THRESHOLD = 5  # watts
 
-
 def get_sample_period(data):
     """Estimate the sample period in seconds.
 
@@ -119,7 +118,7 @@ def plot_missing_samples(data, ax=None, fig=None, max_sample_period=None,
         fig = plt.gcf()
         ax.set_title("Missing samples")  
         ax.xaxis.axis_date(index.tzinfo)
-        ax.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m/%y %H:%M:%S',
+        ax.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m/%y',
                                                           tz=index.tzinfo))
         ax.set_xlim([index[0], index[-1]])
         fig.autofmt_xdate()
@@ -258,7 +257,7 @@ def timestamps_of_missing_samples(data, max_sample_period=None,
     return pd.DatetimeIndex(missing_samples_list)
 
 
-def missing_samples_per_period(data, rule, max_sample_period=None,
+def dropout_rate_per_period(data, rule, max_sample_period=None,
                                   window_start=None, window_end=None):
     """
     Parameters
@@ -304,10 +303,10 @@ def missing_samples_per_period(data, rule, max_sample_period=None,
                             .resample(rule=rule, how='sum')
                             .fillna(0))
 
-    dropout_rate_per_period = 1 - (n_samples_per_period / 
-                                   n_expected_samples_per_period)
+    dropout_rate_per_period_ = 1 - (n_samples_per_period / 
+                                    n_expected_samples_per_period)
 
-    return dropout_rate_per_period
+    return dropout_rate_per_period_
 
 
 def hours_on(series, on_power_threshold=DEFAULT_ON_POWER_THRESHOLD,
@@ -385,6 +384,10 @@ def energy(series, max_sample_period=None, unit='kwh'):
     --------
     hours_on
     """
+    # TODO: replace this evil hack to handle dataframes(!)
+    if isinstance(series, pd.DataFrame):
+        series = series.icol(0)
+
     timedelta = np.diff(series.index.values)
     if max_sample_period is not None:
         timedelta = np.where(timedelta > max_sample_period,
@@ -543,6 +546,10 @@ def usage_per_period(series, freq,
 
     """
 
+    # TODO: replace this evil hack to handle dataframes(!)
+    if isinstance(series, pd.DataFrame):
+        series = series.icol(0)
+
     assert(0 <= max_dropout_rate <= 1)
 
     period_range, boundaries = _indicies_of_periods(series.index, freq)
@@ -552,7 +559,7 @@ def usage_per_period(series, freq,
     energy_series = pd.Series(index=period_range, dtype=np.float,
                               name=name + ' ' + energy_unit)
 
-    MAX_SAMPLES_PER_PERIOD = _secs_per_period_alias(
+    MAX_SAMPLES_PER_PERIOD = secs_per_period_alias(
         freq) / get_sample_period(series)
     MIN_SAMPLES_PER_PERIOD = (MAX_SAMPLES_PER_PERIOD *
                               (1 - max_dropout_rate))
@@ -623,6 +630,10 @@ def activity_distribution(
         example, ignore the '2012/1/1'.
     """
 
+    # TODO: replace this evil hack to handle dataframes(!)
+    if isinstance(series, pd.DataFrame):
+        series = series.icol(0)
+
     # Create a pd.Series with PeriodIndex
     binned_data = series.resample(bin_size, how='max').to_period()
     binned_data = binned_data > on_power_threshold
@@ -637,8 +648,8 @@ def activity_distribution(
                            freq=bin_size)
     distribution = pd.Series(0, index=bins)
 
-    bins_per_timespan = int(round(_secs_per_period_alias(timespan) /
-                                  _secs_per_period_alias(bin_size)))
+    bins_per_timespan = int(round(secs_per_period_alias(timespan) /
+                                  secs_per_period_alias(bin_size)))
 
     for span in timespans:
         try:
@@ -687,6 +698,10 @@ def on(series, max_sample_period=None,
         index is the same as for input `series`
         values are booleans
     """
+    # TODO: replace this evil hack to handle dataframes(!)
+    if isinstance(series, pd.DataFrame):
+        series = series.icol(0)
+
     when_on = series >= on_power_threshold
 
     if max_sample_period is not None:
@@ -789,6 +804,10 @@ def durations(on_series, on_or_off, ignore_n_off_samples=None,
     sample_period()
 
     """
+    # TODO: ignore_n_off_samples should be generalised so it does the
+    # right thing when `on_or_off='off'`
+    if sample_period is None:
+        sample_period = get_sample_period(on_series)
     events = on_off_events(on_series, ignore_n_off_samples)
     delta_time_array = np.diff(events.index.values).astype(int) / 1E9
     delta_time = pd.Series(delta_time_array, index=events.index[:-1])
@@ -846,11 +865,6 @@ def start_end_datetime(data):
 
 
 #------------------------ HELPER FUNCTIONS -------------------------
-def _secs_per_period_alias(alias):
-    """The duration of a period alias in seconds."""
-    dr = pd.date_range('00:00', periods=2, freq=alias)
-    return (dr[-1] - dr[0]).total_seconds()
-
 
 def _indicies_of_periods(datetime_index, freq, use_local_time=True):
     """Find which elements of `datetime_index` fall into each period
@@ -933,7 +947,7 @@ def _indicies_of_periods(datetime_index, freq, use_local_time=True):
     # Find the minimum sample period.
     MIN_SAMPLE_PERIOD = int(get_sample_period(datetime_index))
     MAX_SAMPLES_PER_PERIOD = int(
-        _secs_per_period_alias(freq) / MIN_SAMPLE_PERIOD)
+        secs_per_period_alias(freq) / MIN_SAMPLE_PERIOD)
     MAX_SAMPLES_PER_2_PERIODS = MAX_SAMPLES_PER_PERIOD * 2
     n_rows_processed = 0
     boundaries = {}

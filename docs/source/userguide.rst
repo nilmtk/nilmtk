@@ -4,9 +4,10 @@
 User Guide
 ----------
 
-.. sourcecode:: ipython
+.. toctree::
+   :maxdepth: 2
 
-    In [69]: print "t"
+   stats
 
 .. topic:: Examples:
 
