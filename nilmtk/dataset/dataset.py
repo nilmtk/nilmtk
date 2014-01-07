@@ -160,6 +160,12 @@ class DataSet(object):
                           (x.physical_quantity, x.type)
                           }
 
+        # Write metadata
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        with open(os.path.join(directory, 'metadata.json'), 'w') as metadata_fp:
+            metadata_fp.write(json.dumps(self.metadata))
+
         def create_path_df(building_number, df_name, df, df_type, column):
             """Creates corresponding path in the nilmtk folder hierarchy for df,
              if the path does not exist. Also, saves the dataset in epoch unix 
@@ -184,6 +190,7 @@ class DataSet(object):
             temp.rename(columns=column_mapping[column], inplace=True)
             temp.to_csv(os.path.join(dir_path, namedtuple_map[df_type
                                                               ](df_name)),
+                        float_format= '%.2f',
                         index_label="timestamp")
 
         for building_number in self.buildings:
