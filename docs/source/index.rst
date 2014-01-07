@@ -4,12 +4,10 @@ nilmtk: Non intrusive load monitoring toolkit
 Non intrusive load monitoring
 
 .. toctree::
-   :maxdepth: 1
-
+   :maxdepth: 2
 
    api
    userguide
-   	
 
 
 Indices and tables

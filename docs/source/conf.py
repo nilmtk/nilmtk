@@ -31,8 +31,7 @@ sys.path.insert(0, '/usr/local/lib/python2.7/dist-packages/')
 
 print(os.path.abspath(os.path.join('..', 'sphinxext')))
 
-sys.path.insert(0, os.path.abspath('sphinxext'))
-# sys.path.append('/usr/local/lib/python2.7/dist-packages/matplotlib/sphinxext')
+sys.path.insert(0, os.path.join('..', os.path.abspath('sphinxext')))
 
 print sys.path
 
@@ -84,17 +83,15 @@ def all_from(folder='', abspath=None):
             print "adding", i
             print "/n"
 
-all_from('../../../nilmtk/')
-all_from('../../nilmtk/')
-
+# all_from('../../../nilmtk/')
+# all_from('../../nilmtk/')
 
 #from nilmtk.mock import Mock
 
-MOCK_MODULES = ['numpy', 'scipy', 'matplotlib', 'scipy.stats'
-                'matplotlib.pyplot', 'scipy.interpolate']
-for mod_name in MOCK_MODULES:
-    sys.modules[mod_name] = Mock()
-
+# MOCK_MODULES = ['numpy', 'scipy', 'matplotlib', 'scipy.stats'
+#                'matplotlib.pyplot', 'scipy.interpolate']
+# for mod_name in MOCK_MODULES:
+#    sys.modules[mod_name] = Mock()
 
 # -- General configuration -----------------------------------------------
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -102,10 +99,19 @@ for mod_name in MOCK_MODULES:
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = [
-    'sphinx.ext.autodoc', 'sphinx.ext.mathjax', 'sphinx.ext.ifconfig', 'sphinx.ext.viewcode',
-    'sphinx.ext.intersphinx', 'numpydoc', 'ipython_console_highlighting',
-    'inheritance_diagram']
-#    'matplotlib.sphinxext.plot_directive',
+    'sphinx.ext.autodoc', 
+    'sphinx.ext.mathjax', 
+    'sphinx.ext.ifconfig', 
+    'sphinx.ext.viewcode',
+    'sphinx.ext.intersphinx', 
+    'sphinx.ext.todo', 
+    'sphinx.ext.viewcode', 
+#    'numpydoc', 
+#    'ipython_console_highlighting',
+#    'ipython_directive',
+#    'inheritance_diagram'
+]
+#    'matplotlib.sphinxext.plot_directive']
 #    'matplotlib.sphinxext.ipython_directive']
 
 # Add any paths that contain templates here, relative to this directory.
@@ -122,7 +128,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'nilmtk'
-copyright = u'2013, nilmtk authors'
+copyright = u'2014, nilmtk authors'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -145,7 +151,7 @@ release = '0.0.1'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = []
+exclude_patterns = ['_build']
 
 # The reST default role (used for this markup: `text`) to use for all documents.
 #default_role = None

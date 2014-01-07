@@ -12,27 +12,25 @@ uses.
 .. toctree::
    :maxdepth: 1
 
-A building is a physical entity and its description is given below
 
 Building
 --------
-.. automodule:: building
+A building is a physical entity and its description is given below
 
-.. autoclass:: Building
+.. automodule:: nilmtk.building
+
+.. autoclass:: nilmtk.building.Building
     :members:
 
-A building consists of the following:
-
-
-Utility has the following modalities:
 
 Electricity
 ------------
-.. automodule:: electricity
-.. autoclass:: Electricity
+.. automodule:: nilmtk.sensors.electricity
+
+.. autoclass:: nilmtk.sensors.electricity.Electricity
    :members:
 
 Metrics
 -------
-.. automodule:: metrics
+.. automodule:: nilmtk.metrics
    :members:
