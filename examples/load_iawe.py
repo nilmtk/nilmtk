@@ -33,4 +33,6 @@ for appliance_name, appliance in building.utility.electric.appliances.iteritems(
 # Fixing implausible voltage values
 building_voltage_filtered = filter_out_implausible_values(
     building, Measurement('voltage', ''), 160, 260)
-# Finding appliance usage
+
+# Filtering out data
+
