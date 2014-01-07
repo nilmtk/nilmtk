@@ -31,6 +31,7 @@ sys.path.insert(0, '/usr/local/lib/python2.7/dist-packages/')
 
 
 sys.path.insert(0, os.path.abspath('sphinxext'))
+# sys.path.append('/usr/local/lib/python2.7/dist-packages/matplotlib/sphinxext')
 
 print sys.path
 
@@ -101,7 +102,10 @@ for mod_name in MOCK_MODULES:
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = [
     'sphinx.ext.autodoc', 'sphinx.ext.mathjax', 'sphinx.ext.ifconfig', 'sphinx.ext.viewcode',
-    'sphinx.ext.intersphinx', 'numpydoc', 'inheritance_diagram', 'ipython_console_highlighting']
+    'sphinx.ext.intersphinx', 'numpydoc', 'ipython_console_highlighting']
+#    'inheritance_diagram',
+#    'matplotlib.sphinxext.plot_directive',
+#    'matplotlib.sphinxext.ipython_directive']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['ntemplates']
