@@ -108,8 +108,8 @@ class DataSet(object):
                     b.utility.electric.mains = {}
                     for key in keys_mains:
                         mains_split = int(key.split("/")[-2])
-                        mains_instance = int(key.split("/")[-1])
-                        mains_name = MainsName(mains_split, mains_instance)
+                        mains_meter = int(key.split("/")[-1])
+                        mains_name = MainsName(mains_split, mains_meter)
                         b.utility.electric.mains[mains_name] = store[key]
 
                 # Loading appliances
@@ -127,46 +127,88 @@ class DataSet(object):
                             appliance_name] = store[key]
 
     def export_csv(self, directory):
-        """For now just created this function separately
+        """Exports dataset in nilmtk standard on-disk format. 
+        The format is as follows:
 
-        NB: Needs to be written!! Don't expect this to run at the moment
+            ├── building_1
+            │   ├── metadata.json
+            │   └── utility
+            │       └── electricity
+            │           ├── appliances
+            │           │   ├── ac_1.csv
+            │           │   └── tv_1.csv
+            │           ├── circuits
+            │           │   └── lights_1.csv
+            │           └── mains
+            │               ├── mains_1_1.csv
+            │               ├── mains_1_2.csv
+            │               └── mains_2_1.csv
+            └── building_2
 
         Parameters
         ----------
         directory : Complete path where to export the data 
         """
+        # Mapping from {Appliance/Mains/Circuit}Name to CSV name
+        namedtuple_map = {'mains': lambda x: "%d_%d.csv" %
+                          (x.split, x.meter),
+                          'appliances': lambda x: "%s_%d.csv" %
+                          (x.name, x.instance),
+                          'circuits': lambda x: "%s_%d_%d.csv"
+                          % (x.name, x.split, x.meter)
+                          }
+        # Mapping from {appliance/mains/circuit} to directory structure
+        folder_path_map = {'mains': lambda x: "building_%d/utility/electric/mains/"
+                           % (building_number),
+                           'appliances': lambda x: "building_%d/utility/electric/appliances/"
+                           % (building_number),
+                           'circuits': lambda x: "building_%d/utility/electric/circuits/"
+                           % (building_number)
+
+                           }
+
+        def create_path_df(building_number, df_name, df, type):
+            """Creates corresponding path in the nilmtk folder hierarchy for df,
+             if the path does not exist. Also, saves the dataset in epoch unix 
+             timestamped CSVs. CSV name correpsond to namedtuple_map
+
+            Parameters
+            ----------
+            building_number : nilmtk.Building number, int
+            df_name : nilmtk.sensor.electricity.{appliance/mains/circuits}Name
+            df : pandas.DataFrame consisting of DatetimeIndex and nilmtk.sensors.
+            utility.electric.Measurement as columns
+            type : string, one of ['mains', 'appliances','circuits'] 
+
+            """
+            dir_path = os.path.join(
+                directory, folder_path_map[type](building_number))
+            if not os.path.exists(dir_path):
+                os.makedirs(dir_path)
+            temp = df.copy()
+            temp.index = (df.index.astype(int) / 1e9).astype(int)
+            temp.rename(columns=lambda x: "%s_%s" %
+                        (x.physical_quantity, x.type), inplace=True)
+            temp.to_csv(os.path.join(dir_path, namedtuple_map[type](df_name)),
+                        index_label="timestamp")
+
         for building_number in self.buildings:
-            print("Writing data for %d" % (building_number))
+            print("Writing data for building %d" % (building_number))
             building = self.buildings[building_number]
             utility = building.utility
             electric = utility.electric
             mains = electric.mains
-            for main in mains:
-                dir_path = os.path.join(os.path.abspath(directory),
-                                        "/%d/utility/electric/mains/%d_%d.csv"
-                                        % (building_number, main.split,
-                                           main.meter))
-                print(dir_path)
-                print("*"*80)
-                os.makedirs(dir_path)
-                temp = mains[main].copy()
-                temp.index = (temp.index.astype(int) / 1e9).astype(int)
-                temp.rename(columns=lambda x: "%s_%s" %
-                            (x.physical_quantity, x.type), inplace=True)
-                temp.to_csv(dir_path, index_label="timestamp")
-
             appliances = electric.appliances
-            for appliance in appliances:
-                dir_path = os.path.join(os.path.abspath(directory),
-                                        "/%d/utility/electric/appliances/%d_%d.csv"
-                                        % (building_number, appliance.name,
-                                           appliance.instance))
-                os.makedirs(dir_path)
-                temp = mains[main].copy()
-                temp.index = (temp.index.astype(int) / 1e9).astype(int)
-                temp.rename(columns=lambda x: "%s_%s" %
-                            (x.physical_quantity, x.type), inplace=True)
-                temp.to_csv(dir_path, index_label="timestamp")
+            circuits = electric.circuits
+            for main_name, main_df in mains.iteritems():
+                create_path_df(building_number, main_name, main_df, 'mains')
+
+            for appliance_name, appliance_df in appliances.iteritems():
+                create_path_df(building_number, appliance_name, appliance_df,
+                               'appliances')
+            for circuit_name, circuit_df in circuits.iteritems():
+                create_path_df(building_number, circuit_name, circuit_df,
+                               'circuit')
 
     def export(self, directory, format='HDF5', compact=False):
         """Export dataset to disk as HDF5.
