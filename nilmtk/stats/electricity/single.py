@@ -64,6 +64,26 @@ def get_dropout_rate(data, sample_period=None):
     n_expected_samples = duration.total_seconds() / sample_period
     return 1 - (index.size / n_expected_samples)
 
+def _has_nans_series(series):
+    return series.isnull().any()
+
+def has_nans(data):
+    """
+    Parameters
+    ----------
+    data : pandas.DataFrame or Series
+    
+    Returns
+    -------
+    bool
+    """
+    if isinstance(data, pd.Series):
+        return _has_nans_series(data)
+    elif isinstance(data, pd.DataFrame):
+        return np.any([_has_nans_series(series) for _, series in data.iteritems()])
+    else:
+        raise TypeError
+
 def plot_missing_samples(data, ax=None, fig=None, max_sample_period=None, 
                          bottom=0.1, height=0.8, color='k'):
     """
@@ -75,6 +95,15 @@ def plot_missing_samples(data, ax=None, fig=None, max_sample_period=None,
         Maximum allowed sample period in seconds.  
         If not provided then will use sample period * 4.
     """
+
+    try:
+        data_has_nans = has_nans(data)
+    except TypeError:
+        pass
+    else:
+        if data_has_nans:
+            print("WARNING from plot_missing_samples: data has NaNs!")
+    
     index = _get_index(data)
     if ax is None:
         ax = plt.gca()
