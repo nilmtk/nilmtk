@@ -6,7 +6,7 @@ Non intrusive load monitoring
 .. toctree::
    :maxdepth: 2
 
-   api
+   nilmtk
    userguide
 
 
