@@ -95,10 +95,20 @@ def replace_nans_with_zeros(multiple_appliances_dataframe, max_sample_period):
 
 
 def normalise_power(power, voltage, nominal_voltage):
-    """
-    Normalizes the power draw as per Hart's paper.
-    TODO: Add more information about normalization
+    """ Uses Hart's formula to calculate:
+     "admittance in the guise of 'normalized power':
+        
+    P_{Norm}(t) = 230 ^ 2 x Y(t) = (230 / V(t)) ^ 2 x P(t)
 
+    This is just the admittance adjusted by a constant scale
+    factor, resulting in the power normalized to 120 V, i.e.,
+    what the power would be if the utility provided a steady
+    120 V and the load obeyed a linear model. It is a far more
+    consistent signature than power... All of our prototype
+    NALMs use step changes in the normalized power as the
+    signature."
+    (equation 4, page 8 of Hart 1992)
+    
     Parameters
     ----------
     power : pd.Series
