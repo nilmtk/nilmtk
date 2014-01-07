@@ -343,15 +343,37 @@ class Electricity(object):
     def plot_appliance_activity(self, source):
         """Plot a compact representation of all appliance activity."""
         raise NotImplementedError
+    
+    def get_start_and_end_dates(self):
+        """Returns the start and end dates covering the data in
+        appliances, circuits and mains.
 
-    def plot_missing_samples(self, ax=None, fig=None):
-        # TODO: set start and end time for whole dataset (build a new method to do this)
+        Returns
+        -------
+        [start, end] : pd.Timestamp
+        """
+        start = None
+        end = None
+        for dict_of_dfs in [self.appliances, self.circuits, self.mains]:
+            for df in dict_of_dfs.values():
+                df_start = df.index[0]
+                if start is None or df_start < start:
+                    start = df_start
+
+                df_end = df.index[-1]
+                if end is None or df_end > end:
+                    end = df_end            
+
+        return [start, end]
+
+    def _plot_missing_sample_using_rectanges(self, ax=None, fig=None):
         # TODO: docstrings!
+        # TODO: better default date format
 
-        i = 0
         n = len(self.appliances) + len(self.mains)
         colours = [plt.cm.Blues(c) for c in np.linspace(0.3, 0.9, n)]
         ylabels = []
+        i = 0
         for appliance_name, appliance_df in self.appliances.iteritems():
             ax, fig = plot_missing_samples(appliance_df, ax, fig, bottom=i+0.1, color=colours[i])
             ylabels.append((appliance_name.name, appliance_name.instance))
@@ -365,6 +387,7 @@ class Electricity(object):
         i -= 1
 
         ax.set_yticks(np.arange(0.5, i+1.5))
+        ax.set_xlim(self.get_start_and_end_dates())
 
         def formatter(x, pos):
             x = int(x)
@@ -372,12 +395,9 @@ class Electricity(object):
 
         ax.yaxis.set_major_formatter(FuncFormatter(formatter))
         for item in ax.get_yticklabels():
-            item.set_fontsize(8)
+            item.set_fontsize(10)
 
-        # Plot horizontal lines separating appliances
-        for j in range(1,i):
-            ax.plot(ax.get_xlim(), [j, j], color='grey', linewidth=0.1)
-
+    def _plot_missing_sample_using_bitmap(self, ax=None, fig=None):
         # Alternative strategy for doing this as a bitmap image:
         # find start and end dates of whole dataset (write a sep method for this)
         # resolution = how much time each pixel on the plot represents.
@@ -386,8 +406,22 @@ class Electricity(object):
         #    index is the datetime of each missing sample and all values are True
         #    Then just resample(resolution, how='sum').  This should give us what we need to plot
         #    
+        raise NotImplementedError
 
-        return ax, fig
+    def plot_missing_samples(self, ax=None, fig=None, how='rectangles'):
+        """
+        Arguments
+        ---------
+        how : {'bitmap', 'rectangles'}
+        """
+        # TODO: docstring!
+
+        map_how_to_functions = {
+            'bitmap': self._plot_missing_sample_using_bitmap,
+            'rectangles': self._plot_missing_sample_using_rectanges
+        }
+
+        return map_how_to_functions[how](ax, fig)
 
 
     def __str__(self):

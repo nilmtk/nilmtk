@@ -121,7 +121,8 @@ def start_end_datetimes_channels(electricity):
     start_end_datetimes_dict : dictionary  
         {channel: [start_timestamp, end_timestamp]}
     """
-    return None
+    # also see nilmtk.sensors.electricity.Electricity.get_start_and_end_dates()
+    raise NotImplementedError
 
 
 def average_energy(electricity,
