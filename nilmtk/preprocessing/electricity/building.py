@@ -7,9 +7,16 @@ from nilmtk.stats.electricity.building import top_k_appliances
 
 from nilmtk.preprocessing.electricity.single import remove_implausible_entries
 from nilmtk.preprocessing.electricity.single import filter_datetime_single
-from nilmtk.preprocessing.electricity.single import insert_zeros
+from nilmtk.preprocessing.electricity import single
+
+from nilmtk.utils import apply_func_to_values_of_dicts
 
 from copy import deepcopy
+
+# Define all the dicts to which we want to apply functions within Buildings
+BUILDING_ELECTRICITY_DICTS = ['utility.electric.appliances',
+                              'utility.electric.mains',
+                              'utility.electric.circuits']
 
 
 def filter_contribution_less_than_x(building, x=5):
@@ -60,7 +67,7 @@ def filter_top_k_appliances(building, k=5):
     return building_copy
 
 
-def downsample(building, rule='1T', how='mean'):
+def downsample(building, rule='1T', how='mean', dropna=False):
     """Downsample all electrical data
 
     Parameters
@@ -70,54 +77,73 @@ def downsample(building, rule='1T', how='mean'):
         refer to pandas.resample docs for rules; default '1T' or 1 minute
     how : string
         refer to pandas.resample docs for how; default 'mean'
+    dropna : boolean, optional
+        default = False.  Whether to drop NaNs after resampling.
 
     Returns
     --------
     building_copy: nilmtk.Building
 
     """
-    building_copy = deepcopy(building)
+    # Define a resample function
+    if dropna:
+        resample = lambda df : pd.DataFrame.resample(df, rule=rule, how=how).dropna()
+    else:
+        resample = lambda df : pd.DataFrame.resample(df, rule=rule, how=how)
 
-    # Downsampling appliance data
-    for appliance_name, appliance_df in building.utility.electric.appliances.iteritems():
-        building_copy.utility.electric.appliances[
-            appliance_name] = appliance_df.resample(rule, how).dropna()
-
-    # Downsampling mains data
-    for mains_name, mains_df in building.utility.electric.mains.iteritems():
-        building_copy.utility.electric.mains[
-            mains_name] = mains_df.resample(rule, how).dropna()
-
-    return building_copy
+    return apply_func_to_values_of_dicts(building, resample, 
+                                         BUILDING_ELECTRICITY_DICTS)
 
 
-def add_zeros(building):
-    """Filters out all data falling outside the start and the end date
+def fill_appliance_gaps(building, sample_period_multiplier=4):
+    """Book-ends all large gaps with zeros using
+    `nilmtk.preprocessing.electric.single.insert_zeros`
+    and all appliances in `building` and then forward fills any remaining NaNs.
+    This will result in forward-filling small gaps with 
+    the recorded value which precedes the gap, and forward-filling zeros
+    in large gaps.
+
+    NOTE: This function assumes that any gaps in the appliance data is the
+    result of the appliance monitor and the appliance being off.  Do not
+    use this function if gaps in appliance data are the result of the
+    IAM being broken (and hence the state of the appliance is unknown).
 
     Parameters
     ----------
     building : nilmtk.Building
-    start_datetime :string, 'mm-dd-yyyy hh:mm:ss'
-    end_datetime : string, 'mm-mdd-yyyy hh:mm:ss'
+    sample_period_multiplier : float or int, optional
+        The permissible  maximum sample period expressed as a multiple
+        of each dataframe's sample period. Any gap longer
+        than the max sample period is assumed to imply that the IAM 
+        and appliance are off.  If None then will default to
+        4 x the sample period of each dataframe.
 
     Returns
     -------
     building_copy : nilmtk.Building
+
+    See Also
+    --------
+    nilmtk.preprocessing.electric.single.insert_zeros()
     """
-    building_copy = deepcopy(building)
-    # Filtering appliances
-    for appliance_name, appliance_df in building.utility.electric.appliances.iteritems():
 
-        building_copy.utility.electric.appliances[
-            appliance_name] = insert_zeros(appliance_df)
+    # TODO: should probably remove any periods where all appliances 
+    # are not recording (which indicates that things are broken)
 
-    # Filtering mains data
-    for mains_name, mains_df in building.utility.electric.mains.iteritems():
-        building_copy.utility.electric.mains[
-            mains_name] = insert_zeros(mains_df)
+    # "book-end" each gap with a zero at each end
+    single_insert_zeros = lambda df: single.insert_zeros(df,
+        sample_period_multiplier=sample_period_multiplier)
 
-    return building_copy
+    APPLIANCES = ['utility.electric.appliances']
+    new_building = apply_func_to_values_of_dicts(building, single_insert_zeros,
+                                                 APPLIANCES)
 
+    # Now fill forward
+    ffill = lambda df: pd.DataFrame.fillna(df, method='ffill')
+    new_building = apply_func_to_values_of_dicts(new_building, ffill,
+                                                 APPLIANCES)
+
+    return new_building
 
 def filter_datetime(building, start_datetime=None, end_datetime=None):
     """Filters out all data falling outside the start and the end date

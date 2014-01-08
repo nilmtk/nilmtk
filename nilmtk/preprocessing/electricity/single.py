@@ -9,8 +9,25 @@ from nilmtk.stats.electricity.single import get_sample_period
 from nilmtk.sensors.electricity import Measurement
 
 
-def insert_zeros(single_appliance_dataframe, max_sample_period=None):
-    """There are two possible reasons for lost samples in individual
+def insert_zeros(single_appliance_dataframe, max_sample_period=None,
+                 sample_period_multiplier=4):
+    """Find all gaps in `single_appliance_dataframe` longer than
+    `max_sample_period` and insert a zero 1 sample period after
+    the start of the gap and insert a second zero 1 sample period
+    before the end of the gap.
+
+    In other words: "book-end" the gap with a zero at each end.
+
+    Zeros are only inserted at the start of the gap if the gap
+    starts with a reading above zero; and likewise for insertion
+    of zeros at the end of the gap.
+
+    Note that this function does not fill the entire gap with zeros,
+    if you want that then try pandas.DataFrame.fillna
+
+    What is `insert_zeros` useful for?
+
+    There are two possible reasons for lost samples in individual
     appliance data: 
 
     1) a broken IAM (hence we do not have any information about the appliance)
@@ -20,23 +37,17 @@ def insert_zeros(single_appliance_dataframe, max_sample_period=None):
     Only the user who can decide which of these two assumptions best
     fits their data.  insert_zeros is applicable only in case 2.
 
-    Some individual appliance monitors (IAMs) get turned off.
-    This might happen, for example, in the case where a hoover's IAM is 
-    permanently attached to the hoover's power cord, even when the hoover is
-    unplugged and put away in the cupboard.
+    For example, say a hoover's IAM is permanently attached to the
+    hoover's power cord, even when the hoover is unplugged and put
+    away in the cupboard.
 
-    Say the hoover was switched on and then both the hoover and the hoover's IAM
-    were unplugged.  This would result in the dataset having a gap immediately
-    after an on-segment.  This combination of an on-segment followed (without
-    any zeros) by a gap might confuse downstream statistics and
-    disaggregation functions which assume that the power drawn by an appliance
-    between reading[i] and reading[i+1] is held constant at reading[i] watts.
-
-    If, after any reading > 0, there is a gap in the dataset of more than 
-    `max_sample_period` seconds then assume the appliance (and 
-    individual appliance monitor) have been turned off from the
-    mains and hence insert a zero max_sample_period seconds after 
-    the last sample of the on-segment.
+    Say the hoover was switched on when both the hoover and the
+    hoover's IAM were unplugged.  This would result in the dataset
+    having a gap immediately after an on-segment.  This combination of
+    an on-segment followed (without any zeros) by a gap might confuse
+    downstream statistics and disaggregation functions which assume
+    that the power drawn by an appliance between reading[i] and
+    reading[i+1] is held constant at reading[i] watts.
 
     TODO: a smarter version of this function might use information from
     the aggregate data to do a better job of estimating exactly when
@@ -51,8 +62,12 @@ def insert_zeros(single_appliance_dataframe, max_sample_period=None):
         The maximum sample permissible period (in seconds). Any gap longer
         than `max_sample_period` is assumed to imply that the IAM 
         and appliance are off.  If None then will default to
-        4 x the sample period of `single_appliance_dataframe`.
+        `sample_period_multiplier` x the sample period of 
+        `single_appliance_dataframe`.
 
+    sample_period_multiplier : float or int, optional
+        default = 4
+    
     Returns
     -------
     df_with_zeros : pandas.DataFrame
@@ -60,30 +75,56 @@ def insert_zeros(single_appliance_dataframe, max_sample_period=None):
         `max_sample_period` seconds after the last sample of each on-segment.
 
     """
+    sample_period = get_sample_period(single_appliance_dataframe)
     if max_sample_period is None:
-        max_sample_period = get_sample_period(single_appliance_dataframe) * 4
+        max_sample_period = sample_period * sample_period_multiplier
 
-    # Make a copy (the copied dataframe is what we return, after inserting
-    # zeros)
-    df_with_zeros = deepcopy(single_appliance_dataframe)
+    # Drop NaNs (because we want those to be gaps in the index)
+    df = single_appliance_dataframe.dropna()
 
     # Get the length of time between each pair of consecutive samples. Seconds.
-    timedeltas = np.diff(df_with_zeros.index.values) / np.timedelta64(1, 's')
-    readings_before_gaps = df_with_zeros[:-1][timedeltas > max_sample_period]
+    timedeltas = np.diff(df.index.values) / np.timedelta64(1, 's')
+    gaps_mask = timedeltas > max_sample_period
+    readings_before_gaps = df[:-1][gaps_mask]
+    readings_after_gaps = df[1:][gaps_mask]
 
     # we only add a 0 if the recorded value just before the gap is > 0
     readings_before_gaps = readings_before_gaps[
         readings_before_gaps.sum(axis=1) > 0]
 
+    readings_after_gaps = readings_after_gaps[
+        readings_after_gaps.sum(axis=1) > 0]
+
     # Make a DataFrame of zeros, ready for insertion
-    dates_to_insert_zeros = (readings_before_gaps.index +
-                             pd.DateOffset(seconds=max_sample_period))
-    zeros = pd.DataFrame(data=0, index=dates_to_insert_zeros,
-                         columns=df_with_zeros.columns, dtype=np.float32)
+    dates_to_insert_zeros_before_gaps = (
+        readings_before_gaps.index + pd.DateOffset(seconds=sample_period))
+
+    dates_to_insert_zeros_after_gaps = (
+        readings_after_gaps.index - pd.DateOffset(seconds=sample_period))
+
+    dates_to_insert_zeros = dates_to_insert_zeros_before_gaps.append(
+        dates_to_insert_zeros_after_gaps)
+
+    # Don't insert duplicate entries
+    dates_to_insert_zeros = [d for d in dates_to_insert_zeros 
+                             if d not in df.index]
+
+    zeros = pd.DataFrame(data=0, 
+                         index=dates_to_insert_zeros,
+                         columns=single_appliance_dataframe.columns, 
+                         dtype=np.float32)
 
     # Insert the dataframe of zeros into the data.
+    df_with_zeros = deepcopy(single_appliance_dataframe)
     df_with_zeros = df_with_zeros.append(zeros)
     df_with_zeros = df_with_zeros.sort_index()
+
+    # If input data had a regular frequency then resample
+    # because appending turns off the regular frequency.
+    original_freq = single_appliance_dataframe.index.freq
+    if original_freq is not None:
+        df_with_zeros = df_with_zeros.resample(rule=original_freq)
+
     return df_with_zeros
 
 

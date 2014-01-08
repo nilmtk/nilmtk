@@ -1,4 +1,4 @@
-import os
+import os, copy
 import numpy as np
 import pandas as pd
 
@@ -79,3 +79,74 @@ def is_namedtuple(obj, nt):
         return False
     else:
         return True
+
+
+def recursive_resolve(obj, dict_name):
+    """Returns `obj.dict_name` where `dict_name` is a string
+    which may have periods e.g. `utility.electric.appliances`.
+
+    Parameters
+    ----------
+    obj : object
+        
+    dict_name : string
+        e.g. 'utility.electric.appliances'
+
+    Returns
+    -------
+    obj.dict_name
+
+    Examples
+    --------
+    To get buildling.utility.electric.appliances:
+
+    >>> appliances = recursive_resolve(building, 'utility.electric.appliances')
+    """
+    partitions = dict_name.partition('.')
+    if not partitions[0]:
+        return
+    elif not partitions[2]:
+        # e.g. partitions = ('electric', '', '')
+        return obj.__dict__[dict_name]
+    else:
+        return recursive_resolve(obj.__dict__[partitions[0]], partitions[2])
+
+
+
+def apply_func_to_values_of_dicts(obj, func, dict_names):
+    """Apply a generic function `func` to all values of a set dicts, 
+    each of which is an attribute of an arbitrary object `obj`.
+
+    Parameters
+    ----------
+    obj : object
+        any object which has one or more dicts as attributes
+    func : function
+        the function to apply to each dict value
+    dict_names : list of strings
+        the attribute names of the dicts in `obj`
+
+    Returns
+    -------
+    obj_copy : a deepcopy of `obj` with `func` applied to all `obj.<dict_names>`
+
+    Examples
+    --------
+    For example, to apply `resample` to the `circuits` and `mains` dicts of
+    an Electricity object:
+
+    >>> resample = lambda df : pd.DataFrame.resample(df, rule='T')
+    >>> electric = apply_func_to_values_of_dicts(electric, 
+                                                 resample,
+                                                 ['circuits', 'mains'])
+    """
+
+    # TODO: a lot of functions in nilmtk.preprocessing.electricity.buildling
+    # could be simplified using `apply_to_values_of_dicts`
+
+    obj_copy = copy.deepcopy(obj)
+    for attribute in dict_names:
+        dict_ = recursive_resolve(obj_copy, attribute)
+        for key, value in dict_.iteritems():
+            dict_[key] = func(value)
+    return obj_copy
