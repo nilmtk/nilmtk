@@ -90,20 +90,20 @@ def fraction_energy_assigned_correctly(predicted_power, df_appliances_ground_tru
     '''
 
     fraction = np.array([])
+    total_energy_predicted = np.sum(predicted_power.values)
 
     for appliance in predicted_power:
 
         appliance_energy_predicted = np.sum(predicted_power[appliance].values)
-        total_energy_predicted = np.sum(predicted_power.values)
 
         appliance_energy_ground_truth = np.sum(
             df_appliances_ground_truth[appliance].values)
         total_energy_ground_truth = np.sum(df_appliances_ground_truth.values)
 
-        fraction = np.append(fraction, np.min(
-                                              appliance_energy_predicted/total_energy_predicted,
+        fraction = np.append(fraction, np.min([appliance_energy_predicted/total_energy_predicted,
                                               appliance_energy_ground_truth/total_energy_ground_truth
-                                              ))
+                                              ]))
+        
     return np.sum(fraction)
 
 def mean_normalized_error_power(predicted_power, df_appliances_ground_truth):
