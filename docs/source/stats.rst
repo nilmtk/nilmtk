@@ -20,7 +20,7 @@ already been converted to HDF5 format):
 
    from nilmtk.dataset import DataSet
    dataset = DataSet()
-   dataset.load_hdf5('/home/jack/Dropbox/Data/nilmtk_datasets/redd/low_freq/')
+   dataset.load_hdf5('/home/nipun/Dropbox/nilmtk_datasets/redd/low_freq/')
    electric = dataset.buildings[1].utility.electric
    electric.appliances.keys()
 

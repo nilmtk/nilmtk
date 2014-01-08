@@ -11,6 +11,7 @@ from nilmtk.sensors.electricity import Measurement
 from nilmtk.stats.electricity.single import DEFAULT_MAX_DROPOUT_RATE, usage_per_period
 import nilmtk.stats.electricity.single as single
 
+
 def find_common_measurements(electricity):
     """Finds common measurement contained in all electricity streams
 
@@ -174,10 +175,10 @@ def find_appliances_contribution(electricity, how=np.mean):
     num_mains = len(electricity.mains.keys())
 
     # If more than 1 mains exists, add them up
-    combined_mains = electricity.mains[electricity.mains.keys()[0]]
+    combined_mains = electricity.mains.values()[0]
     if num_mains > 1:
         for i in xrange(1, num_mains):
-            combined_mains += electricity.mains.keys()[electricity.mains.keys()[i]]
+            combined_mains += electricity.mains.values()[i]
 
     # Finding common measurements
     common_measurements = find_common_measurements(electricity)
@@ -283,8 +284,8 @@ def plot_missing_samples_using_rectangles(electricity, ax=None, fig=None):
 
 
 def plot_missing_samples_using_bitmap(electricity, ax=None, fig=None,
-                                     fig_width=800, add_colorbar=True, 
-                                     cmap=plt.cm.Blues):
+                                      fig_width=800, add_colorbar=True,
+                                      cmap=plt.cm.Blues):
     """
     Parameters
     ----------
@@ -292,7 +293,7 @@ def plot_missing_samples_using_bitmap(electricity, ax=None, fig=None,
     fig_width : int, default=800
         The width of the plotted figure, in pixels
     """
-    # TODO: docstring!!! 
+    # TODO: docstring!!!
 
     if ax is None:
         ax = plt.gca()
@@ -304,8 +305,8 @@ def plot_missing_samples_using_bitmap(electricity, ax=None, fig=None,
     rule_code = '{:d}S'.format(int(round(sec_per_pixel)))
 
     missing_samples_per_period = OrderedDict()
-    for dict_of_dfs in [electricity.appliances, 
-                        electricity.circuits, 
+    for dict_of_dfs in [electricity.appliances,
+                        electricity.circuits,
                         electricity.mains]:
         for name, df in dict_of_dfs.iteritems():
             try:
@@ -317,7 +318,7 @@ def plot_missing_samples_using_bitmap(electricity, ax=None, fig=None,
                 single.dropout_rate_per_period(
                     data=df, rule=rule_code,
                     window_start=dataset_start, window_end=dataset_end))
-    
+
     df = pd.DataFrame(missing_samples_per_period)
     img = np.transpose(df.values)
     start_datenum = mdates.date2num(df.index[0])
@@ -329,7 +330,7 @@ def plot_missing_samples_using_bitmap(electricity, ax=None, fig=None,
     if add_colorbar:
         plt.colorbar(im)
 
-    ax.set_yticks(np.arange(0.5, len(df.columns)+0.5))
+    ax.set_yticks(np.arange(0.5, len(df.columns) + 0.5))
 
     def formatter(x, pos):
         x = int(x)
@@ -340,13 +341,13 @@ def plot_missing_samples_using_bitmap(electricity, ax=None, fig=None,
     for item in ax.get_yticklabels():
         item.set_fontsize(8)
 
-    ax.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m/%y', 
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m/%y',
                                                       tz=df.index.tzinfo))
 
     fig.autofmt_xdate()
     # Plot horizontal lines separating appliances
-    for i in range(1,img.shape[0]):
-        ax.plot([start_datenum, end_datenum], [i, i], color='grey', linewidth=1)
+    for i in range(1, img.shape[0]):
+        ax.plot([start_datenum, end_datenum],
+                [i, i], color='grey', linewidth=1)
 
     return ax
-
