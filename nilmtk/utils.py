@@ -64,3 +64,18 @@ def secs_per_period_alias(alias):
     dr = pd.date_range('00:00', periods=2, freq=alias)
     return (dr[-1] - dr[0]).total_seconds()
 
+
+def is_namedtuple(obj, nt):
+    """Returns true if obj is a namedtuple of type nt.
+
+    Does what you might expect `isinstance(obj, nt)` to do, but doesn't.
+    """
+    # we can't use isinstance on NamedTuples like isinstance(col_name, DualSupply)
+    # see http://bugs.python.org/issue7796
+    try:
+        for field in nt._fields:
+            obj.__dict__[field]
+    except (AttributeError, KeyError):
+        return False
+    else:
+        return True

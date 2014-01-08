@@ -1,9 +1,11 @@
+from __future__ import print_function, division
 from collections import namedtuple
 import copy
 import json
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from nilmtk.utils import is_namedtuple
 
 Measurement = namedtuple('Measurement', ['physical_quantity', 'type'])
 """
@@ -43,6 +45,47 @@ def get_two_dataframes_of_dualsupply(appliance_df):
             df_2[column.measurement] = appliance_df[[column]]
     return [df_1, df_2, split_1_supply, split_2_supply]
 
+
+def get_dual_supply_columns(appliance_df):
+    """Returns list of columns which are dual supply """
+    return [col_name for col_name in appliance_df.columns if is_namedtuple(col_name, DualSupply)]
+
+
+def sum_dual_supply(dict_of_appliances):
+    """Sums together any DualSupply appliances.
+
+    The result is as if each DualSupply appliance had been metered with
+    a single meter (summing both supplies together).  Non-DualSupply
+    appliances are copied over untouched.
+    
+    Parameters
+    ----------
+    dict_of_appliances : dict of pandas.DataFrames
+
+    Returns
+    -------
+    new_dict_of_appliances : dict of pandas.DataFrames
+    """
+
+    new_dict_of_appliances = {}
+    for appliance_name, appliance_df in dict_of_appliances.iteritems():
+        dual_supply_columns = get_dual_supply_columns(appliance_df)
+        n_dual_supply_columns = len(dual_supply_columns)
+        if n_dual_supply_columns == 0:
+            # do a straight copy
+            new_dict_of_appliances[appliance_name] = appliance_df
+        elif n_dual_supply_columns == 2:
+            # sum dual-supply columns
+            summed_dual_supply = (appliance_df[dual_supply_columns[0]] +
+                                  appliance_df[dual_supply_columns[1]])
+            summed_dual_supply.name = dual_supply_columns[0].measurement
+            new_dict_of_appliances[appliance_name] = pd.DataFrame(summed_dual_supply)
+            if len(appliance_df.columns) != 2:
+                raise NotImplementedError("TODO: copy over any non-DualSupply columns")
+        else:
+            raise Exception('{:s} has {:d} DualSupply channel(s). Should have 2.'
+                            .format(appliance_name, n_dual_supply_columns))
+    return new_dict_of_appliances
 
 class Electricity(object):
 
@@ -316,22 +359,11 @@ class Electricity(object):
                 appliance_name: appliance_df.icol[0]
                 for appliance_name, appliance_df in self.appliances.iteritems()}
         else:
+            summed_dual_supply = sum_dual_supply(self.appliances)
             appliance_dict = {
                 appliance_name: appliance_df[measurement]
-                for appliance_name, appliance_df in self.appliances.iteritems()
+                for appliance_name, appliance_df in summed_dual_supply.iteritems()
                 if measurement in appliance_df}
-
-            # Handle DualSupply appliances
-            for appliance_name, appliance_df in self.appliances.iteritems():
-                dual_supply_columns = []
-                for column_name in appliance_df:
-                    if (isinstance(column_name, DualSupply) and
-                            column_name.measurement == measurement):
-                        dual_supply_columns.append(appliance_df[column_name])
-
-                if dual_supply_columns:
-                    appliance_dict[appliance_name] = (dual_supply_columns[0] +
-                                                      dual_supply_columns[1])
 
         return pd.DataFrame(appliance_dict)
 
@@ -399,12 +431,13 @@ class Electricity(object):
         representation["circuits"] = ""
         return json.dumps(representation)
 
-    def get_mains_as_series(self, measurement=None):
+    def get_mains_as_series(self, measurement=None, normalise=False):
         """Returns a simplified representation of the mains data.
 
         * Sums together split-phase supplies
         * If multiple meters measure the same mains parameters then selects
           the meter with the highest sample rate
+        * Optionally normalises by voltage
 
         Parameters
         ----------
@@ -418,12 +451,13 @@ class Electricity(object):
         """
         raise NotImplementedError
 
-    def get_appliances_as_series(self, measurement=None):
+    def get_appliances_as_series(self, measurement=None, normalise=False):
         """Returns a simplified representation of the appliance data.
 
         * Sums together DualSupply measurements
         * If multiple meters measure the same mains parameters then selects
           the meter with the highest sample rate
+        * Optionally normalises by voltage
 
         Parameters
         ----------
@@ -436,3 +470,30 @@ class Electricity(object):
         dict of pandas.Series
         """
         raise NotImplementedError
+
+    def sum_split_supplies(self):
+        """Returns a new Electricity object where everything is the same
+        EXCEPT that split-supply mains are summed; and DualSupply
+        appliances are summed.  The main use case is data from North America,
+        e.g. REDD.  Does not touch `circuits`.
+
+        .. warning:: for mains data, this function assumes that there are 
+           only 1 or 2 splits and only a single meter per split.  
+           For DualSupply appliances, we assume only 2 supplies and a 
+           single meter per appliance.
+        """
+        e_copy = copy.deepcopy(self)
+        
+        # Sum split-supply mains
+        try:
+            mains = e_copy.mains[(1,1)] + e_copy.mains[(2,1)]
+        except KeyError:
+            pass # doesn't have split-phase mains so nothing to do
+        else:
+            e_copy.mains.clear()
+            e_copy.mains[MainsName(1,1)] = mains
+
+        # Sum DualSupply appliances
+        e_copy.appliances = sum_dual_supply(e_copy.appliances)
+
+        return e_copy
