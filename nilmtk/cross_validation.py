@@ -40,7 +40,6 @@ def train_test_split(building, **options):
 
     # Finding the buildings utility.electric.mains
     mains = building.utility.electric.mains
-    print(mains)
 
     # Since, it is already assumed that all the mains have same DateTime
     # Index, we choose the DateTime index from the first key
@@ -48,7 +47,6 @@ def train_test_split(building, **options):
 
     # Number of samples in the datetime_index
     n_samples = len(datetime_index)
-    print(n_samples)
     test_size = options.pop('test_size', None)
     train_size = options.pop('train_size', None)
 

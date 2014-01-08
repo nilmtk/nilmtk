@@ -186,5 +186,5 @@ def filter_datetime_single(channel_df, start_datetime=None, end_datetime=None):
         start_datetime = channel_df.index.values[0]
     if end_datetime is None:
         end_datetime = channel_df.index.values[0]
-    
+
     return channel_df[pd.Timestamp(start_datetime):pd.Timestamp(end_datetime)]

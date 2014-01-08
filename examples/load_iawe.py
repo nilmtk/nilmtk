@@ -39,7 +39,8 @@ for appliance_name, appliance in building.utility.electric.appliances.iteritems(
 building_voltage_filtered = filter_out_implausible_values(
     building, Measurement('voltage', ''), 160, 260)
 
-# Filtering out data. Note that this will remove motor as it does not have any data in this period
+# Filtering out data. Note that this will remove motor as it does not have
+# any data in this period
 building_dates_filtered = filter_datetime(
     building_voltage_filtered, '7-13-2013', '8-4-2013')
 

@@ -271,7 +271,6 @@ class CO_1d(Disaggregator):
         # we divide them into chunks and do the processing on smaller chunks
         # and later combine these chunks
         nvalues = len(test_mains.index)
-        print nvalues
         start = 0
         states = np.array([])
         residual_power = np.array([])
@@ -281,7 +280,7 @@ class CO_1d(Disaggregator):
             states = np.append(states, states_temp)
             residual_power = np.append(residual_power, residual_power_temp)
             start += MAX_VALUES_TO_CONSIDER
-            print(start)
+
         # If some values are still left
         [states_temp, residual_power_temp] = find_nearest_vectorized(
             sum_combination, test_mains.values[start:nvalues])

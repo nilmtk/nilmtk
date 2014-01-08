@@ -107,7 +107,7 @@ def add_zeros(building):
     building_copy = deepcopy(building)
     # Filtering appliances
     for appliance_name, appliance_df in building.utility.electric.appliances.iteritems():
-        
+
         building_copy.utility.electric.appliances[
             appliance_name] = insert_zeros(appliance_df)
 
