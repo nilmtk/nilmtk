@@ -86,10 +86,11 @@ all_from(os.path.join('..', '..'))
 import nilmtk
 
 
-MOCK_MODULES = ['numpy', 'scipy', 'matplotlib', 'scipy.stats'
-                'matplotlib.pyplot', 'scipy.interpolate', 'pandas','ipython_directive']
+'''MOCK_MODULES = ['numpy', 'scipy', 'matplotlib', 'scipy.stats'
+                'matplotlib.pyplot', 'scipy.interpolate', 'pandas']
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = Mock()
+'''
 
 
 # -- General configuration -----------------------------------------------
