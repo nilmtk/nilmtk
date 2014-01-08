@@ -249,23 +249,23 @@ def top_k_appliances(electricity, k=3, how=np.mean, order='desc'):
     return series_appliances_contribution.head(k)
 
 
-def plot_missing_samples_using_rectangles(electricity, ax=None, fig=None):
+def plot_missing_samples_using_rectangles(electricity, ax=None, fig=None, 
+                                          color='k'):
     # TODO: docstrings!
     # TODO: better default date format
 
     n = len(electricity.appliances) + len(electricity.mains)
-    colours = [plt.cm.Blues(c) for c in np.linspace(0.3, 0.9, n)]
     ylabels = []
     i = 0
     for appliance_name, appliance_df in electricity.appliances.iteritems():
         ax, fig = single.plot_missing_samples(
-            appliance_df, ax, fig, bottom=i + 0.1, color=colours[i])
+            appliance_df, ax, fig, bottom=i + 0.1, color=color)
         ylabels.append((appliance_name.name, appliance_name.instance))
         i += 1
 
     for mains_name, mains_df in electricity.mains.iteritems():
         ax, fig = single.plot_missing_samples(
-            mains_df, ax, fig, bottom=i + 0.1, color=colours[i])
+            mains_df, ax, fig, bottom=i + 0.1, color=color)
         ylabels.append(('mains', mains_name.split, mains_name.meter))
         i += 1
 
