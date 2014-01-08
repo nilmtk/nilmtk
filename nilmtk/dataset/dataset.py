@@ -21,8 +21,8 @@ class DataSet(object):
     ----------
 
     buildings : dict
-        Each key is a string representing the name of the building and is 
-        preserved from the original dataset.  Each value is a 
+        Each key is a string representing the name of the building and is
+        preserved from the original dataset.  Each value is a
         nilmtk.building.Building object.
 
     metadata : dict
@@ -47,7 +47,7 @@ class DataSet(object):
         geographic_coordinates : pair (lat, long), optional
             The geo location of the research institution.  Used as a fall back
             if geo location isn't available for any individual building.
-    
+
     """
 
     def __init__(self):
@@ -70,9 +70,10 @@ class DataSet(object):
             Directory where the HDF5 store is located
 
         """
-        # Load metadata
-        with open(os.path.join(directory, 'metadata.json'), 'r') as metadata_fp:
-            self.metadata = json.loads(metadata_fp.read())
+        # Load metadata if exists
+        if os.path.isfile(os.path.join(directory, 'metadata.json')):
+            with open(os.path.join(directory, 'metadata.json'), 'r') as metadata_fp:
+                self.metadata = json.loads(metadata_fp.read())
         store = pd.HDFStore(
             os.path.join(directory, 'dataset.h5'))
         self.buildings = {}
@@ -132,11 +133,11 @@ class DataSet(object):
                             appliance_name] = store[key]
 
     def export_csv(self, directory):
-        """Exports dataset in nilmtk standard on-disk CSV format. 
-               
+        """Exports dataset in nilmtk standard on-disk CSV format.
+
         Parameters
         ----------
-        directory : Complete path where to export the data 
+        directory : Complete path where to export the data
         """
 
         # Mapping from {Appliance/Mains/Circuit}Name to CSV name
@@ -171,7 +172,7 @@ class DataSet(object):
 
         def create_path_df(building_number, df_name, df, df_type, column):
             """Creates corresponding path in the nilmtk folder hierarchy for df,
-             if the path does not exist. Also, saves the dataset in epoch unix 
+             if the path does not exist. Also, saves the dataset in epoch unix
              timestamped CSVs. CSV name correpsond to namedtuple_map
 
             Parameters
@@ -180,7 +181,7 @@ class DataSet(object):
             df_name : nilmtk.sensor.electricity.{appliance/mains/circuits}Name
             df : pandas.DataFrame consisting of DatetimeIndex and nilmtk.sensors.
             utility.electric.Measurement as columns
-            df_type : string, one of ['mains', 'appliances','circuits'] 
+            df_type : string, one of ['mains', 'appliances','circuits']
             column: string, one of ['dual', 'single']
             """
 
