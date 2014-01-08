@@ -4,3 +4,4 @@ matplotlib
 numpy
 scipy
 ipython
+tables
