@@ -1,7 +1,7 @@
 scikit-learn>=0.14
 pandas
 matplotlib
-numpy
+numpy==1.8.0
 scipy
 ipython
 numexpr
