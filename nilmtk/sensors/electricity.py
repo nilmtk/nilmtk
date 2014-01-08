@@ -398,3 +398,41 @@ class Electricity(object):
         representation["appliances"] = ""
         representation["circuits"] = ""
         return json.dumps(representation)
+
+    def get_mains_as_series(self, measurement=None):
+        """Returns a simplified representation of the mains data.
+
+        * Sums together split-phase supplies
+        * If multiple meters measure the same mains parameters then selects
+          the meter with the highest sample rate
+
+        Parameters
+        ----------
+        measurement : Measurement, optional
+            If None then will attempt to use the same Measurement
+            for mains and appliances.
+
+        Returns
+        -------
+        pandas.Series
+        """
+        raise NotImplementedError
+
+    def get_appliances_as_series(self, measurement=None):
+        """Returns a simplified representation of the appliance data.
+
+        * Sums together DualSupply measurements
+        * If multiple meters measure the same mains parameters then selects
+          the meter with the highest sample rate
+
+        Parameters
+        ----------
+        measurement : Measurement, optional
+            If None then will attempt to use the same Measurement
+            for mains and appliances.
+
+        Returns
+        -------
+        dict of pandas.Series
+        """
+        raise NotImplementedError
