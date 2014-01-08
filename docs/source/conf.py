@@ -81,10 +81,10 @@ def all_from(folder='', abspath=None):
 all_from(os.path.join('..', '..', '..', 'nilmtk'))
 all_from(os.path.join('..', '..', 'nilmtk'))
 
-# MOCK_MODULES = ['numpy', 'scipy', 'matplotlib', 'scipy.stats'
-#                'matplotlib.pyplot', 'scipy.interpolate']
-# for mod_name in MOCK_MODULES:
-#    sys.modules[mod_name] = Mock()
+MOCK_MODULES = ['numpy', 'scipy', 'matplotlib', 'scipy.stats'
+                'matplotlib.pyplot', 'scipy.interpolate']
+for mod_name in MOCK_MODULES:
+    sys.modules[mod_name] = Mock()
 
 # -- General configuration -----------------------------------------------
 # If your documentation needs a minimal Sphinx version, state it here.
