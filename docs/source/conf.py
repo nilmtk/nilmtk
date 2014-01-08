@@ -33,6 +33,7 @@ sphinxext_path = os.path.abspath(os.path.join('..', 'sphinxext'))
 sys.path.insert(0, sphinxext_path)
 # print sys.path
 
+
 class Mock(object):
 
     __all__ = []
@@ -80,6 +81,8 @@ def all_from(folder='', abspath=None):
 
 all_from(os.path.join('..', '..', '..', 'nilmtk'))
 all_from(os.path.join('..', '..', 'nilmtk'))
+all_from(os.path.join('..', '..'))
+
 
 MOCK_MODULES = ['numpy', 'scipy', 'matplotlib', 'scipy.stats'
                 'matplotlib.pyplot', 'scipy.interpolate']
@@ -92,13 +95,13 @@ for mod_name in MOCK_MODULES:
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = [
-    'sphinx.ext.autodoc', 
-    'sphinx.ext.mathjax', 
-    'sphinx.ext.ifconfig', 
+    'sphinx.ext.autodoc',
+    'sphinx.ext.mathjax',
+    'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
-    'sphinx.ext.intersphinx', 
-    'sphinx.ext.todo', 
-    'sphinx.ext.viewcode', 
+    'sphinx.ext.intersphinx',
+    'sphinx.ext.todo',
+    'sphinx.ext.viewcode',
     'numpydoc',
     'ipython_console_highlighting',
     'ipython_directive',
