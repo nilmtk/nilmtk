@@ -171,8 +171,8 @@ def filter_datetime_single(channel_df, start_datetime=None, end_datetime=None):
     channel_df : pandas.DataFrame
         Corresponds to either an appliance or mains or circuit         
     
-    start_datetime :string, 'dd-mm-yyyy hh:mm:ss'
-    end_datetime : string, 'dd-mm-yyyy hh:mm:ss'
+    start_datetime :string, 'mm-dd-yyyy hh:mm:ss'
+    end_datetime : string, 'mm-dd-yyyy hh:mm:ss'
 
     Returns
     -------
@@ -186,5 +186,5 @@ def filter_datetime_single(channel_df, start_datetime=None, end_datetime=None):
         start_datetime = channel_df.index.values[0]
     if end_datetime is None:
         end_datetime = channel_df.index.values[0]
-
+    
     return channel_df[pd.Timestamp(start_datetime):pd.Timestamp(end_datetime)]
