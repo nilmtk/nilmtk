@@ -198,37 +198,6 @@ def powers_to_states(powers):
     
     return states
 
-def hamming_loss(predicted_state, ground_truth_state):
-    '''Compute Hamming loss
-
-    # TODO: Give a vanilla example
-    
-    .. math::
-        HammingLoss^{(n)} = 
-        \\frac{1}{T} \\sum_{t}
-        xor \\left ( z^{(n)}_t, \\hat{z}^{(n)}_t \\right )
-
-    Attributes
-    ----------
-
-    predicted_state: Pandas DataFrame of type {appliance :
-         [array of predicted states]}
-
-    ground_truth_state: Pandas DataFrame of type {appliance :
-        [array of ground truth states]}
-
-    Returns
-    -------
-    re: dict of type {appliance : HammingLoss}
-    '''
-
-    loss = {}
-
-    for appliance in predicted_state:
-        loss[appliance] = np.sum(predicted_state[appliance].values ==
-                                 ground_truth_state[appliance].values)
-    return loss
-
 def confusion_matrices(predicted_states, ground_truth_states):
     '''Compute confusion matrix between appliance states for each appliance
 
