@@ -6,3 +6,4 @@ scipy
 ipython
 numexpr
 tables
+MySQL-python
