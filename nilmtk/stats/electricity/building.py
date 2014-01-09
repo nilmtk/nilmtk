@@ -44,7 +44,6 @@ def proportion_of_energy_submetered(electricity,
                                     require_matched_measurements=True):
     """Reports the proportion of energy in a building that is submetered.
 
-
     Parameters
     ----------
     electricity : nilmtk.sensors.electricity.Electricity
@@ -64,10 +63,10 @@ def proportion_of_energy_submetered(electricity,
        >1 = more energy submetered than is recorded on the mains channels!
     """
 
+    # TODO: handle dataframes with more than one column (don't use df.icol(0))
     # TODO: Handle circuits.
     # TODO: Check if all channels share at least one Measurement (e.g. ('power', 'active'))
     #       and handle `require_matched_measurements`
-    # TODO: handle dataframes with more than one column (don't use df.icol(0))
 
     # for each channel, find set of 'good_days' where dropout_rate <
     # max_dropout_rate

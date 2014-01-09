@@ -1,6 +1,7 @@
 import os
 import json
 import copy
+import sys
 import pandas as pd
 from nilmtk.building import Building
 from nilmtk.sensors.electricity import MainsName
@@ -9,6 +10,7 @@ from nilmtk.sensors.electricity import Measurement
 from nilmtk.sensors.electricity import DualSupply
 from nilmtk.sensors.electricity import get_two_dataframes_of_dualsupply
 from nilmtk.utils import summary_stats_string
+from nilmtk.stats.electricity.building import proportion_of_energy_submetered
 
 """Base class for all datasets."""
 
@@ -266,24 +268,6 @@ class DataSet(object):
                           appliances[appliance], table=True)
         store.close()
 
-    def get_n_appliances_per_building(self):
-        """
-        Returns
-        -------
-        list : number of appliances per building (not necessarily in order)
-        """
-        return [len(building.utility.electric.appliances) 
-                for building in self.buildings.values()]
-
-    def __str__(self):
-        s = ''
-        s += 'name : ' + self.metadata.get('name', 'NOT DEFINED') + '\n'
-        s += 'number of buildings : {:d}\n'.format(len(self.buildings))
-        s += 'number of appliances per building :\n'
-        s += summary_stats_string(self.get_n_appliances_per_building())
-        return s
-        
-
     # This will be overridden by each subclass
     def load_building_names(self, root_directory):
         """return list of building names"""
@@ -308,3 +292,49 @@ class DataSet(object):
             representation["buildings"][building_name] = building.to_json()
 
         return json.dumps(representation)
+
+    #------------------------------------------------------
+    # DESCRIPTIONS OF THE DATASET
+
+    def get_n_appliances_per_building(self):
+        """
+        Returns
+        -------
+        list : number of appliances per building (not necessarily in order)
+        """
+        return [len(building.utility.electric.appliances) 
+                for building in self.buildings.values()]
+
+    def get_proportion_energy_submetered_per_building(self):
+        """
+        Returns
+        -------
+        list
+        """
+        return [proportion_of_energy_submetered(building.utility.electric)
+                for building in self.buildings.values()]
+
+    def __str__(self):
+        s = 'nilmtk.dataset.DataSet.  '
+        s += 'name=' + self.metadata.get('name', 'NOT DEFINED') + '\n'
+        return s
+
+    def __repr__(self):
+        return self.__str__()
+
+    def describe(self, fh=sys.stdout):
+        s = ''
+        
+        # print metadata
+        s += 'METADATA:\n'
+        for key, value in self.metadata.iteritems():
+            s += '  {} = {}\n'.format(key, value)
+
+        s += '\n'
+        s += 'NUMBER OF BUILDINGS: {:d}\n\n'.format(len(self.buildings))
+        s += 'NUMBER OF APPLIANCES PER BUILDING:\n'
+        s += summary_stats_string(self.get_n_appliances_per_building())
+        s += '\n'
+        s += 'PROPORTION OF ENERGY SUBMETERED PER BUILDLING:\n'
+        s += summary_stats_string(self.get_proportion_energy_submetered_per_building())
+        fh.write(s)

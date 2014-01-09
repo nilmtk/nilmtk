@@ -2,7 +2,7 @@ from __future__ import print_function, division
 import os, copy
 import numpy as np
 import pandas as pd
-import scipy
+from scipy import stats
 
 def get_immediate_subdirectories(dir):
     # From Richie Hindle's StackOverflow answer:
@@ -168,22 +168,20 @@ def timedelta64_to_secs(timedelta):
     return timedelta / np.timedelta64(1, 's')
 
 
-def summary_stats_string(data, fmt='{:.1f}'):
+def summary_stats_string(data, fmt='{:>6.2f}'):
     data = np.array(data)
     s = ''
     # use eval, use loop
     # numpy stat_strings
-    sep = '\n'
     stat_strings = ['min', 'mean', 'mode', 'max', 'std']
     scipy_stats = ['mode']
     for stat_str in stat_strings:
         if stat_str in scipy_stats:
-            stat = scipy.stats.__dict__[stat_str](data)[0][0]
+            stat = stats.__dict__[stat_str](data)[0][0]
         else:
             stat = data.__getattribute__(stat_str)()
         s += '  {:5s}'.format(stat_str) + ' = '
         s += fmt.format(stat)
-        if stat_str != stat_strings[-1]:
-            s += sep
+        s += '\n'
     
     return s
