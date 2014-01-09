@@ -63,7 +63,7 @@ appliance_name_mapping = {
     'garage': 'misc',
     'range': 'cooker',
     'waterheater': 'water heater',
-    'security': 'misc',
+    'security': 'security',
     'ai': 'air conditioner'
 }
 

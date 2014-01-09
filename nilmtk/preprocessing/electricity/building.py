@@ -38,7 +38,7 @@ def filter_contribution_less_than_x(building, x=5):
     appliances_dict = building.utility.electric.appliances
     appliances_filtered = {appliance_name: appliance_df
                            for appliance_name, appliance_df in appliances_dict.iteritems()
-                           if appliance_name in more_than_x_df.columns}
+                           if appliance_name in more_than_x_df.keys()}
     building_copy.utility.electric.appliances = appliances_filtered
     return building_copy
 
