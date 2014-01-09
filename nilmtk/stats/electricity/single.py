@@ -11,8 +11,7 @@ from matplotlib.dates import SEC_PER_HOUR, SEC_PER_DAY
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import copy
-from nilmtk.utils import secs_per_period_alias
-from nilmtk.preprocessing.electricity.single import reframe_index
+from nilmtk.utils import secs_per_period_alias, timedelta64_to_secs
 
 DEFAULT_MAX_DROPOUT_RATE = 0.4  # [0,1]
 DEFAULT_ON_POWER_THRESHOLD = 5  # watts
@@ -166,6 +165,8 @@ def get_gap_starts_and_gap_ends(data, max_sample_period,
     -------
     gap_starts, gap_ends: DatetimeIndex
     """
+    from nilmtk.preprocessing.electricity.single import reframe_index
+
     try:
         data = data.dropna()
     except AttributeError:
@@ -311,24 +312,16 @@ def hours_on(series, on_power_threshold=DEFAULT_ON_POWER_THRESHOLD):
     return secs_on / SEC_PER_HOUR
 
 
-def energy(series, max_sample_period=None, unit='kwh'):
+def energy(series, unit='kwh'):
     """Returns a float representing the quantity of energy this 
     channel consumed.
 
+    If input data has gaps then pre-process data with `insert_zeros`
+    before sending it to this function.
+
     Parameters
     ----------
-    series : pd.Series
-
-    max_sample_period : float or int, optional 
-        The maximum allowed sample period in seconds.  If we find a
-        sample above `on_power_threshold` at time `t` and there are
-        more than `max_sample_period` seconds until the next sample
-        then we assume that the appliance has only been on for
-        `max_sample_period` seconds after time `t`.  This is used where,
-        for example, we have a wireless meter which is supposed to
-        report every `K` seconds and we assume that if we don't hear
-        from it for more than `max_sample_period=K*3` seconds then the
-        sensor (and appliance) have been turned off from the wall.
+    series : pd.Series or pd.DataFrame
 
     unit : {'kwh', 'joules'}
 
@@ -345,10 +338,7 @@ def energy(series, max_sample_period=None, unit='kwh'):
         series = series.icol(0)
 
     timedelta = np.diff(series.index.values)
-    if max_sample_period is not None:
-        timedelta = np.where(timedelta > max_sample_period,
-                             max_sample_period, timedelta)
-    timedelta_secs = timedelta / np.timedelta64(1, 's')  # convert to seconds
+    timedelta_secs = timedelta64_to_secs(timedelta)
     joules = (timedelta_secs * series.values[:-1]).sum()
 
     if unit == 'kwh':
