@@ -32,7 +32,7 @@ def get_two_dataframes_of_dualsupply(appliance_df):
     -------
     df_1
     df_2
-    
+
     """
     df_1 = pd.DataFrame(index=appliance_df.index)
     df_2 = pd.DataFrame(index=appliance_df.index)
@@ -57,7 +57,7 @@ def sum_dual_supply(dict_of_appliances):
     The result is as if each DualSupply appliance had been metered with
     a single meter (summing both supplies together).  Non-DualSupply
     appliances are copied over untouched.
-    
+
     Parameters
     ----------
     dict_of_appliances : dict of pandas.DataFrames
@@ -79,13 +79,16 @@ def sum_dual_supply(dict_of_appliances):
             summed_dual_supply = (appliance_df[dual_supply_columns[0]] +
                                   appliance_df[dual_supply_columns[1]])
             summed_dual_supply.name = dual_supply_columns[0].measurement
-            new_dict_of_appliances[appliance_name] = pd.DataFrame(summed_dual_supply)
+            new_dict_of_appliances[
+                appliance_name] = pd.DataFrame(summed_dual_supply)
             if len(appliance_df.columns) != 2:
-                raise NotImplementedError("TODO: copy over any non-DualSupply columns")
+                raise NotImplementedError(
+                    "TODO: copy over any non-DualSupply columns")
         else:
             raise Exception('{:s} has {:d} DualSupply channel(s). Should have 2.'
                             .format(appliance_name, n_dual_supply_columns))
     return new_dict_of_appliances
+
 
 class Electricity(object):
 
@@ -101,14 +104,14 @@ class Electricity(object):
         * `split` is the phase or split.  Indexed from 1.
         * `meter` is the numeric ID of the meter. Indexed from 1.
 
-        Each value is a DataFrame of shape (n_samples, n_features) 
+        Each value is a DataFrame of shape (n_samples, n_features)
         where each column name is a Measurement namedtuple (please
         definition of Measurement at the top of this file for a
         description of what can go into a Measurement namedtuple).
 
         DataFrame.index is a timezone-aware pd.DateTimeIndex.
         Power values are of type np.float32.
-        DataFrame.name should be identical to the `mains` dict key which 
+        DataFrame.name should be identical to the `mains` dict key which
         maps to this DataFrame.
 
         For example, if we had a dataset recorded in the UK where the home has
@@ -116,7 +119,7 @@ class Electricity(object):
         which measures active and reactive power; the second of which measures only
         active, then we'd use:
 
-        `mains = {MainsName(split=1, meter=1): 
+        `mains = {MainsName(split=1, meter=1):
                       DataFrame(columns=[Measurement('power','active'),
                                          Measurement('power','reactive')]),
                   MainsName(split=1, meter=2):
@@ -132,17 +135,17 @@ class Electricity(object):
         * `meter` is the numeric ID of the meter. Indexed from 1.
           Indexes into the `meters` dict.
 
-        Each value is a DataFrame of shape (n_samples, n_features) 
+        Each value is a DataFrame of shape (n_samples, n_features)
         where each column name is a Measurement namedtuple (please
         definition of Measurement at the top of this file for a
         description of what can go into a Measurement namedtuple).
 
         DataFrame.index is a timezone-aware pd.DateTimeIndex.
         Power values are of type np.float32.
-        DataFrame.name should be identical to the `circuits` dict key which 
+        DataFrame.name should be identical to the `circuits` dict key which
         maps to this DataFrame.
 
-        For example: 
+        For example:
 
         `circuits = {CircuitName(circuit='lighting', split=1):
                          DataFrame(columns=[Measurement('power','active')])}`
@@ -162,17 +165,17 @@ class Electricity(object):
         then use a tuple of appliances as the key, e.g.:
 
         `(('tv', 1), ('dvd player', 1))`
-        
-        Each value of the `appliances` dict is a DataFrame of 
+
+        Each value of the `appliances` dict is a DataFrame of
         shape (n_samples, n_features) where each column name is either:
 
         * a Measurement namedtuple (please definition of Measurement at the top
-          of this file for a description of what can go into 
+          of this file for a description of what can go into
           a Measurement namedtuple).
         * a DualSupply namedtuple with fields:
           * measurement : Measurement namedtuple
           * supply : int. Index of supply. Start from 1. Does not have to map
-            directly to the index used to number the mains splits if this 
+            directly to the index used to number the mains splits if this
             information is not known.
           DualSupply is used for appliances like American ovens which are
           are single appliances but pull power from both "splits".
@@ -181,7 +184,7 @@ class Electricity(object):
 
         DataFrame.index is a timezone-aware pd.DateTimeIndex.
         Power values are of type np.float32; `state` values are np.int32
-        DataFrame.name should be identical to the `appliances` dict key which 
+        DataFrame.name should be identical to the `appliances` dict key which
         maps to this DataFrame.
 
         Note that `appliances` always stores measurements from the meters
@@ -201,7 +204,7 @@ class Electricity(object):
         * `power_prob_dist` : object describing the probability dist, optional
         * `state_prob_dist` : object describing the probability dist, optional
 
-    metadata : dict, optional.  All this information should be ground-truth, 
+    metadata : dict, optional.  All this information should be ground-truth,
         not automatically inferred.  Automatically inferred data should go into
         `inferred_metadata`.
 
@@ -210,7 +213,7 @@ class Electricity(object):
 
         mains_wiring : networkx.DiGraph, optional
             Nodes are ApplianceNames or CircuitNames or MainsNames.
-            Edges describe the power wiring between mains, circuits and 
+            Edges describe the power wiring between mains, circuits and
             appliances.
             Edge direction indicates the flow of energy.  i.e. edges point
             towards loads.
@@ -227,9 +230,9 @@ class Electricity(object):
             Metadata describing each appliance.  This should be ground truth data,
             not automatically inferred information.
             Each key is an ApplianceName(<appliance name>, <instance>) namedtuple.
-            Each value is list of dicts. Each dict describes metadata for that 
-            specific appliance.  Multiple dicts are used to express replacing 
-            appliances over time (in which case the items should be in 
+            Each value is list of dicts. Each dict describes metadata for that
+            specific appliance.  Multiple dicts are used to express replacing
+            appliances over time (in which case the items should be in
             chronological order so the last element of the list is always the
             most recent.)  Each dict has 'general' appliance fields (which
             all appliances can have) and fields which are specific to that
@@ -245,30 +248,30 @@ class Electricity(object):
             'start date', 'end date': datetime to represent the period during which
                 this appliance configuration was active. Set 'start date' to 0
                 if this appliance was active from the start of the dataset. Set
-                'end date' to 0 if this appliance is still active at the end of 
+                'end date' to 0 if this appliance is still active at the end of
                 the dataset.
 
-            Any machine-readable field specified in the communally-defined 
+            Any machine-readable field specified in the communally-defined
             appliance controlled vocabulary may be overridden.
-    
+
             DualSupply appliances may have a 'supply1' and 'supply2'
             key which maps to a list of strings describing the main
             components supplied by that supply.  e.g.
 
-            {('washer dryer', 1): {'supply1': ['motor'], 
+            {('washer dryer', 1): {'supply1': ['motor'],
                                    'supply2': ['heating element']} }
 
-            Valid component names are specified on the wiki at 
+            Valid component names are specified on the wiki at
             electricity-disaggregation.org.
 
             Appliance-specific fields
             -------------------------
-            The permitted fields and values for each appliance name are 
+            The permitted fields and values for each appliance name are
             described in `nilmtk/docs/standard_names/appliances.txt`.  e.g.
 
             Appliances not directly metered
             -------------------------------
-            Appliances which are not directly metered can be listed. For 
+            Appliances which are not directly metered can be listed. For
             example, if a dataset records the lighting circuit (but
             not each individual ceiling light) then we can specify each
             ceiling light in `metadata['appliances']` and then specify
@@ -277,9 +280,9 @@ class Electricity(object):
 
             Example
             -------
-            `{('tv', 1): 
+            `{('tv', 1):
                 [{'original name in source dataset': 'Television LCD',
-                  'display': 'lcd', 
+                  'display': 'lcd',
                   'backlight': 'led'
                   'screen size in inches': 42,
                   'year of manufacture': 2001,
@@ -477,21 +480,31 @@ class Electricity(object):
         appliances are summed.  The main use case is data from North America,
         e.g. REDD.  Does not touch `circuits`.
 
-        .. warning:: for mains data, this function assumes that there are 
-           only 1 or 2 splits and only a single meter per split.  
-           For DualSupply appliances, we assume only 2 supplies and a 
+        .. warning:: for mains data, this function assumes that there are
+           only 1 or 2 splits and only a single meter per split.
+           For DualSupply appliances, we assume only 2 supplies and a
            single meter per appliance.
         """
         e_copy = copy.deepcopy(self)
+        power_energy_columns = [
+            x for x in self.mains.values()[0].columns if x.physical_quantity in ['power', 'energy']]
+
+        non_power_energy_columns = [
+            x for x in self.mains.values()[0].columns if x not in power_energy_columns]
         
         # Sum split-supply mains
         try:
-            mains = e_copy.mains[(1,1)] + e_copy.mains[(2,1)]
+            mains = pd.DataFrame(index=self.mains[(1, 1)].index)
+            mains[power_energy_columns] = e_copy.mains[(1, 1)][power_energy_columns] + \
+                e_copy.mains[(2, 1)][power_energy_columns]
+            mains[non_power_energy_columns] = (e_copy.mains[(1, 1)][non_power_energy_columns] +
+                                               e_copy.mains[(2, 1)][non_power_energy_columns]) / 2
+            #mains = e_copy.mains[(1, 1)] + e_copy.mains[(2, 1)]
         except KeyError:
-            pass # doesn't have split-phase mains so nothing to do
+            pass  # doesn't have split-phase mains so nothing to do
         else:
             e_copy.mains.clear()
-            e_copy.mains[MainsName(1,1)] = mains
+            e_copy.mains[MainsName(1, 1)] = mains
 
         # Sum DualSupply appliances
         e_copy.appliances = sum_dual_supply(e_copy.appliances)

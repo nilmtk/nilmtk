@@ -87,11 +87,12 @@ def downsample(building, rule='1T', how='mean', dropna=False):
     """
     # Define a resample function
     if dropna:
-        resample = lambda df : pd.DataFrame.resample(df, rule=rule, how=how).dropna()
+        resample = lambda df: pd.DataFrame.resample(
+            df, rule=rule, how=how).dropna()
     else:
-        resample = lambda df : pd.DataFrame.resample(df, rule=rule, how=how)
+        resample = lambda df: pd.DataFrame.resample(df, rule=rule, how=how)
 
-    return apply_func_to_values_of_dicts(building, resample, 
+    return apply_func_to_values_of_dicts(building, resample,
                                          BUILDING_ELECTRICITY_DICTS)
 
 
@@ -127,12 +128,12 @@ def fill_appliance_gaps(building, sample_period_multiplier=4):
     nilmtk.preprocessing.electric.single.insert_zeros()
     """
 
-    # TODO: should probably remove any periods where all appliances 
+    # TODO: should probably remove any periods where all appliances
     # are not recording (which indicates that things are broken)
 
     # "book-end" each gap with a zero at each end
     single_insert_zeros = lambda df: single.insert_zeros(df,
-        sample_period_multiplier=sample_period_multiplier)
+                                                         sample_period_multiplier=sample_period_multiplier)
 
     APPLIANCES = ['utility.electric.appliances']
     new_building = apply_func_to_values_of_dicts(building, single_insert_zeros,
@@ -144,6 +145,7 @@ def fill_appliance_gaps(building, sample_period_multiplier=4):
                                                  APPLIANCES)
 
     return new_building
+
 
 def filter_datetime(building, start_datetime=None, end_datetime=None):
     """Filters out all data falling outside the start and the end date
@@ -166,6 +168,7 @@ def filter_datetime(building, start_datetime=None, end_datetime=None):
                                                      end_datetime)
         if len(building_copy.utility.electric.appliances[
                 appliance_name]) == 0:
+            print "DELETING ", appliance_name
             del building_copy.utility.electric.appliances[
                 appliance_name]
 
@@ -175,6 +178,7 @@ def filter_datetime(building, start_datetime=None, end_datetime=None):
             mains_name] = filter_datetime_single(mains_df, start_datetime, end_datetime)
         if len(building_copy.utility.electric.mains[
                 mains_name]) == 0:
+            print "DELETING", mains_name
             del building_copy.utility.electric.mains[
                 mains_name]
 
@@ -225,3 +229,17 @@ def filter_out_implausible_values(building, measurement,
                 mains_name] = mains_df
 
     return building_copy
+
+
+def make_common_index(building):
+    building_copy = deepcopy(building)
+    appliances_index = building.utility.electric.appliances.values()[0].index
+    mains_index = building.utility.electric.mains.values()[0].index
+    freq = building.utility.electric.mains.values()[0].index.freq
+    print freq
+    common_index = pd.DatetimeIndex(
+        np.sort(list(set(mains_index).intersection(set(appliances_index)))),
+        freq=freq)
+    take_common_index = lambda df: df.ix[common_index]
+    return apply_func_to_values_of_dicts(building, take_common_index,
+                                         BUILDING_ELECTRICITY_DICTS)
