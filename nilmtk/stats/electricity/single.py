@@ -86,8 +86,7 @@ def get_dropout_rate(data, sample_period=None):
     HEADROOM = 1.1
     if dropout_rate < 0 and index.size < n_expected_samples * HEADROOM:
         dropout_rate = 0.0
-    try:
-        assert(1 >= dropout_rate >= 0)
+    assert(1 >= dropout_rate >= 0)
     return 1 - (index.size / n_expected_samples)
 
 
@@ -132,6 +131,7 @@ def get_dropout_rate_ignore_gaps(data, sample_period=None,
             dropout_rates.append(dropout_rate)
     
     return np.array(dropout_rates).mean()
+
 
 def _has_nans_series(series):
     return series.isnull().any()
@@ -281,6 +281,47 @@ def get_good_section_starts_and_ends(data, max_sample_period):
         ends = ends.tz_localize('UTC').tz_convert(data.index.tzinfo)
     return starts, ends
 
+
+def get_uptime(data, max_sample_period=None):
+    """
+    Returns
+    -------
+    float : total duration of good data segments, in days
+    """
+    if max_sample_period is None:
+        max_sample_period = get_sample_period(data) * 4
+    starts, ends = get_good_section_starts_and_ends(data, max_sample_period)
+    secs = 0
+    for start, end in zip(starts, ends):
+        secs += (end - start).total_seconds()
+    return secs / SEC_PER_DAY
+
+
+def periods_with_sufficient_samples(datetime_index, freq,
+                                    max_dropout_rate=DEFAULT_MAX_DROPOUT_RATE,
+                                    use_local_time=True):
+    """Find periods where the dropout rate is less than max_dropout_rate.
+
+    Returns
+    -------
+    set of Periods
+    """
+    good_periods = set()
+    periods, boundaries = _indicies_of_periods(datetime_index, freq=freq,
+                                               use_local_time=use_local_time)
+    sample_period = get_sample_period(datetime_index)
+    for period in periods:
+        try:
+            start_i, end_i = boundaries[period]
+        except KeyError:
+            continue
+        index_for_period = datetime_index[start_i:end_i]
+        dropout_rate = get_dropout_rate(index_for_period, sample_period)
+        if dropout_rate < max_dropout_rate:
+            good_periods.add(period)
+
+    return good_periods
+    
 
 def timestamps_of_missing_samples(data, max_sample_period=None,
                                   window_start=None, window_end=None):
@@ -839,32 +880,6 @@ def durations(on_series, on_or_off, ignore_n_off_samples=None,
 
     durations.name = 'seconds ' + on_or_off + ' for ' + str(on_series.name)
     return durations
-
-
-def periods_with_sufficient_samples(datetime_index, freq,
-                                    max_dropout_rate=DEFAULT_MAX_DROPOUT_RATE,
-                                    use_local_time=True):
-    """Find periods where the dropout rate is less than max_dropout_rate.
-
-    Returns
-    -------
-    set of Periods
-    """
-    good_periods = set()
-    periods, boundaries = _indicies_of_periods(datetime_index, freq=freq,
-                                               use_local_time=use_local_time)
-    sample_period = get_sample_period(datetime_index)
-    for period in periods:
-        try:
-            start_i, end_i = boundaries[period]
-        except KeyError:
-            continue
-        index_for_period = datetime_index[start_i:end_i]
-        dropout_rate = get_dropout_rate(index_for_period, sample_period)
-        if dropout_rate < max_dropout_rate:
-            good_periods.add(period)
-
-    return good_periods
 
 
 def start_end_datetime(data):
