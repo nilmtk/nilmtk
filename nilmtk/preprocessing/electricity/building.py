@@ -99,6 +99,10 @@ def downsample(building, rule='1T', how='mean', dropna=False):
 def prepend_append_zeros(building, start_datetime, end_datetime, freq, timezone):
     """Fill zeros from `start` to `appliance`.index[0] and from 
     `appliance`.index[-1] to end at `frequency`"""
+
+    # TODO: can this function be merged with or make use of
+    # preprocessing.building.single.reframe_index ?
+
     APPLIANCES = ['utility.electric.appliances']
     idx = pd.DatetimeIndex(start=start_datetime, end=end_datetime, freq=freq)
     idx = idx.tz_localize('GMT').tz_convert(timezone)
@@ -160,7 +164,7 @@ def fill_appliance_gaps(building, sample_period_multiplier=4):
 
     # "book-end" each gap with a zero at each end
     single_insert_zeros = lambda df: single.insert_zeros(df,
-                                                         sample_period_multiplier=sample_period_multiplier)
+                            sample_period_multiplier=sample_period_multiplier)
 
     APPLIANCES = ['utility.electric.appliances']
     APPLIANCES_MAINS = ['utility.electric.appliances',

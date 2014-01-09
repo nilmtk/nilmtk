@@ -12,6 +12,7 @@ import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import copy
 from nilmtk.utils import secs_per_period_alias
+from nilmtk.preprocessing.electricity.single import reframe_index
 
 DEFAULT_MAX_DROPOUT_RATE = 0.4  # [0,1]
 DEFAULT_ON_POWER_THRESHOLD = 5  # watts
@@ -64,8 +65,10 @@ def get_dropout_rate(data, sample_period=None):
     n_expected_samples = duration.total_seconds() / sample_period
     return 1 - (index.size / n_expected_samples)
 
+
 def _has_nans_series(series):
     return series.isnull().any()
+
 
 def has_nans(data):
     """
@@ -84,26 +87,29 @@ def has_nans(data):
     else:
         raise TypeError
 
+
 def plot_missing_samples(data, ax=None, fig=None, max_sample_period=None,
                          window_start=None, window_end=None,
                          bottom=0.1, height=0.8, color='k'):
-    """
+    """Plots missing samples as Rectanges on `ax`.
+
     Parameters
     ----------
     data : pandas.DataFrame or Series or DatetimeIndex
 
     max_sample_period : int or float, optional
-        Maximum allowed sample period in seconds.  
-        If not provided then will use sample period * 4.  Note that by using
-        a `max_sample_period` equal to `sample_period * 4` (and not, say
-        times 1.5) then this function will not report *every* missing
-        sample.
+        Maximum allowed sample period in seconds.  This defines what
+        counts as a 'gap'.  If not provided then will use sample
+        period * 4.  Note that by using a `max_sample_period` equal to
+        `sample_period * 4` (and not, say times 1.5) then this
+        function will not report *every* missing sample.
 
     window_start, window_end : pd.Timestamp
         The start and end of the window of interest.  If this window
         is larger than the duration of `data` then gaps will be
         appended to the front / back as necessary.  If this window
         is shorter than the duration of `data` data will be cropped.
+
     """
     try:
         data = data.dropna()
@@ -138,6 +144,7 @@ def plot_missing_samples(data, ax=None, fig=None, max_sample_period=None,
     plt.draw()
     return ax, fig
 
+
 def get_gap_starts_and_gap_ends(data, max_sample_period, 
                                 window_start=None, window_end=None):
     """
@@ -146,7 +153,8 @@ def get_gap_starts_and_gap_ends(data, max_sample_period,
     data : pandas.DataFrame or Series or DatetimeIndex
 
     max_sample_period : int or float
-        Maximum allowed sample period in seconds.  
+        Maximum allowed sample period in seconds.  This defines what
+        counts as a 'gap'.
 
     window_start, window_end : pd.Timestamp
         The start and end of the window of interest.  If this window
@@ -174,50 +182,16 @@ def get_gap_starts_and_gap_ends(data, max_sample_period,
     return gap_starts, gap_ends
 
 
-def reframe_index(index, window_start=None, window_end=None):
-    """
-    Parameters
-    ----------
-    index : pd.DatetimeIndex
-
-    window_start, window_end : pd.Timestamp
-        The start and end of the window of interest.  If this window
-        is larger than the duration of `data` then gaps will be
-        appended to the front / back as necessary.  If this window
-        is shorter than the duration of `data` data will be cropped.
-
-    Returns
-    -------
-    index : pd.DatetimeIndex
-    """
-    tz = index.tzinfo
-
-    # Handle window...
-    if window_start is not None:
-        if window_start >= index[0]:
-            index = index[index >= window_start]
-        else:
-            index = index.insert(0, window_start).tz_localize('UTC').tz_convert(tz)
-
-    if window_end is not None:
-        if window_end <= index[-1]:
-            index = index[index <= window_end]
-        else:
-            index = index.insert(len(index), window_end).tz_localize('UTC').tz_convert(tz)
-
-    return index
-
-
 def timestamps_of_missing_samples(data, max_sample_period=None,
                                   window_start=None, window_end=None):
-    """
-    Parameters
+    """Parameters
     ----------
     data : pandas.DataFrame or Series or DatetimeIndex
 
     max_sample_period : int or float, optional
-        Maximum allowed sample period in seconds.  
-        If not provided then will use sample period * 1.5
+        Maximum allowed sample period in seconds.  This defines what
+        counts as a 'gap'.  If not provided then will use sample
+        period * 1.5
 
     window_start, window_end : pd.Timestamp
         The start and end of the window of interest.  If this window
@@ -230,6 +204,7 @@ def timestamps_of_missing_samples(data, max_sample_period=None,
     missing_samples : pd.DatetimeIndex
         Every missing sample in `data` is represented by a timestamp
         in `missing_samples`.
+
     """
     try:
         data = data.dropna()
@@ -1020,3 +995,4 @@ def _get_index(data):
     else:
         raise TypeError('wrong type for `data`.')
     return index
+

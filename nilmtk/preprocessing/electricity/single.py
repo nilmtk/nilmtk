@@ -222,3 +222,40 @@ def filter_datetime_single(channel_df, start_datetime=None, end_datetime=None):
         end_datetime = channel_df.index.values[0]
 
     return channel_df[pd.Timestamp(start_datetime):pd.Timestamp(end_datetime)]
+
+
+def reframe_index(index, window_start=None, window_end=None):
+    """
+    Parameters
+    ----------
+    index : pd.DatetimeIndex
+
+    window_start, window_end : pd.Timestamp
+        The start and end of the window of interest.  If this window
+        is larger than the duration of `data` then a single zero will be
+        inserted at `window_start` or `window_end` as necessary.  If this window
+        is shorter than the duration of `data` data will be cropped.
+
+    Returns
+    -------
+    index : pd.DatetimeIndex
+    """
+    # TODO: can this function be merged with
+    # preprocessing.building.building.prepend_append_zeros ?
+
+    tz = index.tzinfo
+
+    # Handle window...
+    if window_start is not None:
+        if window_start >= index[0]:
+            index = index[index >= window_start]
+        else:
+            index = index.insert(0, window_start).tz_localize('UTC').tz_convert(tz)
+
+    if window_end is not None:
+        if window_end <= index[-1]:
+            index = index[index <= window_end]
+        else:
+            index = index.insert(len(index), window_end).tz_localize('UTC').tz_convert(tz)
+
+    return index
