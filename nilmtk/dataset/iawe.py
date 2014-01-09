@@ -26,7 +26,7 @@ jplug_mapping = {
     '001EC00CC4A0': ApplianceName('fridge', 1),
     '001EC00CC49F': ApplianceName('air conditioner', 1),
     '001EC00D7A1C': ApplianceName('air conditioner', 2),
-    '001EC00CC4AD': ApplianceName('washing_machine', 1),
+    '001EC00CC4AD': ApplianceName('washing machine', 1),
     '001EC00D7A18': ApplianceName('laptop computer', 1),
     '001EC00CC49C': ApplianceName('clothes iron', 1),
     '001EC00CC49D': ApplianceName('kitchen outlets', 1),
@@ -84,9 +84,8 @@ class IAWE(DataSet):
 
     def load(self):
         """Load entire dataset into memory"""
-        building = self.load_building_names(root_directory)
-        for building_name in building_names:
-            self.load_building(root_directory, building_name)
+        self.add_mains()
+        self.add_appliances()
 
     def load_hdf5(self, directory):
         super(IAWE, self).load_hdf5(directory)

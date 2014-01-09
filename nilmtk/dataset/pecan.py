@@ -1,10 +1,7 @@
-'''
+"""
 Pecan Dataset Loader
 
 These routines load Pecan Dataset into NILMTK Dataset format
-
-Authors :
-License:
 
 TODOS
 -----
@@ -13,7 +10,7 @@ TODOS
 2. Handle Grid
 3. Handle Solar
 4. Handle Gen
-'''
+"""
 
 import pandas as pd
 from nilmtk.dataset import DataSet
@@ -27,48 +24,47 @@ from collections import defaultdict
 
 # Mapping between appliances actual name
 appliance_name_mapping = {
-    'ksac': 'misc',
+    'ksac': 'kitchen outlets',
     'tvroom': 'misc',
-    'garage/refrigerator': 'refrigerator',
-    'office': 'computer',
-    'dryg': 'dryer_gas',
-    'bath': 'bathroom',
+    'garage/refrigerator': 'fridge',
+    'office': 'desktop computer',
+    'dryg': 'washer dryer',
+    'bath': 'bathroom misc',
     'genlight': 'lighting',
     'oven': 'oven',
-    'bedroom': 'misc',
+    'bedroom': 'bedroom misc',
     'subl': 'subpanel',
-    'masterbed': 'misc',
-    'bathroom': 'bathroom',
+    'masterbed': 'bedroom misc',
+    'bathroom': 'bathroom misc',
     'livingroom': 'misc',
     'sprinkler': 'sprinkler',
     'disposal': 'disposal',
-    'masterbath':
-    'bathroom',
+    'masterbath': 'bathroom misc',
     'microwave': 'microwave',
-    'drye': 'dryer_electric',
+    'drye': 'washer dryer',
     'smallappliance': 'misc',
-    'washer': 'washer',
-    'furnace': 'furnace',
+    'washer': 'washing machine',
+    'furnace': 'central heater boiler',
     'gri': 'grid',
     'lighting&plugs': 'plugs',
     'famroom': 'misc',
-    'dryer': 'dryer',
+    'dryer': 'washer dryer',
     'diningroom': 'misc',
     'ove': 'oven',
     'backyard': 'misc',
-    'cooktop': 'cooktop',
+    'cooktop': 'cooker',
     'refrigerator': 'fridge',
-    'kitchen': 'kitchen',
+    'kitchen': 'kitchen misc',
     'dishwasher': 'dishwasher',
-    'theater': 'theater',
-    'washingmachine': 'washingmachine',
-    'car': 'car',
-    'air': 'ac',
+    'theater': 'entertainment',
+    'washingmachine': 'washing machine',
+    'car': 'electric vehicle',
+    'air': 'air conditioner',
     'garage': 'misc',
-    'range': 'range',
-    'waterheater': 'waterheater',
-    'security': 'security',
-    'ai': 'ac'
+    'range': 'cooker',
+    'waterheater': 'water heater',
+    'security': 'misc',
+    'ai': 'air conditioner'
 }
 
 

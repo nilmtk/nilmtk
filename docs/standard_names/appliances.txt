@@ -179,6 +179,8 @@ baby monitor
 
 clothes iron
 
+bedroom misc
+
 
 ---------------
 # Office
@@ -278,3 +280,8 @@ electric vehicle
 
 water motor
 
+sprinkler
+
+plugs
+
+security: security systems
