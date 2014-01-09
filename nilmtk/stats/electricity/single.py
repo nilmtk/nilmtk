@@ -232,8 +232,7 @@ def timestamps_of_missing_samples(data, max_sample_period=None,
     return pd.DatetimeIndex(missing_samples_list)
 
 
-def dropout_rate_per_period(data, rule, max_sample_period=None,
-                                  window_start=None, window_end=None):
+def dropout_rate_per_period(data, rule, window_start=None, window_end=None):
     """
     Parameters
     ----------
@@ -241,10 +240,6 @@ def dropout_rate_per_period(data, rule, max_sample_period=None,
 
     rule : pandas Offset string (or what ever the `rule` parameter in
         pd.Series.resample accepts)
-
-    max_sample_period : int or float, optional
-        Maximum allowed sample period in seconds.  
-        If not provided then will use sample period * 1.5
 
     window_start, window_end : pd.Timestamp
         The start and end of the window of interest.  If this window
