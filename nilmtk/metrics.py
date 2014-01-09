@@ -29,6 +29,7 @@ Functions
 
 import numpy as np
 import pandas as pd
+from sklearn.metrics import f1_score
 
 
 def error_energy(predicted_power, df_appliances_ground_truth):
@@ -314,8 +315,8 @@ def tpr_fpr(predicted_states, ground_truth_states):
 
     tfpn = tp_fp_fn_tn(predicted_states, ground_truth_states)
 
-    tpr = tfpn[0, :] / (tfpn[0,:] + tfpn[2,:])
-    fpr = tfpn[1, :] / (tfpn[1,:] + tfpn[3,:])
+    tpr = tfpn[0, :] / (tfpn[0, :] + tfpn[2, :])
+    fpr = tfpn[1, :] / (tfpn[1, :] + tfpn[3, :])
 
     return np.array([tpr, fpr])
 
@@ -346,13 +347,13 @@ def precision_recall(predicted_states, ground_truth_states):
 
     tfpn = tp_fp_fn_tn(predicted_states, ground_truth_states)
 
-    prec = tfpn[0, :] / (tfpn[0,:] + tfpn[1,:])
-    rec = tfpn[0, :] / (tfpn[0,:] + tfpn[2,:])
+    prec = tfpn[0, :] / (tfpn[0, :] + tfpn[1, :])
+    rec = tfpn[0, :] / (tfpn[0, :] + tfpn[2, :])
 
     return np.array([prec, rec])
 
 
-def f_score(predicted_states, ground_truth_states):
+def f_score(predicted_power, ground_truth_power):
     '''Compute F1 score
 
     # TODO: Give a vanilla example
@@ -375,10 +376,19 @@ def f_score(predicted_states, ground_truth_states):
     -------
     numpy array where columns represent appliances and rows represent F score
     '''
+    threshold = 30
+    predicted_states = (predicted_power > threshold).astype(int)
+    ground_truth_states = (ground_truth_power > threshold).astype(int)
+    f_score_out = {}
+    for appliance in predicted_states.columns:
+        f_score_out[appliance] = f1_score(
+            ground_truth_states[[appliance]], predicted_states[[appliance]])
+    return f_score_out
 
-    prec_rec = precision_recall(predicted_states, ground_truth_states)
-
-    return (2 * prec_rec[0, :] * prec_rec[1,:]) / (prec_rec[0,:] + prec_rec[1,:])
+    #prec_rec = precision_recall(predicted_states, ground_truth_states)
+    # return (2 * prec_rec[0, :] * prec_rec[1,:]) / (prec_rec[0,:] +
+    # prec_rec[1,:])
+    # return f1_score(ground_truth_states, predicted_states)
 
 
 def hamming_loss(predicted_state, ground_truth_state):
