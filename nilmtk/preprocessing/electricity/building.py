@@ -96,11 +96,38 @@ def downsample(building, rule='1T', how='mean', dropna=False):
                                          BUILDING_ELECTRICITY_DICTS)
 
 
+def prepend_append_zeros(building, start_datetime, end_datetime, freq, timezone):
+    """Fill zeros from `start` to `appliance`.index[0] and from 
+    `appliance`.index[-1] to end at `frequency`"""
+    APPLIANCES = ['utility.electric.appliances']
+    idx = pd.DatetimeIndex(start=start_datetime, end=end_datetime, freq=freq)
+    idx = idx.tz_localize('GMT').tz_convert(timezone)
+
+    def reindex_fill_na(df):
+        df_copy = deepcopy(df)
+        df_copy.reindex(idx)
+
+        power_columns = [
+            x for x in df.columns if x.physical_quantity in ['power']]
+        non_power_columns = [x for x in df.columns if x not in power_columns]
+        df_copy[power_columns].fillna(0, inplace=True)
+        for measurement in non_power_columns:
+            df_copy[measurement].fillna(df[measurement].median(), inplace=True)
+        print(df_copy.index)
+        print(df_copy.describe())
+        return df_copy
+
+    new_building = apply_func_to_values_of_dicts(building, reindex_fill_na,
+                                                 APPLIANCES)
+    return new_building
+
+
+
 def fill_appliance_gaps(building, sample_period_multiplier=4):
     """Book-ends all large gaps with zeros using
     `nilmtk.preprocessing.electric.single.insert_zeros`
     and all appliances in `building` and then forward fills any remaining NaNs.
-    This will result in forward-filling small gaps with 
+    This will result in forward-filling small gaps with
     the recorded value which precedes the gap, and forward-filling zeros
     in large gaps.
 
@@ -115,7 +142,7 @@ def fill_appliance_gaps(building, sample_period_multiplier=4):
     sample_period_multiplier : float or int, optional
         The permissible  maximum sample period expressed as a multiple
         of each dataframe's sample period. Any gap longer
-        than the max sample period is assumed to imply that the IAM 
+        than the max sample period is assumed to imply that the IAM
         and appliance are off.  If None then will default to
         4 x the sample period of each dataframe.
 
