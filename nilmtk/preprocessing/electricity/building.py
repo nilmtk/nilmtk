@@ -105,22 +105,22 @@ def prepend_append_zeros(building, start_datetime, end_datetime, freq, timezone)
 
     def reindex_fill_na(df):
         df_copy = deepcopy(df)
-        df_copy.reindex(idx)
+        df_copy = df_copy.reindex(idx)
 
         power_columns = [
             x for x in df.columns if x.physical_quantity in ['power']]
         non_power_columns = [x for x in df.columns if x not in power_columns]
-        df_copy[power_columns].fillna(0, inplace=True)
+        for power in power_columns:
+            df_copy[power].fillna(0, inplace=True)
         for measurement in non_power_columns:
-            df_copy[measurement].fillna(df[measurement].median(), inplace=True)
-        print(df_copy.index)
-        print(df_copy.describe())
+            df_copy[measurement].fillna(
+                df[measurement].median(), inplace=True)
+
         return df_copy
 
     new_building = apply_func_to_values_of_dicts(building, reindex_fill_na,
                                                  APPLIANCES)
     return new_building
-
 
 
 def fill_appliance_gaps(building, sample_period_multiplier=4):
@@ -263,7 +263,6 @@ def make_common_index(building):
     appliances_index = building.utility.electric.appliances.values()[0].index
     mains_index = building.utility.electric.mains.values()[0].index
     freq = building.utility.electric.mains.values()[0].index.freq
-    print freq
     common_index = pd.DatetimeIndex(
         np.sort(list(set(mains_index).intersection(set(appliances_index)))),
         freq=freq)
