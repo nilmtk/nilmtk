@@ -163,13 +163,15 @@ def fill_appliance_gaps(building, sample_period_multiplier=4):
                                                          sample_period_multiplier=sample_period_multiplier)
 
     APPLIANCES = ['utility.electric.appliances']
+    APPLIANCES_MAINS = ['utility.electric.appliances',
+                        'utility.electric.mains']
     new_building = apply_func_to_values_of_dicts(building, single_insert_zeros,
                                                  APPLIANCES)
 
     # Now fill forward
     ffill = lambda df: pd.DataFrame.fillna(df, method='ffill')
     new_building = apply_func_to_values_of_dicts(new_building, ffill,
-                                                 APPLIANCES)
+                                                 APPLIANCES_MAINS)
 
     return new_building
 
