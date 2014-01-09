@@ -491,7 +491,7 @@ class Electricity(object):
 
         non_power_energy_columns = [
             x for x in self.mains.values()[0].columns if x not in power_energy_columns]
-        
+
         # Sum split-supply mains
         try:
             mains = pd.DataFrame(index=self.mains[(1, 1)].index)

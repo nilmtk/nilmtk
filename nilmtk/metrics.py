@@ -100,11 +100,15 @@ def fraction_energy_assigned_correctly(predicted_power, df_appliances_ground_tru
             df_appliances_ground_truth[appliance].values)
         total_energy_ground_truth = np.sum(df_appliances_ground_truth.values)
 
-        fraction = np.append(fraction, np.min([appliance_energy_predicted/total_energy_predicted,
-                                              appliance_energy_ground_truth/total_energy_ground_truth
-                                              ]))
-        
+        fraction = np.append(
+            fraction, np.min(
+                [appliance_energy_predicted / total_energy_predicted,
+                 appliance_energy_ground_truth /
+                 total_energy_ground_truth
+                 ]))
+
     return np.sum(fraction)
+
 
 def mean_normalized_error_power(predicted_power, df_appliances_ground_truth):
     '''Compute mean normalized error in assigned power
@@ -169,10 +173,11 @@ def rms_error_power(predicted_power, df_appliances_ground_truth):
     re = {}
 
     for appliance in predicted_power:
-        re[appliance] = np.std(predicted_power[appliance] - 
+        re[appliance] = np.std(predicted_power[appliance] -
                                df_appliances_ground_truth[appliance].values)
-        
+
     return re
+
 
 def powers_to_states(powers):
     '''Converts power demands into binary states
@@ -190,13 +195,14 @@ def powers_to_states(powers):
     states: Pandas DataFrame of type {appliance :
          [array of states]}
     '''
-    
+
     on_power_threshold = 50
-    
+
     states = pd.DataFrame(np.zeros(power.shape))
     states[power > on_power_threshold] = 1
-    
+
     return states
+
 
 def confusion_matrices(predicted_states, ground_truth_states):
     '''Compute confusion matrix between appliance states for each appliance
@@ -216,20 +222,21 @@ def confusion_matrices(predicted_states, ground_truth_states):
     -------
     dict of type {appliance : confusion matrix}
     '''
-    
+
     re = {}
 
     for appliance in predicted_states:
-        matrix = np.zeros([np.max(ground_truth_states[appliance])+1,
-                           np.max(ground_truth_states[appliance])+1])
+        matrix = np.zeros([np.max(ground_truth_states[appliance]) + 1,
+                           np.max(ground_truth_states[appliance]) + 1])
         for time in predicted_states[appliance]:
-            matrix[predicted_states.values[time,appliance],ground_truth_states.values[time,appliance]] += 1
+            matrix[predicted_states.values[time, appliance],
+                   ground_truth_states.values[time, appliance]] += 1
         re[appliance] = matrix
-        
+
     return re
 
+
 def tp_fp_fn_tn(predicted_states, ground_truth_states):
-    
     '''Compute counts of True Positives, False Positives, False Negatives, True Negatives
 
     # TODO: Give a vanilla example
@@ -264,20 +271,24 @@ def tp_fp_fn_tn(predicted_states, ground_truth_states):
     -------
     numpy array where columns represent appliances and rows represent: [TP, FP, FN, TN]
     '''
-    
+
     # assumes state 0 = off, all other states = on
     predicted_states_on = predicted_states > 0
     ground_truth_states_on = ground_truth_states > 0
-    
-    tp = np.sum(np.logical_and(predicted_states_on.values==True, ground_truth_states_on.values==True), axis=0)
-    fp = np.sum(np.logical_and(predicted_states_on.values==True, ground_truth_states_on.values==False), axis=0)
-    fn = np.sum(np.logical_and(predicted_states_on.values==False, ground_truth_states_on.values==True), axis=0)
-    tn = np.sum(np.logical_and(predicted_states_on.values==False, ground_truth_states_on.values==False), axis=0)
-    
+
+    tp = np.sum(np.logical_and(predicted_states_on.values == True,
+                ground_truth_states_on.values == True), axis=0)
+    fp = np.sum(np.logical_and(predicted_states_on.values == True,
+                ground_truth_states_on.values == False), axis=0)
+    fn = np.sum(np.logical_and(predicted_states_on.values == False,
+                ground_truth_states_on.values == True), axis=0)
+    tn = np.sum(np.logical_and(predicted_states_on.values == False,
+                ground_truth_states_on.values == False), axis=0)
+
     return np.array([tp, fp, fn, tn]).astype(float)
 
+
 def tpr_fpr(predicted_states, ground_truth_states):
-    
     '''Compute True Positive Rate and False Negative Rate
 
     # TODO: Give a vanilla example
@@ -300,16 +311,16 @@ def tpr_fpr(predicted_states, ground_truth_states):
     -------
     numpy array where columns represent appliances and rows represent: [TPR, FPR]
     '''
-    
+
     tfpn = tp_fp_fn_tn(predicted_states, ground_truth_states)
-    
-    tpr = tfpn[0,:] / (tfpn[0,:] + tfpn[2,:])
-    fpr = tfpn[1,:] / (tfpn[1,:] + tfpn[3,:])
-    
+
+    tpr = tfpn[0, :] / (tfpn[0,:] + tfpn[2,:])
+    fpr = tfpn[1, :] / (tfpn[1,:] + tfpn[3,:])
+
     return np.array([tpr, fpr])
 
+
 def precision_recall(predicted_states, ground_truth_states):
-    
     '''Compute Precision and Recall
 
     # TODO: Give a vanilla example
@@ -332,16 +343,16 @@ def precision_recall(predicted_states, ground_truth_states):
     -------
     numpy array where columns represent appliances and rows represent: [Precision, Recall]
     '''
-    
+
     tfpn = tp_fp_fn_tn(predicted_states, ground_truth_states)
-    
-    prec = tfpn[0,:] / (tfpn[0,:] + tfpn[1,:])
-    rec = tfpn[0,:] / (tfpn[0,:] + tfpn[2,:])
-    
+
+    prec = tfpn[0, :] / (tfpn[0,:] + tfpn[1,:])
+    rec = tfpn[0, :] / (tfpn[0,:] + tfpn[2,:])
+
     return np.array([prec, rec])
 
+
 def f_score(predicted_states, ground_truth_states):
-    
     '''Compute F1 score
 
     # TODO: Give a vanilla example
@@ -364,10 +375,11 @@ def f_score(predicted_states, ground_truth_states):
     -------
     numpy array where columns represent appliances and rows represent F score
     '''
-    
+
     prec_rec = precision_recall(predicted_states, ground_truth_states)
-    
-    return (2 * prec_rec[0,:] * prec_rec[1,:]) / (prec_rec[0,:] + prec_rec[1,:])
+
+    return (2 * prec_rec[0, :] * prec_rec[1,:]) / (prec_rec[0,:] + prec_rec[1,:])
+
 
 def hamming_loss(predicted_state, ground_truth_state):
     '''Compute Hamming loss
@@ -393,9 +405,10 @@ def hamming_loss(predicted_state, ground_truth_state):
     -------
     float of hamming_loss
     '''
-    
+
     num_appliances = np.size(ground_truth_state.values, axis=1)
-    
-    xors = np.sum((predicted_state.values != ground_truth_state.values), axis=1) / num_appliances
-    
+
+    xors = np.sum((predicted_state.values != ground_truth_state.values),
+                  axis=1) / num_appliances
+
     return np.mean(xors)

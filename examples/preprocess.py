@@ -5,7 +5,7 @@ from nilmtk.sensors.electricity import Measurement
 
 from nilmtk.dataset import DataSet
 dataset = DataSet()
-#dataset.load_hdf5("/home/nipun/Dropbox/nilmtk_datasets/redd/low_freq")
+# dataset.load_hdf5("/home/nipun/Dropbox/nilmtk_datasets/redd/low_freq")
 dataset.load_hdf5("/home/nipun/Dropbox/nilmtk_datasets/iawe")
 # assumes that `dataset` is already loaded
 building = dataset.buildings[1]
@@ -29,7 +29,8 @@ building = prepb.downsample(building, rule='1T')
 # 3. Fill large gaps in appliances with zeros and forward-fill small gaps
 building = prepb.fill_appliance_gaps(building)
 
-building = prepb.prepend_append_zeros(building, '7-13-2013', '8-4-2013', '1T', 'Asia/Kolkata')
+building = prepb.prepend_append_zeros(
+    building, '7-13-2013', '8-4-2013', '1T', 'Asia/Kolkata')
 
 print "*" * 80
 print "Before"

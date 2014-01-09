@@ -249,7 +249,7 @@ def top_k_appliances(electricity, k=3, how=np.mean, order='desc'):
     return series_appliances_contribution.head(k)
 
 
-def plot_missing_samples_using_rectangles(electricity, ax=None, fig=None, 
+def plot_missing_samples_using_rectangles(electricity, ax=None, fig=None,
                                           color='k'):
     # TODO: docstrings!
     # TODO: better default date format
