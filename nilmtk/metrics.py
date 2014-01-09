@@ -17,9 +17,9 @@ Below is the notation used to mathematically define each metric.
 
 :math:`\\hat{y}^{(n)}_t` -  estimated power of appliance :math:`n` in time slice :math:`t`.
 
-:math:`z^{(n)}_t` - ground truth state of appliance :math:`n` in time slice :math:`t`.
+:math:`x^{(n)}_t` - ground truth state of appliance :math:`n` in time slice :math:`t`.
 
-:math:`\\hat{z}^{(n)}_t` - estimated state of appliance :math:`n` in time slice :math:`t`.
+:math:`\\hat{x}^{(n)}_t` - estimated state of appliance :math:`n` in time slice :math:`t`.
 
 Functions
 -----------
@@ -244,19 +244,19 @@ def tp_fp_fn_tn(predicted_states, ground_truth_states):
     .. math::
         TP^{(n)} = 
         \\sum_{t}
-        and \\left ( z^{(n)}_t = on, \\hat{z}^{(n)}_t = on \\right )
+        and \\left ( x^{(n)}_t = on, \\hat{x}^{(n)}_t = on \\right )
         
         FP^{(n)} = 
         \\sum_{t}
-        and \\left ( z^{(n)}_t = off, \\hat{z}^{(n)}_t = on \\right )
+        and \\left ( x^{(n)}_t = off, \\hat{x}^{(n)}_t = on \\right )
         
         FN^{(n)} = 
         \\sum_{t}
-        and \\left ( z^{(n)}_t = on, \\hat{z}^{(n)}_t = off \\right )
+        and \\left ( x^{(n)}_t = on, \\hat{x}^{(n)}_t = off \\right )
         
         TN^{(n)} = 
         \\sum_{t}
-        and \\left ( z^{(n)}_t = off, \\hat{z}^{(n)}_t = off \\right )
+        and \\left ( x^{(n)}_t = off, \\hat{x}^{(n)}_t = off \\right )
 
     Attributes
     ----------
@@ -390,7 +390,7 @@ def hamming_loss(predicted_state, ground_truth_state):
         HammingLoss = 
         \\frac{1}{T} \\sum_{t}
         \\frac{1}{N} \\sum_{n}
-        xor \\left ( z^{(n)}_t, \\hat{z}^{(n)}_t \\right )
+        xor \\left ( x^{(n)}_t, \\hat{x}^{(n)}_t \\right )
 
     Attributes
     ----------
