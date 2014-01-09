@@ -12,6 +12,21 @@ mini vacuum cleaner charger
 kitchen outlets
 
 ----------
+# Cooling
+
+fridge
+  style: chest | upright
+
+freezer
+  style: chest | upright
+
+fridge_freezer
+  style: chest | upright
+  freezer is a separate thermal compartment: boolean
+
+wine cooler
+
+----------
 # Heating
 
 cooker (meta appliance)
@@ -53,7 +68,7 @@ other cooking
 
 
 ----------------
-## Space heating
+## Space heating / cooling
 
 central heating boiler
   fuel: electricity | gas | solid | oil
@@ -70,6 +85,7 @@ underfloor heating
 
 circulation pump
 
+air conditioner
 
 -----------
 ## Bathroom
@@ -86,24 +102,6 @@ jacuzzi
 
 bathroom misc
 
-
-
-----------
-# Cooling
-
-fridge
-  style: chest | upright
-
-freezer
-  style: chest | upright
-
-fridge_freezer
-  style: chest | upright
-  freezer is a separate thermal compartment: boolean
-
-wine cooler
-
-ac
 
 
 ---------------
