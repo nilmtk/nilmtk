@@ -65,6 +65,39 @@ def get_dropout_rate(data, sample_period=None):
     return 1 - (index.size / n_expected_samples)
 
 
+def get_dropout_rate_ignore_gaps(data, sample_period=None, 
+                                 max_sample_period=None):
+    """The proportion of samples that have been lost.
+
+    Parameters
+    ----------
+    data : pandas.DataFrame or Series or DatetimeIndex
+
+    sample_period : int or float, optional
+        Sample period in seconds.  If not provided then will
+        calculate it.
+
+    Returns
+    -------
+    rate : float [0,1]
+        The proportion of samples that have been lost; where 
+        1 means that all samples have been lost and 
+        0 means that no samples have been lost.
+    """
+    if sample_period is None:
+        sample_period = get_sample_period(data)
+    if max_sample_period is None:
+        max_sample_period = sample_period * 4
+
+    dropout_rates = []
+    starts, ends = get_good_section_starts_and_ends(data, max_sample_period)
+    for start, end in zip(starts, ends):
+        cropped_data = data[start:end]
+        if len(cropped_data) > 100:
+            dropout_rates.append(get_dropout_rate(cropped_data))
+    
+    return np.array(dropout_rates).mean()
+
 def _has_nans_series(series):
     return series.isnull().any()
 
@@ -182,6 +215,28 @@ def get_gap_starts_and_gap_ends(data, max_sample_period,
     gap_ends = index[1:][overlong_timedeltas]        
 
     return gap_starts, gap_ends
+
+
+def get_good_section_starts_and_ends(data, max_sample_period):
+    """
+    Parameters
+    ---------
+    data : pandas.DataFrame or Series or DatetimeIndex
+
+    max_sample_period : int or float
+        Maximum allowed sample period in seconds.  This defines what
+        counts as a 'gap'.
+
+    Returns
+    -------
+    starts, ends: DatetimeIndex
+    """
+    gap_starts, gap_ends = get_gap_starts_and_gap_ends(data, max_sample_period)
+    starts = gap_ends.insert(0, data.index[0])
+    starts = starts.tz_localize('UTC').tz_convert(data.index.tzinfo)
+    ends = gap_starts.insert(len(gap_starts), data.index[-1])
+    ends = ends.tz_localize('UTC').tz_convert(data.index.tzinfo)
+    return starts, ends
 
 
 def timestamps_of_missing_samples(data, max_sample_period=None,

@@ -350,3 +350,11 @@ def plot_missing_samples_using_bitmap(electricity, ax=None, fig=None,
                 [i, i], color='grey', linewidth=1)
 
     return ax
+
+def get_dropout_rates(electricity):
+    dropout_rates = []
+    for attribute in ['appliances', 'circuits', 'mains']:
+        for df in electricity.__dict__[attribute].values():
+            dropout_rates.append(single.get_dropout_rate(df))
+    return dropout_rates
+    

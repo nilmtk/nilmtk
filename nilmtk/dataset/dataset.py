@@ -296,24 +296,6 @@ class DataSet(object):
     #------------------------------------------------------
     # DESCRIPTIONS OF THE DATASET
 
-    def get_n_appliances_per_building(self):
-        """
-        Returns
-        -------
-        list : number of appliances per building (not necessarily in order)
-        """
-        return [len(building.utility.electric.appliances) 
-                for building in self.buildings.values()]
-
-    def get_proportion_energy_submetered_per_building(self):
-        """
-        Returns
-        -------
-        list
-        """
-        return [proportion_of_energy_submetered(building.utility.electric)
-                for building in self.buildings.values()]
-
     def __str__(self):
         s = 'nilmtk.dataset.DataSet.  '
         s += 'name=' + self.metadata.get('name', 'NOT DEFINED') + '\n'
@@ -323,18 +305,28 @@ class DataSet(object):
         return self.__str__()
 
     def describe(self, fh=sys.stdout):
-        s = ''
+        # Collect lists of stats per building
+        n_appliances = []
+        energy_submetered = []
+        dropout_rate = []
+        uptime = []
+        timeslices_where_energy_submetered_is_above_thresh = []
+        for building in self.buildings.values():
+            n_appliances.append(len(building.utility.electric.appliances))
+            energy_submetered.append(proportion_of_energy_submetered(
+                building.utility.electric))
+            dropout_rate.extend()
         
-        # print metadata
+        # Prepare string representation of stats
+        s = ''
         s += 'METADATA:\n'
         for key, value in self.metadata.iteritems():
             s += '  {} = {}\n'.format(key, value)
-
         s += '\n'
         s += 'NUMBER OF BUILDINGS: {:d}\n\n'.format(len(self.buildings))
         s += 'NUMBER OF APPLIANCES PER BUILDING:\n'
-        s += summary_stats_string(self.get_n_appliances_per_building())
+        s += summary_stats_string(n_appliances)
         s += '\n'
         s += 'PROPORTION OF ENERGY SUBMETERED PER BUILDLING:\n'
-        s += summary_stats_string(self.get_proportion_energy_submetered_per_building())
+        s += summary_stats_string(energy_submetered)
         fh.write(s)
