@@ -1,3 +1,4 @@
+from __future__ import print_function, division
 import os, copy
 import numpy as np
 import pandas as pd
@@ -150,3 +151,17 @@ def apply_func_to_values_of_dicts(obj, func, dict_names):
         for key, value in dict_.iteritems():
             dict_[key] = func(value)
     return obj_copy
+
+
+def timedelta64_to_secs(timedelta):
+    """Convert `timedelta` to seconds.
+
+    Parameters
+    ----------
+    timedelta : np.timedelta64
+
+    Returns
+    -------
+    float : seconds
+    """
+    return timedelta / np.timedelta64(1, 's')
