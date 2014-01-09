@@ -279,10 +279,12 @@ def dropout_rate_per_period(data, rule, window_start=None, window_end=None):
     return dropout_rate_per_period_
 
 
-def hours_on(series, on_power_threshold=DEFAULT_ON_POWER_THRESHOLD,
-             max_sample_period=None):
+def hours_on(series, on_power_threshold=DEFAULT_ON_POWER_THRESHOLD):
     """Returns a float representing the number of hours this channel
     has been above threshold.
+
+    If input data has gaps then pre-process data with `insert_zeros`
+    before sending it to this function.
 
     Parameters
     ----------
@@ -291,21 +293,9 @@ def hours_on(series, on_power_threshold=DEFAULT_ON_POWER_THRESHOLD,
     on_power_threshold : float or int, optional, default = 5
         Threshold which defines the distinction between "on" and "off".  Watts.
 
-    max_sample_period : float or int, optional 
-        The maximum allowed sample period in seconds.  This is used
-        where, for example, we have a wireless meter which is supposed
-        to report every `K` seconds and we assume that if we don't
-        hear from it for more than `max_sample_period=K*3` seconds
-        then the sensor (and appliance) have been turned off from the
-        wall. If we find a sample above `on_power_threshold` at time
-        `t` and there are more than `max_sample_period` seconds until
-        the next sample then we assume that the appliance has only
-        been on for `max_sample_period` seconds after time `t`.
-
     Returns
     -------
     hours_above_threshold : float
-
 
     See Also
     --------
@@ -317,11 +307,7 @@ def hours_on(series, on_power_threshold=DEFAULT_ON_POWER_THRESHOLD,
     # now calculate timedelta ('td') above threshold...
     td_above_thresh = (series.index[i_above_threshold + 1].values -
                        series.index[i_above_threshold].values)
-    if max_sample_period is not None:
-        td_above_thresh[td_above_thresh >
-                        max_sample_period] = max_sample_period
-
-    secs_on = td_above_thresh.sum().astype('timedelta64[s]').astype(np.int64)
+    secs_on = td_above_thresh.sum() / np.timedelta64(1, 's')
     return secs_on / SEC_PER_HOUR
 
 
