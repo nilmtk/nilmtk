@@ -24,15 +24,15 @@ mysql_conn['smart'] = MySQLdb.connect(
 jplug_mapping = {
 
     '001EC00CC4A0': ApplianceName('fridge', 1),
-    '001EC00CC49F': ApplianceName('ac', 1),
-    '001EC00D7A1C': ApplianceName('ac', 2),
+    '001EC00CC49F': ApplianceName('air conditioner', 1),
+    '001EC00D7A1C': ApplianceName('air conditioner', 2),
     '001EC00CC4AD': ApplianceName('washing_machine', 1),
-    '001EC00D7A18': ApplianceName('laptop', 1),
-    '001EC00CC49C': ApplianceName('iron', 1),
-    '001EC00CC49D': ApplianceName('kitchen_misc', 1),
-    '001EC00D7A1D': ApplianceName('television', 1),
-    '001EC00E6BB6': ApplianceName('water_filter', 1),
-    '001EC00E6BBD': ApplianceName('television', 1)
+    '001EC00D7A18': ApplianceName('laptop computer', 1),
+    '001EC00CC49C': ApplianceName('clothes iron', 1),
+    '001EC00CC49D': ApplianceName('kitchen outlets', 1),
+    '001EC00D7A1D': ApplianceName('entertainment unit', 1),
+    '001EC00E6BB6': ApplianceName('water filter', 1),
+    '001EC00E6BBD': ApplianceName('entertainment unit', 1)
 }
 
 column_mapping = {
@@ -161,4 +161,4 @@ class IAWE(DataSet):
 
         # Adding power to appliances
         self.building.utility.electric.appliances[
-            ApplianceName('motor', 1)] = df
+            ApplianceName('water motor', 1)] = df

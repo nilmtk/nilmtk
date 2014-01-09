@@ -121,6 +121,7 @@ def prepend_append_zeros(building, start_datetime, end_datetime, freq, timezone)
         power_columns = [
             x for x in df.columns if x.physical_quantity in ['power']]
         non_power_columns = [x for x in df.columns if x not in power_columns]
+
         for power in power_columns:
             df_copy[power].fillna(0, inplace=True)
         for measurement in non_power_columns:

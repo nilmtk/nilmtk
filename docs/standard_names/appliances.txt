@@ -11,6 +11,9 @@ mini vacuum cleaner charger
 
 kitchen outlets
 
+water filter
+
+
 ----------
 # Cooling
 
@@ -272,4 +275,6 @@ massage bed
 dehumidifier
 
 electric vehicle
+
+water motor
 
