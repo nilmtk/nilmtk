@@ -324,8 +324,6 @@ class Electricity(object):
 
     def get_dataframe_of_mains(self, measurement=Measurement('power', 'active')):
         """Get a pandas.DataFrame of all mains data
-
-
         """
         first_mains = self.mains.values()[0]
         shape = first_mains.shape
@@ -336,7 +334,14 @@ class Electricity(object):
 
         for main_df in self.mains.itervalues():
             sum_df += main_df
-        return sum_df[[measurement]]
+
+        try:
+            return sum_df[[measurement]]
+        except KeyError:
+            fallback_measurement = Measurement('power', 'apparent')
+            print("Warning, couldn't get", measurement, 
+                  "from mains, so trying", fallback_measurement)
+            return sum_df[[fallback_measurement]]
 
     def get_dataframe_of_appliances(self,
                                     measurement=Measurement('power', 'active')):
@@ -434,13 +439,12 @@ class Electricity(object):
         representation["circuits"] = ""
         return json.dumps(representation)
 
-    def get_mains_as_series(self, measurement=None, normalise=False):
+    def get_mains_as_series(self, measurement=None):
         """Returns a simplified representation of the mains data.
 
         * Sums together split-phase supplies
         * If multiple meters measure the same mains parameters then selects
           the meter with the highest sample rate
-        * Optionally normalises by voltage
 
         Parameters
         ----------
@@ -452,6 +456,10 @@ class Electricity(object):
         -------
         pandas.Series
         """
+        # TODO:  Optionally normalises by voltage
+        
+        
+
         raise NotImplementedError
 
     def get_appliances_as_series(self, measurement=None, normalise=False):

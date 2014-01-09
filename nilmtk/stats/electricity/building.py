@@ -10,7 +10,7 @@ from collections import OrderedDict
 from nilmtk.sensors.electricity import Measurement
 from nilmtk.stats.electricity.single import DEFAULT_MAX_DROPOUT_RATE, usage_per_period
 import nilmtk.stats.electricity.single as single
-
+import nilmtk.preprocessing.electricity.building as prepb
 
 def find_common_measurements(electricity):
     """Finds common measurement contained in all electricity streams
@@ -351,6 +351,7 @@ def plot_missing_samples_using_bitmap(electricity, ax=None, fig=None,
 
     return ax
 
+
 def get_dropout_rates(electricity, ignore_gaps=False):
     """
     Parameters
@@ -370,3 +371,52 @@ def get_dropout_rates(electricity, ignore_gaps=False):
             dropout_rates.append(dropout_func(df))
     return dropout_rates
     
+
+def proportion_of_time_where_more_energy_submetered(building, 
+                                                    min_proportion_submetered=0.7,
+                                                    require_common_indicies=True):
+    """Report the proportion of time slices where the sum of all the appliances
+    submetered is greater than the mains * `min_proportion_submetered`
+
+    Parameters
+    ----------
+    building : Building
+    min_proportion_submetered : float [0,1], optional
+        default = 0.7
+    require_common_indicies : boolean, optional
+        default = True.  Decides what to use for the 'total duration' when 
+        calculating the proportion of time.  If False then use the total
+        duration between the first and last samples. If True then only
+        use the non-NaN timeslices after finding the intersection of the
+        appliance and mains indicies.
+
+    Returns
+    -------
+    float [0,1] proportion of time
+    """
+   
+    building.utility.electric = building.utility.electric.sum_split_supplies()
+    
+    # downsample mains, circuits and appliances
+    b_downsampled = prepb.downsample(building, '1T')
+    
+    electric = b_downsampled.utility.electric
+    appliance_df = electric.get_dataframe_of_appliances().dropna()
+    mains_df = electric.get_dataframe_of_mains().dropna()
+    common_index = mains_df.index & appliance_df.index
+    appliance_df = appliance_df.ix[common_index]
+    mains_df = mains_df.ix[common_index]
+    appliances_summed = appliance_df.sum(axis=1)
+    timeslices_above_thresh = appliances_summed > (mains_df * min_proportion_submetered)
+
+    mins_above_thresh = timeslices_above_thresh.sum().values[0]
+    secs_above_thresh = mins_above_thresh * 60
+    
+    # Calc total duration
+    if require_common_indicies:
+        total_duration_secs = len(common_index) * 60
+    else:
+        start, end = building.utility.electric.get_start_and_end_dates()
+        total_duration_secs = (end - start).total_seconds()
+
+    return secs_above_thresh / total_duration_secs

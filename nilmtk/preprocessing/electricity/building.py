@@ -277,6 +277,9 @@ def make_common_index(building):
     appliances_index = building.utility.electric.appliances.values()[0].index
     mains_index = building.utility.electric.mains.values()[0].index
     freq = building.utility.electric.mains.values()[0].index.freq
+    # TODO: can the line below be replace with
+    # common_index = mains_index & appliances_index
+    # This might be a lot faster and as far as I can tell gives the same answer.
     common_index = pd.DatetimeIndex(
         np.sort(list(set(mains_index).intersection(set(appliances_index)))),
         freq=freq)

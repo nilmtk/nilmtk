@@ -33,8 +33,8 @@ building = prepb.fill_appliance_gaps(building)
 # building = prepb.prepend_append_zeros(
 #    building, '7-13-2013', '8-4-2013', '1T', 'Asia/Kolkata')
 
-# TODO: do we need to do dropna() on all mains data at this step, to ensure
-# that large mains gaps result in large gaps in the index?
+# we need to  dropna() on all mains data at this step, to ensure
+# that large mains gaps result in large gaps in the index
 building = prepb.drop_missing_mains(building)
 
 # TODO: for some datasets (e.g. UKPD), we'll have to find a common index
