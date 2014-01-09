@@ -8,6 +8,7 @@ from nilmtk.sensors.electricity import ApplianceName
 from nilmtk.sensors.electricity import Measurement
 from nilmtk.sensors.electricity import DualSupply
 from nilmtk.sensors.electricity import get_two_dataframes_of_dualsupply
+from nilmtk.utils import summary_stats_string
 
 """Base class for all datasets."""
 
@@ -265,8 +266,23 @@ class DataSet(object):
                           appliances[appliance], table=True)
         store.close()
 
-    def print_summary_stats(self):
-        raise NotImplementedError
+    def get_n_appliances_per_building(self):
+        """
+        Returns
+        -------
+        list : number of appliances per building (not necessarily in order)
+        """
+        return [len(building.utility.electric.appliances) 
+                for building in self.buildings.values()]
+
+    def __str__(self):
+        s = ''
+        s += 'name : ' + self.metadata.get('name', 'NOT DEFINED') + '\n'
+        s += 'number of buildings : {:d}\n'.format(len(self.buildings))
+        s += 'number of appliances per building :\n'
+        s += summary_stats_string(self.get_n_appliances_per_building())
+        return s
+        
 
     # This will be overridden by each subclass
     def load_building_names(self, root_directory):
