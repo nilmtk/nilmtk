@@ -128,13 +128,6 @@ def insert_zeros(single_appliance_dataframe, max_sample_period=None,
     return df_with_zeros
 
 
-def replace_nans_with_zeros(multiple_appliances_dataframe, max_sample_period):
-    """For a single column, find gaps of > max_sample_period and replace
-    all NaNs in these gaps with zeros.  
-    But leave NaNs is gaps <= max_sample_period."""
-    raise NotImplementedError
-
-
 def normalise_power(power, voltage, nominal_voltage):
     """ Uses Hart's formula to calculate:
      "admittance in the guise of 'normalized power':
