@@ -10,7 +10,6 @@ from collections import OrderedDict
 from nilmtk.sensors.electricity import Measurement
 from nilmtk.stats.electricity.single import DEFAULT_MAX_DROPOUT_RATE, usage_per_period
 import nilmtk.stats.electricity.single as single
-import nilmtk.preprocessing.electricity.building as prepb
 
 def find_common_measurements(electricity):
     """Finds common measurement contained in all electricity streams
@@ -397,6 +396,8 @@ def proportion_of_time_where_more_energy_submetered(building,
    
     building.utility.electric = building.utility.electric.sum_split_supplies()
     
+    import nilmtk.preprocessing.electricity.building as prepb
+
     # downsample mains, circuits and appliances
     b_downsampled = prepb.downsample(building, '1T')
     

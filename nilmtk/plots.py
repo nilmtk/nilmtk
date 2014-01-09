@@ -18,15 +18,22 @@ def plot_series(series, **kwargs):
     ax : matplotlib Axes, optional
         If not provided then will generate our own axes.
 
+    fig
+
     date_format : str, optional, default='%d/%m/%y %H:%M:%S'
 
     Can also use all **kwargs expected by `ax.plot`
     """
-    ax = kwargs.get('ax')
-    date_format = kwargs.get('date_format', '%d/%m/%y %H:%M:%S')
+    ax = kwargs.pop('ax', None)
+    fig = kwargs.pop('fig', None)
+    date_format = kwargs.pop('date_format', '%d/%m/%y %H:%M:%S')
 
     if ax is None:
-        fig, ax = plt.subplots(1)
+        ax = plt.gca()
+
+    if fig is None:
+        fig = plt.gcf()
+
     x = _to_ordinalf_np_vectorized(series.index.to_pydatetime())
     ax.plot(x, series, **kwargs)
     ax.xaxis.set_major_formatter(mdates.DateFormatter(date_format, 

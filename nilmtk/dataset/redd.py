@@ -9,6 +9,7 @@ from nilmtk.dataset import DataSet
 from nilmtk.utils import get_immediate_subdirectories
 from nilmtk.building import Building
 from nilmtk.sensors.electricity import MainsName, Measurement, ApplianceName, DualSupply
+from nilmtk.sensors.electricity import get_dual_supply_columns
 
 # Maps from REDD name to:
 #   tuple : ('<nilmtk name>', <metadata dict>)
@@ -170,6 +171,18 @@ class REDD(DataSet):
                 df = self._pre_process_dataframe(df)
                 df[colname].name = appliancename
                 building.utility.electric.appliances[appliancename] = df
+
+
+        # Now go through all DualSupply appliances to make sure there are two chans
+        appliances = building.utility.electric.appliances
+        for appliance_name, appliance_df in appliances.iteritems():
+            dual_supply_columns = get_dual_supply_columns(appliance_df)
+            n_dual_supply_columns = len(dual_supply_columns)
+            if n_dual_supply_columns == 1:
+                col = dual_supply_columns[0]
+                print("converting", appliance_name, "in building", building_number)
+                appliances[appliance_name].rename(columns={col:col.measurement},
+                                                  inplace=True)
 
         # TODO
         # Store appliance_metadata for each appliance instance in electric.metadata['appliances']

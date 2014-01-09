@@ -13,6 +13,7 @@ from nilmtk.utils import summary_stats_string
 from nilmtk.stats.electricity.building import proportion_of_energy_submetered
 from nilmtk.stats.electricity.building import get_dropout_rates
 from nilmtk.stats.electricity.single import get_uptime
+from nilmtk.stats.electricity.building import proportion_of_time_where_more_energy_submetered
 
 """Base class for all datasets."""
 
@@ -313,36 +314,39 @@ class DataSet(object):
         dropout_rate = []
         dropout_rate_ignoring_gaps = []
         uptime = []
-        timeslices_where_energy_submetered_is_above_thresh = []
+        prop_timeslices = []
         for building in self.buildings.values():
             electric = building.utility.electric
-            n_appliances.append(len(electric.appliances))
-            energy_submetered.append(proportion_of_energy_submetered(electric))
-            dropout_rate.extend(get_dropout_rates(electric))
-            dropout_rate_ignoring_gaps.extend(get_dropout_rates(electric, 
-                                                                ignore_gaps=True))
-            uptime.append(get_uptime(electric.mains.values()[0]))
-
+            # n_appliances.append(len(electric.appliances))
+            # energy_submetered.append(proportion_of_energy_submetered(electric))
+            # dropout_rate.extend(get_dropout_rates(electric))
+            # dropout_rate_ignoring_gaps.extend(get_dropout_rates(electric, 
+            #                                                     ignore_gaps=True))
+            # uptime.append(get_uptime(electric.mains.values()[0]))
+            prop_timeslices.append(proportion_of_time_where_more_energy_submetered(building))
         # Prepare string representation of stats
         s = ''
         s += 'METADATA:\n'
         for key, value in self.metadata.iteritems():
             s += '  {} = {}\n'.format(key, value)
+        # s += '\n'
+        # s += 'NUMBER OF BUILDINGS: {:d}\n\n'.format(len(self.buildings))
+        # s += 'NUMBER OF APPLIANCES PER BUILDING:\n'
+        # s += summary_stats_string(n_appliances)
+        # s += '\n'
+        # s += 'PROPORTION OF ENERGY SUBMETERED PER BUILDLING:\n'
+        # s += summary_stats_string(energy_submetered)
+        # s += '\n'
+        # s += 'DROPOUT RATE PER CHANNEL, INCLUDING LARGE GAPS:\n'
+        # s += summary_stats_string(dropout_rate)
+        # s += '\n'
+        # s += 'DROPOUT RATE PER CHANNEL, IGNORING LARGE GAPS:\n'
+        # s += summary_stats_string(dropout_rate_ignoring_gaps)
+        # s += 'MAINS UPTIME PER BUILDING (DAYS):\n'
+        # s += summary_stats_string(uptime)
         s += '\n'
-        s += 'NUMBER OF BUILDINGS: {:d}\n\n'.format(len(self.buildings))
-        s += 'NUMBER OF APPLIANCES PER BUILDING:\n'
-        s += summary_stats_string(n_appliances)
-        s += '\n'
-        s += 'PROPORTION OF ENERGY SUBMETERED PER BUILDLING:\n'
-        s += summary_stats_string(energy_submetered)
-        s += '\n'
-        s += 'DROPOUT RATE PER CHANNEL, INCLUDING LARGE GAPS:\n'
-        s += summary_stats_string(dropout_rate)
-        s += '\n'
-        s += 'DROPOUT RATE PER CHANNEL, IGNORING LARGE GAPS:\n'
-        s += summary_stats_string(dropout_rate_ignoring_gaps)
-        s += 'MAINS UPTIME PER BUILDING (DAYS):\n'
-        s += summary_stats_string(uptime)
+        s += 'PROPORTION OF TIME SLICES WHERE > 70% ENERGY IS SUBMETERED:\n'
+        s += summary_stats_string(prop_timeslices)
         s += '\n'
         
         fh.write(s)
