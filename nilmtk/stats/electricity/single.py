@@ -12,9 +12,11 @@ import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import copy
 from nilmtk.utils import secs_per_period_alias, timedelta64_to_secs
+from nilmtk.exceptions import TooFewSamplesError
 
 DEFAULT_MAX_DROPOUT_RATE = 0.4  # [0,1]
 DEFAULT_ON_POWER_THRESHOLD = 5  # watts
+
 
 def get_sample_period(data):
     """Estimate the sample period in seconds.
@@ -30,11 +32,20 @@ def get_sample_period(data):
     -------
     period_secs : float
         Sample period_secs in seconds.
+
+    Raises
+    ------
+    TooFewSamplesError
     """
+    N_SAMPLES = 100
+    if len(data) < N_SAMPLES:
+        raise TooFewSamplesError
     index = _get_index(data)
-    time_delta_ns = np.diff(index.values[:100]).astype(np.float)
+    time_delta_ns = np.diff(index.values[:N_SAMPLES]).astype(np.float)
     mode_time_delta_ns = stats.mode(time_delta_ns)[0][0]
-    period_secs = mode_time_delta_ns / 1E9
+    td_ns_filtered = time_delta_ns[time_delta_ns <= mode_time_delta_ns + time_delta_ns.std()]
+    period_secs = td_ns_filtered.mean() / 1E9
+    assert(period_secs > 0.0)
     return period_secs
 
 
@@ -55,19 +66,35 @@ def get_dropout_rate(data, sample_period=None):
         The proportion of samples that have been lost; where 
         1 means that all samples have been lost and 
         0 means that no samples have been lost.
+
+    Raises
+    ------
+    TooFewSamplesError
     """
     if sample_period is None:
         sample_period = get_sample_period(data)
 
+    N_SAMPLES = 100
+    if len(data) < N_SAMPLES:
+        raise TooFewSamplesError
+
     index = _get_index(data)
+    assert(index[-1] > index[0])
     duration = index[-1] - index[0]
-    n_expected_samples = duration.total_seconds() / sample_period
+    n_expected_samples = round((duration.total_seconds() / sample_period) + 1)
+    dropout_rate = 1 - (index.size / n_expected_samples)
+    HEADROOM = 1.1
+    if dropout_rate < 0 and index.size < n_expected_samples * HEADROOM:
+        dropout_rate = 0.0
+    try:
+        assert(1 >= dropout_rate >= 0)
     return 1 - (index.size / n_expected_samples)
 
 
 def get_dropout_rate_ignore_gaps(data, sample_period=None, 
                                  max_sample_period=None):
-    """The proportion of samples that have been lost.
+    """The proportion of samples that have been lost, but first
+    remove any large gaps.
 
     Parameters
     ----------
@@ -76,6 +103,10 @@ def get_dropout_rate_ignore_gaps(data, sample_period=None,
     sample_period : int or float, optional
         Sample period in seconds.  If not provided then will
         calculate it.
+
+    max_sample_period : int or float, optional
+        Seconds. Threshold which defines a 'gap'
+        If not provided then will use sample_period * 4
 
     Returns
     -------
@@ -93,8 +124,12 @@ def get_dropout_rate_ignore_gaps(data, sample_period=None,
     starts, ends = get_good_section_starts_and_ends(data, max_sample_period)
     for start, end in zip(starts, ends):
         cropped_data = data[start:end]
-        if len(cropped_data) > 100:
-            dropout_rates.append(get_dropout_rate(cropped_data))
+        try:
+            dropout_rate = get_dropout_rate(cropped_data)
+        except TooFewSamplesError:
+            pass
+        else: 
+            dropout_rates.append(dropout_rate)
     
     return np.array(dropout_rates).mean()
 
@@ -232,10 +267,18 @@ def get_good_section_starts_and_ends(data, max_sample_period):
     starts, ends: DatetimeIndex
     """
     gap_starts, gap_ends = get_gap_starts_and_gap_ends(data, max_sample_period)
-    starts = gap_ends.insert(0, data.index[0])
-    starts = starts.tz_localize('UTC').tz_convert(data.index.tzinfo)
-    ends = gap_starts.insert(len(gap_starts), data.index[-1])
-    ends = ends.tz_localize('UTC').tz_convert(data.index.tzinfo)
+
+    if data.index[0] in gap_ends or data.index[0] >= gap_ends[0]:
+        starts = gap_ends
+    else:
+        starts = gap_ends.insert(0, data.index[0])
+        starts = starts.tz_localize('UTC').tz_convert(data.index.tzinfo)
+
+    if data.index[-1] in gap_starts or data.index[-1] <= gap_starts[-1]:
+        ends = gap_starts
+    else:
+        ends = gap_starts.insert(len(gap_starts), data.index[-1])
+        ends = ends.tz_localize('UTC').tz_convert(data.index.tzinfo)
     return starts, ends
 
 

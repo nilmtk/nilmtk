@@ -11,6 +11,7 @@ from nilmtk.sensors.electricity import DualSupply
 from nilmtk.sensors.electricity import get_two_dataframes_of_dualsupply
 from nilmtk.utils import summary_stats_string
 from nilmtk.stats.electricity.building import proportion_of_energy_submetered
+from nilmtk.stats.electricity.building import get_dropout_rates
 
 """Base class for all datasets."""
 
@@ -309,13 +310,16 @@ class DataSet(object):
         n_appliances = []
         energy_submetered = []
         dropout_rate = []
+        dropout_rate_ignoring_gaps = []
         uptime = []
         timeslices_where_energy_submetered_is_above_thresh = []
         for building in self.buildings.values():
-            n_appliances.append(len(building.utility.electric.appliances))
-            energy_submetered.append(proportion_of_energy_submetered(
-                building.utility.electric))
-            dropout_rate.extend()
+            electric = building.utility.electric
+            n_appliances.append(len(electric.appliances))
+            energy_submetered.append(proportion_of_energy_submetered(electric))
+            dropout_rate.extend(get_dropout_rates(electric))
+            dropout_rate_ignoring_gaps.extend(get_dropout_rates(electric, 
+                                                                ignore_gaps=True))
         
         # Prepare string representation of stats
         s = ''
@@ -329,4 +333,11 @@ class DataSet(object):
         s += '\n'
         s += 'PROPORTION OF ENERGY SUBMETERED PER BUILDLING:\n'
         s += summary_stats_string(energy_submetered)
+        s += '\n'
+        s += 'DROPOUT RATE PER CHANNEL, INCLUDING LARGE GAPS:\n'
+        s += summary_stats_string(dropout_rate)
+        s += '\n'
+        s += 'DROPOUT RATE PER CHANNEL, IGNORING LARGE GAPS:\n'
+        s += summary_stats_string(dropout_rate_ignoring_gaps)
+        
         fh.write(s)
