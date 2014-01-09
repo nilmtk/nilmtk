@@ -168,20 +168,21 @@ def timedelta64_to_secs(timedelta):
     return timedelta / np.timedelta64(1, 's')
 
 
-def summary_stats_string(data, fmt='{:>6.2f}'):
+def summary_stats_string(data, fmt='{:>6.2f}', sep='\n', stat_strings=None):
     data = np.array(data)
     s = ''
     # use eval, use loop
     # numpy stat_strings
-    stat_strings = ['min', 'mean', 'mode', 'max', 'std']
+    if stat_strings is None:
+        stat_strings = ['min', 'mean', 'mode', 'max', 'std']
     scipy_stats = ['mode']
     for stat_str in stat_strings:
         if stat_str in scipy_stats:
             stat = stats.__dict__[stat_str](data)[0][0]
         else:
             stat = data.__getattribute__(stat_str)()
-        s += '  {:5s}'.format(stat_str) + ' = '
-        s += fmt.format(stat)
-        s += '\n'
+        s += '  {:5s}'.format(stat_str) + '=' + fmt.format(stat)
+        if stat_str != stat_strings[-1]:
+            s += sep
     
     return s

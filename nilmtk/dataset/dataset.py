@@ -1,3 +1,4 @@
+from __future__ import print_function, division
 import os
 import json
 import copy
@@ -66,7 +67,7 @@ class DataSet(object):
         for building in building_names:
             self.load_building(root_directory, building)
 
-    def load_hdf5(self, directory):
+    def load_hdf5(self, directory, building_nums=None):
         """Imports dataset from HDF5 store into NILMTK object
 
         Parameters
@@ -75,6 +76,8 @@ class DataSet(object):
         directory : str
             Directory where the HDF5 store is located
 
+        buildling_nums : list of ints, optional
+            Building numbers to load
         """
         # Load metadata if exists
         if os.path.isfile(os.path.join(directory, 'metadata.json')):
@@ -89,6 +92,11 @@ class DataSet(object):
 
         # Finding the buildings
         building_numbers = list(set([key.split("/")[1] for key in keys]))
+
+        # Only use building nums the users asked for
+        if building_nums:
+            building_nums = [str(n) for n in building_nums]
+            building_numbers = list(set(building_numbers).intersection(set(building_nums)))
 
         # Loading the structured information for each building
         for building_number in building_numbers:
@@ -307,46 +315,55 @@ class DataSet(object):
     def __repr__(self):
         return self.__str__()
 
-    def describe(self, fh=sys.stdout):
+    def descriptive_stats(self):
         # Collect lists of stats per building
-        n_appliances = []
-        energy_submetered = []
-        dropout_rate = []
-        dropout_rate_ignoring_gaps = []
-        uptime = []
-        prop_timeslices = []
-        for building in self.buildings.values():
+        stats = {
+            'n_appliances': [],
+            'energy_submetered': [],
+            'dropout_rate': [],
+            'dropout_rate_ignoring_gaps': [],
+            'uptime': [],
+            'prop_timeslices': []}
+
+        for building_num, building in self.buildings.iteritems():
+            print('Calculating stats for building', building_num)
             electric = building.utility.electric
-            # n_appliances.append(len(electric.appliances))
-            # energy_submetered.append(proportion_of_energy_submetered(electric))
-            # dropout_rate.extend(get_dropout_rates(electric))
-            # dropout_rate_ignoring_gaps.extend(get_dropout_rates(electric, 
-            #                                                     ignore_gaps=True))
-            # uptime.append(get_uptime(electric.mains.values()[0]))
-            prop_timeslices.append(proportion_of_time_where_more_energy_submetered(building))
+            stats['n_appliances'].append(len(electric.appliances))
+            stats['energy_submetered'].append(proportion_of_energy_submetered(electric))
+            stats['dropout_rate'].extend(get_dropout_rates(electric))
+            stats['dropout_rate_ignoring_gaps'].extend(get_dropout_rates(electric, 
+                                                                         ignore_gaps=True))
+            stats['uptime'].append(get_uptime(electric.mains.values()[0]))
+            stats['prop_timeslices'].append(proportion_of_time_where_more_energy_submetered(building))
+
+        return stats
+
+    def describe(self, fh=sys.stdout):
         # Prepare string representation of stats
+        stats = self.descriptive_stats()
+
         s = ''
         s += 'METADATA:\n'
         for key, value in self.metadata.iteritems():
             s += '  {} = {}\n'.format(key, value)
-        # s += '\n'
-        # s += 'NUMBER OF BUILDINGS: {:d}\n\n'.format(len(self.buildings))
-        # s += 'NUMBER OF APPLIANCES PER BUILDING:\n'
-        # s += summary_stats_string(n_appliances)
-        # s += '\n'
-        # s += 'PROPORTION OF ENERGY SUBMETERED PER BUILDLING:\n'
-        # s += summary_stats_string(energy_submetered)
-        # s += '\n'
-        # s += 'DROPOUT RATE PER CHANNEL, INCLUDING LARGE GAPS:\n'
-        # s += summary_stats_string(dropout_rate)
-        # s += '\n'
-        # s += 'DROPOUT RATE PER CHANNEL, IGNORING LARGE GAPS:\n'
-        # s += summary_stats_string(dropout_rate_ignoring_gaps)
-        # s += 'MAINS UPTIME PER BUILDING (DAYS):\n'
-        # s += summary_stats_string(uptime)
+        s += '\n'
+        s += 'NUMBER OF BUILDINGS: {:d}\n\n'.format(len(self.buildings))
+        s += 'NUMBER OF APPLIANCES PER BUILDING:\n'
+        s += summary_stats_string(stats['n_appliances'])
+        s += '\n'
+        s += 'PROPORTION OF ENERGY SUBMETERED PER BUILDLING:\n'
+        s += summary_stats_string(stats['energy_submetered'])
+        s += '\n'
+        s += 'DROPOUT RATE PER CHANNEL, INCLUDING LARGE GAPS:\n'
+        s += summary_stats_string(stats['dropout_rate'])
+        s += '\n'
+        s += 'DROPOUT RATE PER CHANNEL, IGNORING LARGE GAPS:\n'
+        s += summary_stats_string(stats['dropout_rate_ignoring_gaps'])
+        s += 'MAINS UPTIME PER BUILDING (DAYS):\n'
+        s += summary_stats_string(stats['uptime'])
         s += '\n'
         s += 'PROPORTION OF TIME SLICES WHERE > 70% ENERGY IS SUBMETERED:\n'
-        s += summary_stats_string(prop_timeslices)
+        s += summary_stats_string(stats['prop_timeslices'])
         s += '\n'
         
         fh.write(s)
