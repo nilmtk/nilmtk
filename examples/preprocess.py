@@ -33,6 +33,12 @@ building = prepb.fill_appliance_gaps(building)
 # building = prepb.prepend_append_zeros(
 #    building, '7-13-2013', '8-4-2013', '1T', 'Asia/Kolkata')
 
+# TODO: do we need to do dropna() on all mains data at this step, to ensure
+# that large mains gaps result in large gaps in the index?
+
+# TODO: for some datasets (e.g. UKPD), we'll have to find a common index
+# for the subset of the appliances we want to use.
+
 # 4. Intersection of mains and appliance datetime indicies
 building = prepb.make_common_index(building)
 
