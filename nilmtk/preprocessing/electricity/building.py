@@ -103,7 +103,6 @@ def drop_missing_mains(building):
         MAINS)
 
 
-
 def prepend_append_zeros(building, start_datetime, end_datetime, freq, timezone):
     """Fill zeros from `start` to `appliance`.index[0] and from 
     `appliance`.index[-1] to end at `frequency`"""

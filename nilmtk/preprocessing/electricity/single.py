@@ -106,13 +106,22 @@ def insert_zeros(single_appliance_dataframe, max_sample_period=None,
         dates_to_insert_zeros_after_gaps)
 
     # Don't insert duplicate entries
-    dates_to_insert_zeros = [d for d in dates_to_insert_zeros 
+    dates_to_insert_zeros = [d for d in dates_to_insert_zeros
                              if d not in df.index]
 
-    zeros = pd.DataFrame(data=0, 
+    # Columns containing power_energy
+    power_columns = [
+        x for x in df.columns if x.physical_quantity in ['power']]
+    non_power_columns = [x for x in df.columns if x not in power_columns]
+
+    zeros = pd.DataFrame(data=0,
                          index=dates_to_insert_zeros,
-                         columns=single_appliance_dataframe.columns, 
+                         columns=power_columns,
                          dtype=np.float32)
+
+    # Now, take median of non-power columns (like voltage)
+    for measurement in non_power_columns:
+        zeros[measurement] = single_appliance_dataframe[measurement].median()
 
     # Insert the dataframe of zeros into the data.
     df_with_zeros = deepcopy(single_appliance_dataframe)
@@ -250,12 +259,14 @@ def reframe_index(index, window_start=None, window_end=None):
         if window_start >= index[0]:
             index = index[index >= window_start]
         else:
-            index = index.insert(0, window_start).tz_localize('UTC').tz_convert(tz)
+            index = index.insert(0, window_start).tz_localize(
+                'UTC').tz_convert(tz)
 
     if window_end is not None:
         if window_end <= index[-1]:
             index = index[index <= window_end]
         else:
-            index = index.insert(len(index), window_end).tz_localize('UTC').tz_convert(tz)
+            index = index.insert(len(index), window_end).tz_localize(
+                'UTC').tz_convert(tz)
 
     return index
