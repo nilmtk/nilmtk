@@ -59,6 +59,8 @@ def latexify(fig_width=None, fig_height=None, columns=1):
     # Width and max height in inches for IEEE journals taken from
     # computer.org/cms/Computer.org/Journal%20templates/transactions_art_guide.pdf
 
+    assert(columns in [1,2])
+
     if fig_width is None:
         fig_width = 3.39 if columns==1 else 6.9 # width in inches
 

@@ -308,9 +308,9 @@ def plot_missing_samples_using_bitmap(electricity, ax=None, fig=None,
                         electricity.mains]:
         for name, df in dict_of_dfs.iteritems():
             try:
-                name_str = (name.name, name.instance)
+                name_str = '{} {}'.format(name.name, name.instance)
             except:
-                name_str = ('mains', name.split, name.meter)
+                name_str = 'mains {}'.format(name.split)
 
             missing_samples_per_period[name_str] = (
                 single.dropout_rate_per_period(
@@ -329,6 +329,7 @@ def plot_missing_samples_using_bitmap(electricity, ax=None, fig=None,
         plt.colorbar(im)
 
     ax.set_yticks(np.arange(0.5, len(df.columns) + 0.5))
+    ax.set_xlim([start_datenum, end_datenum])
 
     def formatter(x, pos):
         x = int(x)
