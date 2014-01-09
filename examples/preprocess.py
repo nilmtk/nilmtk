@@ -35,6 +35,7 @@ building = prepb.fill_appliance_gaps(building)
 
 # TODO: do we need to do dropna() on all mains data at this step, to ensure
 # that large mains gaps result in large gaps in the index?
+building = prepb.drop_missing_mains(building)
 
 # TODO: for some datasets (e.g. UKPD), we'll have to find a common index
 # for the subset of the appliances we want to use.

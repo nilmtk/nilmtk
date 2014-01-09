@@ -96,6 +96,14 @@ def downsample(building, rule='1T', how='mean', dropna=False):
                                          BUILDING_ELECTRICITY_DICTS)
 
 
+def drop_missing_mains(building):
+    MAINS = ['utility.electric.mains']
+    return apply_func_to_values_of_dicts(
+        building, lambda df: df.dropna(),
+        MAINS)
+
+
+
 def prepend_append_zeros(building, start_datetime, end_datetime, freq, timezone):
     """Fill zeros from `start` to `appliance`.index[0] and from 
     `appliance`.index[-1] to end at `frequency`"""
@@ -164,7 +172,7 @@ def fill_appliance_gaps(building, sample_period_multiplier=4):
 
     # "book-end" each gap with a zero at each end
     single_insert_zeros = lambda df: single.insert_zeros(df,
-                            sample_period_multiplier=sample_period_multiplier)
+                                                         sample_period_multiplier=sample_period_multiplier)
 
     APPLIANCES = ['utility.electric.appliances']
     APPLIANCES_MAINS = ['utility.electric.appliances',
@@ -175,7 +183,7 @@ def fill_appliance_gaps(building, sample_period_multiplier=4):
     # Now fill forward
     ffill = lambda df: pd.DataFrame.fillna(df, method='ffill')
     new_building = apply_func_to_values_of_dicts(new_building, ffill,
-                                                 APPLIANCES_MAINS)
+                                                 APPLIANCES)
 
     return new_building
 
