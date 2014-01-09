@@ -165,6 +165,7 @@ def get_gap_starts_and_gap_ends(data, max_sample_period,
     -------
     gap_starts, gap_ends: DatetimeIndex
     """
+    # TODO: this might be a rather nasty hack to fix the circular dependency
     from nilmtk.preprocessing.electricity.single import reframe_index
 
     try:
@@ -175,7 +176,7 @@ def get_gap_starts_and_gap_ends(data, max_sample_period,
     
     index = _get_index(data)
     index = reframe_index(index, window_start, window_end)
-    timedeltas_sec = np.diff(index.values) / np.timedelta64(1, 's')
+    timedeltas_sec = timedelta64_to_secs(np.diff(index.values))
     overlong_timedeltas = timedeltas_sec > max_sample_period
     gap_starts = index[:-1][overlong_timedeltas]
     gap_ends = index[1:][overlong_timedeltas]        
@@ -255,6 +256,9 @@ def dropout_rate_per_period(data, rule, window_start=None, window_end=None):
         timezone=data.index.tzinfo
         Values are the number of dropped in that time period.
     """
+    # TODO: this might be a rather nasty hack to fix the circular dependency
+    from nilmtk.preprocessing.electricity.single import reframe_index
+
     try:
         data = data.dropna()
     except AttributeError:
@@ -308,7 +312,7 @@ def hours_on(series, on_power_threshold=DEFAULT_ON_POWER_THRESHOLD):
     # now calculate timedelta ('td') above threshold...
     td_above_thresh = (series.index[i_above_threshold + 1].values -
                        series.index[i_above_threshold].values)
-    secs_on = td_above_thresh.sum() / np.timedelta64(1, 's')
+    secs_on = timedelta64_to_secs(td_above_thresh.sum())
     return secs_on / SEC_PER_HOUR
 
 
@@ -356,8 +360,11 @@ def usage_per_period(series, freq,
                      on_power_threshold=DEFAULT_ON_POWER_THRESHOLD,
                      max_dropout_rate=DEFAULT_MAX_DROPOUT_RATE,
                      verbose=False,
-                     energy_unit='kwh', max_sample_period=None):
+                     energy_unit='kwh'):
     """Calculate the usage (hours on and kwh) per time period.
+
+    If input data has gaps then pre-process data with `insert_zeros`
+    before sending it to this function.
 
     Parameters
     ----------
@@ -376,17 +383,6 @@ def usage_per_period(series, freq,
         if True then print more information
     
     energy_unit : {'kwh', 'joules'}, optional
-
-    max_sample_period : float or int, optional 
-        The maximum allowed sample period in seconds.  If we find a
-        sample above `on_power_threshold` at time `t` and there are
-        more than `max_sample_period` seconds until the next sample
-        then we assume that the appliance has only been on for
-        `max_sample_period` seconds after time `t`.  This is used where,
-        for example, we have a wireless meter which is supposed to
-        report every `K` seconds and we assume that if we don't hear
-        from it for more than `max_sample_period=K*3` seconds then the
-        sensor (and appliance) have been turned off from the wall.
 
     Returns
     -------
@@ -505,8 +501,8 @@ def usage_per_period(series, freq,
     energy_series = pd.Series(index=period_range, dtype=np.float,
                               name=name + ' ' + energy_unit)
 
-    MAX_SAMPLES_PER_PERIOD = secs_per_period_alias(
-        freq) / get_sample_period(series)
+    MAX_SAMPLES_PER_PERIOD = (secs_per_period_alias(freq) / 
+                              get_sample_period(series))
     MIN_SAMPLES_PER_PERIOD = (MAX_SAMPLES_PER_PERIOD *
                               (1 - max_dropout_rate))
 
@@ -533,19 +529,15 @@ def usage_per_period(series, freq,
             continue
 
         hours_on_series[period] = hours_on(data_for_period,
-                                           on_power_threshold=on_power_threshold,
-                                           max_sample_period=max_sample_period)
-        energy_series[period] = energy(data_for_period,
-                                       max_sample_period=max_sample_period,
-                                       unit=energy_unit)
+                                           on_power_threshold=on_power_threshold)
+        energy_series[period] = energy(data_for_period, unit=energy_unit)
 
     return pd.DataFrame({'hours_on': hours_on_series,
                          energy_unit: energy_series})
 
 
-def activity_distribution(
-    series, on_power_threshold=DEFAULT_ON_POWER_THRESHOLD,
-        bin_size='T', timespan='D'):
+def activity_distribution(series, on_power_threshold=DEFAULT_ON_POWER_THRESHOLD,
+                          bin_size='T', timespan='D'):
     """Returns a distribution describing when this appliance was turned
     on over repeating timespans.  For example, if you want to see
     which times of day this appliance was used, on average, then use 
@@ -614,11 +606,12 @@ def activity_distribution(
     return distribution
 
 
-def on(series, max_sample_period=None,
-       on_power_threshold=DEFAULT_ON_POWER_THRESHOLD):
+def on(series, on_power_threshold=DEFAULT_ON_POWER_THRESHOLD):
     """Returns pd.Series with Boolean values indicating whether the
-    appliance is on (True) or off (False).  Adds an 'off' entry if data
-    is lost for more than self.max_sample_period.
+    appliance is on (True) or off (False).
+
+    If input data has gaps then pre-process data with `insert_zeros`
+    before sending it to this function.
 
     Parameters
     ----------
@@ -627,20 +620,9 @@ def on(series, max_sample_period=None,
     on_power_threshold : float, optional, default=5
         Threshold which defines the difference between 'on' and 'off'. Watts.
 
-    max_sample_period : float or int, optional 
-        The maximum allowed sample period in seconds.  If we find a
-        sample above `on_power_threshold` at time `t` and there are
-        more than `max_sample_period` seconds until the next sample
-        then we assume that the appliance has only been on for
-        `max_sample_period` seconds after time `t`.  This is used where,
-        for example, we have a wireless meter which is supposed to
-        report every `K` seconds and we assume that if we don't hear
-        from it for more than `max_sample_period=K*3` seconds then the
-        sensor (and appliance) have been turned off from the wall.
-
     Returns
     -------
-    pandas.Series
+    when_on : pandas.Series
         index is the same as for input `series`
         values are booleans
     """
@@ -649,17 +631,6 @@ def on(series, max_sample_period=None,
         series = series.icol(0)
 
     when_on = series >= on_power_threshold
-
-    if max_sample_period is not None:
-        # add an 'off' entry whenever data is lost for > self.max_sample_period
-        time_delta = np.diff(series.index.values) / np.timedelta64(1, 's')
-        dropout_dates = series.index[:-1][time_delta > max_sample_period]
-        insert_offs = pd.Series(False,
-                                index=dropout_dates +
-                                pd.DateOffset(seconds=max_sample_period))
-        when_on = when_on.append(insert_offs)
-        when_on = when_on.sort_index()
-
     return when_on
 
 
@@ -686,13 +657,17 @@ def on_off_events(on_series, ignore_n_off_samples=None):
          1 == turn-on event
         -1 == turn-off event
 
-    Example
-    -------
+    Examples
+    --------
     >>> series = pd.Series([0, 0, 100, 100, 100, 0])
     >>> on_off_events(series)
     2:  1
     5: -1
 
+    See Also
+    --------
+    on
+    durations
     """
     if ignore_n_off_samples is not None:
         on_smoothed = pd.rolling_max(
@@ -734,8 +709,9 @@ def durations(on_series, on_or_off, ignore_n_off_samples=None,
         hence only one on-event and one off-event would be reported.
 
     sample_period : int, optional
-        Required if `ignore_n_off_samples` is not None. Sample period
-        in seconds.  See `sample_period()`.
+        Only used if `ignore_n_off_samples` is not None. Sample period
+        in seconds.  If not provided the the function will get the
+        sample period of the data.
 
     Returns
     -------
@@ -933,8 +909,12 @@ def _tz_to_naive(datetime_index):
     Returns
     -------
     pandas.DatetimeIndex, tz-naive
+
+    .. warning: TODO a fix is required for this function to cope with
+       datetimeindicies with a daylight saving transition in them.
+       See: http://stackoverflow.com/q/16628819/732596
+
     """
-    # See http://stackoverflow.com/q/16628819/732596
 
     if datetime_index.tzinfo is None:
         return datetime_index
@@ -966,4 +946,3 @@ def _get_index(data):
     else:
         raise TypeError('wrong type for `data`.')
     return index
-
