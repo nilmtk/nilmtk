@@ -195,7 +195,7 @@ def filter_datetime(building, start_datetime=None, end_datetime=None):
                                                      end_datetime)
         if len(building_copy.utility.electric.appliances[
                 appliance_name]) == 0:
-            print "DELETING ", appliance_name
+            print("DELETING {}".format(appliance_name))
             del building_copy.utility.electric.appliances[
                 appliance_name]
 
@@ -205,7 +205,7 @@ def filter_datetime(building, start_datetime=None, end_datetime=None):
             mains_name] = filter_datetime_single(mains_df, start_datetime, end_datetime)
         if len(building_copy.utility.electric.mains[
                 mains_name]) == 0:
-            print "DELETING", mains_name
+            print("DELETING {}".format(mains_name))
             del building_copy.utility.electric.mains[
                 mains_name]
 
