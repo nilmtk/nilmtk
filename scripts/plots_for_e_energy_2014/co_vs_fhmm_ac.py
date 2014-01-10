@@ -167,11 +167,12 @@ for freq in frequencies:
         ground_truth_power = pd.DataFrame({appliance: app_ground[appliance][DISAGG_FEATURE] for appliance in app_ground})
 
 
-start = pd.Timestamp("2013-08-01 20:25:00")
+# Start and end time
+start = pd.Timestamp("2013-08-01 20:20:00")
 end = pd.Timestamp("2013-08-01 23:10:00")
 
-latexify(columns=2)
 fig, ax = plt.subplots(ncols=4, sharex=True)
+latexify(columns=2, figheight=4)
 predicted_power['fhmm'][('air conditioner', 1)][start:end].plot(ax=ax[0])
 predicted_power['co'][('air conditioner', 1)][start:end].plot(ax=ax[1])
 ground_truth_power[('air conditioner', 1)][start:end].plot(ax=ax[2])
@@ -182,9 +183,12 @@ test.utility.electric.mains[
 ax[0].set_ylim((0, 2000))
 ax[1].set_ylim((0, 2000))
 ax[2].set_ylim((0, 2000))
-plt.tight_layout()
+
 
 format_axes(ax[0])
+format_axes(ax[1])
+format_axes(ax[2])
+format_axes(ax[3])
 
 
 ax[0].set_title("Predicted power\nFHMM")
@@ -197,3 +201,6 @@ ax[0].set_ylabel("Power (W)")
 ax[1].set_ylabel("Power (W)")
 ax[2].set_ylabel("Power (W)")
 ax[3].set_ylabel("Power (W)")
+
+plt.tight_layout
+plt.savefig("/home/nipun/Desktop/co_fhmm.pdf")
