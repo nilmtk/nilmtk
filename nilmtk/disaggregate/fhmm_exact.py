@@ -201,7 +201,6 @@ class FHMM(Disaggregator):
         train_mains = building.utility.electric.get_dataframe_of_mains(
             measurement=disagg_features[0])
 
-        
         # Setting frequency
         self.freq = str(int(get_sample_period(train_mains.index))) + 's'
 
@@ -288,4 +287,3 @@ class FHMM(Disaggregator):
             dfs_list.append(df)
 
         self.predictions = pd.concat(dfs_list).sort_index()
-        self.predictions.plot()
