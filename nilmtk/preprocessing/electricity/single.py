@@ -7,6 +7,7 @@ from copy import deepcopy
 
 from nilmtk.stats.electricity.single import get_sample_period
 from nilmtk.sensors.electricity import Measurement
+from nilmtk.utils import secs_per_period_alias, timedelta64_to_secs
 
 
 def insert_zeros(single_appliance_dataframe, max_sample_period=None,
@@ -270,3 +271,24 @@ def reframe_index(index, window_start=None, window_end=None):
                 'UTC').tz_convert(tz)
 
     return index
+
+
+def contiguous_blocks(datetimeindex):
+    sample_period = get_sample_period(datetimeindex)
+    time_delta = timedelta64_to_secs(np.diff(datetimeindex.values))
+    breaks = time_delta > sample_period
+    if np.sum(breaks) == 0:
+        # All contiguous data
+        contiguous_time_tuples = [(datetimeindex[0], datetimeindex[-1])]
+    # Data has breaks
+    else:
+        break_indices_int = np.where(breaks)[0]
+        contiguous_time_tuples = []
+        start = 0
+        for end in break_indices_int:
+            contiguous_time_tuples.append(
+                (datetimeindex[start], datetimeindex[end]))
+            start = end + 1
+        # Appending last block
+        contiguous_time_tuples.append((datetimeindex[start], datetimeindex[-1]))
+    return contiguous_time_tuples
