@@ -290,5 +290,6 @@ def contiguous_blocks(datetimeindex):
                 (datetimeindex[start], datetimeindex[end]))
             start = end + 1
         # Appending last block
-        contiguous_time_tuples.append((datetimeindex[start], datetimeindex[-1]))
+        contiguous_time_tuples.append(
+            (datetimeindex[start], datetimeindex[-1]))
     return contiguous_time_tuples

@@ -3,6 +3,8 @@ from nilmtk.utils import find_nearest_vectorized
 from nilmtk.disaggregate.disaggregator import Disaggregator
 from nilmtk.sensors.electricity import Measurement
 from nilmtk.preprocessing.electricity.single import contiguous_blocks
+from nilmtk.stats.electricity.single import get_sample_period
+
 
 import pandas as pd
 import itertools
@@ -190,6 +192,7 @@ class FHMM(Disaggregator):
               environmental=None):
         """Train using 1d FHMM. Places the learnt model in `model` attribute
         """
+
          # Get a dataframe of appliances; Since the algorithm is 1D, we need
         # only the first Measurement
         train_appliances = building.utility.electric.get_dataframe_of_appliances(
@@ -197,6 +200,10 @@ class FHMM(Disaggregator):
 
         train_mains = building.utility.electric.get_dataframe_of_mains(
             measurement=disagg_features[0])
+
+        
+        # Setting frequency
+        self.freq = str(int(get_sample_period(train_mains.index))) + 's'
 
         learnt_model = OrderedDict()
         for appliance in train_appliances:
@@ -208,7 +215,7 @@ class FHMM(Disaggregator):
 
             # Breaking data into contiguous blocks
             for start, end in contiguous_blocks(train_mains.index):
-                print(start)
+
                 length = train_appliances[appliance][start:end].values.size
                 # Ignore small sequences
                 if length > 50:
@@ -240,9 +247,17 @@ class FHMM(Disaggregator):
         """
         test_mains = building.utility.electric.get_dataframe_of_mains(
             measurement=disagg_features[0])
-        length = test_mains.values.size
-        temp = test_mains.values.reshape(length, 1)
-        learnt_states = self.model.predict(temp)
+
+        # Array of learnt states
+        learnt_states_array = []
+
+        # Break down test_data into chunks and disaggregate separately on them
+        for start, end in contiguous_blocks(test_mains.index):
+            length = test_mains[start:end].values.size
+            temp = test_mains[start:end].values.reshape(length, 1)
+            learnt_states_array.append(self.model.predict(temp))
+
+        # Model
         means = OrderedDict()
         for appliance in self.individual:
             means[appliance] = self.individual[appliance].means_
@@ -252,7 +267,25 @@ class FHMM(Disaggregator):
                 appliance].astype(int).flatten().tolist()
             means_copy[appliance].sort()
 
-        [decoded_states, decoded_power] = decode_hmm(
-            len(learnt_states), means_copy, means_copy.keys(), learnt_states)
+        decoded_power_array = []
+        decoded_states_array = []
+        for learnt_states in learnt_states_array:
+            [decoded_states, decoded_power] = decode_hmm(
+                len(learnt_states), means_copy, means_copy.keys(), learnt_states)
+            decoded_states_array.append(decoded_states)
+            decoded_power_array.append(decoded_power)
 
-        self.predictions = pd.DataFrame(decoded_power, index=test_mains.index)
+        # Combining to make a DataFrame with correct index, based on the start,
+        # end time and the frequency of the data
+        dfs_list = []
+        count = 0
+        cont_blocks = contiguous_blocks(test_mains.index)
+        for i, (start, end) in enumerate(contiguous_blocks(test_mains.index)):
+            index = pd.DatetimeIndex(start=start, end=end,
+                                     freq=self.freq)
+
+            df = pd.DataFrame(decoded_power_array[i], index=index)
+            dfs_list.append(df)
+
+        self.predictions = pd.concat(dfs_list).sort_index()
+        self.predictions.plot()
