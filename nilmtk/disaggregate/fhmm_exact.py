@@ -2,6 +2,7 @@ from nilmtk.utils import find_nearest
 from nilmtk.utils import find_nearest_vectorized
 from nilmtk.disaggregate.disaggregator import Disaggregator
 from nilmtk.sensors.electricity import Measurement
+from nilmtk.preprocessing.electricity.single import contiguous_blocks
 
 import pandas as pd
 import itertools
@@ -202,9 +203,20 @@ class FHMM(Disaggregator):
             learnt_model[appliance] = hmm.GaussianHMM(
                 2, "full")
 
-            length = train_appliances[appliance].values.size
-            temp = train_appliances[appliance].values.reshape(length, 1)
-            learnt_model[appliance].fit([temp])
+            # Data to fit
+            X = []
+
+            # Breaking data into contiguous blocks
+            for start, end in contiguous_blocks(train_mains.index):
+                print(start)
+                length = train_appliances[appliance][start:end].values.size
+                # Ignore small sequences
+                if length > 50:
+                    temp = train_appliances[appliance][
+                        start:end].values.reshape(length, 1)
+                    X.append(temp)
+            # Fit
+            learnt_model[appliance].fit(X)
 
         # Combining to make a AFHMM
         new_learnt_models = OrderedDict()
