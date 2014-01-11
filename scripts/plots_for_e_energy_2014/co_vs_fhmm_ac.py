@@ -110,7 +110,7 @@ def preprocess_redd(building, freq):
     building = prepb.make_common_index(building)
     building.utility.electric.mains[(1, 1)].rename(
         columns={Measurement('power', 'apparent'): Measurement('power', 'active')}, inplace=True)
-    building = prepb.filter_contribution_less_than_x(building, x=5)
+    building = prepb.filter_top_k_appliances(building, k=6)
 
     return building
 
@@ -143,7 +143,7 @@ for freq in frequencies:
     print("Number of appliance left = {}".format(
         len(building.utility.electric.appliances.keys())))
     print("Dividing data into test and train")
-    train, test = train_test_split(building)
+    train, test = train_test_split(building, train_size=0.5)
     for disaggregator_name, disaggregator in disaggregators.iteritems():
         # Train
         t1 = time.time()
@@ -165,14 +165,47 @@ for freq in frequencies:
         predicted_power[disaggregator_name] = disaggregator.predictions
         app_ground = test.utility.electric.appliances
         ground_truth_power = pd.DataFrame({appliance: app_ground[appliance][DISAGG_FEATURE] for appliance in app_ground})
+        for metric in metrics:
+            results[freq][disaggregator_name][metric] = metric_function[
+                metric](predicted_power[disaggregator_name], ground_truth_power)
 
+
+results = reuslts['1T']
+start = pd.Timestamp("2013-07-27 21:35")
+end = pd.Timestamp("2013-07-27 22:35")
+fig, ax = plt.subplots(ncols=3, sharex=True, sharey=True)
+latexify(fig_height=1, fig_width=3.39)
+predicted_power['fhmm'][('air conditioner', 2)][start:end].plot(ax=ax[0])
+predicted_power['co'][('air conditioner', 2)][start:end].plot(ax=ax[1])
+ground_truth_power[('air conditioner', 2)][start:end].plot(ax=ax[2])
+ax[0].set_ylim((0, 2000))
+ax[1].set_ylim((0, 2000))
+ax[2].set_ylim((0, 2000))
+
+
+format_axes(ax[0])
+format_axes(ax[1])
+format_axes(ax[2])
+format_axes(ax[3])
+
+
+ax[0].set_title("Predicted power\nFHMM")
+ax[1].set_title("Predicted power\nCO")
+ax[2].set_title("Ground truth power")
+
+ax[0].set_ylabel("Power (W)")
+# plt.tight_layout()
+plt.savefig("/home/nipun/Desktop/ac_2.pdf")
+plt.show()
+
+"""
 
 # Start and end time
 start = pd.Timestamp("2013-08-01 20:20:00")
 end = pd.Timestamp("2013-08-01 23:10:00")
 
 fig, ax = plt.subplots(ncols=4, sharex=True)
-latexify(columns=2, figheight=4)
+latexify(columns=2, fig_height=4)
 predicted_power['fhmm'][('air conditioner', 1)][start:end].plot(ax=ax[0])
 predicted_power['co'][('air conditioner', 1)][start:end].plot(ax=ax[1])
 ground_truth_power[('air conditioner', 1)][start:end].plot(ax=ax[2])
@@ -204,3 +237,4 @@ ax[3].set_ylabel("Power (W)")
 
 plt.tight_layout
 plt.savefig("/home/nipun/Desktop/co_fhmm.pdf")
+"""

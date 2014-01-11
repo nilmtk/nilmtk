@@ -90,7 +90,10 @@ def apply_clustering(X, max_num_clusters=3):
             else:
                 return np.array([0])
 
-    return k_means_cluster_centers[num_clus]
+    # TODO: REMOVE THIS LINE!!!HARDCODING IT FOR PAPER FOR CONSISTENT
+    # COMPARISON
+    return k_means_cluster_centers[1]
+    # return k_means_cluster_centers[num_clus]
 
 
 def decode_co(length_sequence, centroids, appliance_list, states,
@@ -129,6 +132,9 @@ def decode_co(length_sequence, centroids, appliance_list, states,
     total_num_combinations = 1
     for appliance in appliance_list:
         total_num_combinations *= len(centroids[appliance])
+
+    print(total_num_combinations)
+    print(centroids)
 
     for appliance in appliance_list:
         co_states[appliance] = np.zeros(length_sequence, dtype=np.int)
