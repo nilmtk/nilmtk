@@ -11,14 +11,66 @@ from nilmtk.dataset import DataSet
 from nilmtk.utils import get_immediate_subdirectories
 
 
-# Column headers
+# Column headers for circuits data (including mains)
 names_circuits = ['CircuitName', 'CircuitNumber', 'TimestampUTC',
                   'RealPowerWatts', 'ApparentPowerVAs']
+
+names_meter = ['MeterName', 'TimestampUTC', 'RealPowerWatts', 'CircuitNumber'
+               ]
 
 # Mapping from smart* to nilmtk
 MAINS_NAME_MAP = {
     'grid': MainsName(1, 1)
 }
+
+APPLIANCE_NAME_MAP = {
+    'ac': ApplianceName('air conditioner', 1),
+    'toaster': ApplianceName('toaster', 1),
+    'waterpump': ApplianceName('water pump', 1),
+    'nitelight': ApplianceName('light', 4),
+    'laptop': ApplianceName('computer laptop', 1),
+    'telephone': ApplianceName('phone', 1),
+    'wii': ApplianceName('entertainment', 1),
+    'batteries': ApplianceName('misc', 1),
+    'printer': ApplianceName('printer', 1),
+    'video': ApplianceName('entertainment unit', 1),
+    'lamp2': ApplianceName('light', 3),
+    'lamp1': ApplianceName('light', 2),
+    'tassimo': ApplianceName('misc', 2),
+    'timemachine': ApplianceName('misc', 3),
+    'microwave': ApplianceName('microwave', 1),
+    'monitor': ApplianceName('monitor', 1),
+    'clock': ApplianceName('misc', 4),
+    'tv': ApplianceName('entertainment unit', 2),
+    'hrv': ApplianceName('hrv', 1),
+    'coffeepot': ApplianceName('coffee maker', 1),
+    'freezer': ApplianceName('fridge', 1),
+    'lamp': ApplianceName('light', 1),
+    'dehumidifier': ApplianceName('dehumidifier', 1),
+    'noise': ApplianceName('misc', 5),
+    'ipod': ApplianceName('entertainment unit', 3),
+    'subwoofer': ApplianceName('entertainment unit', 4),
+    'tivo': ApplianceName('misc', 6),
+    'clock1': ApplianceName('misc', 7),
+    'macmini': ApplianceName('computer desktop', 1),
+    'fan': ApplianceName('fan', 1),
+    'cablebox': ApplianceName('entertainment unit', 4),
+    'desklamp': ApplianceName('light', 5),
+    'refrigerator': ApplianceName('refrigerator', 2),
+    'cablemodem': ApplianceName('entertainment unit', 5),
+    'nightstand2': ApplianceName('misc', 8),
+    'washingmachine': ApplianceName('washing machine', 1),
+    'dvd': ApplianceName('entertainment', 5),
+    'iphone1': ApplianceName('misc', 9),
+    'roku': ApplianceName('misc', 10),
+    'panini': ApplianceName('misc', 11),
+    'receiver': ApplianceName('misc', 12),
+    'clockphone': ApplianceName('misc', 13)
+}
+
+
+def find_appliance_nilmtk_name(appliance_name):
+    return APPLIANCE_NAME_MAP[appliance_name.split(":")[1]]
 
 
 def circuit_name_mapping(circuit_name):
@@ -86,8 +138,12 @@ class Smart(DataSet):
 
     def _drop_circuit_number(self, df):
         """Drops circuit number and name from columns"""
-        df = df.drop("CircuitNumber", 1)
-        df = df.drop("CircuitName", 1)
+        if "CircuitName" in df.columns:
+            df = df.drop("CircuitNumber", 1)
+            df = df.drop("CircuitName", 1)
+        if "MeterName" in df.columns:
+            df = df.drop("MeterName", 1)
+            df = df.drop("CircuitNumber", 1)
         return df
 
     def load_building(self, root_directory, building_name):
@@ -126,7 +182,7 @@ class Smart(DataSet):
         # mains
         combined_df = combined_df[combined_df["CircuitName"] != "Grid"]
 
-        # Grouping appliances data
+        # Grouping circuits data
         circuit_df_groups = combined_df.groupby('CircuitName')
         for name, df in circuit_df_groups:
             # Getting nilmtk name
@@ -135,6 +191,30 @@ class Smart(DataSet):
             building.utility.electric.circuits[circuit_name] = df
 
         # --------Loading data from meter------#
+        list_csv = glob.glob(building_dir + '/*-meter/*.csv')
+        # List of dataframes
+        df_list = []
+        # Iterating over all CSVs and appending to list of dataframes
+        for csv in list_csv:
+            df = pd.read_csv(csv, header=None,
+                             names=names_meter, index_col=1)
+            # Converting the index to DatetimeIndex
+            df.index = pd.to_datetime(
+                (df.index.values * 1E9).astype(int), utc=True)
+            # Append to list of dfs
+            df_list.append(df)
+
+        # Merging all dfs
+        combined_df = pd.concat(df_list)
+
+        # Grouping appliance data
+        appliance_df_groups = combined_df.groupby('MeterName')
+        for name, df in appliance_df_groups:
+            print(name)
+            # Getting nilmtk name
+            appliance_name = find_appliance_nilmtk_name(name)
+            df = self._pre_process_dataframe(df)
+            building.utility.electric.appliances[appliance_name] = df
 
         # Storing building in buildings dictionary
         building_number = building_name_mapping[building_name]
