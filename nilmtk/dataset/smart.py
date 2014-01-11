@@ -5,49 +5,24 @@ import glob
 import os
 
 
-from nilmtk.sensors.electricity import ApplianceName, Measurement, MainsName
+from nilmtk.sensors.electricity import CircuitName, ApplianceName, Measurement, MainsName
 from nilmtk.building import Building
 from nilmtk.dataset import DataSet
 from nilmtk.utils import get_immediate_subdirectories
 
-# Get all the CSVs in that folder
-list_csv = glob.glob("*.csv")
 
 # Column headers
-names = ['CircuitName', 'CircuitNumber', 'TimestampUTC',
-         'RealPowerWatts', 'ApparentPowerVAs']
+names_circuits = ['CircuitName', 'CircuitNumber', 'TimestampUTC',
+                  'RealPowerWatts', 'ApparentPowerVAs']
 
 # Mapping from smart* to nilmtk
 MAINS_NAME_MAP = {
     'grid': MainsName(1, 1)
 }
-APPLIANCE_NAME_MAP = {
-    'Dryer': ApplianceName('hair dryer', 1),
-    'OfficeOutlets': ApplianceName('plugs', 1),
-    'LivingRoomOutlets': ApplianceName('plugs', 2),
-    'GuestBathOutlets': ApplianceName('plugs', 3),
-    'MasterBathOutlets': ApplianceName('plugs', 4),
-    'LivingRoomPatioLights': ApplianceName('plugs', 5),
-    'GuestBathHallLights': ApplianceName('light', 1),
-    'DiningRoomOutlets': ApplianceName('plugs', 6),
-    'OutsideOutlets': ApplianceName('plugs', 7),
-    'CellarLights': ApplianceName('light', 2),
-    'FurnaceHRV': ApplianceName('heat pump', 1),
-    'CellarOutlets': ApplianceName('plugs', 8),
-    'WashingMachine': ApplianceName('washing machine', 1),
-    'FridgeRange': ApplianceName('fridge', 1),
-    'DisposalDishwasher': ApplianceName('dishwasher', 1),
-    'Microwave': ApplianceName('microwave', 1),
-    'KitchenLights': ApplianceName('light', 3),
-    'BedroomOutlets': ApplianceName('plugs', 9),
-    'BedroomLights': ApplianceName('light', 4),
-    'MasterOutlets': ApplianceName('plugs', 10),
-    'MasterLights': ApplianceName('light', 5),
-    'DuctHeaterHRV': ApplianceName('heat pump', 2),
-    'CounterOutlets2': ApplianceName('plugs', 11),
-    'CounterOutlets1': ApplianceName('plugs', 12),
-    'KitchenOutlets': ApplianceName('plugs', 13)
-}
+
+
+def circuit_name_mapping(circuit_name):
+    return CircuitName(circuit_name, 1, 1)
 
 # Building name mapping
 building_name_mapping = {
@@ -72,7 +47,8 @@ def load_labels(data_dir):
     # List of csvs in the directory
     list_csv = glob.glob(data_dir + '/*-circuit/*.csv')
     # Reaaing first CSV
-    df = pd.read_csv(list_csv[0], header=None, names=names, index_col=2)
+    df = pd.read_csv(list_csv[0], header=None,
+                     names=names_circuits, index_col=2)
     # Assuming first CSV has all appliances
     labels = list(df.CircuitName.unique())
     return labels
@@ -122,13 +98,16 @@ class Smart(DataSet):
             'home(?P<building_name>\w+)', building_dir).group('building_name')
         labels = load_labels(building_dir)
 
+        # --------Loading data from circuits- mains and circuit------#
+
         # Finding all CSVs
         list_csv = glob.glob(building_dir + '/*-circuit/*.csv')
         # List of dataframes
         df_list = []
         # Iterating over all CSVs and appending to list of dataframes
         for csv in list_csv:
-            df = pd.read_csv(csv, header=None, names=names, index_col=2)
+            df = pd.read_csv(csv, header=None,
+                             names=names_circuits, index_col=2)
             # Converting the index to DatetimeIndex
             df.index = pd.to_datetime(
                 (df.index.values * 1E9).astype(int), utc=True)
@@ -148,12 +127,14 @@ class Smart(DataSet):
         combined_df = combined_df[combined_df["CircuitName"] != "Grid"]
 
         # Grouping appliances data
-        appliance_df_groups = combined_df.groupby('CircuitName')
-        for name, df in appliance_df_groups:
+        circuit_df_groups = combined_df.groupby('CircuitName')
+        for name, df in circuit_df_groups:
             # Getting nilmtk name
-            appliance_name = APPLIANCE_NAME_MAP[name]
+            circuit_name = circuit_name_mapping(name)
             df = self._pre_process_dataframe(df)
-            building.utility.electric.appliances[appliance_name] = df
+            building.utility.electric.circuits[circuit_name] = df
+
+        # --------Loading data from meter------#
 
         # Storing building in buildings dictionary
         building_number = building_name_mapping[building_name]
