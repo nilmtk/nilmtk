@@ -31,17 +31,24 @@ APPLIANCE_NAME_MAP = {
 # maps from house number to a list of dud REDD channel numbers
 DUD_CHANNELS = {1: [19]}
 
-def load_chan(building_dir, chan, colname=Measurement('power','active')):
+def load_chan(building_dir, chan=None, filename=None, colnames=None):
     """Returns DataFrame containing data for this channel"""
-    filename = os.path.join(building_dir, 'channel_{:d}.dat'.format(chan))
+    if colnames is None:
+        colnames = [Measurement('power','active')]
+    
+    if filename is None:
+        filename = os.path.join(building_dir, 'channel_{:d}.dat'.format(chan))
+    else:
+        filename = os.path.join(building_dir, filename)
+
     print('Loading', filename)
     # Don't use date_parser with pd.read_csv.  Instead load it all
     # and then convert to datetime.  Thanks to Nipun for linking to
     # this discussion where jreback gives this tip:
     # https://github.com/pydata/pandas/issues/3757
     df = pd.read_csv(filename, sep=' ', header=None, index_col=0,
-                     parse_dates=False, names=[colname], 
-                     dtype={colname:np.float32})
+                     parse_dates=False, names=colnames,
+                     dtype={colname:np.float32 for colname in colnames})
     df.index = pd.to_datetime((df.index.values*1E9).astype(int), utc=True)
     return df
 
@@ -134,7 +141,7 @@ class REDD(DataSet):
         # Load mains chans
         for mains_chan in mains_chans:
             mainsname = MainsName(split=mains_chan, meter=1)
-            df = load_chan(building_dir, mains_chan, colname=Measurement('power', 'apparent'))
+            df = load_chan(building_dir, mains_chan, colnames=[Measurement('power', 'apparent')])
             df = self._pre_process_dataframe(df)
             building.utility.electric.mains[mainsname] = df
 
@@ -167,7 +174,7 @@ class REDD(DataSet):
                 # This is not a DualSupply appliance
                 instances[label] = (instance + 1, 1)
                 colname = measurement
-                df = load_chan(building_dir, appliance_chan, colname=colname)
+                df = load_chan(building_dir, appliance_chan, colnames=[colname])
                 df = self._pre_process_dataframe(df)
                 df[colname].name = appliancename
                 building.utility.electric.appliances[appliancename] = df
