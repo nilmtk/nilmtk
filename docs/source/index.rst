@@ -8,6 +8,7 @@ Non intrusive load monitoring
 
    nilmtk
    userguide
+   contribute
 
 
 Indices and tables
