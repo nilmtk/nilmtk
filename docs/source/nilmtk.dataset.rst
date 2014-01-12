@@ -52,6 +52,21 @@ nilmtk.dataset.redd module
     :undoc-members:
     :show-inheritance:
 
+nilmtk.dataset.smart module
+---------------------------
+
+.. automodule:: nilmtk.dataset.smart
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+nilmtk.dataset.ukpd module
+--------------------------
+
+.. automodule:: nilmtk.dataset.ukpd
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 Module contents
 ---------------
