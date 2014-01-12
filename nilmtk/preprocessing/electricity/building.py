@@ -135,6 +135,16 @@ def prepend_append_zeros(building, start_datetime, end_datetime, freq, timezone)
     return new_building
 
 
+def filter_channels_with_less_than_x_samples(building, threshold=100):
+    building_copy = deepcopy(building)
+    for appliance_name, appliance_df in building.utility.electric.appliances.items():
+        print(appliance_name,len(appliance_df.index))
+        if len(appliance_df.index) < threshold:
+            print(appliance_name)
+            building_copy.utility.electric.appliances.pop(appliance_name, None)
+    return building_copy
+
+
 def fill_appliance_gaps(building, sample_period_multiplier=4):
     """Book-ends all large gaps with zeros using
     `nilmtk.preprocessing.electric.single.insert_zeros`
@@ -279,7 +289,8 @@ def make_common_index(building):
     freq = building.utility.electric.mains.values()[0].index.freq
     # TODO: can the line below be replace with
     # common_index = mains_index & appliances_index
-    # This might be a lot faster and as far as I can tell gives the same answer.
+    # This might be a lot faster and as far as I can tell gives the same
+    # answer.
     common_index = pd.DatetimeIndex(
         np.sort(list(set(mains_index).intersection(set(appliances_index)))),
         freq=freq)
