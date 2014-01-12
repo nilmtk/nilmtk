@@ -17,17 +17,18 @@ Next, we create a folder named `nilmtkdocs`::
 Inside `nilmtkdocs`, we create a `html` folder, within which we clone the `nilmtk` repository::
 
 	cd nilmtkdocs
-	git clone https://github.com/nilmtk/nilmtk/
+	git clone https://github.com/nilmtk/nilmtk/ html
 
-Setting up remote for `gh-pages` branch::
-
+Setting up remote for `gh-pages` branch inside `html` folder::
+	
+	cd html
 	git checkout -b gh-pages remotes/origin/gh-pages
 
 Now, move back to the main repository::
 
 	cd ~/nilmtk
 
-As usual make changes to .rst files in `~/nilmtk/docs` to contribute to documentation. 
+As usual make changes to .rst files in `~/nilmtk/docs/source` to contribute to documentation. 
 
 Build your documentation::
 
@@ -37,8 +38,8 @@ Build your documentation::
 Now, built documentation should lie in `~/nilmtkdocs` directory. You may use your browser to check if everything got built properly.
 
 Commit your changes and push. These changes are reflected in the master
-branch of `nilmtk` a these are changes to the source::
-
+branch of `nilmtk` a these are changes to the source. ::
+	
 	git commit -m "your message"
 	git push
 
@@ -56,7 +57,10 @@ official documentation site::
 	git commit -a -m "rebuilt docs"
 	git push origin gh-pages
 
-Thats all!
+Thats all! Please allow a time upto 10 minutes for your new docs to appear on the official documentation site.
+Thanks to the wonderful tutorial here_. 
+
+.. _here: https://github.com/daler/sphinxdoc-test
 
 
 
