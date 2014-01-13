@@ -41,16 +41,20 @@ time_datasets = {
     'REDD': [pd.Timestamp("2011-04-24 08:40"), pd.Timestamp("2011-04-24 09:55")],
     'AMPds': [pd.Timestamp("2012-04-02 04:30"), pd.Timestamp("2012-04-02 06:00")],
     'iAWE': [pd.Timestamp("2013-06-21 06:25"), pd.Timestamp("2013-06-21 06:55")],
-    'UKPD': [pd.Timestamp("2012-11-10 10:24"), pd.Timestamp("2013-11-10 11:44")]
+    'UKPD': [pd.Timestamp("2012-11-10 10:24"), pd.Timestamp("2012-11-10 11:44")]
 
 }
 
 count = -1
 fig, axes = plt.subplots(ncols=5)
-for dataset_name, dataset in DATASETS.iteritems():
+for dataset_name, dataset_path in DATASETS.iteritems():
     count += 1
+    try:
+        del dataset
+    except:
+        pass
     dataset = DataSet()
-    full_path = join(DATASET_PATH, DATASETS[dataset_name])
+    full_path = join(DATASET_PATH, dataset_path)
     print("Loading", full_path)
     dataset.load_hdf5(full_path)
     start, end = time_datasets[dataset_name]
@@ -64,7 +68,7 @@ for dataset_name, dataset in DATASETS.iteritems():
 count += 1
 # Plotting UKPD which is on other path
 dataset = DataSet()
-dataset.load_hdf5("/home/nipun/Desktop/temp/ukpd")
+dataset.load_hdf5("/home/nipun/Desktop/temp/ukpd",[1])
 start, end = time_datasets["UKPD"]
 dataset.buildings[1].utility.electric.appliances[wm_names['UKPD']][
     ('power', 'active')][start:end].plot(title='UKPD',

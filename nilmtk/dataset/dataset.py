@@ -96,7 +96,8 @@ class DataSet(object):
         # Only use building nums the users asked for
         if building_nums:
             building_nums = [str(n) for n in building_nums]
-            building_numbers = list(set(building_numbers).intersection(set(building_nums)))
+            building_numbers = list(
+                set(building_numbers).intersection(set(building_nums)))
 
         # Loading the structured information for each building
         for building_number in building_numbers:
@@ -145,6 +146,9 @@ class DataSet(object):
                             appliance_name, appliance_instance)
                         b.utility.electric.appliances[
                             appliance_name] = store[key]
+
+        # Closing the store
+        store.close()
 
     def export_csv(self, directory):
         """Exports dataset in nilmtk standard on-disk CSV format.
@@ -329,12 +333,15 @@ class DataSet(object):
             print('Calculating stats for building', building_num)
             electric = building.utility.electric
             stats['n_appliances'].append(len(electric.appliances))
-            stats['energy_submetered'].append(proportion_of_energy_submetered(electric))
+            stats['energy_submetered'].append(
+                proportion_of_energy_submetered(electric))
             stats['dropout_rate'].extend(get_dropout_rates(electric))
-            stats['dropout_rate_ignoring_gaps'].extend(get_dropout_rates(electric, 
-                                                                         ignore_gaps=True))
+            stats[
+                'dropout_rate_ignoring_gaps'].extend(get_dropout_rates(electric,
+                                                                       ignore_gaps=True))
             stats['uptime'].append(get_uptime(electric.mains.values()[0]))
-            stats['prop_timeslices'].append(proportion_of_time_where_more_energy_submetered(building))
+            stats['prop_timeslices'].append(
+                proportion_of_time_where_more_energy_submetered(building))
 
         return stats
 
@@ -365,5 +372,5 @@ class DataSet(object):
         s += 'PROPORTION OF TIME SLICES WHERE > 70% ENERGY IS SUBMETERED:\n'
         s += summary_stats_string(stats['prop_timeslices'])
         s += '\n'
-        
+
         fh.write(s)
