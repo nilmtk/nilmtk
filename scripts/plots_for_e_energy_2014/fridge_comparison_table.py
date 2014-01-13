@@ -5,15 +5,8 @@ from __future__ import print_function, division
 from os.path import expanduser, join
 import pandas as pd
 from nilmtk.dataset import DataSet
-from nilmtk.utils import summary_stats_string
 from collections import OrderedDict
 
-"""
-TODO:
-* get other datasets to work!
-* Use appropriate formatting for each column
-* align numbers and periods?
-"""
 
 LOAD_DATASETS = True
 
@@ -21,19 +14,13 @@ DATASET_PATH = expanduser('~/Dropbox/nilmtk_datasets/')
 
 # Maps from human-readable name to path
 DATASETS = OrderedDict()
-# DATASETS['REDD'] = 'redd/low_freq'
-# DATASETS['Pecan Street'] = 'pecan_1min'
+DATASETS['REDD'] = 'redd/low_freq'
+DATASETS['Pecan Street'] = 'pecan_1min'
 DATASETS['AMDds'] = 'ampds'
-# DATASETS['iAWE'] = 'iawe'
+DATASETS['iAWE'] = 'iawe'
 
-if LOAD_DATASETS:
-    dataset_objs = OrderedDict()
-    for ds_name, ds_path in DATASETS.iteritems():
-        dataset = DataSet()
-        full_path = join(DATASET_PATH, ds_path)
-        print("Loading", full_path)
-        dataset.load_hdf5(full_path)
-        dataset_objs[ds_name] = dataset
+for dataset_name, dataset in DATASETS:
+    # Choose first home from each
 
 
 # Maps from short col name to human-readable name

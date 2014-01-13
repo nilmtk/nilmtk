@@ -138,7 +138,7 @@ def prepend_append_zeros(building, start_datetime, end_datetime, freq, timezone)
 def filter_channels_with_less_than_x_samples(building, threshold=100):
     building_copy = deepcopy(building)
     for appliance_name, appliance_df in building.utility.electric.appliances.items():
-        print(appliance_name,len(appliance_df.index))
+        print(appliance_name, len(appliance_df.index))
         if len(appliance_df.index) < threshold:
             print(appliance_name)
             building_copy.utility.electric.appliances.pop(appliance_name, None)
