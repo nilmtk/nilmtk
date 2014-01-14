@@ -1,11 +1,12 @@
 """
-Produces a LaTeX table summarising the datasets
+Produces a plot comparing washing machines across different datasets
 """
 from __future__ import print_function, division
 from os.path import expanduser, join
 import pandas as pd
 from nilmtk.dataset import DataSet
 from nilmtk.sensors.electricity import ApplianceName
+from nilmtk.plots import plot_series, format_axes, latexify
 from collections import OrderedDict
 import matplotlib.pyplot as plt
 
@@ -19,14 +20,15 @@ PECAN  : 08:00 to 11:00; 5 Sept
 UKPD   : 10:24 to 11:44 10 Nov, 2012
 """
 
+DATE_FORMAT = '%H:%M'
 
 DATASET_PATH = expanduser('~/Dropbox/nilmtk_datasets/')
 
 # Maps from human-readable name to path
 DATASETS = OrderedDict()
 DATASETS['REDD'] = 'redd/low_freq'
-DATASETS['Pecan'] = 'pecan_1min'
-DATASETS['AMPds'] = 'ampds'
+#DATASETS['Pecan'] = 'pecan_1min'
+#DATASETS['AMPds'] = 'ampds'
 #DATASETS['iAWE'] = 'iawe'
 
 wm_names = {'REDD': ApplianceName('washer dryer', 1),
@@ -38,15 +40,17 @@ wm_names = {'REDD': ApplianceName('washer dryer', 1),
 
 time_datasets = {
     'Pecan': [pd.Timestamp("2012-09-05 08:00"), pd.Timestamp("2012-09-05 11:00")],
-    'REDD': [pd.Timestamp("2011-04-24 08:40"), pd.Timestamp("2011-04-24 09:55")],
+    'REDD': [pd.Timestamp("2011-04-24 08:30"), pd.Timestamp("2011-04-24 09:55")],
     'AMPds': [pd.Timestamp("2012-04-02 04:30"), pd.Timestamp("2012-04-02 06:00")],
-    'iAWE': [pd.Timestamp("2013-06-21 06:25"), pd.Timestamp("2013-06-21 06:55")],
+    'iAWE': [pd.Timestamp("2013-07-10 07:22"), pd.Timestamp("2013-07-15 07:30")],
     'UKPD': [pd.Timestamp("2012-11-10 10:24"), pd.Timestamp("2012-11-10 11:44")]
 
 }
 
 count = -1
-fig, axes = plt.subplots(ncols=5)
+fig, axes = plt.subplots(ncols=len(DATASETS) + 1)
+latexify(columns=2)
+
 for dataset_name, dataset_path in DATASETS.iteritems():
     count += 1
     try:
@@ -56,21 +60,29 @@ for dataset_name, dataset_path in DATASETS.iteritems():
     dataset = DataSet()
     full_path = join(DATASET_PATH, dataset_path)
     print("Loading", full_path)
-    dataset.load_hdf5(full_path)
+    dataset.load_hdf5(full_path, [1])
     start, end = time_datasets[dataset_name]
     building = dataset.buildings[1]
     electric = building.utility.electric
     electric = electric.sum_split_supplies()
-    electric.appliances[wm_names[dataset_name]][
-        ('power', 'active')][start:end].plot(title=dataset_name,
-                                             ax=axes[count])
+    ax = plot_series(electric.appliances[wm_names[dataset_name]][
+        ('power', 'active')][start:end],
+        ax=axes[count], date_format=DATE_FORMAT)
+    ax.set_title(dataset_name)
+    ax.set_ylabel("Active Power (Watts)")
+
 
 count += 1
 # Plotting UKPD which is on other path
 dataset = DataSet()
-dataset.load_hdf5("/home/nipun/Desktop/temp/ukpd",[1])
+dataset.load_hdf5("/home/nipun/Desktop/temp/ukpd", [1])
 start, end = time_datasets["UKPD"]
-dataset.buildings[1].utility.electric.appliances[wm_names['UKPD']][
-    ('power', 'active')][start:end].plot(title='UKPD',
-                                         ax=axes[count])
-plt.show()
+ax = plot_series(dataset.buildings[1].utility.electric.appliances[wm_names['UKPD']][
+    ('power', 'active')][start:end], ax=axes[count], date_format=DATE_FORMAT)
+ax.set_title("UKPD")
+ax.set_ylabel("Active Power (Watts)")
+for ax in axes:
+    format_axes(ax)
+
+fig.tight_layout()
+fig.savefig("/home/nipun/Desktop/wm.pdf")

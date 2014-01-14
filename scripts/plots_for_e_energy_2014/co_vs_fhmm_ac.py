@@ -74,6 +74,9 @@ results = {}
 predicted_power = {'co': {}, 'fhmm': {}}
 
 
+DATE_FORMAT = '%H:%M'
+
+
 frequencies = ['1T']
 for freq in frequencies:
     train_time[freq] = {}
@@ -170,71 +173,29 @@ for freq in frequencies:
                 metric](predicted_power[disaggregator_name], ground_truth_power)
 
 
-results = reuslts['1T']
+results = results['1T']
 start = pd.Timestamp("2013-07-27 21:35")
 end = pd.Timestamp("2013-07-27 22:35")
-fig, ax = plt.subplots(ncols=3, sharex=True, sharey=True)
-latexify(fig_height=1, fig_width=3.39)
-predicted_power['fhmm'][('air conditioner', 2)][start:end].plot(ax=ax[0])
-predicted_power['co'][('air conditioner', 2)][start:end].plot(ax=ax[1])
-ground_truth_power[('air conditioner', 2)][start:end].plot(ax=ax[2])
-ax[0].set_ylim((0, 2000))
-ax[1].set_ylim((0, 2000))
-ax[2].set_ylim((0, 2000))
+fig, axes = plt.subplots(ncols=3, sharex=True, sharey=True)
+latexify(columns=1)
+plot_series(predicted_power['fhmm']
+            [('air conditioner', 2)][start:end], ax=axes[0], date_format=DATE_FORMAT)
+plot_series(predicted_power['co']
+            [('air conditioner', 2)][start:end], ax=axes[1], date_format=DATE_FORMAT)
+plot_series(ground_truth_power[('air conditioner', 2)]
+            [start:end], ax=axes[2], date_format=DATE_FORMAT)
 
 
-format_axes(ax[0])
-format_axes(ax[1])
-format_axes(ax[2])
-format_axes(ax[3])
+for ax in axes:
+    ax.set_ylim((0, 2000))
+    format_axes(ax)
 
 
-ax[0].set_title("Predicted power\nFHMM")
-ax[1].set_title("Predicted power\nCO")
-ax[2].set_title("Ground truth power")
+axes[0].set_title("Predicted power\nFHMM")
+axes[1].set_title("Predicted power\nCO")
+axes[2].set_title("Ground truth power")
 
-ax[0].set_ylabel("Power (W)")
-# plt.tight_layout()
-plt.savefig("/home/nipun/Desktop/ac_2.pdf")
+axes[0].set_ylabel("Power (W)")
+fig.tight_layout()
+fig.savefig("/home/nipun/Desktop/ac_2.pdf")
 plt.show()
-
-"""
-
-# Start and end time
-start = pd.Timestamp("2013-08-01 20:20:00")
-end = pd.Timestamp("2013-08-01 23:10:00")
-
-fig, ax = plt.subplots(ncols=4, sharex=True)
-latexify(columns=2, fig_height=4)
-predicted_power['fhmm'][('air conditioner', 1)][start:end].plot(ax=ax[0])
-predicted_power['co'][('air conditioner', 1)][start:end].plot(ax=ax[1])
-ground_truth_power[('air conditioner', 1)][start:end].plot(ax=ax[2])
-test.utility.electric.mains[
-    (1, 1)][('power', 'active')][start:end].plot(ax=ax[3])
-
-
-ax[0].set_ylim((0, 2000))
-ax[1].set_ylim((0, 2000))
-ax[2].set_ylim((0, 2000))
-
-
-format_axes(ax[0])
-format_axes(ax[1])
-format_axes(ax[2])
-format_axes(ax[3])
-
-
-ax[0].set_title("Predicted power\nFHMM")
-ax[1].set_title("Predicted power\nCO")
-ax[2].set_title("Ground truth power")
-ax[3].set_title("Aggregate power")
-
-
-ax[0].set_ylabel("Power (W)")
-ax[1].set_ylabel("Power (W)")
-ax[2].set_ylabel("Power (W)")
-ax[3].set_ylabel("Power (W)")
-
-plt.tight_layout
-plt.savefig("/home/nipun/Desktop/co_fhmm.pdf")
-"""
