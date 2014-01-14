@@ -19,6 +19,7 @@ ApplianceName = namedtuple('ApplianceName', ['name', 'instance'])
 MainsName = namedtuple('MainsName', ['split', 'meter'])
 CircuitName = namedtuple('CircuitName', ['name', 'split', 'meter'])
 DualSupply = namedtuple('DualSupply', ['measurement', 'supply'])
+# Note that DualSupply might be removed from the design
 
 
 def get_two_dataframes_of_dualsupply(appliance_df):
