@@ -47,14 +47,16 @@ for dataset_name, dataset_path in DATASETS.iteritems():
     electric = electric.sum_split_supplies()
     top_k = top_k_appliances(electric, k=5)
     fracs = (top_k.values * 100).tolist()
+    fracs.append(100.0 - sum(fracs))
     labels = pretty_name_appliance_names(top_k.index.tolist())
+    labels.append("Others")
+    explode = (0.03, 0.03, 0.03, 0.03, 0.03, 0.03)
     ax = axes[count]
-    ax.pie(fracs,  labels=labels,
+    ax.pie(fracs,  labels=labels, explode=explode,
            autopct='%1.1f%%', shadow=True, startangle=90)
     ax.set_title(dataset_name)
-    
 
-
+"""
 count += 1
 # Plotting UKPD which is on other path
 dataset = DataSet()
@@ -68,6 +70,7 @@ ax = axes[count]
 ax.pie(fracs,  labels=labels,
        autopct='%1.1f%%', shadow=True, startangle=90)
 ax.set_title("UKPD")
+"""
 
 for ax in axes:
     format_axes(ax)
