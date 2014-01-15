@@ -39,7 +39,12 @@ def get_sample_period(data):
     """
     N_SAMPLES = 100
     if len(data) < N_SAMPLES:
-        raise TooFewSamplesError
+        try:
+            name = data.name
+        except AttributeError:
+            name = ''
+        raise TooFewSamplesError('{:d} samples required. Only {:d} in data! {:s}'
+                                 .format(N_SAMPLES, len(data), name))
     index = _get_index(data)
     time_delta_ns = np.diff(index.values[:N_SAMPLES]).astype(np.float)
     mode_time_delta_ns = stats.mode(time_delta_ns)[0][0]

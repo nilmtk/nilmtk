@@ -92,6 +92,7 @@ def proportion_of_energy_submetered(electricity,
         """Helper function.  Returns a list of pd.Series of kWh per day."""
         chan_kwh_per_day = []
         for label, df in dictionary.iteritems():
+            print(label)
             data = None
             if common_measurement is None:
                 for measurement in MEASUREMENT_PREFERENCES:
@@ -101,12 +102,13 @@ def proportion_of_energy_submetered(electricity,
                         pass
                     else:
                         break
-                if data is None:
-                    raise NoSuitableMeasurementError
             else:
                 data = df[common_measurement]
+
+            if data is None:
+                raise NoSuitableMeasurementError
                 
-            kwh_per_day = usage_per_period(df.icol(0), freq='D',
+            kwh_per_day = usage_per_period(data, freq='D',
                                            max_dropout_rate=max_dropout_rate)['kwh']
             kwh_per_day = kwh_per_day.dropna()
             chan_kwh_per_day.append(kwh_per_day)
@@ -114,7 +116,7 @@ def proportion_of_energy_submetered(electricity,
         return chan_kwh_per_day
 
     mains_kwh_per_day = get_kwh_per_day_per_chan(electricity.mains)
-    appliances_kwh_per_day = get_kwh_per_day_per_chan(electricity.appliances)
+    appliances_kwh_per_day = get_kwh_per_day_per_chan(electricity.appliances_without_unmetered())
 
     # find intersection of all these sets (i.e. find all good days in common)
     good_days_set = good_days_list[0]
@@ -286,7 +288,8 @@ def plot_missing_samples_using_rectangles(electricity, ax=None, fig=None,
     n = len(electricity.appliances) + len(electricity.mains)
     ylabels = []
     i = 0
-    for appliance_name, appliance_df in electricity.appliances.iteritems():
+    appliances = electricity.appliances_without_unmetered()
+    for appliance_name, appliance_df in appliances.iteritems():
         ax, fig = single.plot_missing_samples(
             appliance_df, ax, fig, bottom=i + 0.1, color=color)
         ylabels.append((appliance_name.name, appliance_name.instance))
@@ -334,7 +337,7 @@ def plot_missing_samples_using_bitmap(electricity, ax=None, fig=None,
     rule_code = '{:d}S'.format(int(round(sec_per_pixel)))
 
     missing_samples_per_period = OrderedDict()
-    for dict_of_dfs in [electricity.appliances,
+    for dict_of_dfs in [electricity.appliances_without_unmetered(),
                         electricity.circuits,
                         electricity.mains]:
         for name, df in dict_of_dfs.iteritems():

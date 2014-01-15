@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 from collections import namedtuple
 import copy
+from copy import deepcopy
 import json
 import pandas as pd
 import numpy as np
@@ -375,6 +376,25 @@ class Electricity(object):
                 if measurement in appliance_df}
 
         return pd.DataFrame(appliance_dict)
+
+    def appliances_without_unmetered(self):
+        """Returns a dict with the same structure as `electricity.appliances`.
+        If `electricity.appliances` contains any 'unmetered' channels then 
+        returns a copy of `electricity.appliances` with the unmetered channel
+        removed.  Otherwise just returns a reference to `appliances`."""
+        if ('unmetered', 1) in self.appliances:
+            appliances = deepcopy(self.appliances)
+            i = 1
+            while True:
+                try:
+                    appliances.pop(('unmetered', i))
+                except KeyError:
+                    break
+                else:
+                    i += 1
+        else:
+            appliances = self.appliances
+        return appliances
 
     def get_appliance(self, appliance_name, measurement="all"):
         """

@@ -20,8 +20,8 @@ DATASET_PATH = expanduser('~/Dropbox/Data/nilmtk_datasets/')
 # Maps from human-readable name to path
 DATASETS = OrderedDict()
 # DATASETS['REDD'] = 'redd/low_freq'
-# DATASETS['Pecan Street'] = 'pecan_1min'
-DATASETS['AMDds'] = 'ampds'
+DATASETS['Pecan Street'] = 'pecan_1min'
+# DATASETS['AMDds'] = 'ampds'
 # DATASETS['iAWE'] = 'iawe'
 # TODO: UKPD
 
