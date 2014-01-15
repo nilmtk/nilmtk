@@ -206,7 +206,7 @@ class FHMM(Disaggregator):
 
         learnt_model = OrderedDict()
         for appliance in train_appliances:
-            #print(appliance)
+            print(appliance)
             learnt_model[appliance] = hmm.GaussianHMM(
                 2, "full")
 
