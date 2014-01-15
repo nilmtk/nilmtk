@@ -206,6 +206,7 @@ class FHMM(Disaggregator):
 
         learnt_model = OrderedDict()
         for appliance in train_appliances:
+            #print(appliance)
             learnt_model[appliance] = hmm.GaussianHMM(
                 2, "full")
 
@@ -214,13 +215,15 @@ class FHMM(Disaggregator):
 
             # Breaking data into contiguous blocks
             for start, end in contiguous_blocks(train_mains.index):
-
+                #print(start, end)
                 length = train_appliances[appliance][start:end].values.size
+                # print(length)
                 # Ignore small sequences
                 if length > 50:
                     temp = train_appliances[appliance][
                         start:end].values.reshape(length, 1)
                     X.append(temp)
+            # print(X)
             # Fit
             learnt_model[appliance].fit(X)
 

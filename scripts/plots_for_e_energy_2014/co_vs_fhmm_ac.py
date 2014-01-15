@@ -177,13 +177,14 @@ results = results['1T']
 start = pd.Timestamp("2013-07-27 21:35")
 end = pd.Timestamp("2013-07-27 22:35")
 fig, axes = plt.subplots(ncols=3, sharex=True, sharey=True)
-latexify(columns=1, fig_height=2, fig_width=3.39)
+latexify(fig_height=1, fig_width=3.39)
+
 plot_series(predicted_power['fhmm']
-            [('air conditioner', 2)][start:end], ax=axes[0], date_format=DATE_FORMAT)
+            [('air conditioner', 2)][start:end], ax=axes[0], color='k', date_format=DATE_FORMAT)
 plot_series(predicted_power['co']
-            [('air conditioner', 2)][start:end], ax=axes[1], date_format=DATE_FORMAT)
+            [('air conditioner', 2)][start:end], ax=axes[1], color='k', date_format=DATE_FORMAT)
 plot_series(ground_truth_power[('air conditioner', 2)]
-            [start:end], ax=axes[2], date_format=DATE_FORMAT)
+            [start:end], ax=axes[2], color='k', date_format=DATE_FORMAT)
 
 
 for ax in axes:
@@ -196,6 +197,8 @@ axes[1].set_title("Predicted power\nCO")
 axes[2].set_title("Ground truth power")
 
 axes[0].set_ylabel("Power (W)")
+axes[1].set_ylabel("")
+axes[2].set_ylabel("")
 fig.tight_layout()
 fig.savefig("/home/nipun/Desktop/ac_2.pdf")
 plt.show()

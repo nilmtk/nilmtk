@@ -26,6 +26,10 @@ DUD_CHANNELS = {}
 # load metadata
 
 
+START = pd.Timestamp("2013-03-01")
+END = pd.Timestamp("2013-07-01")
+
+
 def _load_sometimes_unplugged(data_dir):
     """Loads data_dir/sometimes_unplugged.dat file and returns a
     list of strings.  Returns an empty list if file doesn't exist.
@@ -58,11 +62,11 @@ class UKPD(DataSet):
 
     def _pre_process_dataframe(self, df):
         df = df.tz_convert(self.metadata['timezone'])
-        df = df.astype('float32')
+        
         return df
 
     def load_building(self, root_directory, building_name,
-                      load_1_sec_mains_if_available=True):
+                      load_1_sec_mains_if_available=False):
         # Construct new Building and set known attributes
         building = Building()
         building.metadata['original_name'] = building_name
@@ -105,9 +109,9 @@ class UKPD(DataSet):
         for mains_chan in mains_chans:
             mainsname = MainsName(split=1, meter=1)
             df = load_chan(building_dir, mains_chan,
-                           colnames=Measurement('power', 'apparent'))
+                           colnames=[Measurement('power', 'apparent')])
             df = self._pre_process_dataframe(df)
-            building.utility.electric.mains[mainsname] = df
+            building.utility.electric.mains[mainsname] = df[START:END]
 
         if load_1_sec_mains_if_available:
             # Load 1-second mains, if available
@@ -121,7 +125,7 @@ class UKPD(DataSet):
                 pass
             else:
                 building.utility.electric.mains[
-                    MainsName(split=1, meter=2)] = df.astype('float32')
+                    MainsName(split=1, meter=2)] = df
 
         # Load sub metered channels
         instances = {}
@@ -139,7 +143,7 @@ class UKPD(DataSet):
             df = load_chan(building_dir, appliance_chan, colnames=[colname])
             df = self._pre_process_dataframe(df)
             df[colname].name = appliancename
-            building.utility.electric.appliances[appliancename] = df
+            building.utility.electric.appliances[appliancename] = df[START:END]
 
         # TODO
         # Store appliance_metadata for each appliance instance in electric.metadata['appliances']
