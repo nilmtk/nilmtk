@@ -268,7 +268,7 @@ def get_good_section_starts_and_ends(data, max_sample_period):
     """
     gap_starts, gap_ends = get_gap_starts_and_gap_ends(data, max_sample_period)
 
-    if gap_starts and gap_ends:
+    if gap_starts.size > 0 and gap_ends.size > 0:
         if data.index[0] in gap_ends or data.index[0] >= gap_ends[0]:
             starts = gap_ends
         else:

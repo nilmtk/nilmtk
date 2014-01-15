@@ -13,7 +13,7 @@ TODO:
 * see Jack's to-do list on our 'plan of action' google doc
 """
 
-LOAD_DATASETS = False
+LOAD_DATASETS = True
 OUTPUT_LATEX = False
 DATASET_PATH = expanduser('~/Dropbox/Data/nilmtk_datasets/')
 
@@ -23,6 +23,7 @@ DATASETS = OrderedDict()
 DATASETS['Pecan Street'] = 'pecan_1min'
 # DATASETS['AMDds'] = 'ampds'
 # DATASETS['iAWE'] = 'iawe'
+# TODO: UKPD
 
 if LOAD_DATASETS:
     dataset_objs = OrderedDict()
