@@ -177,7 +177,7 @@ results = results['1T']
 start = pd.Timestamp("2013-07-27 21:35")
 end = pd.Timestamp("2013-07-27 22:35")
 fig, axes = plt.subplots(ncols=3, sharex=True, sharey=True)
-latexify(columns=1)
+latexify(columns=1, fig_height=2, fig_width=3.39)
 plot_series(predicted_power['fhmm']
             [('air conditioner', 2)][start:end], ax=axes[0], date_format=DATE_FORMAT)
 plot_series(predicted_power['co']

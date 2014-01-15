@@ -19,6 +19,24 @@ from nilmtk.stats.electricity.building import proportion_of_time_where_more_ener
 """Base class for all datasets."""
 
 
+def create_time_query(start, end):
+    if start is not None and end is not None:
+        lower_bound = pd.Term(
+            'index', '>', pd.Timestamp(start))
+        upper_bound = pd.Term(
+            'index', '<', pd.Timestamp(end))
+        query = [lower_bound, upper_bound]
+    elif start is None:
+        upper_bound = pd.Term(
+            'index', '<', pd.Timestamp(end))
+        query = [upper_bound]
+    else:
+        lower_bound = pd.Term(
+            'index', '>', pd.Timestamp(start))
+        query = [lower_bound]
+    return query
+
+
 class DataSet(object):
 
     """Base class for all datasets.  This class can be used
@@ -67,7 +85,7 @@ class DataSet(object):
         for building in building_names:
             self.load_building(root_directory, building)
 
-    def load_hdf5(self, directory, building_nums=None):
+    def load_hdf5(self, directory, building_nums=None, time_map=None):
         """Imports dataset from HDF5 store into NILMTK object
 
         Parameters
@@ -78,6 +96,9 @@ class DataSet(object):
 
         buildling_nums : list of ints, optional
             Building numbers to load
+
+        time_map : dict, optional 
+            building number: (start, end) time to query
         """
         # Load metadata if exists
         if os.path.isfile(os.path.join(directory, 'metadata.json')):
@@ -131,7 +152,22 @@ class DataSet(object):
                         mains_split = int(key.split("/")[-2])
                         mains_meter = int(key.split("/")[-1])
                         mains_name = MainsName(mains_split, mains_meter)
-                        b.utility.electric.mains[mains_name] = store[key]
+                        
+                        if time_map is None:
+                            b.utility.electric.mains[
+                                mains_name] = store[key]
+
+                        else:
+                            if int(building_number) in time_map.keys():
+                                
+                                start, end = time_map[int(building_number)]
+                                query = create_time_query(start, end)
+
+                            else:
+                                query = []
+                            
+                            b.utility.electric.mains[
+                                mains_name] = store.select(key, query)
 
                 # Loading appliances
                 keys_appliances = [
@@ -144,8 +180,18 @@ class DataSet(object):
                         appliance_instance = int(key.split("/")[-1])
                         appliance_name = ApplianceName(
                             appliance_name, appliance_instance)
-                        b.utility.electric.appliances[
-                            appliance_name] = store[key]
+                        if time_map is None:
+                            b.utility.electric.appliances[
+                                appliance_name] = store[key]
+                        else:
+                            if int(building_number) in time_map.keys():
+                                start, end = time_map[int(building_number)]
+                                query = create_time_query(start, end)
+                            else:
+                                query = []
+                            
+                            b.utility.electric.appliances[
+                                appliance_name] = store.select(key, query)
 
         # Closing the store
         store.close()
