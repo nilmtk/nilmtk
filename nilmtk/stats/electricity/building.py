@@ -10,6 +10,7 @@ from collections import OrderedDict
 from nilmtk.sensors.electricity import Measurement
 from nilmtk.stats.electricity.single import DEFAULT_MAX_DROPOUT_RATE, usage_per_period
 import nilmtk.stats.electricity.single as single
+from nilmtk.exceptions import NoSuitableMeasurementError, NoCommonMeasurementError
 
 def find_common_measurements(electricity):
     """Finds common measurement contained in all electricity streams
@@ -40,7 +41,7 @@ def find_common_measurements(electricity):
 
 def proportion_of_energy_submetered(electricity,
                                     max_dropout_rate=DEFAULT_MAX_DROPOUT_RATE,
-                                    require_matched_measurements=True):
+                                    require_common_measurements=True):
     """Reports the proportion of energy in a building that is submetered.
 
     Parameters
@@ -49,8 +50,9 @@ def proportion_of_energy_submetered(electricity,
 
     max_dropout_rate : float [0,1], optional
 
-    require_matched_measurements : boolean, optional, default=True
-        If True then raise an exception if there is not at least one shared
+    require_common_measurements : boolean, optional, default=True
+        If True then raise a NoCommonMeasurementsError exception if 
+        there is not at least one shared
         Measurement (e.g. ('power', 'active')) across all channels.
         If False then continue even if measurements do not match.
 
@@ -62,10 +64,25 @@ def proportion_of_energy_submetered(electricity,
        >1 = more energy submetered than is recorded on the mains channels!
     """
 
-    # TODO: handle dataframes with more than one column (don't use df.icol(0))
+    # TODO: re-write so it assumes that input has been pre-processed so 
+    #       we can just take the total kWh for all appliances and mains.
     # TODO: Handle circuits.
-    # TODO: Check if all channels share at least one Measurement (e.g. ('power', 'active'))
-    #       and handle `require_matched_measurements`
+    # TODO: Handle wiring diagram.
+    # TODO: handle `require_matched_measurements`
+
+    MEASUREMENT_PREFERENCES = [Measurement('power', 'active'),
+                               Measurement('power', 'apparent')]
+
+    # Check if all channels share at least one Measurement (e.g. ('power', 'active'))
+    common_measurements = find_common_measurements(electricity)
+    common_measurement = None
+    for measurement_preference in MEASUREMENT_PREFERENCES:
+        if measurement_preference in common_measurements:
+            common_measurement = measurement_preference
+            print("Using common_measurement:", common_measurement)
+            break
+    if common_measurements is None and require_common_measurements:
+        raise NoCommonMeasurementError
 
     # for each channel, find set of 'good_days' where dropout_rate <
     # max_dropout_rate
@@ -75,6 +92,20 @@ def proportion_of_energy_submetered(electricity,
         """Helper function.  Returns a list of pd.Series of kWh per day."""
         chan_kwh_per_day = []
         for label, df in dictionary.iteritems():
+            data = None
+            if common_measurement is None:
+                for measurement in MEASUREMENT_PREFERENCES:
+                    try:
+                        data = df[measurement]
+                    except KeyError:
+                        pass
+                    else:
+                        break
+                if data is None:
+                    raise NoSuitableMeasurementError
+            else:
+                data = df[common_measurement]
+                
             kwh_per_day = usage_per_period(df.icol(0), freq='D',
                                            max_dropout_rate=max_dropout_rate)['kwh']
             kwh_per_day = kwh_per_day.dropna()
