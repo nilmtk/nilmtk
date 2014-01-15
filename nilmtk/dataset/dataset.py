@@ -152,20 +152,20 @@ class DataSet(object):
                         mains_split = int(key.split("/")[-2])
                         mains_meter = int(key.split("/")[-1])
                         mains_name = MainsName(mains_split, mains_meter)
-                        
+
                         if time_map is None:
                             b.utility.electric.mains[
                                 mains_name] = store[key]
 
                         else:
                             if int(building_number) in time_map.keys():
-                                
+
                                 start, end = time_map[int(building_number)]
                                 query = create_time_query(start, end)
 
                             else:
                                 query = []
-                            
+
                             b.utility.electric.mains[
                                 mains_name] = store.select(key, query)
 
@@ -189,7 +189,7 @@ class DataSet(object):
                                 query = create_time_query(start, end)
                             else:
                                 query = []
-                            
+
                             b.utility.electric.appliances[
                                 appliance_name] = store.select(key, query)
 
@@ -311,7 +311,8 @@ class DataSet(object):
         store = pd.HDFStore(
             os.path.join(directory, 'dataset.h5'), complevel=9, complib='zlib')
         for building_number in self.buildings:
-            print("Writing data for %d" % (building_number))
+            print
+("Writing data for %d" % (building_number))
             building = self.buildings[building_number]
             utility = building.utility
             electric = utility.electric

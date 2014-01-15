@@ -17,13 +17,15 @@ from nilmtk.dataset.redd import load_chan, load_labels, ApplianceMetadata
 
 # TODO: fill in this map
 APPLIANCE_NAME_MAP = {
-#    'oven': ApplianceMetadata('oven', {'fuel':'electricity', 'dualsupply': True}),
+    #    'oven': ApplianceMetadata('oven', {'fuel':'electricity', 'dualsupply': True}),
 }
 
 # maps from house number to a list of dud channel numbers
 DUD_CHANNELS = {}
 
 # load metadata
+
+
 def _load_sometimes_unplugged(data_dir):
     """Loads data_dir/sometimes_unplugged.dat file and returns a
     list of strings.  Returns an empty list if file doesn't exist.
@@ -39,6 +41,7 @@ def _load_sometimes_unplugged(data_dir):
 
 
 class UKPD(DataSet):
+
     """Load data from UKPD."""
 
     def __init__(self):
@@ -47,16 +50,18 @@ class UKPD(DataSet):
             'name': 'UKPD',
             'full_name': 'UK Power Dataset',
             'urls': ['http://www.doc.ic.ac.uk/~dk3810/data/'],
-            'geographic_coordinates': (51.464462,-0.076544), # Imperial's coorindates
+            # Imperial's coorindates
+            'geographic_coordinates': (51.464462, -0.076544),
             'timezone': 'Europe/London'
             # TODO: citations
         }
 
     def _pre_process_dataframe(self, df):
         df = df.tz_convert(self.metadata['timezone'])
+        df = df.astype('float32')
         return df
 
-    def load_building(self, root_directory, building_name, 
+    def load_building(self, root_directory, building_name,
                       load_1_sec_mains_if_available=True):
         # Construct new Building and set known attributes
         building = Building()
@@ -84,12 +89,13 @@ class UKPD(DataSet):
             if nilmtk_appliance is not None:
                 labels[chan] = nilmtk_appliance.name
                 if nilmtk_appliance.metadata:
-                    appliance_metadata[nilmtk_appliance.name] = nilmtk_appliance.metadata
+                    appliance_metadata[
+                        nilmtk_appliance.name] = nilmtk_appliance.metadata
 
         # Split channels into mains and appliances
         mains_chans = []
         appliance_chans = []
-        for chan, label in labels.iteritems():            
+        for chan, label in labels.iteritems():
             if label == 'aggregate':
                 mains_chans.append(chan)
             else:
@@ -98,14 +104,15 @@ class UKPD(DataSet):
         # Load mains chans
         for mains_chan in mains_chans:
             mainsname = MainsName(split=1, meter=1)
-            df = load_chan(building_dir, mains_chan, colnames=Measurement('power', 'apparent'))
+            df = load_chan(building_dir, mains_chan,
+                           colnames=Measurement('power', 'apparent'))
             df = self._pre_process_dataframe(df)
             building.utility.electric.mains[mainsname] = df
 
         if load_1_sec_mains_if_available:
             # Load 1-second mains, if available
             try:
-                df = load_chan(building_dir, filename='mains.dat', 
+                df = load_chan(building_dir, filename='mains.dat',
                                colnames=[Measurement('power', 'active'),
                                          Measurement('power', 'apparent'),
                                          Measurement('voltage', '')])
@@ -113,18 +120,19 @@ class UKPD(DataSet):
                 # some houses don't have 1-second mains
                 pass
             else:
-                building.utility.electric.mains[MainsName(split=1, meter=2)] = df
+                building.utility.electric.mains[
+                    MainsName(split=1, meter=2)] = df.astype('float32')
 
         # Load sub metered channels
-        instances = {} 
+        instances = {}
         # instances is a dict which maps:
-        # {<'appliance name'>: 
+        # {<'appliance name'>:
         #  (<index of next appliance instance>, <i of next supply>)}
         measurement = Measurement('power', 'active')
         for appliance_chan in appliance_chans:
             # Get appliance label and instance
             label = labels[appliance_chan]
-            instance, supply = instances.get(label, (1,1))
+            instance, supply = instances.get(label, (1, 1))
             appliancename = ApplianceName(name=label, instance=instance)
             instances[label] = (instance + 1, 1)
             colname = measurement
@@ -145,4 +153,3 @@ class UKPD(DataSet):
         dirs = [dir for dir in dirs if pattern.match(dir)]
         dirs.sort()
         return dirs
-
