@@ -198,7 +198,7 @@ def fill_appliance_gaps(building, sample_period_multiplier=4):
     return new_building
 
 
-def filter_datetime(building, start_datetime=None, end_datetime=None):
+def filter_datetime(building, start_datetime=None, end_datetime=None, copy=False):
     """Filters out all data falling outside the start and the end date
 
     Parameters
@@ -211,17 +211,23 @@ def filter_datetime(building, start_datetime=None, end_datetime=None):
     -------
     building_copy : nilmtk.Building
     """
-    building_copy = deepcopy(building)
+    if copy:
+        building_copy = deepcopy(building)
+    else:
+        building_copy = building
     # Filtering appliances
+    del_list = []
     for appliance_name, appliance_df in building.utility.electric.appliances.iteritems():
         building_copy.utility.electric.appliances[
             appliance_name] = filter_datetime_single(appliance_df, start_datetime,
                                                      end_datetime)
         if len(building_copy.utility.electric.appliances[
                 appliance_name]) == 0:
-            print("DELETING {}".format(appliance_name))
-            del building_copy.utility.electric.appliances[
-                appliance_name]
+
+            del_list.append(appliance_name)
+    for appliance_name in del_list:
+        print("DELETING {}".format(appliance_name))
+        building_copy.utility.electric.appliances.pop(appliance_name)
 
     # Filtering mains data
     for mains_name, mains_df in building.utility.electric.mains.iteritems():
