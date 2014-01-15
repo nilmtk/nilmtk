@@ -377,23 +377,32 @@ class Electricity(object):
 
         return pd.DataFrame(appliance_dict)
 
-    def appliances_without_unmetered(self):
+    def remove_channels_from_appliances(self, channels_to_remove=None):
         """Returns a dict with the same structure as `electricity.appliances`.
         If `electricity.appliances` contains any 'unmetered' channels then 
         returns a copy of `electricity.appliances` with the unmetered channel
         removed.  Otherwise just returns a reference to `appliances`."""
-        if ('unmetered', 1) in self.appliances:
+        if channels_to_remove is None:
+            channels_to_remove = ['unmetered', 'subpanel']
+
+        there_are_channels_to_remove = np.any(
+            [(channel_to_remove, 1) in self.appliances 
+             for channel_to_remove in channels_to_remove])
+
+        if there_are_channels_to_remove:
             appliances = deepcopy(self.appliances)
-            i = 1
-            while True:
-                try:
-                    appliances.pop(('unmetered', i))
-                except KeyError:
-                    break
-                else:
-                    i += 1
+            for channel_to_remove in channels_to_remove:
+                i = 1
+                while True:
+                    try:
+                        appliances.pop((channel_to_remove, i))
+                    except KeyError:
+                        break
+                    else:
+                        i += 1
         else:
             appliances = self.appliances
+
         return appliances
 
     def get_appliance(self, appliance_name, measurement="all"):

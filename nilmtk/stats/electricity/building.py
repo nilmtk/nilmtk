@@ -116,7 +116,7 @@ def proportion_of_energy_submetered(electricity,
         return chan_kwh_per_day
 
     mains_kwh_per_day = get_kwh_per_day_per_chan(electricity.mains)
-    appliances_kwh_per_day = get_kwh_per_day_per_chan(electricity.appliances_without_unmetered())
+    appliances_kwh_per_day = get_kwh_per_day_per_chan(electricity.remove_channels_from_appliances())
 
     # find intersection of all these sets (i.e. find all good days in common)
     good_days_set = good_days_list[0]
@@ -288,7 +288,7 @@ def plot_missing_samples_using_rectangles(electricity, ax=None, fig=None,
     n = len(electricity.appliances) + len(electricity.mains)
     ylabels = []
     i = 0
-    appliances = electricity.appliances_without_unmetered()
+    appliances = electricity.remove_channels_from_appliances()
     for appliance_name, appliance_df in appliances.iteritems():
         ax, fig = single.plot_missing_samples(
             appliance_df, ax, fig, bottom=i + 0.1, color=color)
@@ -337,7 +337,7 @@ def plot_missing_samples_using_bitmap(electricity, ax=None, fig=None,
     rule_code = '{:d}S'.format(int(round(sec_per_pixel)))
 
     missing_samples_per_period = OrderedDict()
-    for dict_of_dfs in [electricity.appliances_without_unmetered(),
+    for dict_of_dfs in [electricity.remove_channels_from_appliances(),
                         electricity.circuits,
                         electricity.mains]:
         for name, df in dict_of_dfs.iteritems():
