@@ -382,9 +382,8 @@ class DataSet(object):
             stats['energy_submetered'].append(
                 proportion_of_energy_submetered(electric))
             stats['dropout_rate'].extend(get_dropout_rates(electric))
-            stats[
-                'dropout_rate_ignoring_gaps'].extend(get_dropout_rates(electric,
-                                                                       ignore_gaps=True))
+            stats['dropout_rate_ignoring_gaps'].extend(
+                get_dropout_rates(electric, ignore_gaps=True))
             stats['uptime'].append(get_uptime(electric.mains.values()[0]))
             stats['prop_timeslices'].append(
                 proportion_of_time_where_more_energy_submetered(building))

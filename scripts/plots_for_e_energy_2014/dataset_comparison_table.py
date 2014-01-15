@@ -10,20 +10,18 @@ from collections import OrderedDict
 
 """
 TODO:
-* get other datasets to work!
-* Use appropriate formatting for each column
-* align numbers and periods?
+* see Jack's to-do list on our 'plan of action' google doc
 """
 
-LOAD_DATASETS = True
-
-DATASET_PATH = expanduser('~/Dropbox/nilmtk_datasets/')
+LOAD_DATASETS = False
+OUTPUT_LATEX = False
+DATASET_PATH = expanduser('~/Dropbox/Data/nilmtk_datasets/')
 
 # Maps from human-readable name to path
 DATASETS = OrderedDict()
 # DATASETS['REDD'] = 'redd/low_freq'
-# DATASETS['Pecan Street'] = 'pecan_1min'
-DATASETS['AMDds'] = 'ampds'
+DATASETS['Pecan Street'] = 'pecan_1min'
+# DATASETS['AMDds'] = 'ampds'
 # DATASETS['iAWE'] = 'iawe'
 
 if LOAD_DATASETS:
@@ -43,11 +41,14 @@ COLUMNS['energy_submetered'] = """% energy\\\\submetered"""
 COLUMNS['dropout_rate'] = 'dropout rate'
 COLUMNS['dropout_rate_ignoring_gaps'] = """dropout rate\\\\(ignoring gaps)"""
 COLUMNS['uptime'] = """mains uptime\\\\per building\\\\(days)"""
-COLUMNS[
-    'prop_timeslices'] = """% timeslices\\\\where energy\\\\submetered > 70%"""
+COLUMNS['prop_timeslices'] = ("""% timeslices\\\\where energy\\\\"""
+                              """submetered > 70%""")
 
 for key, value in COLUMNS.iteritems():
-    COLUMNS[key] = """\textbf{\specialcell[h]{""" + value + """}}"""
+    if OUTPUT_LATEX:
+        COLUMNS[key] = """\textbf{\specialcell[h]{""" + value + """}}"""
+    else:
+        COLUMNS[key] = key
 
 df = pd.DataFrame(index=DATASETS.keys(), columns=COLUMNS.values())
 
@@ -56,15 +57,22 @@ for ds_name in DATASETS.iterkeys():
     dataset = dataset_objs[ds_name]
     ds_stats = dataset.descriptive_stats()
     for col_short, col_long in COLUMNS.iteritems():
-        s = """\specialcell{"""
-        s += summary_stats_string(ds_stats[col_short], sep="""\\\\""",
-                                  stat_strings=['min', 'mean', 'max']).replace(' ', '')
-        s += """}"""
+        s = ""
+        if OUTPUT_LATEX:
+            s += """\specialcell{"""
+        s += summary_stats_string(ds_stats[col_short], sep=""",""",
+                                  stat_strings=['min', 'median', 'max'],
+                                  minimal=True).replace(' ', '')
+        if OUTPUT_LATEX:
+            s += """}"""
         df[col_long][ds_name] = s
 
-print("------------LATEX BEGINS-----------------")
-latex = df.to_latex()
-for str_to_replace in ['midrule', 'toprule', 'bottomrule']:
-    latex = latex.replace(str_to_replace, 'hline')
-print(latex)
-print("------------LATEX ENDS-------------------")
+if OUTPUT_LATEX:
+    print("------------LATEX BEGINS-----------------")
+    latex = df.to_latex()
+    for str_to_replace in ['midrule', 'toprule', 'bottomrule']:
+        latex = latex.replace(str_to_replace, 'hline')
+    print(latex)
+    print("------------LATEX ENDS-------------------")
+else:
+    print(df)

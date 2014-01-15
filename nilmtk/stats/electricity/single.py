@@ -268,17 +268,23 @@ def get_good_section_starts_and_ends(data, max_sample_period):
     """
     gap_starts, gap_ends = get_gap_starts_and_gap_ends(data, max_sample_period)
 
-    if data.index[0] in gap_ends or data.index[0] >= gap_ends[0]:
-        starts = gap_ends
-    else:
-        starts = gap_ends.insert(0, data.index[0])
-        starts = starts.tz_localize('UTC').tz_convert(data.index.tzinfo)
+    if gap_starts and gap_ends:
+        if data.index[0] in gap_ends or data.index[0] >= gap_ends[0]:
+            starts = gap_ends
+        else:
+            starts = gap_ends.insert(0, data.index[0])
+            starts = starts.tz_localize('UTC').tz_convert(data.index.tzinfo)
 
-    if data.index[-1] in gap_starts or data.index[-1] <= gap_starts[-1]:
-        ends = gap_starts
+        if data.index[-1] in gap_starts or data.index[-1] <= gap_starts[-1]:
+            ends = gap_starts
+        else:
+            ends = gap_starts.insert(len(gap_starts), data.index[-1])
+            ends = ends.tz_localize('UTC').tz_convert(data.index.tzinfo)
     else:
-        ends = gap_starts.insert(len(gap_starts), data.index[-1])
-        ends = ends.tz_localize('UTC').tz_convert(data.index.tzinfo)
+        # there are no gaps in the data!
+        starts = pd.DatetimeIndex([data.index[0]])
+        ends = pd.DatetimeIndex([data.index[-1]])
+
     return starts, ends
 
 
