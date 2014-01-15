@@ -10,20 +10,18 @@ from collections import OrderedDict
 
 """
 TODO:
-* get other datasets to work!
-* Use appropriate formatting for each column
-* align numbers and periods?
+* see Jack's to-do list on our 'plan of action' google doc
 """
 
 LOAD_DATASETS = True
 
-DATASET_PATH = expanduser('~/Dropbox/nilmtk_datasets/')
+DATASET_PATH = expanduser('~/Dropbox/Data/nilmtk_datasets/')
 
 # Maps from human-readable name to path
 DATASETS = OrderedDict()
 # DATASETS['REDD'] = 'redd/low_freq'
-# DATASETS['Pecan Street'] = 'pecan_1min'
-DATASETS['AMDds'] = 'ampds'
+DATASETS['Pecan Street'] = 'pecan_1min'
+# DATASETS['AMDds'] = 'ampds'
 # DATASETS['iAWE'] = 'iawe'
 
 if LOAD_DATASETS:
@@ -43,8 +41,8 @@ COLUMNS['energy_submetered'] = """% energy\\\\submetered"""
 COLUMNS['dropout_rate'] = 'dropout rate'
 COLUMNS['dropout_rate_ignoring_gaps'] = """dropout rate\\\\(ignoring gaps)"""
 COLUMNS['uptime'] = """mains uptime\\\\per building\\\\(days)"""
-COLUMNS[
-    'prop_timeslices'] = """% timeslices\\\\where energy\\\\submetered > 70%"""
+COLUMNS['prop_timeslices'] = ("""% timeslices\\\\where energy\\\\"""
+                              """submetered > 70%""")
 
 for key, value in COLUMNS.iteritems():
     COLUMNS[key] = """\textbf{\specialcell[h]{""" + value + """}}"""
