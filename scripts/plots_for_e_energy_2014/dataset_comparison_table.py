@@ -13,8 +13,8 @@ TODO:
 * see Jack's to-do list on our 'plan of action' google doc
 """
 
-LOAD_DATASETS = True
-
+LOAD_DATASETS = False
+OUTPUT_LATEX = False
 DATASET_PATH = expanduser('~/Dropbox/Data/nilmtk_datasets/')
 
 # Maps from human-readable name to path
@@ -45,7 +45,10 @@ COLUMNS['prop_timeslices'] = ("""% timeslices\\\\where energy\\\\"""
                               """submetered > 70%""")
 
 for key, value in COLUMNS.iteritems():
-    COLUMNS[key] = """\textbf{\specialcell[h]{""" + value + """}}"""
+    if OUTPUT_LATEX:
+        COLUMNS[key] = """\textbf{\specialcell[h]{""" + value + """}}"""
+    else:
+        COLUMNS[key] = key
 
 df = pd.DataFrame(index=DATASETS.keys(), columns=COLUMNS.values())
 
@@ -54,15 +57,22 @@ for ds_name in DATASETS.iterkeys():
     dataset = dataset_objs[ds_name]
     ds_stats = dataset.descriptive_stats()
     for col_short, col_long in COLUMNS.iteritems():
-        s = """\specialcell{"""
-        s += summary_stats_string(ds_stats[col_short], sep="""\\\\""",
-                                  stat_strings=['min', 'mean', 'max']).replace(' ', '')
-        s += """}"""
+        s = ""
+        if OUTPUT_LATEX:
+            s += """\specialcell{"""
+        s += summary_stats_string(ds_stats[col_short], sep=""",""",
+                                  stat_strings=['min', 'median', 'max'],
+                                  minimal=True).replace(' ', '')
+        if OUTPUT_LATEX:
+            s += """}"""
         df[col_long][ds_name] = s
 
-print("------------LATEX BEGINS-----------------")
-latex = df.to_latex()
-for str_to_replace in ['midrule', 'toprule', 'bottomrule']:
-    latex = latex.replace(str_to_replace, 'hline')
-print(latex)
-print("------------LATEX ENDS-------------------")
+if OUTPUT_LATEX:
+    print("------------LATEX BEGINS-----------------")
+    latex = df.to_latex()
+    for str_to_replace in ['midrule', 'toprule', 'bottomrule']:
+        latex = latex.replace(str_to_replace, 'hline')
+    print(latex)
+    print("------------LATEX ENDS-------------------")
+else:
+    print(df)
