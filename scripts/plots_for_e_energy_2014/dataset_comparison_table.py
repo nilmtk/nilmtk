@@ -20,10 +20,10 @@ DATASET_PATH = expanduser('~/Dropbox/Data/nilmtk_datasets/')
 
 # Maps from human-readable name to path
 DATASETS = OrderedDict()
-#DATASETS['REDD'] = 'redd/low_freq'
-#DATASETS['Pecan Street'] = 'pecan_1min'
-#DATASETS['AMDds'] = 'ampds'
-#DATASETS['iAWE'] = 'iawe'
+DATASETS['REDD'] = 'redd/low_freq'
+DATASETS['Pecan Street'] = 'pecan_1min'
+DATASETS['AMDds'] = 'ampds'
+DATASETS['iAWE'] = 'iawe'
 DATASETS['UKPD'] = 'ukpd'
 #DATASETS['Smart'] = 'smart'
 
@@ -39,7 +39,7 @@ if LOAD_DATASETS:
             print("Pre-processing iAWE...")
             electric = dataset.buildings[1].utility.electric
             electric.crop('2013/6/11', '2013/7/31')
-            electric.drop_duplicate_indicies()
+            electric.drop_duplicate_indicies() # TODO: remove when no longer necessary
         elif ds_name == 'UKPD':
             electric = dataset.buildings[1].utility.electric
             electric.appliances = electric.remove_channels_from_appliances(

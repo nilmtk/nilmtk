@@ -351,10 +351,14 @@ def mask_appliances_with_mains(electricity, sample_period_multiplier=4):
         print(".", end='')
         sys.stdout.flush()
         for gap_start, gap_end in zip(gap_starts, gap_ends):
-            # some DFs are int32, which can't accept NaNs, so convert to float32:
-            appliance_df = appliance_df.astype(np.float32)
             index = appliance_df.index
-            appliance_df[(index >= gap_start) & (index <= gap_end)] = np.NaN
+            try:
+                appliance_df[(index >= gap_start) & (index <= gap_end)] = np.NaN
+            except ValueError:
+                # some DFs are int32, which can't accept NaNs, so convert to float32:
+                # TODO: remove this once #105 is fixed
+                appliance_df = appliance_df.astype(np.float32)
+                appliance_df[(index >= gap_start) & (index <= gap_end)] = np.NaN
         return appliance_df
     
     masked = apply_func_to_values_of_dicts(electricity, mask_appliances, 
