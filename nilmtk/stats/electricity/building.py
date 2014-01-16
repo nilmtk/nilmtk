@@ -4,6 +4,7 @@ from __future__ import print_function, division
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import sys
 from matplotlib.ticker import FuncFormatter
 import matplotlib.dates as mdates
 from collections import OrderedDict
@@ -11,6 +12,7 @@ from nilmtk.sensors.electricity import Measurement
 from nilmtk.stats.electricity.single import DEFAULT_MAX_DROPOUT_RATE, usage_per_period
 import nilmtk.stats.electricity.single as single
 from nilmtk.exceptions import NoSuitableMeasurementError, NoCommonMeasurementError
+from nilmtk.utils import apply_func_to_values_of_dicts
 
 def find_common_measurements(electricity):
     """Finds common measurement contained in all electricity streams
@@ -40,15 +42,19 @@ def find_common_measurements(electricity):
 
 
 def proportion_of_energy_submetered(electricity,
-                                    max_dropout_rate=DEFAULT_MAX_DROPOUT_RATE,
+                                    sample_period_multiplier=4,
                                     require_common_measurements=True):
     """Reports the proportion of energy in a building that is submetered.
+
+    Assumes that missing appliance data means that the appliance is off.
 
     Parameters
     ----------
     electricity : nilmtk.sensors.electricity.Electricity
 
-    max_dropout_rate : float [0,1], optional
+    sample_period_multiplier : float, optional
+        Defines a 'gap'.  Any gap > sample_period x sample_period_multiplier
+        is counted as a gap.  Default = 4.
 
     require_common_measurements : boolean, optional, default=True
         If True then raise a NoCommonMeasurementsError exception if 
@@ -64,98 +70,64 @@ def proportion_of_energy_submetered(electricity,
        >1 = more energy submetered than is recorded on the mains channels!
     """
 
-    # TODO: re-write so it assumes that input has been pre-processed so 
-    #       we can just take the total kWh for all appliances and mains.
     # TODO: Handle circuits.
     # TODO: Handle wiring diagram.
-    # TODO: handle `require_matched_measurements`
 
-    MEASUREMENT_PREFERENCES = [Measurement('power', 'active'),
-                               Measurement('power', 'apparent')]
+    # TODO: this might be an ugly hack to resolve circular dependencies.
+    from nilmtk.preprocessing.electricity.building import mask_appliances_with_mains
+    from nilmtk.preprocessing.electricity.single import insert_zeros
 
-    # Check if all channels share at least one Measurement (e.g. ('power', 'active'))
-    common_measurements = find_common_measurements(electricity)
-    common_measurement = None
-    for measurement_preference in MEASUREMENT_PREFERENCES:
-        if measurement_preference in common_measurements:
-            common_measurement = measurement_preference
-            print("Using common_measurement:", common_measurement)
-            break
-    if common_measurements is None and require_common_measurements:
-        raise NoCommonMeasurementError
+    # remove 'unmetered' and 'subpanels' from appliances
+    electricity.appliances = electricity.remove_channels_from_appliances()
 
-    # for each channel, find set of 'good_days' where dropout_rate <
-    # max_dropout_rate
-    good_days_list = []
+    # Sum split mains and DualSupply appliances
+    electricity = electricity.sum_split_supplies()
 
-    def get_kwh_per_day_per_chan(dictionary):
-        """Helper function.  Returns a list of pd.Series of kWh per day."""
-        chan_kwh_per_day = []
-        for label, df in dictionary.iteritems():
-            print(label)
-            data = None
-            if common_measurement is None:
-                for measurement in MEASUREMENT_PREFERENCES:
-                    try:
-                        data = df[measurement]
-                    except KeyError:
-                        pass
-                    else:
-                        break
-            else:
-                data = df[common_measurement]
+    # TODO: Select common measurements. Maybe use electricity.select_common_measurements?
+    # MEASUREMENT_PREFERENCES = [Measurement('power', 'active'),
+    #                            Measurement('power', 'apparent')]
 
-            if data is None:
-                raise NoSuitableMeasurementError
-                
-            kwh_per_day = usage_per_period(data, freq='D',
-                                           max_dropout_rate=max_dropout_rate)['kwh']
-            kwh_per_day = kwh_per_day.dropna()
-            chan_kwh_per_day.append(kwh_per_day)
-            good_days_list.append(set(kwh_per_day.index))
-        return chan_kwh_per_day
+    # # Check if all channels share at least one Measurement (e.g. ('power', 'active'))
+    # common_measurements = find_common_measurements(electricity)
+    # common_measurement = None
+    # for measurement_preference in MEASUREMENT_PREFERENCES:
+    #     if measurement_preference in common_measurements:
+    #         common_measurement = measurement_preference
+    #         print("Using common_measurement:", common_measurement)
+    #         break
+    # if common_measurements is None and require_common_measurements:
+    #     raise NoCommonMeasurementError
 
-    mains_kwh_per_day = get_kwh_per_day_per_chan(electricity.mains)
-    appliances_kwh_per_day = get_kwh_per_day_per_chan(electricity.remove_channels_from_appliances())
+    # Find large gaps in mains data and ignore those gaps for all appliance channels
+    electricity = mask_appliances_with_mains(electricity, 
+                                             sample_period_multiplier)
 
-    # find intersection of all these sets (i.e. find all good days in common)
-    good_days_set = good_days_list[0]
-    for good_days in good_days_list[1:]:
-        good_days_set = good_days_set.intersection(good_days)
+    # Drop NaNs on all channels
+    electricity = apply_func_to_values_of_dicts(electricity, 
+                                                lambda df: df.dropna(),
+                                                ['appliances', 'mains'])
 
-    # for each day in intersection, get kWh
-    proportion_per_day = []
-    for good_day in good_days_set:
-        mains_kwh = 0
-        for kwh_per_day in mains_kwh_per_day:
-            mains_kwh += kwh_per_day[good_day]
+    # Insert_zeros on appliance data.
+    print("Inserting zeros... may take a little while...", end='')
+    sys.stdout.flush()
+    single_insert_zeros = lambda df: insert_zeros(
+        df, sample_period_multiplier=sample_period_multiplier)
+    electricity = apply_func_to_values_of_dicts(electricity, single_insert_zeros,
+                                                ['appliances', 'mains'])
+    print("done")
 
-        appliances_kwh = 0
-        for kwh_per_day in appliances_kwh_per_day:
-            appliances_kwh += kwh_per_day[good_day]
+    # Total energy used for mains
+    total_mains = get_total_energy_per_dict(electricity, 'mains')
+    total_appliances = get_total_energy_per_dict(electricity, 'appliances')
 
-        proportion = appliances_kwh / mains_kwh
-        proportion_per_day.append(proportion)
-
-    return np.mean(proportion_per_day)
+    return total_appliances / total_mains
 
 
-def start_end_datetimes_channels(electricity):
-    """Finds the start and end datetimes of all electricity channels. 
-    It can be used to find common start and end times for different 
-    channels to be used in preprocessing filters
-
-    Parameters
-    ----------
-    electricity : nilmtk.utility.electricity
-
-    Returns
-    -------
-    start_end_datetimes_dict : dictionary  
-        {channel: [start_timestamp, end_timestamp]}
-    """
-    # also see nilmtk.sensors.electricity.Electricity.get_start_and_end_dates()
-    raise NotImplementedError
+def get_total_energy_per_dict(electricity, dict_='mains',  unit='kwh'):
+    total_energy = 0
+    for df in electricity.__dict__[dict_].values():
+        total_energy += single.energy(df, unit)
+    return total_energy
 
 
 def average_energy(electricity,
@@ -165,6 +137,8 @@ def average_energy(electricity,
     -------
     float
        Average energy usage for this building in kWh per day.
+
+    .. warning:: NOT IMPLEMENTED YET
     """
     raise NotImplementedError
 
@@ -187,6 +161,8 @@ def average_energy_per_appliance(electricity,
         pd.Series
         Each element of the index is an ApplianceName
         Values are average energy in kWh per day
+
+    .. warning:: NOT IMPLEMENTED YET
     """
     raise NotImplementedError
 

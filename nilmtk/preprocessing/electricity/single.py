@@ -106,17 +106,23 @@ def insert_zeros(single_appliance_dataframe, max_sample_period=None,
     dates_to_insert_zeros = dates_to_insert_zeros_before_gaps.append(
         dates_to_insert_zeros_after_gaps)
 
-    # Don't insert duplicate entries
-    dates_to_insert_zeros = [d for d in dates_to_insert_zeros
-                             if d not in df.index]
-
     # Columns containing power_energy
     power_columns = [
         x for x in df.columns if x.physical_quantity in ['power']]
     non_power_columns = [x for x in df.columns if x not in power_columns]
 
+    # Don't insert duplicate indicies
+    filtered_dates_to_insert_zeros = []
+    for d in dates_to_insert_zeros:
+        # TODO: can probably do this faster using set intersection and disjoint
+        try:
+            df[power_columns][d] = 0
+        except IndexError:
+            filtered_dates_to_insert_zeros.append(d)
+
+    # Create new dataframe of zeros at new indicies ready for insertion
     zeros = pd.DataFrame(data=0,
-                         index=dates_to_insert_zeros,
+                         index=filtered_dates_to_insert_zeros,
                          columns=power_columns,
                          dtype=np.float32)
 

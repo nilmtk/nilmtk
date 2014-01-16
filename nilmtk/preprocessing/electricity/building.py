@@ -1,9 +1,12 @@
 """Contains preprocessing functions."""
+from __future__ import print_function, division
 import pandas as pd
 import numpy as np
+import sys
 
 from nilmtk.stats.electricity.building import find_appliances_contribution
 from nilmtk.stats.electricity.building import top_k_appliances
+from nilmtk.stats.electricity.single import get_sample_period, get_gap_starts_and_gap_ends
 
 from nilmtk.preprocessing.electricity.single import remove_implausible_entries
 from nilmtk.preprocessing.electricity.single import filter_datetime_single
@@ -148,7 +151,7 @@ def filter_channels_with_less_than_x_samples(building, threshold=100):
 def fill_appliance_gaps(building, sample_period_multiplier=4):
     """Book-ends all large gaps with zeros using
     `nilmtk.preprocessing.electric.single.insert_zeros`
-    and all appliances in `building` and then forward fills any remaining NaNs.
+    on all appliances in `building` and then forward fills any remaining NaNs.
     This will result in forward-filling small gaps with
     the recorded value which precedes the gap, and forward-filling zeros
     in large gaps.
@@ -181,12 +184,10 @@ def fill_appliance_gaps(building, sample_period_multiplier=4):
     # are not recording (which indicates that things are broken)
 
     # "book-end" each gap with a zero at each end
-    single_insert_zeros = lambda df: single.insert_zeros(df,
-                                                         sample_period_multiplier=sample_period_multiplier)
+    single_insert_zeros = lambda df: single.insert_zeros(
+        df, sample_period_multiplier=sample_period_multiplier)
 
     APPLIANCES = ['utility.electric.appliances']
-    APPLIANCES_MAINS = ['utility.electric.appliances',
-                        'utility.electric.mains']
     new_building = apply_func_to_values_of_dicts(building, single_insert_zeros,
                                                  APPLIANCES)
 
@@ -303,3 +304,53 @@ def make_common_index(building):
     take_common_index = lambda df: df.ix[common_index]
     return apply_func_to_values_of_dicts(building, take_common_index,
                                          BUILDING_ELECTRICITY_DICTS)
+
+
+def mask_appliances_with_mains(electricity, sample_period_multiplier=4):
+    """Finds gaps in first mains channel and then removes 
+    these gaps from all appliance data. 
+
+    The assumption is that if the mains channel is dead for any
+    timeslice then we should ignore this timeslice for all appliance
+    channels too.
+
+    Parameters
+    ----------
+    electricity : Electricity object
+
+    sample_period_multiplier : int, optional
+        Default = 4
+        max_sample_period = sample_period x sample_period_multiplier
+        max_sample_period defines a 'gap'.
+    
+    Returns
+    -------
+    copy of electricity
+    
+    .. warning:: currently only uses gaps from first mains dataframe and ignores
+                 all other mains dataframes.
+
+    """
+
+    # TODO: handle multiple mains channels and take intersection of gaps
+
+    print("Masking appliances with mains... may take a little while...", end='')
+    sys.stdout.flush()
+    mains = electricity.mains.values()[0]
+    max_sample_period = get_sample_period(mains) * sample_period_multiplier
+    gap_starts, gap_ends = get_gap_starts_and_gap_ends(mains, max_sample_period)
+
+    def mask_appliances(appliance_df):
+        """For each appliance dataframe, insert NaNs for any reading inside
+        mains gaps.
+        """
+        for gap_start, gap_end in zip(gap_starts, gap_ends):
+            index = appliance_df.index
+            appliance_df[(index >= gap_start) & (index <= gap_end)] = np.NaN
+        return appliance_df
+    
+    masked = apply_func_to_values_of_dicts(electricity, mask_appliances, 
+                                           ['appliances'])
+    print("done")
+    return masked
+    
