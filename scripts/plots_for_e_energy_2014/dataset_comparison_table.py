@@ -14,8 +14,8 @@ TODO:
 * see Jack's to-do list on our 'plan of action' google doc
 """
 
-LOAD_DATASETS = False
-OUTPUT_LATEX = False
+LOAD_DATASETS = True
+OUTPUT_LATEX = True
 DATASET_PATH = expanduser('~/Dropbox/Data/nilmtk_datasets/')
 
 # Maps from human-readable name to path
@@ -23,8 +23,8 @@ DATASETS = OrderedDict()
 #DATASETS['REDD'] = 'redd/low_freq'
 #DATASETS['Pecan Street'] = 'pecan_1min'
 #DATASETS['AMDds'] = 'ampds'
-DATASETS['iAWE'] = 'iawe'
-#DATASETS['UKPD'] = 'ukpd'
+#DATASETS['iAWE'] = 'iawe'
+DATASETS['UKPD'] = 'ukpd'
 #DATASETS['Smart'] = 'smart'
 
 if LOAD_DATASETS:
@@ -40,7 +40,11 @@ if LOAD_DATASETS:
             electric = dataset.buildings[1].utility.electric
             electric.crop('2013/6/11', '2013/7/31')
             electric.drop_duplicate_indicies()
-            dataset.buildings[1].utility.electric = electric
+        elif ds_name == 'UKPD':
+            electric = dataset.buildings[1].utility.electric
+            electric.appliances = electric.remove_channels_from_appliances(
+                ['kitchen_lights', 'LED_printer'])
+            electric.crop('2013/3/17')
 
         dataset_objs[ds_name] = dataset
 
@@ -49,7 +53,7 @@ if LOAD_DATASETS:
 COLUMNS = OrderedDict()
 COLUMNS['n_appliances'] = """number of\\\\appliances"""
 COLUMNS['energy_submetered'] = """% energy\\\\submetered"""
-COLUMNS['dropout_rate'] = 'dropout rate'
+COLUMNS['proportion_up'] = """uptime / \\\\ total duration"""
 COLUMNS['dropout_rate_ignoring_gaps'] = """dropout rate\\\\(ignoring gaps)"""
 COLUMNS['uptime'] = """mains uptime\\\\per building\\\\(days)"""
 COLUMNS['prop_timeslices'] = ("""% timeslices\\\\where energy\\\\"""

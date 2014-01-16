@@ -405,6 +405,7 @@ class Electricity(object):
                     except KeyError:
                         break
                     else:
+                        print("Removed", (channel_to_remove, i))
                         i += 1
         else:
             appliances = self.appliances

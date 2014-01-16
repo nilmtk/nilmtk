@@ -4,6 +4,7 @@ import json
 import copy
 import sys
 import pandas as pd
+from matplotlib.dates import SEC_PER_DAY
 from nilmtk.building import Building
 from nilmtk.sensors.electricity import MainsName
 from nilmtk.sensors.electricity import ApplianceName
@@ -375,7 +376,8 @@ class DataSet(object):
         stats = {
             'n_appliances': [],
             'energy_submetered': [],
-            'dropout_rate': [],
+            'proportion_up': [],
+#            'dropout_rate': [],
             'dropout_rate_ignoring_gaps': [],
             'uptime': [],
             'prop_timeslices': []}
@@ -386,10 +388,14 @@ class DataSet(object):
             stats['n_appliances'].append(len(electric.appliances))
             stats['energy_submetered'].append(
                 proportion_of_energy_submetered(electric))
-            stats['dropout_rate'].extend(get_dropout_rates(electric))
+#            stats['dropout_rate'].extend(get_dropout_rates(electric))
             stats['dropout_rate_ignoring_gaps'].extend(
                 get_dropout_rates(electric, ignore_gaps=True))
-            stats['uptime'].append(get_uptime(electric.mains.values()[0]))
+            uptime = get_uptime(electric.mains.values()[0])
+            stats['uptime'].append(uptime)
+            start, end = electric.get_start_and_end_dates()
+            stats['proportion_up'].append(uptime / ((end-start).total_seconds() 
+                                                    / SEC_PER_DAY))
             stats['prop_timeslices'].append(
                 proportion_of_time_where_more_energy_submetered(building))
 

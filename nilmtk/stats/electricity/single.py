@@ -46,7 +46,7 @@ def get_sample_period(data):
         raise TooFewSamplesError('{:d} samples required. Only {:d} in data! {:s}'
                                  .format(N_SAMPLES, len(data), name))
     index = _get_index(data)
-    time_delta_ns = np.diff(index.values[:N_SAMPLES]).astype(np.float)
+    time_delta_ns = np.diff(index.values[-N_SAMPLES:]).astype(np.float)
     mode_time_delta_ns = stats.mode(time_delta_ns)[0][0]
     td_ns_filtered = time_delta_ns[time_delta_ns <= mode_time_delta_ns + time_delta_ns.std()]
     period_secs = td_ns_filtered.mean() / 1E9
