@@ -3,6 +3,13 @@ Pecan Dataset Loader
 
 These routines load Pecan Dataset into NILMTK Dataset format
 
+NOTES
+-----
+
+In Home #8, Grid [kVA] was replaced manually by Grid* [kVA]
+The former was an entry error and breaks the convention of 
+fields where kVA was measured.
+
 TODOS
 -----
 
