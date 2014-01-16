@@ -135,7 +135,7 @@ def insert_zeros(single_appliance_dataframe,
     # Check no zeros are closer than sample_period
     # TODO: remove this assert when we're confident the code is correct
     # also remove the sort_index().
-    if not zeros.empty:
+    if len(zeros) > 1:
         zeros = zeros.sort_index()
         assert(timedelta64_to_secs(np.diff(zeros.index.values).min()) > 
                sample_period)
