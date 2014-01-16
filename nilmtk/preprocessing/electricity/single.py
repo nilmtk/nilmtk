@@ -109,9 +109,14 @@ def insert_zeros(single_appliance_dataframe, max_sample_period=None,
     dates_to_insert_zeros = dates_to_insert_zeros_before_gaps.append(
         dates_to_insert_zeros_after_gaps)
 
-    # Columns containing power_energy
-    power_columns = [x for x in df.columns if x.physical_quantity in ['power']]
-    non_power_columns = [x for x in df.columns if x not in power_columns]
+    # Columns containing power
+    power_columns = []
+    non_power_columns = []
+    for col in df.columns:
+        if col.physical_quantity == 'power':
+            power_columns.append(col)
+        else:
+            non_power_columns.append(col)
 
     # Don't insert duplicate indicies
     assert((dates_to_insert_zeros & df.index).size == 0)
