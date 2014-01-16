@@ -42,7 +42,7 @@ def find_common_measurements(electricity):
 
 
 def proportion_of_energy_submetered(electricity,
-                                    sample_period_multiplier=4,
+                                    sample_period_multiplier=20,
                                     require_common_measurements=True):
     """Reports the proportion of energy in a building that is submetered.
 
@@ -378,8 +378,13 @@ def get_dropout_rates(electricity, ignore_gaps=False):
                     else single.get_dropout_rate)
     dropout_rates = []
     for attribute in ['appliances', 'circuits', 'mains']:
-        for df in electricity.__dict__[attribute].values():
-            dropout_rates.append(dropout_func(df))
+        for name, df in electricity.__dict__[attribute].iteritems():
+            try:
+                dropout_rates.append(dropout_func(df))
+            except:
+                print("Error occurred when processing attribute={}, name={}"
+                      .format(attribute, name), file=sys.stderr)
+                raise
     return dropout_rates
     
 

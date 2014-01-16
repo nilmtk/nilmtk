@@ -88,11 +88,11 @@ def get_dropout_rate(data, sample_period=None):
     duration = index[-1] - index[0]
     n_expected_samples = round((duration.total_seconds() / sample_period) + 1)
     dropout_rate = 1 - (index.size / n_expected_samples)
-    HEADROOM = 1.1
+    HEADROOM = 1.2
     if dropout_rate < 0 and index.size < n_expected_samples * HEADROOM:
         dropout_rate = 0.0
     assert(1 >= dropout_rate >= 0)
-    return 1 - (index.size / n_expected_samples)
+    return dropout_rate
 
 
 def get_dropout_rate_ignore_gaps(data, sample_period=None, 
@@ -129,7 +129,8 @@ def get_dropout_rate_ignore_gaps(data, sample_period=None,
     for start, end in zip(starts, ends):
         cropped_data = data[start:end]
         try:
-            dropout_rate = get_dropout_rate(cropped_data)
+            dropout_rate = get_dropout_rate(cropped_data, 
+                                            sample_period=sample_period)
         except TooFewSamplesError:
             pass
         else: 

@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 from collections import namedtuple
-import copy
+import copy, sys
 from copy import deepcopy
 import json
 import pandas as pd
@@ -552,3 +552,21 @@ class Electricity(object):
         e_copy.appliances = sum_dual_supply(e_copy.appliances)
 
         return e_copy
+
+    def drop_duplicate_indicies(self):
+        """Removes duplicate indicies in all dataframes in appliances,
+        circuits and mains; in place.
+        """
+        print('Dropping duplicate indicies...', end='')
+        sys.stdout.flush()
+        for dict_ in [self.appliances, self.circuits, self.mains]:
+            for name in dict_.keys():
+                df = dict_[name]
+                df['index'] = df.index
+                df = df.drop_duplicates(cols='index')
+                del df['index']
+                dict_[name] = df
+                print('.', end='')
+                sys.stdout.flush()
+        print('Done')
+        

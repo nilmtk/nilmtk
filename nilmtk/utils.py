@@ -1,5 +1,5 @@
 from __future__ import print_function, division
-import os, copy
+import os, copy, sys
 import numpy as np
 import pandas as pd
 from scipy import stats
@@ -150,7 +150,12 @@ def apply_func_to_values_of_dicts(obj, func, dict_names):
     for attribute in dict_names:
         dict_ = recursive_resolve(obj_copy, attribute)
         for key, value in dict_.iteritems():
-            dict_[key] = func(value)
+            try:
+                dict_[key] = func(value)
+            except:
+                print("Exception occurred while processing attribute={}, key={}"
+                      .format(attribute, key), file=sys.stderr)
+                raise
     return obj_copy
 
 

@@ -14,7 +14,7 @@ TODO:
 * see Jack's to-do list on our 'plan of action' google doc
 """
 
-LOAD_DATASETS = True
+LOAD_DATASETS = False
 OUTPUT_LATEX = False
 DATASET_PATH = expanduser('~/Dropbox/Data/nilmtk_datasets/')
 
@@ -36,9 +36,11 @@ if LOAD_DATASETS:
         dataset.load_hdf5(full_path)
 
         if ds_name == 'iAWE':
-            print("Cropping iAWE...")
-            dataset.buildings[1].utility.electric.crop('2013/6/11', '2013/7/31')
-            print(dataset.buildings[1].utility.electric.get_start_and_end_dates())
+            print("Pre-processing iAWE...")
+            electric = dataset.buildings[1].utility.electric
+            electric.crop('2013/6/11', '2013/7/31')
+            electric.drop_duplicate_indicies()
+            dataset.buildings[1].utility.electric = electric
 
         dataset_objs[ds_name] = dataset
 
