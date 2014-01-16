@@ -191,7 +191,7 @@ plot_series(ground_truth_power[('air conditioner', 2)]
 for ax in axes:
     ax.set_ylim((0, 2000))
     format_axes(ax)
-    ax.set_xticklabels(['0', '', '30', '', '60'])
+    ax.set_xticklabels(['0', ' ', '30', ' ', '60'])
     ax.set_xlabel("Time \n(mins)")
 
 axes[0].set_title("Predicted power\nFHMM")

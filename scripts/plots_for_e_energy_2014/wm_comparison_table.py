@@ -30,6 +30,7 @@ DATASETS['REDD'] = 'redd/low_freq'
 #DATASETS['Pecan'] = 'pecan_1min'
 #DATASETS['AMPds'] = 'ampds'
 #DATASETS['iAWE'] = 'iawe'
+DATASETS['UKPD'] = 'ukpd'
 
 wm_names = {'REDD': ApplianceName('washer dryer', 1),
             'iAWE': ApplianceName('washing machine', 1),
@@ -43,13 +44,14 @@ time_datasets = {
     'REDD': [pd.Timestamp("2011-04-24 08:30"), pd.Timestamp("2011-04-24 09:55")],
     'AMPds': [pd.Timestamp("2012-04-02 04:30"), pd.Timestamp("2012-04-02 06:00")],
     'iAWE': [pd.Timestamp("2013-07-10 07:22"), pd.Timestamp("2013-07-15 07:30")],
-    'UKPD': [pd.Timestamp("2012-11-10 10:24"), pd.Timestamp("2012-11-10 11:44")]
+    'UKPD': [pd.Timestamp("2013-04-14 14:00"), pd.Timestamp("2014-04-14 16:00")]
 
 }
 
 count = -1
-fig, axes = plt.subplots(ncols=len(DATASETS) + 1)
-latexify(columns=2)
+latexify(columns=1)
+fig, axes = plt.subplots(ncols=len(DATASETS), sharey=True)
+
 
 for dataset_name, dataset_path in DATASETS.iteritems():
     count += 1
@@ -67,20 +69,22 @@ for dataset_name, dataset_path in DATASETS.iteritems():
     electric = electric.sum_split_supplies()
     ax = plot_series(electric.appliances[wm_names[dataset_name]][
         ('power', 'active')][start:end],
-        ax=axes[count], date_format=DATE_FORMAT)
+        ax=axes[count], date_format=DATE_FORMAT, color='k')
     ax.set_title(dataset_name)
-    ax.set_ylabel("Active Power (Watts)")
+    ax.set_ylabel("")
+axes[0].set_ylabel("Active Power (Watts)")
 
-
+"""
 count += 1
 # Plotting UKPD which is on other path
 dataset = DataSet()
 dataset.load_hdf5("/home/nipun/Desktop/temp/ukpd", [1])
 start, end = time_datasets["UKPD"]
 ax = plot_series(dataset.buildings[1].utility.electric.appliances[wm_names['UKPD']][
-    ('power', 'active')][start:end], ax=axes[count], date_format=DATE_FORMAT)
+    ('power', 'active')][start:end], ax=axes[count], date_format=DATE_FORMAT, color='k')
 ax.set_title("UKPD")
 ax.set_ylabel("Active Power (Watts)")
+"""
 for ax in axes:
     format_axes(ax)
 
