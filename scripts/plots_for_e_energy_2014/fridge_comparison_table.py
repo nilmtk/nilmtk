@@ -19,7 +19,7 @@ DATASETS['Pecan Street'] = 'pecan_1min'
 DATASETS['AMDds'] = 'ampds'
 DATASETS['iAWE'] = 'iawe'
 
-for dataset_name, dataset in DATASETS:
+#for dataset_name, dataset in DATASETS:
     # Choose first home from each
 
 

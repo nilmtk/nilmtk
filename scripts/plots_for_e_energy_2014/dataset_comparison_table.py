@@ -25,29 +25,7 @@ DATASETS['Pecan Street'] = 'pecan_1min'
 DATASETS['AMDds'] = 'ampds'
 DATASETS['iAWE'] = 'iawe'
 DATASETS['UKPD'] = 'ukpd'
-#DATASETS['Smart'] = 'smart'
-
-if LOAD_DATASETS:
-    dataset_objs = OrderedDict()
-    for ds_name, ds_path in DATASETS.iteritems():
-        dataset = DataSet()
-        full_path = join(DATASET_PATH, ds_path)
-        print("Loading", full_path)
-        dataset.load_hdf5(full_path)
-
-        if ds_name == 'iAWE':
-            print("Pre-processing iAWE...")
-            electric = dataset.buildings[1].utility.electric
-            electric.crop('2013/6/11', '2013/7/31')
-            electric.drop_duplicate_indicies() # TODO: remove when no longer necessary
-        elif ds_name == 'UKPD':
-            electric = dataset.buildings[1].utility.electric
-            electric.appliances = electric.remove_channels_from_appliances(
-                ['kitchen_lights', 'LED_printer'])
-            electric.crop('2013/3/17')
-
-        dataset_objs[ds_name] = dataset
-
+# DATASETS['Smart'] = 'smart'
 
 # Maps from short col name to human-readable name
 COLUMNS = OrderedDict()
@@ -65,11 +43,28 @@ for key, value in COLUMNS.iteritems():
     else:
         COLUMNS[key] = key
 
-df = pd.DataFrame(index=DATASETS.keys(), columns=COLUMNS.values())
+stats_df = pd.DataFrame(index=DATASETS.keys(), columns=COLUMNS.values())
 
-for ds_name in DATASETS.iterkeys():
+for ds_name, ds_path in DATASETS.iteritems():
+    if LOAD_DATASETS:
+        dataset = DataSet()
+        full_path = join(DATASET_PATH, ds_path)
+        print("##################################################")
+        print("Loading", full_path)
+        dataset.load_hdf5(full_path)
+
+        if ds_name == 'iAWE':
+            print("Pre-processing iAWE...")
+            electric = dataset.buildings[1].utility.electric
+            electric.crop('2013/6/11', '2013/7/31')
+            electric.drop_duplicate_indicies() # TODO: remove when no longer necessary
+        elif ds_name == 'UKPD':
+            electric = dataset.buildings[1].utility.electric
+            electric.appliances = electric.remove_channels_from_appliances(
+                ['kitchen_lights', 'LED_printer'])
+            electric.crop('2013/3/17')
+
     print('Calculating stats for', ds_name)
-    dataset = dataset_objs[ds_name]
     ds_stats = dataset.descriptive_stats()
     for col_short, col_long in COLUMNS.iteritems():
         s = ""
@@ -80,14 +75,14 @@ for ds_name in DATASETS.iterkeys():
                                   minimal=True).replace(' ', '')
         if OUTPUT_LATEX:
             s += """}"""
-        df[col_long][ds_name] = s
+        stats_df[col_long][ds_name] = s
 
 if OUTPUT_LATEX:
     print("------------LATEX BEGINS-----------------")
-    latex = df.to_latex()
+    latex = stats_df.to_latex()
     for str_to_replace in ['midrule', 'toprule', 'bottomrule']:
         latex = latex.replace(str_to_replace, 'hline')
     print(latex)
     print("------------LATEX ENDS-------------------")
 else:
-    print(df)
+    print(stats_df)
