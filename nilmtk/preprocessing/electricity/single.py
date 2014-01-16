@@ -10,7 +10,7 @@ from nilmtk.sensors.electricity import Measurement
 from nilmtk.utils import secs_per_period_alias, timedelta64_to_secs
 
 
-def insert_zeros(single_appliance_dataframe, max_sample_period=None,
+def insert_zeros(single_appliance_dataframe,
                  sample_period_multiplier=4,
                  round_sample_period=True):
     """Find all gaps in `single_appliance_dataframe` longer than
@@ -61,15 +61,19 @@ def insert_zeros(single_appliance_dataframe, max_sample_period=None,
         Data from a single appliance.
 
     max_sample_period : float or int, optional
-        The maximum sample permissible period (in seconds). Any gap longer
-        than `max_sample_period` is assumed to imply that the IAM 
-        and appliance are off.  If None then will default to
-        `sample_period_multiplier` x the sample period of 
-        `single_appliance_dataframe`.
 
-    sample_period_multiplier : float or int, optional
-        default = 4
-    
+    sample_period_multiplier : float or int, optional 
+        default = 4.  Must be 4 or larger (to ensure we do not add zeros
+        less than sample_period seconds apart).
+        max_sample_period = sample_period x sample_period_multiplier.
+        max_sample_period is the maximum permissible sample period (in
+        seconds). Any gap longer than `max_sample_period` is assumed
+        to imply that the IAM and appliance are off.
+
+    round_sample_period : bool, optional
+        default = True. Whether or not to round sample_period to the 
+        nearest int.
+
     Returns
     -------
     df_with_zeros : pandas.DataFrame
@@ -80,8 +84,8 @@ def insert_zeros(single_appliance_dataframe, max_sample_period=None,
     sample_period = get_sample_period(single_appliance_dataframe)
     if round_sample_period:
         sample_period = int(round(sample_period))
-    if max_sample_period is None:
-        max_sample_period = sample_period * sample_period_multiplier
+
+    max_sample_period = sample_period * sample_period_multiplier
 
     # Drop NaNs (because we want those to be gaps in the index)
     df = single_appliance_dataframe.dropna()
@@ -119,6 +123,7 @@ def insert_zeros(single_appliance_dataframe, max_sample_period=None,
             non_power_columns.append(col)
 
     # Don't insert duplicate indicies
+    # TODO: remove this assert when we're confident the code is correct
     assert((dates_to_insert_zeros & df.index).size == 0)
 
     # Create new dataframe of zeros at new indicies ready for insertion
@@ -126,6 +131,14 @@ def insert_zeros(single_appliance_dataframe, max_sample_period=None,
                          index=dates_to_insert_zeros,
                          columns=power_columns,
                          dtype=np.float32)
+
+    # Check no zeros are closer than sample_period
+    # TODO: remove this assert when we're confident the code is correct
+    # also remove the sort_index().
+    if not zeros.empty:
+        zeros = zeros.sort_index()
+        assert(timedelta64_to_secs(np.diff(zeros.index.values).min()) > 
+               sample_period)
 
     # Now, take median of non-power columns (like voltage)
     for measurement in non_power_columns:

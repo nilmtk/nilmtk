@@ -364,9 +364,15 @@ class Electricity(object):
             Index is the same as the index used in the appliances DataFrames.
             Each column name is an ApplianceName namedtuple.
         """
+        # TODO: I think we should modify the behaviour so that it will always try
+        # to return a 'power' column per appliance if power data is available,
+        # even if the exact parameter isn't available.  ATM this function will
+        # silently remove some appliances if they don't include the correct
+        # measurements.
+
         if measurement is None:
             appliance_dict = {
-                appliance_name: appliance_df.icol[0]
+                appliance_name: appliance_df.icol(0)
                 for appliance_name, appliance_df in self.appliances.iteritems()}
         else:
             summed_dual_supply = sum_dual_supply(self.appliances)

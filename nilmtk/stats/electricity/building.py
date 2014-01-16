@@ -124,9 +124,10 @@ def proportion_of_energy_submetered(electricity,
 
 
 def get_total_energy_per_dict(electricity, dict_='mains',  unit='kwh'):
-    total_energy = 0
+    total_energy = 0.0
     for df in electricity.__dict__[dict_].values():
-        total_energy += single.energy(df, unit)
+        energy_for_df = single.energy(df, unit)
+        total_energy += energy_for_df
     return total_energy
 
 

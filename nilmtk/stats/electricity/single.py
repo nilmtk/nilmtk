@@ -487,6 +487,7 @@ def energy(series, unit='kwh'):
     --------
     hours_on
     """
+
     # TODO: replace this evil hack to handle dataframes(!)
     if isinstance(series, pd.DataFrame):
         series = series.icol(0)
