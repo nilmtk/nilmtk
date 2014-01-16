@@ -11,7 +11,8 @@ from nilmtk.utils import secs_per_period_alias, timedelta64_to_secs
 
 
 def insert_zeros(single_appliance_dataframe, max_sample_period=None,
-                 sample_period_multiplier=4):
+                 sample_period_multiplier=4,
+                 round_sample_period=True):
     """Find all gaps in `single_appliance_dataframe` longer than
     `max_sample_period` and insert a zero 1 sample period after
     the start of the gap and insert a second zero 1 sample period
@@ -77,6 +78,8 @@ def insert_zeros(single_appliance_dataframe, max_sample_period=None,
 
     """
     sample_period = get_sample_period(single_appliance_dataframe)
+    if round_sample_period:
+        sample_period = int(round(sample_period))
     if max_sample_period is None:
         max_sample_period = sample_period * sample_period_multiplier
 
@@ -96,7 +99,7 @@ def insert_zeros(single_appliance_dataframe, max_sample_period=None,
     readings_after_gaps = readings_after_gaps[
         readings_after_gaps.sum(axis=1) > 0]
 
-    # Make a DataFrame of zeros, ready for insertion
+    # Find dates to insert zeros
     dates_to_insert_zeros_before_gaps = (
         readings_before_gaps.index + pd.DateOffset(seconds=sample_period))
 
@@ -107,22 +110,15 @@ def insert_zeros(single_appliance_dataframe, max_sample_period=None,
         dates_to_insert_zeros_after_gaps)
 
     # Columns containing power_energy
-    power_columns = [
-        x for x in df.columns if x.physical_quantity in ['power']]
+    power_columns = [x for x in df.columns if x.physical_quantity in ['power']]
     non_power_columns = [x for x in df.columns if x not in power_columns]
 
     # Don't insert duplicate indicies
-    filtered_dates_to_insert_zeros = []
-    for d in dates_to_insert_zeros:
-        # TODO: can probably do this faster using set intersection and disjoint
-        try:
-            df[power_columns][d] = 0
-        except IndexError:
-            filtered_dates_to_insert_zeros.append(d)
+    assert((dates_to_insert_zeros & df.index).size == 0)
 
     # Create new dataframe of zeros at new indicies ready for insertion
     zeros = pd.DataFrame(data=0,
-                         index=filtered_dates_to_insert_zeros,
+                         index=dates_to_insert_zeros,
                          columns=power_columns,
                          dtype=np.float32)
 
