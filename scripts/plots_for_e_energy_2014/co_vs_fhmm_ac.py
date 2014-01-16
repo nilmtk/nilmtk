@@ -176,8 +176,9 @@ for freq in frequencies:
 results = results['1T']
 start = pd.Timestamp("2013-07-27 21:35")
 end = pd.Timestamp("2013-07-27 22:35")
+latexify(columns=1)
 fig, axes = plt.subplots(ncols=3, sharex=True, sharey=True)
-latexify(fig_height=1, fig_width=3.39)
+
 
 plot_series(predicted_power['fhmm']
             [('air conditioner', 2)][start:end], ax=axes[0], color='k', date_format=DATE_FORMAT)
@@ -190,11 +191,12 @@ plot_series(ground_truth_power[('air conditioner', 2)]
 for ax in axes:
     ax.set_ylim((0, 2000))
     format_axes(ax)
-
+    ax.set_xticklabels(['0', '', '30', '', '60'])
+    ax.set_xlabel("Time \n(mins)")
 
 axes[0].set_title("Predicted power\nFHMM")
 axes[1].set_title("Predicted power\nCO")
-axes[2].set_title("Ground truth power")
+axes[2].set_title("Ground truth \npower")
 
 axes[0].set_ylabel("Power (W)")
 axes[1].set_ylabel("")
