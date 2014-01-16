@@ -303,13 +303,18 @@ class DataSet(object):
         """
         if not os.path.exists(directory):
             os.makedirs(directory)
+
+        # Store metadata
         with open(os.path.join(directory, 'metadata.json'), 'w') as metadata_fp:
             metadata_fp.write(json.dumps(self.metadata))
 
-        # Store metadata
+        # Delete older dataset.h5 file if it exists
+        path_h5 = os.path.join(directory, 'dataset.h5')
+        if os.path.isfile(path_h5):
+            print("Removing older HDF5 file")
+            os.remove(path_h5)
 
-        store = pd.HDFStore(
-            os.path.join(directory, 'dataset.h5'), complevel=9, complib='zlib')
+        store = pd.HDFStore(path_h5, complevel=9, complib='zlib')
         for building_number in self.buildings:
             print("Writing data for %d" % (building_number))
             building = self.buildings[building_number]
