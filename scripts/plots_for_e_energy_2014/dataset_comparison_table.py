@@ -6,6 +6,7 @@ from os.path import expanduser, join
 import pandas as pd
 from nilmtk.dataset import DataSet
 from nilmtk.utils import summary_stats_string
+import nilmtk.preprocessing.electricity.building as prepb
 from collections import OrderedDict
 
 """
@@ -14,17 +15,17 @@ TODO:
 """
 
 LOAD_DATASETS = True
-OUTPUT_LATEX = True
+OUTPUT_LATEX = False
 DATASET_PATH = expanduser('~/Dropbox/Data/nilmtk_datasets/')
 
 # Maps from human-readable name to path
 DATASETS = OrderedDict()
-DATASETS['REDD'] = 'redd/low_freq'
-DATASETS['Pecan Street'] = 'pecan_1min'
-DATASETS['AMDds'] = 'ampds'
+#DATASETS['REDD'] = 'redd/low_freq'
+#DATASETS['Pecan Street'] = 'pecan_1min'
+#DATASETS['AMDds'] = 'ampds'
 DATASETS['iAWE'] = 'iawe'
-DATASETS['UKPD'] = 'ukpd'
-DATASETS['Smart'] = 'smart'
+#DATASETS['UKPD'] = 'ukpd'
+#DATASETS['Smart'] = 'smart'
 
 if LOAD_DATASETS:
     dataset_objs = OrderedDict()
@@ -33,6 +34,12 @@ if LOAD_DATASETS:
         full_path = join(DATASET_PATH, ds_path)
         print("Loading", full_path)
         dataset.load_hdf5(full_path)
+
+        if ds_name == 'iAWE':
+            print("Cropping iAWE...")
+            dataset.buildings[1].utility.electric.crop('2013/6/11', '2013/7/31')
+            print(dataset.buildings[1].utility.electric.get_start_and_end_dates())
+
         dataset_objs[ds_name] = dataset
 
 

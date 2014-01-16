@@ -338,12 +338,18 @@ def mask_appliances_with_mains(electricity, sample_period_multiplier=4):
     sys.stdout.flush()
     mains = electricity.mains.values()[0]
     max_sample_period = get_sample_period(mains) * sample_period_multiplier
+    print("Mains sample period = {:.1f}, max_sample_period = {:.1f}"
+          .format(get_sample_period(mains), max_sample_period))
+    print("Getting gap starts and ends...")
     gap_starts, gap_ends = get_gap_starts_and_gap_ends(mains, max_sample_period)
+    print("Found {:d} gap starts and {:d} gap ends.".format(len(gap_starts), len(gap_ends)))
 
     def mask_appliances(appliance_df):
         """For each appliance dataframe, insert NaNs for any reading inside
         mains gaps.
         """
+        print(".", end='')
+        sys.stdout.flush()
         for gap_start, gap_end in zip(gap_starts, gap_ends):
             index = appliance_df.index
             appliance_df[(index >= gap_start) & (index <= gap_end)] = np.NaN

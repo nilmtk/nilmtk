@@ -443,6 +443,24 @@ class Electricity(object):
         """Plot a compact representation of all appliance activity."""
         raise NotImplementedError
 
+    def crop(self, start_datetime=None, end_datetime=None):
+        """Just crops all dataframes in appliances, circuits and mains.
+        Does not remove any channels.  Performs in-place, does not return
+        anything.
+
+        Parameters
+        ----------
+        start_datetime, end_datetime : strings or datetime objects, optional
+        """
+        for dict_ in [self.appliances, self.circuits, self.mains]:
+            for name in dict_.keys():
+                df = dict_[name]
+                if start_datetime:
+                    df = df[df.index >= start_datetime]
+                if end_datetime:
+                    df = df[df.index <= end_datetime]
+                dict_[name] = df
+
     def get_start_and_end_dates(self):
         """Returns the start and end dates covering the data in
         appliances, circuits and mains.
