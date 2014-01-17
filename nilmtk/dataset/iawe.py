@@ -58,6 +58,7 @@ def query_database_jplug(self, jplug):
     data = psql.frame_query(query, mysql_conn['jplug'])
     data = data[data.timestamp < 1381069800]
     data.timestamp = data.timestamp.astype('int')
+    data.drop_duplicates(cols='timestamp', take_last=True, inplace=True)
     data.index = pd.to_datetime(
         (data.timestamp.values * 1E9).astype(int), utc=True)
     data = data.drop('timestamp', 1)
@@ -95,6 +96,7 @@ class IAWE(DataSet):
         data = psql.frame_query(query, mysql_conn['smart'])
         data = data[data.timestamp < 1381069800]
         data.timestamp = data.timestamp.astype('int')
+        data.drop_duplicates(cols='timestamp', take_last=True, inplace=True)
         data.index = pd.to_datetime(
             (data.timestamp.values * 1E9).astype(int), utc=True)
         data = data.drop('timestamp', 1)
@@ -142,8 +144,7 @@ class IAWE(DataSet):
         # Adding motor data which was collected using Current Cost
         df = pd.read_csv('/home/nipun/Copy/motor_data_complete.csv',
                          names=['timestamp', 'power'])
-        df.timestamp = df.timestamp.astype('int32')
-        df.power = df.power.astype('int32')
+        df.power = df.power.astype('float32')
         df.index = pd.to_datetime(
             (df.timestamp.values * 1E9).astype(int), utc=True)
         df = df.drop('timestamp', 1)
@@ -154,6 +155,10 @@ class IAWE(DataSet):
         # experiments
         df = df[df.power < 1000]
         df = df.dropna()
+        df["index"] = df.index
+        df.drop_duplicates(cols='index', take_last=True, inplace=True)
+        df = df.drop("index", 1)
+        df = df.sort_index()
 
         # Renaming the column
         df.columns = [Measurement('power', 'active')]

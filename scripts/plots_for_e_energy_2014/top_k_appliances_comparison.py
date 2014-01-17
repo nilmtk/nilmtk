@@ -29,8 +29,8 @@ def pretty_name_appliance_names(appliance_name_list):
     return [name + str(instance) for (name, instance) in appliance_name_list]
 
 count = -1
-fig, axes = plt.subplots(ncols=len(DATASETS) + 1)
 latexify(columns=2)
+fig, axes = plt.subplots(ncols=2)
 
 for dataset_name, dataset_path in DATASETS.iteritems():
     count += 1
