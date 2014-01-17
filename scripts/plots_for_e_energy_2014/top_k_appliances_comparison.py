@@ -1,6 +1,6 @@
 """
 Produces a plot comparing the top k appliances and their 
-contribution across a sample home each in Canada, India, UK and US
+contribution across a sample home each in India, UK and US
 """
 from __future__ import print_function, division
 from os.path import expanduser, join
@@ -12,14 +12,9 @@ from nilmtk.stats.electricity.building import proportion_per_appliance
 from collections import OrderedDict
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import Rectangle
-"""
-TODO:
-* are we doing all the pre-processing we need to do?
-* sum multiple instances of same class of appliance
-"""
 
 K = 5
-LOAD_DATASETS = False
+LOAD_DATASETS = True
 DATASET_PATH = expanduser('~/Dropbox/Data/nilmtk_datasets/')
 FIGURE_PATH = expanduser('~/PhD/writing/papers/e_energy_2014/latex/figures/')
 
@@ -89,7 +84,7 @@ if LOAD_DATASETS:
 def pretty_name_appliance_names(appliance_name_list):
     names = [name.replace('_', ' ')  for name in appliance_name_list]
     names = [name[0].upper() + name[1:] for name in names]
-    for old, new in [('Htpc', 'HTPC'), 
+    for old, new in [('Htpc', 'Home theatre PC'), 
                      ('Boiler', 'Gas boiler'),
                      ('Air conditioner', 'Air conditioning')]:
         try:

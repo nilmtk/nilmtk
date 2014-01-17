@@ -105,6 +105,6 @@ def format_axes(ax):
     for axis in [ax.xaxis, ax.yaxis]:
         axis.set_tick_params(direction='out', color=SPINE_COLOR)
 
-    matplotlib.pyplot.tight_layout()
+#    matplotlib.pyplot.tight_layout()
 
     return ax
