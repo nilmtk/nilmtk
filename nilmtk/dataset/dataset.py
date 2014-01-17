@@ -393,7 +393,8 @@ class DataSet(object):
 #            'dropout_rate': [],
             'dropout_rate_ignoring_gaps': [],
             'uptime': [],
-            'prop_timeslices': []}
+#            'prop_timeslices': []
+            }
 
         for building_num, building in self.buildings.iteritems():
             print('Calculating stats for building', building_num)
@@ -409,8 +410,8 @@ class DataSet(object):
             start, end = electric.get_start_and_end_dates()
             stats['proportion_up'].append(uptime / ((end-start).total_seconds() 
                                                     / SEC_PER_DAY))
-            stats['prop_timeslices'].append(
-                proportion_of_time_where_more_energy_submetered(building))
+#            stats['prop_timeslices'].append(
+#                proportion_of_time_where_more_energy_submetered(building))
 
         return stats
 

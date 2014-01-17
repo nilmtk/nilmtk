@@ -15,16 +15,16 @@ TODO:
 """
 
 LOAD_DATASETS = True
-OUTPUT_LATEX = True
+OUTPUT_LATEX = False
 DATASET_PATH = expanduser('~/Dropbox/Data/nilmtk_datasets/')
 
 # Maps from human-readable name to path
 DATASETS = OrderedDict()
-DATASETS['REDD'] = 'redd/low_freq'
-DATASETS['Pecan Street'] = 'pecan_1min'
-DATASETS['AMDds'] = 'ampds'
-DATASETS['iAWE'] = 'iawe'
-DATASETS['UKPD'] = 'ukpd'
+#DATASETS['REDD'] = join(DATASET_PATH, 'redd/low_freq')
+#DATASETS['Pecan Street'] = join(DATASET_PATH, 'pecan_1min')
+#DATASETS['AMDds'] = join(DATASET_PATH, 'ampds')
+DATASETS['iAWE'] = join(DATASET_PATH, 'iawe')
+#DATASETS['UKPD'] = '/data/mine/vadeec/h5'
 # DATASETS['Smart'] = 'smart'
 
 # Maps from short col name to human-readable name
@@ -34,8 +34,8 @@ COLUMNS['energy_submetered'] = """% energy\\\\submetered"""
 COLUMNS['proportion_up'] = """uptime / \\\\ total duration"""
 COLUMNS['dropout_rate_ignoring_gaps'] = """dropout rate\\\\(ignoring gaps)"""
 COLUMNS['uptime'] = """mains uptime\\\\per building\\\\(days)"""
-COLUMNS['prop_timeslices'] = ("""% timeslices\\\\where energy\\\\"""
-                              """submetered > 70%""")
+# COLUMNS['prop_timeslices'] = ("""% timeslices\\\\where energy\\\\"""
+#                              """submetered > 70%""")
 
 for key, value in COLUMNS.iteritems():
     if OUTPUT_LATEX:
@@ -48,21 +48,18 @@ stats_df = pd.DataFrame(index=DATASETS.keys(), columns=COLUMNS.values())
 for ds_name, ds_path in DATASETS.iteritems():
     if LOAD_DATASETS:
         dataset = DataSet()
-        full_path = join(DATASET_PATH, ds_path)
         print("##################################################")
-        print("Loading", full_path)
-        dataset.load_hdf5(full_path)
+        print("Loading", ds_path)
+        dataset.load_hdf5(ds_path)
 
         if ds_name == 'iAWE':
             print("Pre-processing iAWE...")
             electric = dataset.buildings[1].utility.electric
             electric.crop('2013/6/11', '2013/7/31')
-            electric.drop_duplicate_indicies() # TODO: remove when no longer necessary
         elif ds_name == 'UKPD':
             electric = dataset.buildings[1].utility.electric
             electric.appliances = electric.remove_channels_from_appliances(
                 ['kitchen_lights', 'LED_printer'])
-            electric.crop('2013/3/17')
 
     print('Calculating stats for', ds_name)
     ds_stats = dataset.descriptive_stats()

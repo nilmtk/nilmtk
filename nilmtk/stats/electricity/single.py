@@ -88,8 +88,7 @@ def get_dropout_rate(data, sample_period=None):
     duration = index[-1] - index[0]
     n_expected_samples = round((duration.total_seconds() / sample_period) + 1)
     dropout_rate = 1 - (index.size / n_expected_samples)
-    HEADROOM = 1.2
-    if dropout_rate < 0 and index.size < n_expected_samples * HEADROOM:
+    if dropout_rate < 0:
         dropout_rate = 0.0
     assert(1 >= dropout_rate >= 0)
     return dropout_rate
