@@ -12,6 +12,17 @@ from nilmtk.sensors.electricity import MainsName, Measurement, ApplianceName, Du
 from nilmtk.sensors.electricity import get_dual_supply_columns
 from nilmtk.dataset.redd import load_chan, load_labels, ApplianceMetadata
 
+"""
+TODO:
+* re-use more code from REDD
+* put lighting_circuit into circuits
+* set up wiring
+* use correct measurements (some are apparent; some are active)
+* convert to UKPD standard appliance names
+* import metadata from house 1
+* add citations to metadata
+"""
+
 # Maps from UKPD name to:
 #   tuple : ('<nilmtk name>', <metadata dict>)
 
