@@ -42,8 +42,8 @@ def find_common_measurements(electricity):
 
 
 def proportion_of_energy_submetered(electricity,
-                                    sample_period_multiplier=20,
-                                    require_common_measurements=True):
+                                    sample_period_multiplier=20):
+#                                    require_common_measurements=True):
     """Reports the proportion of energy in a building that is submetered.
 
     Assumes that missing appliance data means that the appliance is off.
@@ -69,11 +69,46 @@ def proportion_of_energy_submetered(electricity,
         1 = all energy submetered
        >1 = more energy submetered than is recorded on the mains channels!
     """
-
+    # TODO: get common measurements!
     # TODO: Handle circuits.
     # TODO: Handle wiring diagram.
 
     print("Calculating proportion of energy submetered...")
+    total_mains_energy, totals_per_appliance = energy_per_dataframe(
+        electricity, sample_period_multiplier)
+    return totals_per_appliance.sum() / total_mains_energy
+
+
+def proportion_per_appliance(electricity):
+    """
+    Returns
+    -------
+    Series, sorted by value
+       Keys are ApplianceNames
+       Values are proportion of total energy expressed as a float
+       between 0 and 1.
+    """
+    total_mains_energy, totals_per_appliance = energy_per_dataframe(
+        electricity)
+    prop_per_appliance = totals_per_appliance / total_mains_energy
+    prop_per_appliance.sort(ascending=False)
+    return prop_per_appliance
+
+
+def energy_per_dataframe(electricity, sample_period_multiplier=20, unit='kwh'):
+    """pre-processes electricity and then gets total energy per channel, 
+    after masking out all gaps in mains.
+
+    Returns
+    -------
+    mains_total_energy, totals_per_appliance
+
+    total_mains_energy : float
+    totals_per_appliance : pd.Series
+        each key is an ApplianceName
+        each value is total energy
+    """
+
     # TODO: this might be an ugly hack to resolve circular dependencies.
     from nilmtk.preprocessing.electricity.building import mask_appliances_with_mains
     from nilmtk.preprocessing.electricity.single import insert_zeros
@@ -118,12 +153,13 @@ def proportion_of_energy_submetered(electricity,
     print("done inserting zeros")
 
     # Total energy used for mains
-    total_mains = get_total_energy_per_dict(electricity, 'mains')
-    total_appliances = get_total_energy_per_dict(electricity, 'appliances')
+    total_mains_energy = get_total_energy_per_dict(electricity, 'mains', unit)
 
-    print("Done calculating proportion of energy submetered")
-
-    return total_appliances / total_mains
+    totals_per_appliance = {}
+    for name, df in electricity.appliances.iteritems():
+        totals_per_appliance[name] = single.energy(df, unit=unit)
+    
+    return total_mains_energy, pd.Series(totals_per_appliance)
 
 
 def get_total_energy_per_dict(electricity, dict_='mains',  unit='kwh'):
