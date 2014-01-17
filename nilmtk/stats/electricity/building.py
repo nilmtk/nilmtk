@@ -410,7 +410,19 @@ def proportion_of_time_where_more_energy_submetered(building,
     -------
     float [0,1] proportion of time
     """
-   
+
+    # mask appliance with mains & remove large gaps in mains
+    # (take a look at proportion_of_time_where_more_energy_submetered)
+    # put mains and appliances into one big DF (make sure we take the correct appliances!)
+    # downsample to 10 minute chunks, using mean
+    # 
+    # OR....
+    # ignore large gaps in mains... then...
+    # chop into 10 min chunks and pass these to proportion_of_energy_submetered.
+    # maybe can do this efficiently by putting everything into a big dataframe
+    # and using indicies_of_periods, and then extracting these chunks back
+    # into an Electricity object.
+
     building.utility.electric = building.utility.electric.sum_split_supplies()
     
     import nilmtk.preprocessing.electricity.building as prepb

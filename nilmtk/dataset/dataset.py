@@ -80,11 +80,24 @@ class DataSet(object):
         self.buildings = {}
         self.metadata = {}
 
-    def load(self, root_directory):
-        """Load entire dataset into memory"""
+    def load(self, root_directory, buildings_to_load=None, **args):
+        """Load dataset into memory
+        
+        Parameters
+        ---------
+        root_direction : string
+        buildings_to_load : list of strings, optional
+            Use the native dataset names. e.g. 'house_1' for REDD.
+            If none then load all buildings in the dataset.
+        **args : optional
+            named arguments to pass to load_building
+        """
         building_names = self.load_building_names(root_directory)
+        if buildings_to_load:
+            building_names = (set(building_names)
+                              .intersection(set(buildings_to_load)))
         for building in building_names:
-            self.load_building(root_directory, building)
+            self.load_building(root_directory, building, **args)
 
     def load_hdf5(self, directory, building_nums=None, time_map=None):
         """Imports dataset from HDF5 store into NILMTK object

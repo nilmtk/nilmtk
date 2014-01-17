@@ -455,12 +455,7 @@ class Electricity(object):
         """
         for dict_ in [self.appliances, self.circuits, self.mains]:
             for name in dict_.keys():
-                df = dict_[name]
-                if start_datetime:
-                    df = df[df.index >= start_datetime]
-                if end_datetime:
-                    df = df[df.index <= end_datetime]
-                dict_[name] = df
+                dict_[name] = dict_[name].ix[start_datetime:end_datetime]
 
     def get_start_and_end_dates(self):
         """Returns the start and end dates covering the data in

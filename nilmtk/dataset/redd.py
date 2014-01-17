@@ -2,6 +2,7 @@ from __future__ import print_function, division
 import re
 import os
 import datetime
+import sys
 import pandas as pd
 import numpy as np
 from collections import namedtuple
@@ -31,8 +32,33 @@ APPLIANCE_NAME_MAP = {
 # maps from house number to a list of dud REDD channel numbers
 DUD_CHANNELS = {1: [19]}
 
-def load_chan(building_dir, chan=None, filename=None, colnames=None):
-    """Returns DataFrame containing data for this channel"""
+def load_chan(building_dir, chan=None, filename=None, colnames=None, 
+              usecols=None, sep=' '):
+    """Loads CSV files where the first column is a UNIX timestamp, 
+    like REDD or UKPD CSV files.
+
+    Parameters
+    ----------
+    building_dir : string
+        The base path
+    chan : int, optional
+        filename will be formed from 'building_dir/channel_<chan>.dat'
+    filename : string, optinal
+        if you want to load a filename not of the form `channel_<chan>.dat` then
+        leave `chan` as None and provide just the `filename`, no path.
+    colnames : list, optional
+        The names to give to each column
+    usecols : list of ints, optional
+        A list of column indicies to load.  If colnames is provided then
+        len(colnames) == len(usecols)
+    sep : character, optional
+        Defaults to ' '
+
+    Returns 
+    -------
+    DataFrame.  Index is DatetimeIndex in UTC.  Data values are float32.  
+        Column names are `colnames` if provided.
+    """
     if colnames is None:
         colnames = [Measurement('power','active')]
     
@@ -41,15 +67,28 @@ def load_chan(building_dir, chan=None, filename=None, colnames=None):
     else:
         filename = os.path.join(building_dir, filename)
 
-    print('Loading', filename)
+    print('Attempting to load', filename, '...', end='')
+    if usecols:
+        usecols.insert(0,0)
+        if colnames:
+            colnames.insert(0, 'index')
+        print("Only using columns", usecols, '...', end='')
+    sys.stdout.flush()
     # Don't use date_parser with pd.read_csv.  Instead load it all
     # and then convert to datetime.  Thanks to Nipun for linking to
     # this discussion where jreback gives this tip:
     # https://github.com/pydata/pandas/issues/3757
-    df = pd.read_csv(filename, sep=' ', header=None, index_col=0,
-                     parse_dates=False, names=colnames,
-                     dtype={colname:np.float32 for colname in colnames})
-    df.index = pd.to_datetime((df.index.values*1E9).astype(int), utc=True)
+    try:
+        df = pd.read_csv(filename, sep=sep, header=None, index_col=0,
+                         parse_dates=False, names=colnames, usecols=usecols,
+                         dtype={colname:np.float32 for colname in colnames
+                                if colname != 'index'})
+    except Exception as e:
+        print('failed:', str(e))
+        raise
+    else:
+        print('done.')
+        df.index = pd.to_datetime((df.index.values*1E9).astype(int), utc=True)
     return df
 
 
