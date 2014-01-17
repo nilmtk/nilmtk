@@ -79,18 +79,64 @@ def proportion_of_energy_submetered(electricity,
     return totals_per_appliance.sum() / total_mains_energy
 
 
-def proportion_per_appliance(electricity):
+def proportion_per_appliance(electricity, merge=False):
     """
+    Parameters
+    ----------
+    merge : boolean, optional
+        If True then merge multiple instances of the same appliance name
+        and merge all appliances with 'light' in their name.
+
     Returns
     -------
     Series, sorted by value
-       Keys are ApplianceNames
+       Keys are ApplianceNames.names if `merge` else ApplianceNames.names
        Values are proportion of total energy expressed as a float
        between 0 and 1.
     """
     total_mains_energy, totals_per_appliance = energy_per_dataframe(
         electricity)
     prop_per_appliance = totals_per_appliance / total_mains_energy
+
+    if merge:
+        names = set([appliance.name for appliance in prop_per_appliance.index])
+
+        # Split names into lighting and non-lighting
+        names_excl_lights = []
+        names_of_lights = []
+        for name in names:
+            if np.any([light_name in name for light_name in ['light','lamp']]):
+                names_of_lights.append(name)
+            else:
+                names_excl_lights.append(name)
+
+        # Merge non-lighting appliances
+        ppa_merged = {}
+        for name in names_excl_lights:
+            i = 1
+            ppa_merged[name] = 0
+            while True:
+                try:
+                    ppa_merged[name] += prop_per_appliance[(name, i)]
+                except KeyError:
+                    break
+                else:
+                    i += 1
+
+        # Merge lighting
+        ppa_merged['lighting'] = 0
+        for name in names_of_lights:
+            i = 1
+            while True:
+                try:
+                    ppa_merged['lighting'] += prop_per_appliance[(name, i)]
+                except KeyError:
+                    break
+                else:
+                    i += 1
+
+        prop_per_appliance = pd.Series(ppa_merged)
+
     prop_per_appliance.sort(ascending=False)
     return prop_per_appliance
 

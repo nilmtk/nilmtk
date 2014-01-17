@@ -11,7 +11,7 @@ from nilmtk.plots import plot_series, format_axes, latexify
 from nilmtk.stats.electricity.building import proportion_per_appliance
 from collections import OrderedDict
 import matplotlib.pyplot as plt
-
+from matplotlib.pyplot import Rectangle
 """
 TODO:
 * are we doing all the pre-processing we need to do?
@@ -21,27 +21,9 @@ TODO:
 K = 5
 LOAD_DATASETS = False
 DATASET_PATH = expanduser('~/Dropbox/Data/nilmtk_datasets/')
-FIGURE_PATH = expanduser('~/PhD/writing/papers/e_energy_2014/figures/')
+FIGURE_PATH = expanduser('~/PhD/writing/papers/e_energy_2014/latex/figures/')
 
 # From http://colorbrewer2.org
-# number of data classes = 7
-# qualitative
-COLORS = [(141,211,199),
-(255,255,179),
-(190,186,218),
-(251,128,114),
-(128,177,211),
-(253,180,98),
-(179,222,105)]
-
-COLORS = ['#8dd3c7',
-'#ffffb3',
-'#bebada',
-'#fb8072',
-'#80b1d3',
-'#fdb462',
-'#b3de69']
-
 COLORS = [
 '#a6cee3',
 '#1f78b4',
@@ -49,8 +31,39 @@ COLORS = [
 '#33a02c',
 '#fb9a99',
 '#e31a1c',
-'#fdbf6f'
+'#fdbf6f',
+'#ff7f00',
+'#cab2d6',
+'#6a3d9a',
+'#ffff99'
 ]
+
+# List of tuples
+# Each tuple is a list of synonyms
+label_to_color = [
+    ('others'),
+    ('lighting'), 
+    ('fridge'), 
+    ('washer dryer','washing_machine'),
+    ('kitchen outlets'),
+    ('boiler'),
+    ('htpc'),
+    ('air conditioner'),
+    ('laptop computer'),
+    ('dishwasher'),
+    ('entertainment unit')
+]
+
+def get_colors_for_labels(labels):
+    colors = []
+    for label in labels:
+        for i, labs in enumerate(label_to_color):
+            if label in labs:
+                colors.append(COLORS[i])
+                print(label, i)
+                break
+    return colors
+
 # Maps from human-readable name to path
 DATASETS = OrderedDict()
 DATASETS['REDD'] = join(DATASET_PATH, 'redd/low_freq')
@@ -70,52 +83,57 @@ if LOAD_DATASETS:
         building = dataset.buildings[1]
         electric = building.utility.electric
         electrics[dataset_name] = electric
-        proportions[dataset_name] = proportion_per_appliance(electric)
+        proportions[dataset_name] = proportion_per_appliance(electric, 
+                                                             merge=True)
 
 def pretty_name_appliance_names(appliance_name_list):
-    return [name.replace('_', ' ') + str(instance) for (name, instance) in appliance_name_list]
+    names = [name.replace('_', ' ')  for name in appliance_name_list]
+    names = [name[0].upper() + name[1:] for name in names]
+    try:
+        names[names.index('Htpc')] = 'HTPC'
+    except ValueError:
+        pass
+    return names
 
 plt.close('all')
-latexify(columns=2, fig_height=3)
-fig, axes = plt.subplots(ncols=3)
+latexify(columns=2, fig_height=2)
+fig, axes = plt.subplots(ncols=4, subplot_kw={'aspect':1})
 
 count = 0
 for dataset_name, dataset_path in DATASETS.iteritems():
-    electric = electrics[dataset_name]
-    top_k = proportions[dataset_name][:K]
     print("\n------------------", dataset_name, "-----------------")
+    top_k = proportions[dataset_name][:K]
     print(top_k)
     fracs = top_k.tolist()
     fracs.append(1.0 - sum(fracs))
-    labels = pretty_name_appliance_names(top_k.index.tolist())
-    labels.append("Others")
+    labels_raw = top_k.index.tolist()
+    labels_raw.append('others')
+    colors = get_colors_for_labels(labels_raw)
+    pretty_labels = pretty_name_appliance_names(labels_raw)
     explode = (0.03, 0.03, 0.03, 0.03, 0.03, 0.03)
     ax = axes[count]
-    ax.pie(fracs,  labels=labels,  labeldistance=1.0, colors=COLORS,
-#           autopct='%1.0f%%', explode=explode,
+    ax.pie(fracs, 
+           labeldistance=0.9, 
+           colors=colors,
+#           autopct='%1.0f%%', explode=explode, labels=pretty_labels,
+           radius=1.1,
            shadow=False, startangle=90)
     ax.set_title(dataset_name)
     count += 1
-    del electric
 
-"""
-count += 1
-# Plotting UKPD which is on other path
-dataset = DataSet()
-dataset.load_hdf5("/home/nipun/Desktop/temp/ukpd", [1])
-building = dataset.buildings[1]
-electric = building.utility.electric
-top_k = top_k_appliances(electric, k=5)
-fracs = (top_k.values * 100).tolist()
-labels = pretty_name_appliance_names(top_k.index.tolist())
-ax = axes[count]
-ax.pie(fracs,  labels=labels,
-       autopct='%1.1f%%', shadow=True, startangle=90)
-ax.set_title("UKPD")
-"""
-
-for ax in axes:
-    format_axes(ax)
-
+# draw legend
+names = []
+for tup in label_to_color:
+    if isinstance(tup, tuple):
+        names.append(tup[0])
+    else:
+        names.append(tup)
+names = pretty_name_appliance_names(names)
+proxy_artists = [Rectangle((0,0),1,1,fc=color) for color in COLORS]
+ax = axes[-1]
+ax.axis('off')
+ax.legend(proxy_artists, names, loc='center')
 fig.tight_layout()
+fig.subplots_adjust(wspace=.001)
 fig.savefig(join(FIGURE_PATH, "top_k_appliances_pie.pdf"))
+print("done")
