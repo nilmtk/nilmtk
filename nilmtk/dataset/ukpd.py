@@ -54,7 +54,7 @@ DUD_CHANNELS = {}
 # load metadata
 
 # Start and end times per building
-DEFAULT_PERIODS_TO_LOAD = {1: ("2013-04-01", None)}
+DEFAULT_PERIODS_TO_LOAD = {1: ("2013-04-16", None)}
 
 MIN_SAMPLES_TO_LOAD = 100
 

@@ -49,8 +49,9 @@ def load_chan(building_dir, chan=None, filename=None, colnames=None,
     colnames : list, optional
         The names to give to each column
     usecols : list of ints, optional
-        A list of column indicies to load.  If colnames is provided then
-        len(colnames) == len(usecols)
+        A list of column indicies to load.  Note that the index column
+        counts as column 0.  If usecols is provided then load_chan
+        will run `usecols.insert(0,0)` to load the index column.
     sep : character, optional
         Defaults to ' '
 
@@ -69,8 +70,9 @@ def load_chan(building_dir, chan=None, filename=None, colnames=None,
 
     print('Attempting to load', filename, '...', end='')
     if usecols:
-        usecols.insert(0,0)
-        if colnames:
+        if usecols and 0 not in usecols:
+            usecols.insert(0,0)
+        if colnames and 'index' not in colnames:
             colnames.insert(0, 'index')
         print("Only using columns", usecols, '...', end='')
     sys.stdout.flush()
