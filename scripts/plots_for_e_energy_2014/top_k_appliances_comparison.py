@@ -89,10 +89,13 @@ if LOAD_DATASETS:
 def pretty_name_appliance_names(appliance_name_list):
     names = [name.replace('_', ' ')  for name in appliance_name_list]
     names = [name[0].upper() + name[1:] for name in names]
-    try:
-        names[names.index('Htpc')] = 'HTPC'
-    except ValueError:
-        pass
+    for old, new in [('Htpc', 'HTPC'), 
+                     ('Boiler', 'Gas boiler'),
+                     ('Air conditioner', 'Air conditioning')]:
+        try:
+            names[names.index(old)] = new
+        except ValueError:
+            pass
     return names
 
 plt.close('all')
