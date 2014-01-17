@@ -10,7 +10,7 @@ import pandas as pd
 from matplotlib.dates import SEC_PER_HOUR, SEC_PER_DAY
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
-import copy
+import copy, sys
 from nilmtk.utils import secs_per_period_alias, timedelta64_to_secs
 from nilmtk.exceptions import TooFewSamplesError
 
@@ -37,7 +37,7 @@ def get_sample_period(data):
     ------
     TooFewSamplesError
     """
-    N_SAMPLES = 100
+    N_SAMPLES = 90
     if len(data) < N_SAMPLES:
         try:
             name = data.name
@@ -95,7 +95,7 @@ def get_dropout_rate(data, sample_period=None):
 
 
 def get_dropout_rate_ignore_gaps(data, sample_period=None, 
-                                 max_sample_period=None):
+                                 sample_period_multiplier=20):
     """The proportion of samples that have been lost, but first
     remove any large gaps.
 
@@ -120,15 +120,15 @@ def get_dropout_rate_ignore_gaps(data, sample_period=None,
     """
     if sample_period is None:
         sample_period = get_sample_period(data)
-    if max_sample_period is None:
-        max_sample_period = sample_period * 4
+    max_sample_period = sample_period * sample_period_multiplier
 
+    index = _get_index(data)
     dropout_rates = []
-    starts, ends = get_good_section_starts_and_ends(data, max_sample_period)
+    starts, ends = get_good_section_starts_and_ends(index, max_sample_period)
     for start, end in zip(starts, ends):
-        cropped_data = data[start:end]
+        slice_ = index.slice_indexer(start, end)
         try:
-            dropout_rate = get_dropout_rate(cropped_data, 
+            dropout_rate = get_dropout_rate(index[slice_], 
                                             sample_period=sample_period)
         except TooFewSamplesError:
             pass
@@ -271,24 +271,29 @@ def get_good_section_starts_and_ends(data, max_sample_period):
     -------
     starts, ends: DatetimeIndex
     """
-    gap_starts, gap_ends = get_gap_starts_and_gap_ends(data, max_sample_period)
+    print("Getting good section starts and ends..", end="")
+    sys.stdout.flush()
+    index = _get_index(data)
+    gap_starts, gap_ends = get_gap_starts_and_gap_ends(index, max_sample_period)
 
     if gap_starts.size > 0 and gap_ends.size > 0:
-        if data.index[0] in gap_ends or data.index[0] >= gap_ends[0]:
+        if index[0] in gap_ends or index[0] >= gap_ends[0]:
             starts = gap_ends
         else:
-            starts = gap_ends.insert(0, data.index[0])
-            starts = starts.tz_localize('UTC').tz_convert(data.index.tzinfo)
+            starts = gap_ends.insert(0, index[0])
+            starts = starts.tz_localize('UTC').tz_convert(index.tzinfo)
 
-        if data.index[-1] in gap_starts or data.index[-1] <= gap_starts[-1]:
+        if index[-1] in gap_starts or index[-1] <= gap_starts[-1]:
             ends = gap_starts
         else:
-            ends = gap_starts.insert(len(gap_starts), data.index[-1])
-            ends = ends.tz_localize('UTC').tz_convert(data.index.tzinfo)
+            ends = gap_starts.insert(len(gap_starts), index[-1])
+            ends = ends.tz_localize('UTC').tz_convert(index.tzinfo)
     else:
         # there are no gaps in the data!
-        starts = pd.DatetimeIndex([data.index[0]])
-        ends = pd.DatetimeIndex([data.index[-1]])
+        starts = pd.DatetimeIndex([index[0]])
+        ends = pd.DatetimeIndex([index[-1]])
+
+    print("found {:d} good sections. done".format(len(starts)))
 
     return starts, ends
 
@@ -299,12 +304,14 @@ def get_uptime(data, max_sample_period=None):
     -------
     float : total duration of good data segments, in days
     """
+    print("Calculating uptime...")
     if max_sample_period is None:
         max_sample_period = get_sample_period(data) * 4
     starts, ends = get_good_section_starts_and_ends(data, max_sample_period)
     secs = 0
     for start, end in zip(starts, ends):
         secs += (end - start).total_seconds()
+    print("done calculating uptime")
     return secs / SEC_PER_DAY
 
 

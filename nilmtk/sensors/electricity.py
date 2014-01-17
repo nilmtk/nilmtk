@@ -566,3 +566,11 @@ class Electricity(object):
                 sys.stdout.flush()
         print('Done')
         
+    def remove_voltage(self):
+        for dict_ in [self.appliances, self.circuits, self.mains]:
+            for name in dict_.keys():
+                df = dict_[name]
+                for col in df.columns:
+                    if col.physical_quantity == 'voltage':
+                        del df[col]
+                

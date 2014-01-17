@@ -73,6 +73,7 @@ def proportion_of_energy_submetered(electricity,
     # TODO: Handle circuits.
     # TODO: Handle wiring diagram.
 
+    print("Calculating proportion of energy submetered...")
     # TODO: this might be an ugly hack to resolve circular dependencies.
     from nilmtk.preprocessing.electricity.building import mask_appliances_with_mains
     from nilmtk.preprocessing.electricity.single import insert_zeros
@@ -114,11 +115,13 @@ def proportion_of_energy_submetered(electricity,
         df, sample_period_multiplier=sample_period_multiplier)
     electricity = apply_func_to_values_of_dicts(electricity, single_insert_zeros,
                                                 ['appliances', 'mains'])
-    print("done")
+    print("done inserting zeros")
 
     # Total energy used for mains
     total_mains = get_total_energy_per_dict(electricity, 'mains')
     total_appliances = get_total_energy_per_dict(electricity, 'appliances')
+
+    print("Done calculating proportion of energy submetered")
 
     return total_appliances / total_mains
 
@@ -374,17 +377,20 @@ def get_dropout_rates(electricity, ignore_gaps=False):
     -------
     list of dropout rates, one per dataframe
     """
+    print("Calculating dropout rates...")
     dropout_func = (single.get_dropout_rate_ignore_gaps if ignore_gaps 
                     else single.get_dropout_rate)
     dropout_rates = []
     for attribute in ['appliances', 'circuits', 'mains']:
         for name, df in electricity.__dict__[attribute].iteritems():
+            print(name)
             try:
-                dropout_rates.append(dropout_func(df))
+                dropout_rates.append(dropout_func(df.index))
             except:
                 print("Error occurred when processing attribute={}, name={}"
                       .format(attribute, name), file=sys.stderr)
                 raise
+    print("done calculating dropout rates")
     return dropout_rates
     
 
