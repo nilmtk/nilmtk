@@ -14,6 +14,12 @@ from nilmtk.dataset.redd import load_chan, load_labels, ApplianceMetadata
 
 """
 TODO:
+* load 1-sec data
+* provide options for:
+  * loading just the last X days of data from each house
+  * 1-sec mains:
+    * down-sample
+    * ignore some measurements (e.g. just take active power)
 * re-use more code from REDD
 * put lighting_circuit into circuits
 * set up wiring
