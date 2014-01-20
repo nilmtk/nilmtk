@@ -12,7 +12,7 @@ from nilmtk.plots import plot_series, format_axes, latexify
 from nilmtk.stats.electricity.building import proportion_per_appliance
 from nilmtk.preprocessing.electricity.single import normalise_power
 
-LOAD_DATASETS = False
+LOAD_DATASETS = True
 DATASET_PATH = expanduser('~/Dropbox/Data/nilmtk_datasets/')
 FIGURE_PATH = expanduser('~/PhD/writing/papers/e_energy_2014/'
                          'nilmtk_e_energy_2014/figures/')
@@ -140,7 +140,7 @@ for i, (chan, voltage, nominal_voltage) in enumerate(chans):
     if i==0:
         ax.set_ylabel('Frequency')
     elif i==1:
-        ax.set_xlabel('Power (kW)')
+        ax.set_xlabel('Active Power (kW)')
 
     def watts_to_kw(x, pos):
         return '{:.1f}'.format(x/1000)

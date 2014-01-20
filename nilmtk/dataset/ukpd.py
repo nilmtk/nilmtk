@@ -170,7 +170,7 @@ class UKPD(DataSet):
             usecols.append(3)
         try:
             df = load_chan(building_dir, filename='mains.dat', usecols=usecols,
-                           colnames=[Measurement('power', 'active'), 
+                           colnames=[Measurement('power', 'active'),
                                      Measurement('power', 'apparent'),
                                      Measurement('voltage', '')])
         except IOError:
@@ -191,7 +191,6 @@ class UKPD(DataSet):
                 mains_chan = chan
             else:
                 appliance_chans.append(chan)
-
 
         # Load Current Cost mains chans (only if we haven't loaded 1sec mains)
         if mains_chan and electric.mains.get(MainsName(1,1)) is None:

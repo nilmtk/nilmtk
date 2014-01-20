@@ -525,10 +525,12 @@ class Electricity(object):
         """
         e_copy = copy.deepcopy(self)
         power_energy_columns = [
-            x for x in self.mains.values()[0].columns if x.physical_quantity in ['power', 'energy']]
+            x for x in self.mains.values()[0].columns 
+            if x.physical_quantity in ['power', 'energy']]
 
         non_power_energy_columns = [
-            x for x in self.mains.values()[0].columns if x not in power_energy_columns]
+            x for x in self.mains.values()[0].columns 
+            if x not in power_energy_columns]
 
         # Sum split-supply mains
         try:
