@@ -396,6 +396,7 @@ def plot_missing_samples_using_bitmap(electricity, ax=None, fig=None,
 
     dataset_start, dataset_end = electricity.get_start_and_end_dates()
     sec_per_pixel = (dataset_end - dataset_start).total_seconds() / fig_width
+    print("Seconds per pixel = {:.1f}".format(sec_per_pixel))
     rule_code = '{:d}S'.format(int(round(sec_per_pixel)))
 
     missing_samples_per_period = OrderedDict()
@@ -424,22 +425,27 @@ def plot_missing_samples_using_bitmap(electricity, ax=None, fig=None,
     if add_colorbar:
         plt.colorbar(im)
 
-    ax.set_yticks(np.arange(0.5, len(df.columns) + 0.5))
-    ax.set_xlim([start_datenum, end_datenum])
+    ax.set_title('Proportion of lost samples')
 
+    # y axis
     def formatter(x, pos):
         x = int(x)
         return df.columns[x]
 
+    ax.set_yticks(np.arange(0.5, len(df.columns) + 0.5))
     ax.yaxis.set_major_formatter(FuncFormatter(formatter))
-    ax.set_title('Proportion of lost samples')
     for item in ax.get_yticklabels():
         item.set_fontsize(8)
 
+    # x axis
+    ax.set_xlim([start_datenum, end_datenum])
+    ax.set_xlabel('Date (day / month / year)')
+    ax.set_xticks([start_datenum, (start_datenum+end_datenum)/2, 
+                   end_datenum])
     ax.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m/%y',
                                                       tz=df.index.tzinfo))
 
-    fig.autofmt_xdate()
+#    fig.autofmt_xdate()
     # Plot horizontal lines separating appliances
     for i in range(1, img.shape[0]):
         ax.plot([start_datenum, end_datenum],
