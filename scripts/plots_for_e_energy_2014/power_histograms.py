@@ -5,16 +5,17 @@ import numpy as np
 from collections import OrderedDict
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import Rectangle
-from matplotlib.ticker import MaxNLocator
+from matplotlib.ticker import MaxNLocator, FuncFormatter
 from nilmtk.dataset import DataSet
 from nilmtk.sensors.electricity import ApplianceName
 from nilmtk.plots import plot_series, format_axes, latexify
 from nilmtk.stats.electricity.building import proportion_per_appliance
 from nilmtk.preprocessing.electricity.single import normalise_power
 
-LOAD_DATASETS = True
+LOAD_DATASETS = False
 DATASET_PATH = expanduser('~/Dropbox/Data/nilmtk_datasets/')
-FIGURE_PATH = expanduser('~/PhD/writing/papers/e_energy_2014/latex/figures/')
+FIGURE_PATH = expanduser('~/PhD/writing/papers/e_energy_2014/'
+                         'nilmtk_e_energy_2014/figures/')
 
 NORMALISED_BAR_COLOR = 'gray'
 UNNORMALISED_LINE_COLOR = 'k'
@@ -64,7 +65,7 @@ chans = [(ukpd_apps[('washing_machine', 1)][('power', 'active')],
           INDIA_NOMINAL_VOLTAGE)]
 
 plt.close('all')
-latexify(columns=2, fig_height=2)
+latexify(columns=2, fig_height=1.8)
 fig, axes = plt.subplots(ncols=3)
 for i, (chan, voltage, nominal_voltage) in enumerate(chans):
     name = labels[i]
@@ -124,22 +125,28 @@ for i, (chan, voltage, nominal_voltage) in enumerate(chans):
     title_x = 0.5
     ax.set_xlim([min_power, max_power])
     if name == 'Washer dryer':
-        ax.set_ylim([0, np.max(n)*0.8])
+        ax.set_ylim([0, np.max(n)*0.7])
         ax.set_xlim([0,max_power])
+        ax.set_xticks([0,1000,2000])
     elif name == 'Toaster':
         ax.set_ylim([0, np.max(n)*1.0])
 #        ax.set_xlim([1500, 1640])
+        ax.set_xticks([1500,1600])
     elif name == 'Air conditioning':
-        pass
+        ax.set_xticks([1500,1900,2300])
     else:
         ax.set_ylim([0, np.max(n)*1.2])
 
     if i==0:
-        ax.set_ylabel('frequency')
+        ax.set_ylabel('Frequency')
     elif i==1:
-        ax.set_xlabel('power (watts)')
+        ax.set_xlabel('Power (kW)')
 
-    ax.xaxis.set_major_locator(MaxNLocator(5))
+    def watts_to_kw(x, pos):
+        return '{:.1f}'.format(x/1000)
+
+#    ax.xaxis.set_major_locator(MaxNLocator(5))
+    ax.xaxis.set_major_formatter(FuncFormatter(watts_to_kw))
     ax.set_title(name, x=title_x, y=TITLE_Y, ha='center')
 
 fig.tight_layout()
