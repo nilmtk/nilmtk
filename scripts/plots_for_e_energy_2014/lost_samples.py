@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from copy import deepcopy
 from nilmtk.dataset import DataSet
 import nilmtk.stats.electricity.building as bstats
-from nilmtk.plots import latexify, format_axes
+from nilmtk.plots import latexify, format_axes, SPINE_COLOR
 
 # Attempt to automatically figure out if we need to load dataset
 try:
@@ -21,6 +21,7 @@ LATEX_PDF_OUTPUT_FILENAME = expanduser('~/PhD/writing/papers/e_energy_2014/'
                                        'lost_samples.pdf')
 
 plt.close('all')
+latexify(columns=1, fig_height=1.5)
 fig = plt.figure()
 ax = fig.add_subplot(111)
 
@@ -30,8 +31,6 @@ if LOAD_DATASET:
     dataset.load_hdf5(DATASET_PATH)
 
 electric = dataset.buildings[1].utility.electric
-
-latexify(columns=1)
 electric_cropped = deepcopy(electric)
 electric_cropped.appliances = {k:v for k,v in electric.appliances.items()[:N_APPLIANCES]}
 bstats.plot_missing_samples_using_bitmap(electric_cropped, ax=ax, cmap=plt.cm.Greys)
@@ -39,6 +38,11 @@ format_axes(ax)
 xlim = ax.get_xlim()
 ax.set_title('')
 plt.tight_layout()
+
+for spine in ['top', 'right']:
+    ax.spines[spine].set_visible(True)
+    ax.spines[spine].set_color(SPINE_COLOR)
+    ax.spines[spine].set_linewidth(0.5)
 
 # format appliance labels
 ytext = [t.get_text() for t in ax.get_yticklabels()]
@@ -50,6 +54,7 @@ for text in ytext:
 
 ax.set_yticklabels(formatted_ytext)
 
-fig.text(0.97,0.57,'Drop-out rate', fontsize=8, rotation=90, va='center')
+fig.text(0.95,0.6,'Drop-out rate', fontsize=8, rotation=90, va='center')
+plt.subplots_adjust(bottom=0.3, left=0.27, top=0.96)
 plt.savefig(LATEX_PDF_OUTPUT_FILENAME)
 plt.show()

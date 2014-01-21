@@ -107,7 +107,7 @@ def prettify_name(name):
     name = name[0].upper() + name[1:]
     for old, new in [('Air conditioner', 'AC'),
                      ('Htpc', 'AV'),
-                     ('Boiler', 'Gas Boiler'),
+                     ('Boiler', 'Gas boiler'),
                      ('Washing machine', 'Clothes w.'),
                      ('Washer dryer','Clothes w.'),
                      ('Dishwasher', 'Dishwasher'),
@@ -116,7 +116,7 @@ def prettify_name(name):
                      ('Lighting', 'Lights')]:
         if name == old:
             name = new
-    if name not in ['Clothes w.', 'Gas Boiler']:
+    if name not in ['Clothes w.', 'Gas boiler']:
         name = name.replace(' ', '\n')
     return name
 
@@ -124,6 +124,8 @@ plt.close('all')
 latexify(columns=1, fig_height=2.5)
 fig, ax = plt.subplots(ncols=1)
 dataset_names = DATASETS.keys()
+
+# Code based on http://stackoverflow.com/a/19060351/732596
 prop_matrix = np.array([proportions[dataset][:K] for dataset in dataset_names])
 prop_matrix = prop_matrix.transpose()
 others = 1 - prop_matrix.sum(axis=0)
@@ -143,7 +145,9 @@ def colors_for_row(j):
     return [map_label_to_color[label] for label in labels_for_row(j)]
 
 # Bottom row of bars and text:
-rects = ax.bar(x, prop_matrix[0], BAR_WIDTH, color=colors_for_row(0), edgecolor=colors_for_row(0))
+rects = ax.bar(x, prop_matrix[0], BAR_WIDTH, color=colors_for_row(0),
+#               edgecolor=colors_for_row(0))
+               edgecolor='white', linewidth=0.5)
 for rect in rects:
     text_x = rect.get_x()+(BAR_WIDTH/2)
     text_y = rect.get_y()+(rect.get_height()/2)
@@ -152,7 +156,9 @@ for rect in rects:
 # Other rows of bars and text:
 for j in xrange(1, K+1):
     rects = ax.bar(x, prop_matrix[j], BAR_WIDTH, bottom=bottoms[j-1], 
-                   color=colors_for_row(j), edgecolor=colors_for_row(j))
+                   color=colors_for_row(j), 
+#                   edgecolor=colors_for_row(j))
+                   edgecolor='white', linewidth=0.5)
     labels = labels_for_row(j)
     for label, rect, dataset in zip(labels, rects, dataset_names):
         text_x = rect.get_x()+(BAR_WIDTH/2)

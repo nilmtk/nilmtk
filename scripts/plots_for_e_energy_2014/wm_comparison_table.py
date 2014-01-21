@@ -21,7 +21,7 @@ PECAN  : 08:00 to 11:00; 5 Sept
 UKPD   : 10:24 to 11:44 10 Nov, 2012
 """
 
-LOAD_DATASETS = True
+LOAD_DATASETS = False
 DATASET_PATH = expanduser('~/Dropbox/Data/nilmtk_datasets/')
 FIGURE_PATH = expanduser('~/PhD/writing/papers/e_energy_2014/'
                          'nilmtk_e_energy_2014/figures/')
@@ -52,7 +52,7 @@ time_datasets = {
 }
 
 count = 0
-latexify(columns=1, fig_height=1.7)
+latexify(columns=1, fig_height=1.5)
 fig, axes = plt.subplots(ncols=len(DATASETS), sharey=True)
 
 if LOAD_DATASETS:
@@ -86,8 +86,9 @@ for dataset_name, dataset_path in DATASETS.iteritems():
     ax.set_xticks([0,30,60])
     count += 1
 
-axes[0].set_ylabel("Active Power (kW)")
+axes[0].set_ylabel("Active power (kW)")
 fig.text(0.5, 0.01, "Time (minutes)", ha='center', fontsize=8)
 fig.tight_layout()
+plt.subplots_adjust(left=0.1, top=0.88, right=0.98)
 
-fig.savefig(join(FIGURE_PATH, "wm.pdf"))
+fig.savefig(join(FIGURE_PATH, "wm.pdf"), dpi=1200)

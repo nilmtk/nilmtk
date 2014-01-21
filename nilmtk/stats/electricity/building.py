@@ -423,7 +423,7 @@ def plot_missing_samples_using_bitmap(electricity, ax=None, fig=None,
                    cmap=cmap)
 
     if add_colorbar:
-        plt.colorbar(im)
+        plt.colorbar(im, ticks=[0.0, 0.5, 1.0])
 
     ax.set_title('Proportion of lost samples')
 
@@ -439,7 +439,7 @@ def plot_missing_samples_using_bitmap(electricity, ax=None, fig=None,
 
     # x axis
     ax.set_xlim([start_datenum, end_datenum])
-    ax.set_xlabel('Date (day / month / year)')
+    ax.set_xlabel('Time (day/month/year)')
     ax.set_xticks([start_datenum, (start_datenum+end_datenum)/2, 
                    end_datenum])
     ax.xaxis.set_major_formatter(mdates.DateFormatter('%d/%m/%y',
