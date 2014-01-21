@@ -33,7 +33,7 @@ if LOAD_DATASET:
 electric = dataset.buildings[1].utility.electric
 electric_cropped = deepcopy(electric)
 electric_cropped.appliances = {k:v for k,v in electric.appliances.items()[:N_APPLIANCES]}
-bstats.plot_missing_samples_using_bitmap(electric_cropped, ax=ax, cmap=plt.cm.Greys)
+bstats.plot_missing_samples_using_bitmap(electric_cropped, ax=ax, cmap=plt.cm.Greys, gain=5)
 format_axes(ax)
 xlim = ax.get_xlim()
 ax.set_title('')
@@ -54,7 +54,7 @@ for text in ytext:
 
 ax.set_yticklabels(formatted_ytext)
 
-fig.text(0.95,0.6,'Drop-out rate', fontsize=8, rotation=90, va='center')
+fig.text(0.95,0.6,'''Dropout rate (\%)''', fontsize=8, rotation=90, va='center')
 plt.subplots_adjust(bottom=0.3, left=0.27, top=0.96)
 plt.savefig(LATEX_PDF_OUTPUT_FILENAME)
 plt.show()

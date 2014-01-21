@@ -379,7 +379,8 @@ def plot_missing_samples_using_rectangles(electricity, ax=None, fig=None,
 
 def plot_missing_samples_using_bitmap(electricity, ax=None, fig=None,
                                       fig_width=800, add_colorbar=True,
-                                      cmap=plt.cm.Blues):
+                                      cmap=plt.cm.Blues,
+                                      gain=1, horiz_bars=True):
     """
     Parameters
     ----------
@@ -416,6 +417,8 @@ def plot_missing_samples_using_bitmap(electricity, ax=None, fig=None,
 
     df = pd.DataFrame(missing_samples_per_period)
     img = np.transpose(df.values)
+    img = img * gain
+    img[img > 1] = 1
     start_datenum = mdates.date2num(df.index[0])
     end_datenum = mdates.date2num(df.index[-1])
     im = ax.imshow(img, aspect='auto', interpolation='none', origin='lower',
@@ -423,7 +426,15 @@ def plot_missing_samples_using_bitmap(electricity, ax=None, fig=None,
                    cmap=cmap)
 
     if add_colorbar:
-        plt.colorbar(im, ticks=[0.0, 0.5, 1.0])
+        max_rate = 1 / gain
+        def func_formatter(x, pos):
+            s = ''
+            if x == 1:
+                s = '''\ge'''
+            s += '{:.0%}'.format(x/gain)
+            return s
+        fmt = FuncFormatter(func_formatter)
+        plt.colorbar(im, ticks=[0.0, 0.5, 1.0], format=fmt)
 
     ax.set_title('Proportion of lost samples')
 
@@ -447,9 +458,10 @@ def plot_missing_samples_using_bitmap(electricity, ax=None, fig=None,
 
 #    fig.autofmt_xdate()
     # Plot horizontal lines separating appliances
-    for i in range(1, img.shape[0]):
-        ax.plot([start_datenum, end_datenum],
-                [i, i], color='grey', linewidth=1)
+    if horiz_bars:
+        for i in range(1, img.shape[0]):
+            ax.plot([start_datenum, end_datenum],
+                    [i, i], color='white', linewidth=1)
 
     return ax
 
