@@ -1,6 +1,7 @@
 """
 Produces a plot comparing the top k appliances and their 
 contribution across a sample home each in India, UK and US
+Using a pie chart.
 """
 from __future__ import print_function, division
 from os.path import expanduser, join
