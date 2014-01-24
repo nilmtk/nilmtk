@@ -7,6 +7,7 @@ import pandas as pd
 from nilmtk.dataset import DataSet
 from nilmtk.utils import summary_stats_string
 import nilmtk.preprocessing.electricity.building as prepb
+from nilmtk.sensors.electricity import Measurement
 from collections import OrderedDict
 
 """
@@ -16,7 +17,7 @@ TODO:
 
 LOAD_DATASETS = True
 OUTPUT_LATEX = True
-DATASET_PATH = expanduser('~/Dropbox/Data/nilmtk_datasets/')
+DATASET_PATH = expanduser('~/Dropbox/nilmtk_datasets/')
 
 # Maps from human-readable name to path
 DATASETS = OrderedDict()
@@ -31,7 +32,8 @@ DATASETS['Smart*'] = join(DATASET_PATH, 'smart')
 COLUMNS = OrderedDict()
 COLUMNS['n_appliances'] = """Number of\\\\appliances"""
 COLUMNS['energy_submetered'] = """Percentage\\\\energy\\\\sub-metered"""
-COLUMNS['dropout_rate_ignoring_gaps'] = """Percentage\\\\missing samples\\\\(ignoring gaps)"""
+COLUMNS[
+    'dropout_rate_ignoring_gaps'] = """Percentage\\\\missing samples\\\\(ignoring gaps)"""
 COLUMNS['uptime'] = """Mains up-time\\\\per building\\\\(days)"""
 COLUMNS['proportion_up'] = """Percentage\\\\up-time"""
 # COLUMNS['prop_timeslices'] = ("""% timeslices\\\\where energy\\\\"""
@@ -52,6 +54,18 @@ for ds_name, ds_path in DATASETS.iteritems():
         print("Loading", ds_path)
         dataset.load_hdf5(ds_path)
 
+        if ds_name == "Smart*":
+            building = dataset.buildings[1]
+            building = prepb.filter_out_implausible_values(
+                building, Measurement('power', 'active'), max_threshold=20000)
+            #electric = building.utility.electric
+            #electric.crop('2012-06-05', '2012-06-10')
+            #building = prepb.filter_channels_with_less_than_x_samples(
+            #    building, 100)
+            dataset.buildings[1] = building
+
+            print("Preprocessed!")
+
         if ds_name == 'iAWE':
             print("Pre-processing iAWE...")
             electric = dataset.buildings[1].utility.electric
@@ -71,7 +85,7 @@ for ds_name, ds_path in DATASETS.iteritems():
     print('Calculating stats for', ds_name)
     ds_stats = dataset.descriptive_stats()
     for col_short, col_long in COLUMNS.iteritems():
-        if col_short in ['energy_submetered', 'proportion_up', 
+        if col_short in ['energy_submetered', 'proportion_up',
                          'dropout_rate_ignoring_gaps', 'prop_timeslices']:
             fmt = '{:>.0%}'
         else:
@@ -80,7 +94,7 @@ for ds_name, ds_path in DATASETS.iteritems():
         if len(dataset.buildings) > 1:
             s += summary_stats_string(ds_stats[col_short], sep=""", """,
                                       stat_strings=['min', 'median', 'max'],
-                                      minimal=True, fmt=fmt).replace('%','')
+                                      minimal=True, fmt=fmt).replace('%', '')
         else:
             s += fmt.format((ds_stats[col_short][0]))
         stats_df[col_long][ds_name] = s
@@ -90,7 +104,7 @@ if OUTPUT_LATEX:
     latex = stats_df.to_latex()
     latex = latex.replace('  ', '')
     n_columns = len(COLUMNS) + 1
-    latex = latex.replace('l'*n_columns, 'c'*n_columns)
+    latex = latex.replace('l' * n_columns, 'c' * n_columns)
     for str_to_replace in ['midrule', 'toprule', 'bottomrule']:
         latex = latex.replace(str_to_replace, 'hline')
     print(latex)

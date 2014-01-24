@@ -180,27 +180,27 @@ latexify(columns=1)
 fig, axes = plt.subplots(ncols=3, sharex=True, sharey=True)
 
 
-plot_series(predicted_power['fhmm']
-            [('air conditioner', 2)][start:end], ax=axes[0], color='k', date_format=DATE_FORMAT)
-plot_series(predicted_power['co']
-            [('air conditioner', 2)][start:end], ax=axes[1], color='k', date_format=DATE_FORMAT)
 plot_series(ground_truth_power[('air conditioner', 2)]
-            [start:end], ax=axes[2], color='k', date_format=DATE_FORMAT)
+            [start:end] / 1e3, ax=axes[0], color='k', date_format=DATE_FORMAT, linewidth=0.5)
+plot_series(predicted_power['co']
+            [('air conditioner', 2)][start:end] / 1e3, ax=axes[1], color='k', date_format=DATE_FORMAT, linewidth=0.5)
+plot_series(predicted_power['fhmm']
+            [('air conditioner', 2)][start:end] / 1e3, ax=axes[2], color='k', date_format=DATE_FORMAT, linewidth=0.5)
 
 
 for ax in axes:
-    ax.set_ylim((0, 2000))
+    ax.set_ylim((0, 2))
     format_axes(ax)
-    ax.set_xticklabels(['0', ' ', '30', ' ', '60'])
+    ax.set_xticklabels(['0', '   ', '30', '   ', '60'], rotation=0)
     ax.set_xlabel("Time \n(mins)")
 
-axes[0].set_title("Predicted power\nFHMM")
+axes[2].set_title("Predicted power\nFHMM")
 axes[1].set_title("Predicted power\nCO")
-axes[2].set_title("Ground truth \npower")
+axes[0].set_title("Ground truth \npower")
 
-axes[0].set_ylabel("Power (W)")
+axes[0].set_ylabel("Active power (kW)")
 axes[1].set_ylabel("")
 axes[2].set_ylabel("")
-fig.tight_layout()
+fig.tight_layout(w_pad=0.15)
 fig.savefig("/home/nipun/Desktop/ac_2.pdf")
 plt.show()
