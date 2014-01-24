@@ -70,7 +70,7 @@ def load_chan(building_dir, chan=None, filename=None, colnames=None,
 
     print('Attempting to load', filename, '...', end='')
     if usecols:
-        if usecols and 0 not in usecols:
+        if 0 not in usecols:
             usecols.insert(0,0)
         if colnames and 'index' not in colnames:
             colnames.insert(0, 'index')
@@ -84,7 +84,8 @@ def load_chan(building_dir, chan=None, filename=None, colnames=None,
         df = pd.read_csv(filename, sep=sep, header=None, index_col=0,
                          parse_dates=False, names=colnames, usecols=usecols,
                          dtype={colname:np.float32 for colname in colnames
-                                if colname != 'index'})
+                                if colname != 'index'},
+                         tupleize_cols=True)
     except Exception as e:
         print('failed:', str(e))
         raise
