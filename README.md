@@ -1,18 +1,15 @@
 nilmtk: Non-Intrusive Load Monitoring Toolkit
 ======
 
-NILM is the process of taking a whole-house power meter
-reading and estimating the energy consumed individual
-appliances.  In other words, it produces an (estimated) itemised
-energy bill using just a single, whole-house power meter.
+NILM is the process of estimating the energy consumed by individual
+appliances given just a whole-house power meter
+reading.  In other words, it produces an (estimated) itemised
+energy bill from just a single, whole-house power meter.
 
-This process is sometimes called:
+NILM is sometimes called:
 
-* "non-intrusive load monitoring (NILM)"
 * "non-intrusive appliance load monitoring (NALM or NIALM)"
-* "electriciy disaggregation"
-* "energy disaggregation"
-* "smart meter disaggregation"
+* "[electriciy | energy | smart meter] disaggregation"
 
 Below is an illustration<sup>1</sup> of what NILM, in general, can do.
 
