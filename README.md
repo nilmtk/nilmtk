@@ -16,7 +16,20 @@ http://nilmtk.github.io/nilmtk/
 
 #####Current state of the project
 
-The project is in the very, very earliest stages.  *It does not do anything useful yet!*  If you'd like to help design the architecture please jump into the [issue queue](https://github.com/nilmtk/nilmtk/issues).  Otherwise, if you want something usable, then please check back in a month or two ;)
+The project is in its early stages.
+
+At present, NILMTK can:
+
+* import data from the following data sets: REDD, Pecan Street, AMPds, iAWE, SMART* and UKPD
+* store imported data in a common in-memory format, which can also be exported to a standard on-disk format
+* compute diagnostic statistics for the raw data (uptime, dropout rate, find gaps etc)
+* pre-process the data (downsample, fill gaps, mask appliance data with gaps from the mains data, select only contiguous blocks, normalise power etc)
+* compute usage statistics (distribution of appliance activity per day, week or month, distribution of on-power, proportion of total energy per appliance, on-durations etc)
+* provide a common input and output interface to NILM algorithms
+* disaggregate data using two supervised benchmark algorithms: combinatorial optimisation and factorial hidden Markov model.
+* compute a range of NILM performance metrics (confusion matrices, error in assigned energy, F1 score, fraction of energy assigned correctly etc).
+
+To make the code as easy as possible to use and to maintain, it will be undergoing some refactoring in Febrary 2014.
 
 
 #####Installing
@@ -37,6 +50,22 @@ If you want to get involved in development then:
 2. matplotlib
 3. numpy => 1.8
 4. scikit-learn > 0.13
+
+#####Getting started
+
+Loading a supported dataset is as simple as:
+
+```python
+from nilmtk.dataset import REDD
+redd = REDD()
+redd.load('/data/REDD/low_freq/')
+```
+
+Please see the [`examples`](https://github.com/nilmtk/nilmtk/tree/master/examples) folder for further information on getting started.  
+
+We have started writing [a user guide](http://nilmtk.github.io/nilmtk/userguide.html) although it is by no means complete yet.  A full user guide will be written in February.
+
+We also have [API documentation](http://nilmtk.github.io/nilmtk/nilmtk.html).  This documentation covers almost all functions in NILMTK but needs some tidying up which will be done over February.
 
 #####Further info
 
