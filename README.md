@@ -1,17 +1,30 @@
 nilmtk
 ======
 
-Non-Intrusive Load Monitoring Toolkit (nilmtk)
+Non-Intrusive Load Monitoring Toolkit (nilmtk).
+
+NILM is the process of taking a whole-house power meter
+reading and estimating the energy consumed individual
+appliances.  In other words, it produces an (estimated) itemised
+energy bill using just a single, whole-house power meter.
+
+This process is sometimes called:
+
+* "non-intrusive load monitoring (NILM)"
+* "non-intrusive appliance load monitoring (NALM or NIALM)"
+* "electriciy disaggregation"
+* "energy disaggregation"
+* "smart meter disaggregation"
 
 Below is an illustration<sup>1</sup> of what NILM, in general, can do.
 
 <img src="https://dl.dropboxusercontent.com/u/75845627/misc/after_disagg.png" alt="Drawing" style="width: 40% height: 40%;"/>
 
-#####Documentation
+##### NILMTK Documentation
 
 http://nilmtk.github.io/nilmtk/
 
-#####Current state of the project
+##### Current state of the project
 
 The project is in its early stages.
 
@@ -25,11 +38,12 @@ At present, NILMTK can:
 * provide a common input and output interface to NILM algorithms
 * disaggregate data using two supervised benchmark algorithms: combinatorial optimisation and factorial hidden Markov model.
 * compute a range of NILM performance metrics (confusion matrices, error in assigned energy, F1 score, fraction of energy assigned correctly etc).
+* work has started on a disaggregation web interface.  [Here's a demo](http://energy.iiitd.edu.in:5002/).
 
 To make the code as easy as possible to use and to maintain, it will be undergoing some refactoring in Febrary 2014.
 
 
-#####Installing
+##### Installing
 
 If you just want to use the code without modifying it then:
 
@@ -41,14 +55,14 @@ If you want to get involved in development then:
 
 `python setup.py develop`
 
-#####Software Dependencies
+##### Software Dependencies
 
 1. Pandas
 2. matplotlib
 3. numpy => 1.8
 4. scikit-learn > 0.13
 
-#####Getting started
+##### Getting started
 
 Loading a supported dataset is as simple as:
 
@@ -64,7 +78,7 @@ We have started writing [a user guide](http://nilmtk.github.io/nilmtk/userguide.
 
 We also have [API documentation](http://nilmtk.github.io/nilmtk/nilmtk.html).  This documentation covers almost all functions in NILMTK but needs some tidying up which will be done over February.
 
-#####Further info
+##### Further info
 
 Please see [the nilmtk wiki](https://github.com/nilmtk/nilmtk/wiki) for more details.
 
