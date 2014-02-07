@@ -19,6 +19,7 @@ from os.path import join
 import os
 import sys
 import warnings
+import numpy
 
 CYTHON_DIR = 'nilmtk/disaggregate/feature_detectors'
 
@@ -34,12 +35,14 @@ else:
 if use_cython:
     sources = [join(CYTHON_DIR, '_feature_detectors.pyx')]
     extensions = [Extension("nilmtk.disaggregate._feature_detectors", 
-                            sources=sources)]
+                            sources=sources,
+                            include_dirs=[numpy.get_include()])]
     ext_modules = cythonize(extensions)
 else:
     ext_modules = [
         Extension("nilmtk.disaggregate._feature_detectors", 
-                  [join(CYTHON_DIR, '_feature_detectors.c')]),
+                  [join(CYTHON_DIR, '_feature_detectors.c')],
+                  include_dirs=[numpy.get_include()]),
     ]
 
 """
