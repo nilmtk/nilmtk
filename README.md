@@ -41,7 +41,7 @@ At present, NILMTK can:
 * Improve the documentation
 * Write more unit tests
 * easy installation via pip
-* [Build a semantic wiki for storing information relevant to NILM (e.g. a database of appliances)](http://jack-kelly.com/wiki_and_online_community_for_electricity_disaggregation) - NILMTK will integrate with the wiki wherever possible; and the 'standard' appliance names will be taken from the wiki.
+* [Build a semantic wiki for storing information relevant to NILM (e.g. a database of appliances)](http://jack-kelly.com/wiki_and_online_community_for_electricity_disaggregation) - NILMTK will integrate with the wiki wherever possible, especially regarding appliance metadata.
 
 ##### Installing
 
