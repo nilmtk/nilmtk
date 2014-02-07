@@ -59,7 +59,7 @@ If you want to get involved in development then:
 
 ##### Getting started
 
-Loading a supported dataset is as simple as:
+Loading a supported dataset is simple.  For example, to load [REDD](http://redd.csail.mit.edu/):
 
 ```python
 from nilmtk.dataset import REDD
