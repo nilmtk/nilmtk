@@ -31,17 +31,9 @@ At present, NILMTK can:
 * pre-process the data (downsample, fill gaps, mask appliance data with gaps from the mains data, select only contiguous blocks, normalise power etc)
 * compute usage statistics (distribution of appliance activity per day, week or month, distribution of on-power, proportion of total energy per appliance, on-durations etc)
 * provide a common input and output interface to NILM algorithms
-* disaggregate data using two supervised benchmark algorithms: combinatorial optimisation and factorial hidden Markov model.
+* disaggregate data using two supervised benchmark algorithms: combinatorial optimisation and factorial hidden Markov model (these are not competitive with the current state-of-the-art.  More sophisticated NILM algorithms will be added to NILMTK later this year.)
 * compute a range of NILM performance metrics (confusion matrices, error in assigned energy, F1 score, fraction of energy assigned correctly etc).
 * work has started on a disaggregation web interface.  [Here's a demo](http://energy.iiitd.edu.in:5002/).
-
-##### Plans for February and March:
-
-* To make the code as easy as possible to use and to maintain, it will be undergoing some refactoring in Febrary 2014.
-* Improve the documentation
-* Write more unit tests
-* easy installation via pip
-* [Build a semantic wiki for storing information relevant to NILM (e.g. a database of appliances)](http://jack-kelly.com/wiki_and_online_community_for_electricity_disaggregation) - NILMTK will integrate with the wiki wherever possible, especially regarding appliance metadata.
 
 ##### Installing
 
@@ -81,6 +73,14 @@ We also have [API documentation](http://nilmtk.github.io/nilmtk/nilmtk.html).  T
 ##### Further info
 
 Please see [the nilmtk wiki](https://github.com/nilmtk/nilmtk/wiki) for more details.
+
+##### Development plans for February and March:
+
+* To make the code as easy as possible to use and to maintain, it will be undergoing some refactoring in Febrary 2014.
+* Improve the documentation
+* Write more unit tests
+* easy installation via pip
+* [Build a semantic wiki for storing information relevant to NILM (e.g. a database of appliances)](http://jack-kelly.com/wiki_and_online_community_for_electricity_disaggregation) - NILMTK will integrate with the wiki wherever possible, especially regarding appliance metadata.
 
 ##### Notes
 
