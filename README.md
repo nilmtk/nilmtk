@@ -35,8 +35,13 @@ At present, NILMTK can:
 * compute a range of NILM performance metrics (confusion matrices, error in assigned energy, F1 score, fraction of energy assigned correctly etc).
 * work has started on a disaggregation web interface.  [Here's a demo](http://energy.iiitd.edu.in:5002/).
 
-To make the code as easy as possible to use and to maintain, it will be undergoing some refactoring in Febrary 2014.
+##### Plans for February and March:
 
+* To make the code as easy as possible to use and to maintain, it will be undergoing some refactoring in Febrary 2014.
+* Improve the documentation
+* Write more unit tests
+* easy installation via pip
+* [Build a semantic wiki for storing information relevant to NILM (e.g. a database of appliances)](http://jack-kelly.com/wiki_and_online_community_for_electricity_disaggregation) - NILMTK will integrate with the wiki wherever possible; and the 'standard' appliance names will be taken from the wiki.
 
 ##### Installing
 
