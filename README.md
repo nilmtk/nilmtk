@@ -1,7 +1,5 @@
-nilmtk
+nilmtk: Non-Intrusive Load Monitoring Toolkit
 ======
-
-Non-Intrusive Load Monitoring Toolkit (nilmtk).
 
 NILM is the process of taking a whole-house power meter
 reading and estimating the energy consumed individual
