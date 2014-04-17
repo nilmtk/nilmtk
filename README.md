@@ -28,19 +28,18 @@ Batra, N., Kelly, J., Parson, O., Dutta, H., Knottenbelt, W., Rogers, A., Singh,
 Bibtex:
 
 ```
- @inproceedings{NILMTK,
- title = {{NILMTK: An Open Source Toolkit for Non-intrusive Load Monitoring}},
- year = {2014},
- author = {Batra, Nipun and Kelly, Jack and Parson, Oliver and Dutta, Haimonti and Knottenbelt, William and Rogers, Alex  and Singh, Amarjeet and Srivastava, Mani},
- booktitle = {Fifth International Conference on Future Energy Systems (ACM e-Energy)},
- address = {Cambridge, UK},
- archivePrefix = {arXiv},
- arxivId = {1404.3878},
- doi = {10.1145/2602044.2602051},
- eprint = {1404.3878}
- }
+@inproceedings{NILMTK,
+   title = {{NILMTK: An Open Source Toolkit for Non-intrusive Load Monitoring}},
+   year = {2014},
+   author = {Batra, Nipun and Kelly, Jack and Parson, Oliver and Dutta, Haimonti and Knottenbelt, William and Rogers, Alex  and Singh, Amarjeet and Srivastava, Mani},
+   booktitle = {Fifth International Conference on Future Energy Systems (ACM e-Energy)},
+   address = {Cambridge, UK},
+   archivePrefix = {arXiv},
+   arxivId = {1404.3878},
+   doi = {10.1145/2602044.2602051},
+   eprint = {1404.3878}
+}
 ```
-
 
 
 ##### Current state of the project
@@ -98,9 +97,9 @@ We also have [API documentation](http://nilmtk.github.io/nilmtk/nilmtk.html).  T
 
 Please see [the nilmtk wiki](https://github.com/nilmtk/nilmtk/wiki) for more details.
 
-##### Development plans for February and March:
+##### Development plans for April and May 2014:
 
-* To make the code as easy as possible to use and to maintain, it will be undergoing some refactoring in Febrary 2014.
+* To make the code as easy as possible to use and to maintain, it will be undergoing some refactoring in April and May 2014.
 * Improve the documentation
 * Write more unit tests
 * easy installation via pip
