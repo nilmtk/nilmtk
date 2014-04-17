@@ -19,6 +19,29 @@ Below is an illustration<sup>1</sup> of what NILM, in general, can do.
 
 http://nilmtk.github.io/nilmtk/
 
+##### Academic paper on NILMTK
+
+Batra, N., Kelly, J., Parson, O., Dutta, H., Knottenbelt, W., Rogers, A., Singh, A., Srivastava, M. (2014). NILMTK: An Open Source Toolkit for Non-intrusive Load Monitoring. In Fifth International Conference on Future Energy Systems (ACM e-Energy). Cambridge, UK. arXiv:[1404.3878](http://arxiv.org/abs/1404.3878) DOI:[10.1145/2602044.2602051](http://dx.doi.org/10.1145/2602044.2602051)
+
+(the DOI isn't active yet but will be soon)
+
+Bibtex:
+
+ @inproceedings{NILMTK,
+ title = {{NILMTK: An Open Source Toolkit for Non-intrusive Load Monitoring}},
+ year = {2014},
+ author = {Batra, Nipun and Kelly, Jack and Parson, Oliver and Dutta, Haimonti and Knottenbelt, William and Rogers, Alex  and Singh, Amarjeet and Srivastava, Mani},
+ booktitle = {Fifth International Conference on Future Energy Systems (ACM e-Energy)},
+ address = {Cambridge, UK},
+ archivePrefix = {arXiv},
+ arxivId = {1404.3878},
+ doi = {10.1145/2602044.2602051},
+ eprint = {1404.3878}
+ }
+
+
+
+
 ##### Current state of the project
 
 The project is in its early stages.
