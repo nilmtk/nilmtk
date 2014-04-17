@@ -27,6 +27,7 @@ Batra, N., Kelly, J., Parson, O., Dutta, H., Knottenbelt, W., Rogers, A., Singh,
 
 Bibtex:
 
+```
  @inproceedings{NILMTK,
  title = {{NILMTK: An Open Source Toolkit for Non-intrusive Load Monitoring}},
  year = {2014},
@@ -38,7 +39,7 @@ Bibtex:
  doi = {10.1145/2602044.2602051},
  eprint = {1404.3878}
  }
-
+```
 
 
 
