@@ -4,6 +4,6 @@ matplotlib
 numpy==1.8.0
 scipy
 ipython
-numexpr
+numexpr>=2.0
 tables
 MySQL-python
