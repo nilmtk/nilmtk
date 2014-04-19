@@ -1,18 +1,20 @@
 language: python
 python:
-  - "2.7"
+  - 2.7
+# Install stuff
 before_install:
-  - sudo apt-get install libhdf5-serial-dev python-dev 
-  - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+  - if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then wget http://repo.continuum.io/miniconda/Miniconda-2.2.2-Linux-x86_64.sh -O miniconda.sh; else wget http://repo.continuum.io/miniconda/Miniconda3-2.2.2-Linux-x86_64.sh -O miniconda.sh; fi
   - chmod +x miniconda.sh
   - ./miniconda.sh -b
+  - mv travis/.condarc $HOME
   - export PATH=/home/travis/anaconda/bin:$PATH
-  # The next couple lines fix a crash with multiprocessing on Travis and
-  # are not specific to using Miniconda
+  - conda update --yes conda
+  - sudo apt-get install libhdf5-serial-dev python-dev
+install:
+  - conda install --yes pip python=$TRAVIS_PYTHON_VERSION numpy scipy six scikit-learn pandas numexpr tables
+  - if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then conda install --yes configparser futures logutils; fi
+  # Have to use pip for nose-cov because its entry points are not supported by conda yet
   - sudo rm -rf /dev/shm
   - sudo ln -s /run/shm /dev/shm
-
-# Install conda packages
-install:
-  - conda install --yes -c python=$TRAVIS_PYTHON_VERSION scikit-learn>=0.14 pandas matplotlib numpy==1.8.0 scipy ipython cython==0.19.1 bottleneck==0.6.0 numexpr==2.2.2 MySQL-python tables
   - python setup.py install
+
