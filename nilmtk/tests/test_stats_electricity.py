@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 """
    Copyright 2013 nilmtk authors.
 
@@ -22,11 +20,14 @@ import nilmtk.stats.electricity.single as single
 import numpy as np
 import pandas as pd
 
+
 class TestSingle(unittest.TestCase):
+
     def test_tz_to_naive(self):
+        assert(1 == 1)
         START = '2010/1/1'
-        F = 'D' # frequency
-        P = 48 # periods
+        F = 'D'  # frequency
+        P = 48  # periods
         dti_naive = pd.date_range(START, freq=F, periods=P)
 
         def test_dti(tz):
