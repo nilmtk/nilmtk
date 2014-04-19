@@ -2,8 +2,17 @@ language: python
 python:
   - "2.7"
 before_install:
- - sudo apt-get install libhdf5-serial-dev python-dev 
+  - sudo apt-get install libhdf5-serial-dev python-dev 
+  - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+  - chmod +x miniconda.sh
+  - ./miniconda.sh -b
+  - export PATH=/home/travis/anaconda/bin:$PATH
+  # The next couple lines fix a crash with multiprocessing on Travis and
+  # are not specific to using Miniconda
+  - sudo rm -rf /dev/shm
+  - sudo ln -s /run/shm /dev/shm
+
+# Install conda packages
 install:
-  - pip install -r requirements.txt
-  - pip install git+https://github.com/PyTables/PyTables.git@develop#egg=tables
+  - conda install --yes -c python=$TRAVIS_PYTHON_VERSION scikit-learn>=0.14 pandas matplotlib numpy==1.8.0 scipy ipython cython==0.19.1 bottleneck==0.6.0 numexpr==2.2.2 MySQL-python tables
   - python setup.py install
