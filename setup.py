@@ -21,6 +21,7 @@ import sys
 import warnings
 import numpy
 
+"""
 CYTHON_DIR = 'nilmtk/disaggregate/feature_detectors'
 
 try:
@@ -44,6 +45,8 @@ else:
                   [join(CYTHON_DIR, '_feature_detectors.c')],
                   include_dirs=[numpy.get_include()]),
     ]
+
+"""
 
 """
 Following Segment of this file was taken from the pandas project(https://github.com/pydata/pandas) 
