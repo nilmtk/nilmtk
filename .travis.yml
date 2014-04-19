@@ -11,7 +11,6 @@ before_install:
   - sudo apt-get install libhdf5-serial-dev python-dev
 install:
   - conda install --yes pip python=$TRAVIS_PYTHON_VERSION numpy scipy six scikit-learn pandas numexpr pytables
-  - if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then conda install --yes configparser futures logutils; fi
   # Have to use pip for nose-cov because its entry points are not supported by conda yet
   - sudo rm -rf /dev/shm
   - sudo ln -s /run/shm /dev/shm
