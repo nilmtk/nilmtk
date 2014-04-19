@@ -101,7 +101,7 @@ setup(
     version=FULLVERSION,
     packages = find_packages(),
     ext_modules = ext_modules,
-    install_requires = ['numpy', 'pandas', 'matplotlib', 'scikit-learn'],
+    install_requires = [],
     description='Estimate the energy consumed by individual appliances from '
                 'whole-house power meter readings',
     author='nilmtk authors',
