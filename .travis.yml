@@ -5,4 +5,5 @@ before_install:
  - sudo apt-get install libhdf5-serial-dev python-dev 
 install:
   - pip install -r requirements.txt
+  - pip install git+https://github.com/PyTables/PyTables.git@develop#egg=tables
   - python setup.py install
