@@ -4,6 +4,8 @@ matplotlib
 numpy==1.8.0
 scipy
 ipython
-numexpr==2.4
-tables
+cython==0.19.1
+bottleneck==0.6.0
+numexpr==2.2.2
+tables==2.3.1
 MySQL-python
