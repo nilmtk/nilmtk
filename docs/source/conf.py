@@ -107,8 +107,6 @@ extensions = [
     'sphinx.ext.todo',
     'sphinx.ext.viewcode',
     'numpydoc',
-    'ipython_console_highlighting',
-    'ipython_directive',
     'inheritance_diagram'
 ]
 #    'matplotlib.sphinxext.plot_directive']
