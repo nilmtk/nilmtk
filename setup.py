@@ -51,7 +51,7 @@ else:
 """
 Following Segment of this file was taken from the pandas project(https://github.com/pydata/pandas) 
 """
-#Version Check
+# Version Check
 
 MAJOR = 0
 MINOR = 1
@@ -70,8 +70,9 @@ if not ISRELEASED:
                                     stdout=subprocess.PIPE).stdout
         except OSError:
             # msysgit compatibility
-            pipe = subprocess.Popen(["git.cmd", "rev-parse", "--short", "HEAD"],
-                                    stdout=subprocess.PIPE).stdout
+            pipe = subprocess.Popen(
+                ["git.cmd", "rev-parse", "--short", "HEAD"],
+                stdout=subprocess.PIPE).stdout
         rev = pipe.read().strip()
         # makes distutils blow up on Python 2.7
         if sys.version_info[0] >= 3:
@@ -83,34 +84,35 @@ if not ISRELEASED:
 else:
     FULLVERSION += QUALIFIER
 
+
 def write_version_py(filename=None):
     cnt = """\
 version = '%s'
 short_version = '%s'
 """
     if not filename:
-        filename = os.path.join(os.path.dirname(__file__), 'nilmtk', 'version.py')
+        filename = os.path.join(
+            os.path.dirname(__file__), 'nilmtk', 'version.py')
 
     a = open(filename, 'w')
     try:
         a.write(cnt % (FULLVERSION, VERSION))
     finally:
         a.close()
-write_version_py()        
-#End of Version Check
+write_version_py()
+# End of Version Check
 
 setup(
     name='nilmtk',
     version=FULLVERSION,
-    packages = find_packages(),
-    ext_modules = ext_modules,
-    install_requires = [],
+    packages=find_packages(),
+    install_requires=[],
     description='Estimate the energy consumed by individual appliances from '
                 'whole-house power meter readings',
     author='nilmtk authors',
     author_email='',
     url='https://github.com/nilmtk/nilmtk',
-    download_url = "https://github.com/nilmtk/nilmtk/tarball/master#egg=nilmtk-dev",
+    download_url="https://github.com/nilmtk/nilmtk/tarball/master#egg=nilmtk-dev",
     long_description=open('README.md').read(),
     license='Apache 2.0',
     classifiers=[
