@@ -202,7 +202,7 @@ class REDD(DataSet):
             is_dualsupply = metadata and metadata.get('dualsupply')
             if is_dualsupply:
                 colname = DualSupply(measurement, supply)
-                df = load_chan(building_dir, appliance_chan, colname)
+                df = load_chan(building_dir, appliance_chan, colnames=[colname])
                 df = self._pre_process_dataframe(df)
                 df[colname].name = appliancename
                 if supply == 1:
