@@ -69,8 +69,9 @@ class Pipeline(object):
                  HDFTableExport('meter1_preprocessed.h5', table_path)]
     >>> pipeline = Pipeline(nodes)
     >>> pipeline.run(meter)
-    >>> energy = pipeline.results['energy']
-    >>> print("Energy in Joules =", energy.joules, "and kWh =", energy.kwh)
+    >>> energy = pipeline.results['energy'].combined
+    >>> print("Active energy =", energy['active'], "kWh",
+    >>>       "and reactive =", energy['reactive'], "kWh")
     
     """
     def __init__(self, nodes=None):

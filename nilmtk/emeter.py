@@ -17,7 +17,7 @@ class EMeter(object):
           e.g. power normalisation or removing gaps.  Properties:
           - 'gaps_bookended_with_zeros': bool
           - 'energy_computed': bool
-        device_name : string, the model name of the meter device.
+        device_model : string, the model name of the meter device.
 
         --------- THE FOLLOWING ATTRIBUTES ARE SET AUTOMATICALLY, ---------
         --------- i.e. THEY DO NOT EXIST IN THE ON-DISK METADATA. ---------
@@ -41,15 +41,14 @@ class EMeter(object):
     @classmethod
     def _load_meter_devices(cls, loader):
         dataset_metadata = loader.store.load_metadata()
-        EMeter.meter_devices = dataset_metadata.get('meter_devices', {})
+        EMeter.meter_devices.update(dataset_metadata.get('meter_devices', {}))
 
     def load(self, loader):
         self.loader = loader
         self.metadata = self.loader.load_metadata()
-        if not EMeter.meter_devices:
-            EMeter._load_meter_devices(loader)
-        device_name = self.metadata['device_name']
-        self.metadata['device'] = EMeter.meter_devices[device_name]
+        EMeter._load_meter_devices(loader)
+        device_model = self.metadata['device_model']
+        self.metadata['device'] = EMeter.meter_devices[device_model]
 
     def save(self, destination, key):
         """

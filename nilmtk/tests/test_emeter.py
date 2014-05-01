@@ -24,8 +24,8 @@ class TestEMeter(WarningTestMixin, unittest.TestCase):
     def test_load(self):
         meter = EMeter()
         meter.load(self.loader)
-        self.assertEqual(meter.metadata['device_name'], 'EnviR')
-        self.assertEqual(meter.metadata['device']['sample_period'], 6)
+        self.assertEqual(meter.metadata['device_model'], 'Random Meter')
+        self.assertEqual(meter.metadata['device']['sample_period'], 10)
 
 if __name__ == '__main__':
     unittest.main()

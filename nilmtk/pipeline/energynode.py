@@ -9,10 +9,12 @@ from nilmtk import TimeFrame
 from nilmtk.measurement import Power, Energy
 
 def _energy_per_power_series(series):
+    series = series.dropna()
     timedelta = np.diff(series.index.values)
     timedelta_secs = timedelta64_to_secs(timedelta)
     joules = (timedelta_secs * series.values[:-1]).sum()
-    return joules / JOULES_PER_KWH
+    kwh = joules / JOULES_PER_KWH
+    return kwh
 
 class EnergyNode(Node):
 
@@ -23,21 +25,30 @@ class EnergyNode(Node):
         super(EnergyNode, self).__init__(name)
 
     def process(self, df, metadata):
+        """
+        Preference: Energy(cumulative) > Energy > Power
+        """
+
         energy_results = EnergyResults()
         df.results = getattr(df, 'results', {})
 
         energy = {}
+        data_source_rank = {} # overwrite Power with Energy with Energy(cumulative)
         for measurement, series in df.iteritems():
             if isinstance(measurement, Power):
-                _energy = _energy_per_power_series(series)
+                # Preference is to calculate energy from 
+                # native Energy data rather than Power data
+                # so don't overwrite with Power data.
+                if not energy.has_key(measurement.ac_type):
+                    energy[measurement.ac_type] = _energy_per_power_series(series)
+                    data_source_rank[measurement.ac_type] = 3 # least favourite
             elif isinstance(measurement, Energy):
                 if measurement.cumulative:
-                    _energy = series.iloc[-1] - series.iloc[0]
-                else:
-                    _energy = series.sum()
-            else:
-                continue
-            energy[measurement.ac_type] = _energy
+                    energy[measurement.ac_type] = series.iloc[-1] - series.iloc[0]
+                    data_source_rank[measurement.ac_type] = 1 # favourite
+                elif data_source_rank.get(measurement.ac_type, 3) > 2:
+                    energy[measurement.ac_type] = series.sum()
+                    data_source_rank[measurement.ac_type] = 2
 
         energy_results.append(df.timeframe, energy)
         df.results[self.name] = energy_results

@@ -1,15 +1,10 @@
 #!/usr/bin/python
 from __future__ import print_function, division
 import unittest
-from nilmtk.pipeline.pipeline import Pipeline
-from nilmtk import TimeFrame, EMeter
+from nilmtk.pipeline import Pipeline, EnergyNode
+from nilmtk import TimeFrame, EMeter, HDFDataStore, Loader
 from nilmtk.tests.testingtools import data_dir
 from os.path import join
-from nilmtk.datastore import HDFDataStore
-from nilmtk.loader import Loader
-from nilmtk.pipeline.energynode import EnergyNode
-from nilmtk.pipeline.pipeline import Pipeline
-from nilmtk import TimeFrame
 
 class TestPipeline(unittest.TestCase):
 

@@ -32,8 +32,8 @@ class TestLoader(unittest.TestCase):
         for chunk in chunks:
             i += 1
             self.assertEqual(chunk.index[0], self.TIMEFRAME.start)
-            self.assertEqual(chunk.index[-1], self.TIMEFRAME.end-timedelta(seconds=1))
-            self.assertEqual(len(chunk), self.NROWS-1)
+            self.assertEqual(chunk.index[-1], self.TIMEFRAME.end)
+            self.assertEqual(len(chunk), self.NROWS)
         self.assertEqual(i, 1)
 
         timeframes = [TimeFrame('2012-01-01 00:00:00', '2012-01-01 00:00:05'),

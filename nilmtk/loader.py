@@ -23,7 +23,7 @@ class Loader(object):
     def __init__(self, store, key):
         self.store = store
         self.key = key
-        self.mask = None
+        self.mask = [None]
 
     def load_chunks(self, cols=None):
         """
@@ -52,8 +52,7 @@ class Loader(object):
         # and then iterated over the row indicies.      
 
         self.store._check_columns(self.key, cols)
-        periods = [self.store.timeframe(self.key)] if self.mask is None else self.mask
-        for period in periods:
+        for period in self.mask:
             data = self.store.load(key=self.key, cols=cols, period=period)
             yield data
 
