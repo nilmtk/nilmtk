@@ -14,9 +14,9 @@ def reframe_index(index, window_start=None, window_end=None):
 
     window_start, window_end : pd.Timestamp
         The start and end of the window of interest. If this window
-        is larger than the duration of `data` then a single zero will be
+        is larger than the duration of `data` then a single timestamp will be
         inserted at `window_start` or `window_end` as necessary. If this window
-        is shorter than the duration of `data` data will be cropped.
+        is shorter than the duration of `data` then `data` will be cropped.
 
     Returns
     -------
@@ -48,14 +48,13 @@ def reframe_index(index, window_start=None, window_end=None):
 
     return index
 
-class LocateGapsNode(Node):
+class LocateGoodSectionsNode(Node):
 
-    requirements = {'device': {
-        'max_sample_period': 'ANY VALUE'}}
-    postconditions =  {'preprocessing': {'gaps_located':True}}
+    requirements = {'device': {'max_sample_period': 'ANY VALUE'}}
+    postconditions =  {'preprocessing': {'good_sections_located':True}}
 
-    def __init__(self, name='locate_gaps'):
-        super(LocateGapsNode, self).__init__(name)
+    def __init__(self, name='locate_good_sections'):
+        super(LocateGoodSectionsNode, self).__init__(name)
 
     def process(self, df, metadata=None):
         assert metadata is not None
@@ -66,8 +65,19 @@ class LocateGapsNode(Node):
         index = reframe_index(index, df.timeframe.start, df.timeframe.end)
         timedeltas_sec = timedelta64_to_secs(np.diff(index.values))
         overlong_timedeltas = timedeltas_sec > max_sample_period
-        gap_starts = index[:-1][overlong_timedeltas]
-        gap_ends = index[1:][overlong_timedeltas] 
+        good_sect_starts = index[1:][overlong_timedeltas] 
+        good_sect_starts = good_sect_starts.insert(0, index[0])
+        good_sect_ends = index[:-1][overlong_timedeltas]
+        good_sect_ends = good_sect_ends.insert(len(good_sect_ends), index[-1])
+        
+        assert len(good_sect_starts) == len(good_sect_ends)
+
+        mask = []
+        for start, end in zip(good_sect_starts, good_sect_ends):
+            try:
+                mask.append(TimeFrame(start, end))
+            except ValueError:
+                pass # silently ignore good sections of zero length
 
         results = getattr(df, 'results', {})
 #        locate_gaps_results = LocateGapsResults()

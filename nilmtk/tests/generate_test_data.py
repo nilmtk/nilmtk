@@ -112,7 +112,8 @@ def create_random_hdf5():
 
 
 def create_energy_hdf5(simple=True):
-    FILENAME = join(data_dir(), 'energy.h5')
+    fname = 'energy.h5' if simple else 'energy_complex.h5'
+    FILENAME = join(data_dir(), fname)
 
     df = power_data(simple=simple)
 
