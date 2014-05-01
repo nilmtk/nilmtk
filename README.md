@@ -1,3 +1,8 @@
+### v0.2.0 development branch
+
+This is the development branch.  At present, we are substantially
+re-writing parts of NILMTK, and this branch does not do much useful yet!
+
 nilmtk: Non-Intrusive Load Monitoring Toolkit
 ======
 
