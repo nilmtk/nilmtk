@@ -17,26 +17,12 @@ class EnergyResults(Results):
         `apparent` is (optional) energy in kVAh
     """
     
-    @property
-    def combined(self):
-        """Return all results from each chunk combined.
-        Either return single float for all periods or a dict where necessary, 
-        e.g. if calculating Energy for a meter which records both apparent power and
-        active power then we've have energyresults.combined['active']
-        """
-        return self._data[self._columns_with_end_removed()].sum()
-
-    def append(self, timeframe, **kwargs):
+    def append(self, timeframe, new_results):
         """Append a single result.
-        e.g. append(TimeFrame(start, end), apparent=34, active=43)
+        e.g. append(TimeFrame(start, end), {'apparent': 34, 'active': 43})
         """
-        if set(kwargs.keys()) - set(AC_TYPES):
-            raise KeyError('kwargs must be a combination of '+
+        if set(new_results.keys()) - set(AC_TYPES):
+            raise KeyError('new_results must be a combination of ' +
                            str(AC_TYPES))
-        super(EnergyResults, self).append(timeframe, **kwargs)
+        super(EnergyResults, self).append(timeframe, new_results)
 
-    def update(self, new_result):
-        """Update with new result."""
-        if not isinstance(new_result, EnergyResults):
-            raise TypeError('new_results must be of type EnergyResults')
-        super(EnergyResults, self).update(new_result)

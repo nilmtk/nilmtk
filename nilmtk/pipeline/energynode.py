@@ -27,16 +27,19 @@ class EnergyNode(Node):
         df.results = getattr(df, 'results', {})
 
         energy = {}
-        for ac_type in AC_TYPES:
-            energy_measurement = Energy(ac_type)
-            power_measurement = Power(ac_type)
-            if energy_measurement in df.columns:
-                energy[ac_type] = df[energy_measurement].sum()
-            elif power_measurement in df.columns:
-                energy[ac_type] = _energy_per_power_series(
-                    df[power_measurement])
+        for measurement, series in df.iteritems():
+            if isinstance(measurement, Power):
+                _energy = _energy_per_power_series(series)
+            elif isinstance(measurement, Energy):
+                if measurement.cumulative:
+                    _energy = series.iloc[-1] - series.iloc[0]
+                else:
+                    _energy = series.sum()
+            else:
+                continue
+            energy[measurement.ac_type] = _energy
 
-        energy_results.append(df.timeframe, **energy)
+        energy_results.append(df.timeframe, energy)
         df.results[self.name] = energy_results
         return df
 
