@@ -4,7 +4,7 @@ import numpy as np
 from nilmtk import TimeFrame
 from node import UnsatisfiedRequirementsError
 from nilmtk.utils import timedelta64_to_secs
-from locategapresults import LocateGapResults
+# from locategapresults import LocateGapResults #TODO
 
 def reframe_index(index, window_start=None, window_end=None):
     """
@@ -50,33 +50,28 @@ def reframe_index(index, window_start=None, window_end=None):
 
 class LocateGapsNode(Node):
 
-    requirements = {}
+    requirements = {'device': {
+        'max_sample_period': 'ANY VALUE'}}
     postconditions =  {'preprocessing': {'gaps_located':True}}
 
     def __init__(self, name='locate_gaps'):
-        super(EnergyNode, self).__init__(name)
+        super(LocateGapsNode, self).__init__(name)
 
-    def process(self, df):
-        if df.__dict__.get('metadata') is None:
-            raise KeyError('df.metadata must exist.')
+    def process(self, df, metadata=None):
+        assert metadata is not None
+        assert hasattr(df, 'timeframe')
 
-        for key in ['max_sample_period', 'chunk_start_date', 'chunk_end_date']:
-            if key not in df.metadata:
-                msg = 'df.metadata.' + key + ' must be set'
-                raise UnsatisfiedRequirementsError(msg)
-    
+        max_sample_period = metadata['device']['max_sample_period']    
         index = df.dropna().index
-        index = reframe_index(index, 
-                              df.metadata['chunk_start_date'], 
-                              df.metadata['chunk_end_date'])
+        index = reframe_index(index, df.timeframe.start, df.timeframe.end)
         timedeltas_sec = timedelta64_to_secs(np.diff(index.values))
-        overlong_timedeltas = timedeltas_sec > df.metadata['max_sample_period']
+        overlong_timedeltas = timedeltas_sec > max_sample_period
         gap_starts = index[:-1][overlong_timedeltas]
         gap_ends = index[1:][overlong_timedeltas] 
 
-        results = df.__dict__.get('results', {})
-        locate_gaps_results = LocateGapsResults()
+        results = getattr(df, 'results', {})
+#        locate_gaps_results = LocateGapsResults()
         # TODO: populate
-        results[self.name] = locate_gaps_results
+        results[self.name] = 'TODO' # locate_gaps_results
         df.results = results
         return df

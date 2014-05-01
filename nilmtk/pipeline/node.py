@@ -8,6 +8,8 @@ def find_unsatisfied_requirements(state, requirements):
     Parameters
     ----------
     state, requirements : dict
+        If a property is required but the specific value does not
+        matter then use 'ANY VALUE' as the value in `requirements`.
 
     Returns
     -------
@@ -28,7 +30,7 @@ def find_unsatisfied_requirements(state, requirements):
             else:
                 if isinstance(value, dict):
                     unsatisfied_requirements(cond_value, value)
-                elif cond_value != value:
+                elif value != 'ANY VALUE' and cond_value != value:
                     msg = ("Requires '{}={}' not '{}={}'."
                            .format(key, value, key, cond_value))
                     unsatisfied.append(msg)

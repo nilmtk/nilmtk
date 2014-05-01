@@ -28,10 +28,6 @@ class EnergyNode(Node):
         """
         Preference: Energy(cumulative) > Energy > Power
         """
-
-        energy_results = EnergyResults()
-        df.results = getattr(df, 'results', {})
-
         energy = {}
         data_source_rank = {} # overwrite Power with Energy with Energy(cumulative)
         for measurement, series in df.iteritems():
@@ -50,7 +46,9 @@ class EnergyNode(Node):
                     energy[measurement.ac_type] = series.sum()
                     data_source_rank[measurement.ac_type] = 2
 
+        energy_results = EnergyResults()
         energy_results.append(df.timeframe, energy)
+        df.results = getattr(df, 'results', {})
         df.results[self.name] = energy_results
         return df
 
