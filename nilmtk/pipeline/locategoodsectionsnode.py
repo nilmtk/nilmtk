@@ -1,8 +1,7 @@
 from __future__ import print_function, division
-from node import Node
+from node import Node, UnsatisfiedRequirementsError
 import numpy as np
 from nilmtk import TimeFrame
-from node import UnsatisfiedRequirementsError
 from nilmtk.utils import timedelta64_to_secs
 # from locategapresults import LocateGapResults #TODO
 
