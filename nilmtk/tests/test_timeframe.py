@@ -87,5 +87,45 @@ class TestTimeFrame(unittest.TestCase):
         self.assertEqual(new_tf, TimeFrame(start=tf.start, end=new_end))
         self.assertFalse(new_tf.empty)        
 
+    def test_adjacent(self):
+        # overlap 
+        tf1 = TimeFrame("2011-01-01 00:00:00", "2011-02-01 00:00:00")
+        tf2 = TimeFrame("2011-02-01 00:00:00", "2011-03-01 00:00:00")
+        self.assertTrue(tf1.adjacent(tf2))
+        self.assertTrue(tf2.adjacent(tf1))
+
+        # no overlap
+        tf1 = TimeFrame("2011-01-01 00:00:00", "2011-02-01 00:00:00")
+        tf2 = TimeFrame("2011-02-01 00:00:01", "2011-03-01 00:00:00")
+        self.assertFalse(tf1.adjacent(tf2))
+        self.assertFalse(tf2.adjacent(tf1))
+
+        # no overlap but gap specified
+        tf1 = TimeFrame("2011-01-01 00:00:00", "2011-02-01 00:00:00")
+        tf2 = TimeFrame("2011-02-01 00:00:01", "2011-03-01 00:00:00")
+        self.assertTrue(tf1.adjacent(tf2, gap=1))
+        self.assertTrue(tf2.adjacent(tf1, gap=1))
+        self.assertTrue(tf1.adjacent(tf2, gap=100))
+        self.assertTrue(tf2.adjacent(tf1, gap=100))
+
+    def test_union(self):
+        # overlap 
+        def test_u(ts1, ts2, ts3, ts4):
+            ts1 = pd.Timestamp(ts1)
+            ts2 = pd.Timestamp(ts2)
+            ts3 = pd.Timestamp(ts3)
+            ts4 = pd.Timestamp(ts4)
+            tf1 = TimeFrame(ts1, ts2)
+            tf2 = TimeFrame(ts3, ts4)
+            union = tf1.union(tf2)
+            self.assertEqual(union.start, ts1)
+            self.assertEqual(union.end, ts4)
+
+        test_u("2011-01-01 00:00:00", "2011-02-01 00:00:00", 
+               "2011-02-01 00:00:00", "2011-03-01 00:00:00")
+        test_u("2011-01-01 00:00:00", "2011-01-15 00:00:00", 
+               "2011-02-01 00:00:00", "2011-03-01 00:00:00")
+
+        
 if __name__ == '__main__':
     unittest.main()

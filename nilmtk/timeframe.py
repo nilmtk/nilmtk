@@ -1,5 +1,6 @@
 from __future__ import print_function, division
 import pandas as pd
+from datetime import timedelta
 from copy import deepcopy
 
 class TimeFrame(object):
@@ -60,6 +61,25 @@ class TimeFrame(object):
             raise ValueError("end date must be after start date")
         else:
             self._end = new_end
+
+    def adjacent(self, other, gap=0):
+        """Returns True if self.start == other.end or visa versa.
+
+        Parameters
+        ----------
+        gap : float or int
+            Number of seconds gap allowed.
+        """        
+        assert gap >= 0
+        gap_td = timedelta(seconds=gap)
+        return (other.start - gap_td <= self.end <= other.start or
+                self.start - gap_td <= other.end <= self.start)
+
+    def union(self, other):
+        """Return a single TimeFrame combining self and other."""
+        start = min(self.start, other.start)
+        end = max(self.end, other.end)
+        return TimeFrame(start, end)
 
     @property
     def timedelta(self):

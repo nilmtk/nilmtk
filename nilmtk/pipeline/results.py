@@ -25,10 +25,11 @@ class Results(object):
 
     @property
     def combined(self):
-        """Return all results from each chunk combined.
-        Either return single float for all periods or a dict where necessary, 
-        e.g. if calculating Energy for a meter which records both apparent power and
-        active power then we've have energyresults.combined['active']
+        """Return all results from each chunk combined.  Either return single
+        float for all periods or a dict where necessary, e.g. if
+        calculating Energy for a meter which records both apparent
+        power and active power then get active power with
+        energyresults.combined['active']
         """
         return self._data[self._columns_with_end_removed()].sum()
 
