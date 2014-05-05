@@ -42,7 +42,6 @@ def reframe_index(index, window_start=None, window_end=None):
 
     if reset_tz:
         # index.insert breaks timezone.
-        # TODO: check if this is still true in Pandas 0.13.1
         index = index.tz_localize('UTC').tz_convert(tz)
 
     return index

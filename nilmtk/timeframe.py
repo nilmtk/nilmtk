@@ -135,7 +135,7 @@ class TimeFrame(object):
             terms.append("index>=" + variable_name + ".start")
         if self.end is not None:
             terms.append("index<" + variable_name + ".end")
-        return terms
+        return None if terms == [] else terms
 
     def clear(self):
         self.enabled = True

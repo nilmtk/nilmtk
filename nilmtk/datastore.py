@@ -44,26 +44,35 @@ class HDFDataStore(DataStore):
         self.store = pd.HDFStore(filename)
         super(HDFDataStore, self).__init__()
 
-    def load(self, key, cols=None, period=None):
+    def load(self, key, cols=None, periods=None, n_look_ahead_rows=10):
         """
         Parameters
         ----------
         key : string, the location of a table within the DataStore.
-        cols : list or 'index', optional
-            e.g. [('power', 'active'), ('power', 'reactive'), ('voltage', '')]
+        cols : list of Measurements or ['index'], optional
+            e.g. [Power('active'), Power('reactive'), Voltage()]
             if not provided then will return all columns from the table.
-        period : nilmtk.TimeFrame, optional
-            defines the time period to load.  If `self.window` is enabled
-            then `period` will be intersected with `self.window`.
+        periods : list of nilmtk.TimeFrame objects, optional
+            defines the time periods to load.  If `self.window` is enabled
+            then each `period` will be intersected with `self.window`.
+        n_look_ahead_rows : int, optional, defaults to 10
 
         Returns
         ------- 
-        If `cols=='index'` then returns a pd.DatetimeIndex
-        else returns a pd.DataFrame.
-        Returns an empty DataFrame if no data is available for the
-        specified period (or if the period.intersect(self.window)
-        is empty).
-        Returned DataFrame has a `timeframe` attribute.
+        Returns a generator of DataFrame objects.  Each DataFrame is:
+
+        If `cols==['index']` then 
+            each DF is a pd.DatetimeIndex
+        else 
+            returns a pd.DataFrame with extra attributes:
+                - timeframe : TimeFrame of period intersected with self.window
+                - look_ahead : pd.DataFrame:
+                    with `n_look_ahead_rows` rows.  The first row will be for
+                    `period.end`.
+
+            Returns an empty DataFrame if no data is available for the
+            specified period (or if the period.intersect(self.window)
+            is empty).
 
         Raises
         ------
@@ -71,33 +80,44 @@ class HDFDataStore(DataStore):
         """
         self._check_key(key)
         self._check_columns(key, cols)
-        window_intersect = self.window.intersect(period)
-        if window_intersect.empty:
-            df = pd.DataFrame()
-            df.timeframe = window_intersect
-            return df
-        
-        # Check we won't use too much memory
-        mem_requirement = self.estimate_memory_requirement(key, cols, 
-                                                           window_intersect)
-        if mem_requirement > MAX_MEM_ALLOWANCE_IN_BYTES:
-            raise MemoryError('Requested data would use {:.3f}MBytes:'
-                              ' too much memory.'
-                              .format(mem_requirement / 1E6))
+        periods = periods if periods else [TimeFrame()]
 
-        # Create list of query terms
-        terms = window_intersect.query_terms('window_intersect')
-        if cols is not None:
-            terms.append("columns==cols")
-        if terms == []:
-            terms = None
+        start_row = 0 # row to start search in table
+        for period in periods:
+            window_intersect = self.window.intersect(period)
+            if window_intersect.empty:
+                data = pd.DataFrame()
+            else:
+                terms = window_intersect.query_terms('window_intersect')
+                coords = self.store.select_as_coordinates(
+                    key=key, where=terms, start=start_row, stop=-1)
+                if len(coords) > 0:
+                    self.check_data_will_fit_in_memory(
+                        key=key, nrows=len(coords), cols=cols)
+                    data = self.store.select(key=key, where=coords, columns=cols)
+                    start_row = coords[-1]+1
+                else:
+                    data = pd.DataFrame()
+            if cols == ['index']:
+                data = data.index
 
-        # Read data
-        data = self.store.select(key=key, where=terms)
-        if cols == 'index':
-            data = data.index
-        data.timeframe = window_intersect
-        return data
+            data.timeframe = window_intersect
+
+            # Load 'look ahead'
+            try:
+                look_ahead_coords = self.store.select_as_coordinates(
+                    key=key, where="index >= period.end", 
+                    start=start_row, stop=start_row+n_look_ahead_rows)
+            except IndexError:
+                look_ahead_coords = []
+
+            if len(look_ahead_coords) > 0:
+                data.look_ahead = self.store.select(
+                    key=key, where=look_ahead_coords, columns=cols)
+            else:
+                data.look_ahead = pd.DataFrame()
+
+            yield data
     
     def _check_columns(self, key, columns):
         if columns is None:
@@ -129,8 +149,16 @@ class HDFDataStore(DataStore):
         query_cols = set(cols)
         table_cols = set(self.column_names(key) + ['index'])
         return query_cols.issubset(table_cols)
-    
-    def estimate_memory_requirement(self, key, cols=None, timeframe=None):
+
+    def check_data_will_fit_in_memory(self, key, nrows, cols=None):
+        # Check we won't use too much memory
+        mem_requirement = self.estimate_memory_requirement(key, nrows, cols)
+        if mem_requirement > MAX_MEM_ALLOWANCE_IN_BYTES:
+            raise MemoryError('Requested data would use {:.3f}MBytes:'
+                              ' too much memory.'
+                              .format(mem_requirement / 1E6))
+
+    def estimate_memory_requirement(self, key, nrows, cols=None):
         """Returns estimated mem requirement in bytes."""
         BYTES_PER_ELEMENT = 4
         BYTES_PER_TIMESTAMP = 8
@@ -140,10 +168,12 @@ class HDFDataStore(DataStore):
         else:
             self._check_columns(key, cols)
         ncols = len(cols)
-        nrows = self.nrows(key, timeframe)
         est_mem_usage_for_data = nrows * ncols * BYTES_PER_ELEMENT
         est_mem_usage_for_index = nrows * BYTES_PER_TIMESTAMP
-        return est_mem_usage_for_data + est_mem_usage_for_index
+        if cols == ['index']:
+            return est_mem_usage_for_index
+        else:
+            return est_mem_usage_for_data + est_mem_usage_for_index
     
     def column_names(self, key):
         self._check_key(key)
@@ -163,8 +193,6 @@ class HDFDataStore(DataStore):
             nrows = 0
         elif timeframe_intersect:
             terms = timeframe_intersect.query_terms('timeframe_intersect')
-            if terms == []:
-                terms = None
             coords = self.store.select_as_coordinates(key, terms)
             nrows = len(coords)
         else:
@@ -176,7 +204,7 @@ class HDFDataStore(DataStore):
         """
         Returns
         -------
-        nilmtk.TimeFrame
+        nilmtk.TimeFrame of entire table after intersecting with self.window.
         """
         self._check_key(key)
         data_start_date = self.store.select(key, [0]).index[0]

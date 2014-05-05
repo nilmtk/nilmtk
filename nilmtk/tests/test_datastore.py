@@ -58,20 +58,23 @@ class TestHDFDataStore(unittest.TestCase):
         self._apply_mask()
         for key in self.keys:
             self.datastore.window.enabled = True
-            mem = self.datastore.estimate_memory_requirement(key)
+            mem = self.datastore.estimate_memory_requirement(key, self.datastore.nrows(key))
             self.assertEqual(mem, 12000)
             self.datastore.window.enabled = False
-            mem = self.datastore.estimate_memory_requirement(key)
+            mem = self.datastore.estimate_memory_requirement(key, self.datastore.nrows(key))
             self.assertEqual(mem, 200000)
 
     def test_load(self):
         timeframe = TimeFrame('2012-01-01 00:00:00', '2012-01-01 00:00:05')
         self.datastore.window.clear()
-        df = self.datastore.load(key=self.keys[0], 
-                                 cols=[Power('active')],
-                                 period=timeframe)
+        gen = self.datastore.load(key=self.keys[0], 
+                                  cols=[Power('active')],
+                                  periods=[timeframe])
+        df = next(gen)
         self.assertEqual(df.index[0], timeframe.start)
         self.assertEqual(df.index[-1], timeframe.end - timedelta(seconds=1))
+        self.assertEqual(df.look_ahead.index[0], timeframe.end)
+        self.assertEqual(len(df.look_ahead), 10)
 
 
     #--------- helper functions ---------------------#

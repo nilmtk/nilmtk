@@ -27,7 +27,7 @@ class TestLoader(unittest.TestCase):
 
     def test_load_chunks(self):
         self.datastore.window.clear()
-        chunks = self.loader.load_chunks()
+        chunks = self.loader.load()
         i = 0
         for chunk in chunks:
             i += 1
@@ -39,7 +39,7 @@ class TestLoader(unittest.TestCase):
         timeframes = [TimeFrame('2012-01-01 00:00:00', '2012-01-01 00:00:05'),
                       TimeFrame('2012-01-01 00:10:00', '2012-01-01 00:10:05')]
         self.loader.mask = timeframes
-        chunks = self.loader.load_chunks()
+        chunks = self.loader.load()
         i = 0
         for chunk in chunks:
             self.assertEqual(chunk.index[0], timeframes[i].start)
@@ -51,7 +51,7 @@ class TestLoader(unittest.TestCase):
         # Check when we have a narrow mask
         self.datastore.window = TimeFrame('2012-01-01 00:10:02', '2012-01-01 00:10:10')
         self.loader.mask = timeframes
-        chunks = self.loader.load_chunks()
+        chunks = self.loader.load()
         i = 0
         for chunk in chunks:
             if i == 0:
