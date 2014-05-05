@@ -1,4 +1,5 @@
 from results import Results
+import pandas as pd
 
 class LocateGoodSectionsResults(Results):
     """
@@ -16,28 +17,33 @@ class LocateGoodSectionsResults(Results):
         Parameters
         ----------
         timeframe : nilmtk.TimeFrame
-        new_results : dict with one key: `sections`
+        new_results : {'sections': list of TimeFrame objects}
         """
-        assert new_results.keys() == ['sections']
         super(LocateGoodSectionsResults, self).append(timeframe, new_results)
-
 
     @property
     def combined(self):
-        """Merges together any good sections which span multiple segments.
+        """Merges together any good sections which span multiple segments,
+        as long as those segments are immediately adjacent 
+        (previous.end == next.start).
 
         Returns
         -------
-        mask : list of nilmtk.TimeFrame objects
+        sections : list of nilmtk.TimeFrame objects
         """
-        assert hasattr(self, 'max_sample_period')
-        mask = []
+        sections = []
+        end_date_of_prev_row = None
         for index, row in self._data.iterrows():
-            if mask and mask[-1].adjacent(row['sections'][0], 
-                                          self.max_sample_period):
-                mask[-1] = mask[-1].union(row['sections'][0])
-                mask.extend(row['sections'][1:])
-            else:
-                mask.extend(row['sections'])
+            row_sections = row['sections']
 
-        return mask
+            # Check if first TimeFrame of row_sections needs to be merged with
+            # last TimeFrame of previous section
+            if end_date_of_prev_row == index and row_sections[0].start is None:
+                assert sections[-1].end is None
+                sections[-1].end = row_sections[0].end
+                row_sections.pop(0)
+                
+            end_date_of_prev_row = row['end']
+            sections.extend(row_sections)
+
+        return sections

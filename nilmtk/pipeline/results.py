@@ -76,10 +76,9 @@ class Results(object):
         if not isinstance(new_result, self.__class__):
             raise TypeError("new_results must be of type '{}'"
                             .format(self.__class__))
-        cols = new_result._columns_with_end_removed()
-        for index, series in new_result._data.iterrows():
-            self.append(TimeFrame(index, series['end']), 
-                        series[cols].to_dict())
+
+        self._data = self._data.append(new_result._data, verify_integrity=True)
+        self._data.sort_index(inplace=True)
 
     def _columns_with_end_removed(self):
         cols = set(self._data.columns)
