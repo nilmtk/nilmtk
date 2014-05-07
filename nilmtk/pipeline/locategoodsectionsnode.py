@@ -19,7 +19,7 @@ class LocateGoodSectionsNode(Node):
     requirements = {'device': {'max_sample_period': 'ANY VALUE'}}
     postconditions =  {'preprocessing': {'good_sections_located': True}}
 
-    def __init__(self, name='locate_good_sections'):        
+    def __init__(self, name='good_sections'):        
         super(LocateGoodSectionsNode, self).__init__(name)
         self.previous_chunk_ended_with_open_ended_good_section = False
 
@@ -36,7 +36,7 @@ class LocateGoodSectionsNode(Node):
 
         Returns
         -------
-        df with `results` dict with `locate_good_sections` key.
+        df with `results` dict with `good_sections` key.
             Each good section in `df` is marked with a TimeFrame.
             If this df ends with an open-ended good section (assessed by
             examining df.look_ahead) then the last TimeFrame will have

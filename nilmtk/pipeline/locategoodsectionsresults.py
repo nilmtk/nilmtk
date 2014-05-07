@@ -28,6 +28,10 @@ class LocateGoodSectionsResults(Results):
         super(LocateGoodSectionsResults, self).append(timeframe, new_results)
 
     @property
+    def last_results(self):
+        return self._data['sections'][-1]
+
+    @property
     def combined(self):
         """Merges together any good sections which span multiple segments,
         as long as those segments are adjacent 

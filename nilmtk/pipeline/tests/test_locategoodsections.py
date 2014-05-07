@@ -4,7 +4,7 @@ import unittest
 from nilmtk.pipeline import Pipeline, EnergyNode, LocateGoodSectionsNode
 from nilmtk.pipeline.locategoodsectionsnode import reframe_index
 from nilmtk.pipeline.locategoodsectionsresults import LocateGoodSectionsResults
-from nilmtk.pipeline.energynode import _energy_per_power_series
+from nilmtk.pipeline.energynode import _energy_for_power_series
 from nilmtk import TimeFrame, EMeter, HDFDataStore, Loader
 from nilmtk.consts import JOULES_PER_KWH
 from nilmtk.tests.testingtools import data_dir
@@ -95,7 +95,7 @@ class TestLocateGaps(unittest.TestCase):
 
         locate = LocateGoodSectionsNode()
         locate.process(df, metadata)
-        results = df.results['locate_good_sections'].combined
+        results = df.results['good_sections'].combined
         self.assertEqual(len(results), 4)
         self.assertEqual(results[0].timedelta.total_seconds(), 30)
         self.assertEqual(results[1].timedelta.total_seconds(), 10)
@@ -123,7 +123,7 @@ class TestLocateGaps(unittest.TestCase):
                     cropped_df.look_ahead = pd.DataFrame()
                 prev_i = i
                 locate.process(cropped_df, metadata)
-                aggregate_results.update(cropped_df.results['locate_good_sections'])
+                aggregate_results.update(cropped_df.results['good_sections'])
 
             results = aggregate_results.combined
             self.assertEqual(len(results), 4)

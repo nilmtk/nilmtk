@@ -143,6 +143,20 @@ class TimeFrame(object):
         self._end = None
         self._empty = False
 
+    def slice(self, frame):
+        """Slices `frame` using self.start and self.end.
+
+        Parameters
+        ----------
+        frame : pd.DataFrame or pd.Series to slice
+
+        Returns
+        -------
+        frame : sliced frame
+        """
+        if not self.empty:
+            return frame.loc[self.start:self.end]
+
     def __nonzero__(self):
         if self.empty:
             return False
