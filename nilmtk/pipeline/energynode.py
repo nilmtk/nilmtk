@@ -8,17 +8,10 @@ from nilmtk.measurement import AC_TYPES
 from nilmtk import TimeFrame
 from nilmtk.measurement import Power, Energy
 
-def _energy_per_power_series(series):
-    series = series.dropna()
-    timedelta = np.diff(series.index.values)
-    timedelta_secs = timedelta64_to_secs(timedelta)
-    joules = (timedelta_secs * series.values[:-1]).sum()
-    kwh = joules / JOULES_PER_KWH
-    return kwh
 
 class EnergyNode(Node):
 
-    requirements = {'preprocessing': {'gaps_bookended_with_zeros': True}}
+    requirements = {'preprocessing': {'good_sections_located': True}}
     postconditions =  {'preprocessing': {'energy_computed': True}}
 
     def __init__(self, name='energy'):
@@ -57,3 +50,12 @@ class EnergyNode(Node):
         available_measurements = state['device']['measurements']
         return [measurement for measurement in available_measurements 
                 if isinstance(measurement, (Power, Energy))]
+
+
+def _energy_per_power_series(series):
+    series = series.dropna()
+    timedelta = np.diff(series.index.values)
+    timedelta_secs = timedelta64_to_secs(timedelta)
+    joules = (timedelta_secs * series.values[:-1]).sum()
+    kwh = joules / JOULES_PER_KWH
+    return kwh

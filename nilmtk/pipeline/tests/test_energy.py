@@ -1,7 +1,7 @@
 #!/usr/bin/python
 from __future__ import print_function, division
 import unittest
-from nilmtk.pipeline import Pipeline, EnergyNode
+from nilmtk.pipeline import Pipeline, EnergyNode, LocateGoodSectionsNode
 from nilmtk.pipeline.energynode import _energy_per_power_series
 from nilmtk import TimeFrame, EMeter, HDFDataStore, Loader
 from nilmtk.consts import JOULES_PER_KWH
@@ -30,7 +30,7 @@ class TestEnergy(unittest.TestCase):
     def test_pipeline(self):
         meter = EMeter()
         meter.load(self.loader)
-        nodes = [EnergyNode()]
+        nodes = [LocateGoodSectionsNode(), EnergyNode()]
         pipeline = Pipeline(nodes)
         pipeline.run(meter)
         energy = pipeline.results['energy'].combined

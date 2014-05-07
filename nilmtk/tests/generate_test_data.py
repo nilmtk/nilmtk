@@ -86,6 +86,7 @@ def create_random_df():
 TEST_METER = {'manufacturer': 'Test Manufacturer', 
               'model': 'Random Meter', 
               'sample_period': 10,
+              'max_sample_period': MAX_SAMPLE_PERIOD,
               'measurements': [Power('apparent')]
           }
 
@@ -131,8 +132,7 @@ def create_energy_hdf5(simple=True):
     store.put(key, df, format='table')
     store.get_storer(key).attrs.metadata = {
         'device_model': meter['model'], 
-        'submeter_of': 1,
-        'preprocessing': {'gaps_bookended_with_zeros': simple}}
+        'submeter_of': 1}
 
     # Save dataset-wide metadata
     store.root._v_attrs.dataset = {'meter_devices': {meter['model']: meter}}
