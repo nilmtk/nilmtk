@@ -95,7 +95,8 @@ class EMeter(object):
         
     def total_energy(self, preprocessing=None):
         """returns an EnergyResults object"""
-        raise NotImplementedError
+        
+
         # nodes = [] if preprocessing is None else preprocessing
         # nodes.extend([RemoveImplausableValues(self.measurement_limits), 
         #               BookendGapsWithZeros(), 
