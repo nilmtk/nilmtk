@@ -15,15 +15,14 @@ class DataStore(object):
 
     * Deals with: retrieving data from disk / network / direct from a meter
     * Optimised for: handling large amounts of data
-    * Services it provides: delivering a pd.DataFrame of data given a
+    * Services it provides: delivering a generator of pd.DataFrames of data given a
       specific time span and columns
     * Totally agnostic about what the data 'means'. It could be voltage,
       current, temperature, PIR readings etc.
-    * subclasses for NILMTK HDF5, NILMTK CSV, Xively, REDD, iAWE,
+    * could have subclasses for NILMTK HDF5, NILMTK CSV, Xively, REDD, iAWE,
       UKPD, etc; MetOffice XLS data, Current Cost meters etc.  
     * One DataStore per HDF5 file or folder or CSV files or Xively
       feed etc 
-    * always use JSON for metadata
 
     Attributes
     ----------

@@ -7,7 +7,9 @@ class EMeter(object):
     
     Attributes
     ----------
-    loader : Loader
+    store : nilmtk.DataStore
+
+    key : key into nilmtk.DataStore to access data
     
     metadata : dict.  Including keys:
         id : int, meter ID    
@@ -41,18 +43,20 @@ class EMeter(object):
 
     def __init__(self):
         self.metadata = {}
-        self.loader = None
+        self.store = None
+        self.key = None
 
     @classmethod
-    def _load_meter_devices(cls, loader):
-        dataset_metadata = loader.store.load_metadata()
+    def _load_meter_devices(cls, store):
+        dataset_metadata = store.load_metadata()
         EMeter.meter_devices.update(dataset_metadata.get('meter_devices', {}))
 
-    # TODO: why not just have this as __init__(loader)???
-    def load(self, loader):
-        self.loader = loader
-        self.metadata = self.loader.load_metadata()
-        EMeter._load_meter_devices(loader)
+    # TODO: why not just have this as __init__(store)???
+    def load(self, store, key):
+        self.store = store
+        self.key = key
+        self.metadata = self.store.load_metadata(self.key)
+        EMeter._load_meter_devices(store)
         device_model = self.metadata['device_model']
         self.metadata['device'] = EMeter.meter_devices[device_model]
 
@@ -99,18 +103,18 @@ class EMeter(object):
         """Returns a generator of pd.Series of voltage, if available."""
         raise NotImplementedError
         
-    def total_energy(self):
+    def total_energy(self, **load_kwargs):
         """
         Returns
         -------
         nilmtk.pipeline.EnergyResults object
         """
         nodes = [ClipNode(), EnergyNode()]
-        results = self._run_pipeline(nodes)
+        results = self._run_pipeline(nodes, **load_kwargs)
         return results['energy']
 
     def _sanity_check_before_processing(self):
-        if self.loader is None:
+        if self.store is None:
             msg = ("'meter.loader' is not set!"
                    " Cannot process data without a loader!")
             raise RuntimeError(msg)
@@ -129,10 +133,10 @@ class EMeter(object):
         results = self._run_pipeline(nodes)
         return results['good_sections']
 
-    def _run_pipeline(self, nodes):
+    def _run_pipeline(self, nodes, **load_kwargs): 
         self._sanity_check_before_processing()
         pipeline = Pipeline(nodes)
-        pipeline.run(self)
+        pipeline.run(meter=self, **load_kwargs)
         return pipeline.results        
         
     def contiguous_sections(self):
@@ -146,15 +150,3 @@ class EMeter(object):
         implausible values removed)"""
         raise NotImplementedError
         
-    def set_loader_attributes(self, **kwargs):
-        """Provides a common interface to setting loader attributes.
-        e.g. set_load_attributes(mask=Mask())
-        """
-        for key, value in kwargs.iteritems():
-            self.loader.__setattr__(key, value)
-        
-    def reset_loader_attributes(self):
-        self.loader.reset()
-        
-    def get_loader_attribute(self, attribute):
-        return self.loader.__getattr__(attribute)

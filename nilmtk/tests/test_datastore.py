@@ -76,6 +76,42 @@ class TestHDFDataStore(unittest.TestCase):
         self.assertEqual(df.look_ahead.index[0], timeframe.end)
         self.assertEqual(len(df.look_ahead), 10)
 
+    def test_load_chunks(self):
+        self.datastore.window.clear()
+        chunks = self.datastore.load(key=self.keys[0])
+        i = 0
+        for chunk in chunks:
+            i += 1
+            self.assertEqual(chunk.index[0], self.TIMEFRAME.start)
+            self.assertEqual(chunk.index[-1], self.TIMEFRAME.end)
+            self.assertEqual(len(chunk), self.NROWS)
+        self.assertEqual(i, 1)
+
+        timeframes = [TimeFrame('2012-01-01 00:00:00', '2012-01-01 00:00:05'),
+                      TimeFrame('2012-01-01 00:10:00', '2012-01-01 00:10:05')]
+        chunks = self.datastore.load(key=self.keys[0], periods=timeframes)
+        i = 0
+        for chunk in chunks:
+            self.assertEqual(chunk.index[0], timeframes[i].start)
+            self.assertEqual(chunk.index[-1], timeframes[i].end-timedelta(seconds=1))
+            self.assertEqual(len(chunk), 5)
+            i += 1
+        self.assertEqual(i, 2)
+
+        # Check when we have a narrow mask
+        self.datastore.window = TimeFrame('2012-01-01 00:10:02', '2012-01-01 00:10:10')
+        chunks = self.datastore.load(key=self.keys[0], periods=timeframes)
+        i = 0
+        for chunk in chunks:
+            if i == 0:
+                self.assertTrue(chunk.empty)
+            else:
+                self.assertEqual(chunk.index[0], pd.Timestamp('2012-01-01 00:10:02'))
+                self.assertEqual(chunk.index[-1], pd.Timestamp('2012-01-01 00:10:04'))
+                self.assertEqual(len(chunk), 3)
+            i += 1
+        self.assertEqual(i, 2)
+
 
     #--------- helper functions ---------------------#
 

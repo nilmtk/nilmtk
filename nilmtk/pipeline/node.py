@@ -51,6 +51,12 @@ class Node(object):
     requirements = {}
     postconditions = {}
 
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        pass # to be overridden by subclasses
+
     def update_state(self, state):
         """Recursively updates `state` dict with `postconditions`.
 

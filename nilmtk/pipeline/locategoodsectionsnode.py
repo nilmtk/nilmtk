@@ -19,8 +19,8 @@ class LocateGoodSectionsNode(Node):
     requirements = {'device': {'max_sample_period': 'ANY VALUE'}}
     postconditions =  {'preprocessing': {'good_sections_located': True}}
     name='good_sections'
-
-    def __init__(self):        
+        
+    def reset(self):
         self.previous_chunk_ended_with_open_ended_good_section = False
 
     def process(self, df, metadata):

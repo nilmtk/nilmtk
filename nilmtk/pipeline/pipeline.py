@@ -8,27 +8,24 @@ class Pipeline(object):
     able to do a sequence of processing steps on a chunk
     while that chunk is in memory.
     
-    DATASTORE -> LOADER -> NODE_1 -> ... -> NODE_N
+    DATASTORE -> NODE_1 -> ... -> NODE_N
     
-    A pipeline consists of one loader
+    A pipeline consists of one datastore
     node which loads and, if necessary, splits the data into chunks;
     if there are K chunks then the pipeline runs K times; and on each
-    iteration the output from the loader/splitter is a single DataFrame
+    iteration the output from the datastore is a single DataFrame
     (with metatdata such as sample_period, max_sample_period, 
     chunk_start_datetime, chunk_end_datetime, etc).
-    
-    The Loader contains a DataStore object which defines how to pull
-    data from the physical data store (disk / network / device).
-    
-    After the loader/splitter are an arbitrary number of "nodes"
+       
+    Downstream of the store are an arbitrary number of "nodes"
     which process data in sequence or export the data to disk.
         
     During a single cycle of the pipeline, results from each
     stats node are stored in the `dataframe.results` dict.  At the end
     of each pipeline cycle, the contents of dataframe.results 
-    are combined and the aggregate results are stored in the pipeline.
+    are combined and the aggregate results are stored in `pipeline.results`
     
-    Each processing node has a set of preconditions (e.g. gaps must be
+    Each processing node has a set of requirements (e.g. gaps must be
     filled) and a set of postconditions (e.g. gaps will have been
     filled).  This allows us to check that a particular pipeline is
     viable (i.e. that, for every node, the node's preconditions are
@@ -51,14 +48,12 @@ class Pipeline(object):
     Attributes
     ----------
     nodes : list of Node objects
-    loader : Loader
     results : dict of Results objects storing aggregate stats results
     
     Examples
     --------
     
     >>> store = HDFDataStore('redd.h5')
-    >>> loader = Loader(store, 'building1/electric/meter1')
 
     Calculate total energy and save the preprocessed data
     and the energy data back to disk:
@@ -67,7 +62,7 @@ class Pipeline(object):
                  Energy(), 
                  HDFTableExport('meter1_preprocessed.h5', table_path)]
     >>> pipeline = Pipeline(nodes)
-    >>> pipeline.run(meter)
+    >>> pipeline.run(store, 'building1/electric/meter1', metadata, mask)
     >>> energy = pipeline.results['energy'].combined
     >>> print("Active energy =", energy['active'], "kWh",
     >>>       "and reactive =", energy['reactive'], "kWh")
@@ -76,19 +71,26 @@ class Pipeline(object):
     def __init__(self, nodes=None):
         self.nodes = [] if nodes is None else nodes
             
-    def run(self, meter):
+    def run(self, meter, **load_kwargs):
         """
         Parameters
         ----------
         meter : nilmtk.EMeter
+        **load_kwargs : key word arguments for store.load() e.g.:
+            - periods : list of nilmtk.TimeFrame objects
         """
-        self.results = {}
+        self._reset()
         self._check_requirements(meter.metadata)
 
         # Run pipeline
-        for chunk in meter.loader.load(): # TODO only load required measurements
+        for chunk in meter.store.load(key=meter.key, **load_kwargs): # TODO only load required measurements
             processed_chunk = self._run_chunk_through_pipeline(chunk, meter.metadata)
             self._update_results(processed_chunk.results)
+
+    def _reset(self):
+        self.results = {}
+        for node in self.nodes:
+            node.reset()
 
     def _check_requirements(self, metadata):
         state = deepcopy(metadata)
