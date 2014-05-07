@@ -68,7 +68,9 @@ class HDFDataStore(DataStore):
                 - timeframe : TimeFrame of period intersected with self.window
                 - look_ahead : pd.DataFrame:
                     with `n_look_ahead_rows` rows.  The first row will be for
-                    `period.end`.
+                    `period.end`.  `look_ahead` stores data which appears on 
+                    disk immediately after `period.end`; i.e. it ignores
+                    the next `period.start`.
 
             Returns an empty DataFrame if no data is available for the
             specified period (or if the period.intersect(self.window)

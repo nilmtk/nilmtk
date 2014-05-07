@@ -105,7 +105,7 @@ class LocateGoodSectionsNode(Node):
         self.previous_chunk_ended_with_open_ended_good_section = (
             ends_with_open_ended_good_section)
         
-        good_section_results = LocateGoodSectionsResults()
+        good_section_results = LocateGoodSectionsResults(max_sample_period)
         good_section_results.append(df.timeframe, {'sections': [sections]})
         results = getattr(df, 'results', {})
         results[self.name] = good_section_results

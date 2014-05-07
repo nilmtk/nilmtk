@@ -79,7 +79,8 @@ class TestLocateGaps(unittest.TestCase):
         self.assertEqual(reframed.tzinfo.zone, TZ)
 
     def test_process(self):
-        metadata = {'device': {'max_sample_period': 10}}
+        MAX_SAMPLE_PERIOD = 10
+        metadata = {'device': {'max_sample_period': MAX_SAMPLE_PERIOD}}
         #       0  1  2  3    4  5     6     7
         secs = [0,10,20,30,  50,60,  100,  200, 
 
@@ -112,7 +113,7 @@ class TestLocateGaps(unittest.TestCase):
             locate = LocateGoodSectionsNode()
             df.results = {}
             prev_i = 0
-            aggregate_results = LocateGoodSectionsResults()
+            aggregate_results = LocateGoodSectionsResults(MAX_SAMPLE_PERIOD)
             for j,i in enumerate(split_point):
                 cropped_df = df.iloc[prev_i:i]
                 cropped_df.timeframe = TimeFrame(timestamps[j], timestamps[j+1])
