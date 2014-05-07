@@ -102,33 +102,34 @@ class TestLocateGaps(unittest.TestCase):
         self.assertEqual(results[3].timedelta.total_seconds(), 20)
 
         # Now try splitting data into multiple chunks
-        locate = LocateGoodSectionsNode()
-        df.results = {}
-        prev_i = 0
         timestamps = [pd.Timestamp("2011-01-01 00:00:00"),
                       pd.Timestamp("2011-01-01 00:00:40"),
                       pd.Timestamp("2011-01-01 00:01:20"),
                       pd.Timestamp("2011-01-01 00:04:20"),
                       pd.Timestamp("2011-01-01 00:06:20")
         ]
-        aggregate_results = LocateGoodSectionsResults()
-        for j,i in enumerate([4,6,9,17]):
-            cropped_df = df.iloc[prev_i:i]
-            cropped_df.timeframe = TimeFrame(timestamps[j], timestamps[j+1])
-            try:
-                cropped_df.look_ahead = df.iloc[i:]
-            except IndexError:
-                cropped_df.look_ahead = pd.DataFrame()
-            prev_i = i
-            locate.process(cropped_df, metadata)
-            aggregate_results.update(cropped_df.results['locate_good_sections'])
+        for split_point in [[4,6,9,17], [4,10,12,17]]:
+            locate = LocateGoodSectionsNode()
+            df.results = {}
+            prev_i = 0
+            aggregate_results = LocateGoodSectionsResults()
+            for j,i in enumerate(split_point):
+                cropped_df = df.iloc[prev_i:i]
+                cropped_df.timeframe = TimeFrame(timestamps[j], timestamps[j+1])
+                try:
+                    cropped_df.look_ahead = df.iloc[i:]
+                except IndexError:
+                    cropped_df.look_ahead = pd.DataFrame()
+                prev_i = i
+                locate.process(cropped_df, metadata)
+                aggregate_results.update(cropped_df.results['locate_good_sections'])
 
-        results = aggregate_results.combined
-        self.assertEqual(len(results), 4)
-        self.assertEqual(results[0].timedelta.total_seconds(), 30)
-        self.assertEqual(results[1].timedelta.total_seconds(), 10)
-        self.assertEqual(results[2].timedelta.total_seconds(), 50)
-        self.assertEqual(results[3].timedelta.total_seconds(), 20)
+            results = aggregate_results.combined
+            self.assertEqual(len(results), 4)
+            self.assertEqual(results[0].timedelta.total_seconds(), 30)
+            self.assertEqual(results[1].timedelta.total_seconds(), 10)
+            self.assertEqual(results[2].timedelta.total_seconds(), 50)
+            self.assertEqual(results[3].timedelta.total_seconds(), 20)
         
 
 if __name__ == '__main__':
