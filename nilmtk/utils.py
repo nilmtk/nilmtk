@@ -12,4 +12,7 @@ def timedelta64_to_secs(timedelta):
     -------
     float : seconds
     """
-    return timedelta / np.timedelta64(1, 's')
+    if len(timedelta) == 0:
+        return np.array([])
+    else:
+        return timedelta / np.timedelta64(1, 's')
