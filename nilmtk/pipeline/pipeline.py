@@ -1,5 +1,4 @@
 from __future__ import print_function, division
-from nilmtk import EMeter
 from copy import deepcopy
 
 class Pipeline(object):
@@ -78,7 +77,11 @@ class Pipeline(object):
         self.nodes = [] if nodes is None else nodes
             
     def run(self, meter):
-        assert(isinstance(meter, EMeter))
+        """
+        Parameters
+        ----------
+        meter : nilmtk.EMeter
+        """
         self.results = {}
         self._check_requirements(meter.metadata)
 

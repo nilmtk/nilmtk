@@ -103,7 +103,8 @@ class HDFDataStore(DataStore):
             if cols == ['index']:
                 data = data.index
 
-            data.timeframe = window_intersect
+            data.timeframe = (window_intersect if window_intersect 
+                              else self.timeframe(key))
 
             # Load 'look ahead'
             try:

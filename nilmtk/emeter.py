@@ -1,4 +1,5 @@
 from __future__ import print_function, division
+from nilmtk.pipeline import Pipeline, ClipNode, EnergyNode
 from warnings import warn
 
 class EMeter(object):
@@ -38,11 +39,16 @@ class EMeter(object):
     """
     meter_devices = {}
 
+    def __init__(self):
+        self.metadata = {}
+        self.loader = None
+
     @classmethod
     def _load_meter_devices(cls, loader):
         dataset_metadata = loader.store.load_metadata()
         EMeter.meter_devices.update(dataset_metadata.get('meter_devices', {}))
 
+    # TODO: why not just have this as __init__(loader)???
     def load(self, loader):
         self.loader = loader
         self.metadata = self.loader.load_metadata()
@@ -90,20 +96,26 @@ class EMeter(object):
         raise NotImplementedError
         
     def voltage_series(self):
-        """Returns a generator of pd.Series of voltage, if avilable."""
+        """Returns a generator of pd.Series of voltage, if available."""
         raise NotImplementedError
         
-    def total_energy(self, preprocessing=None):
-        """returns an EnergyResults object"""
-        
+    def total_energy(self):
+        """
+        Returns
+        -------
+        nilmtk.pipeline.EnergyResults object
+        """
+        self._sanity_check_before_processing()
+        nodes = [ClipNode(), EnergyNode()]
+        pipeline = Pipeline(nodes)
+        pipeline.run(self)
+        return pipeline.results['energy']
 
-        # nodes = [] if preprocessing is None else preprocessing
-        # nodes.extend([RemoveImplausableValues(self.measurement_limits), 
-        #               BookendGapsWithZeros(), 
-        #               Energy()])
-        # pipeline = Pipeline(self, nodes)
-        # pipeline.run()
-        # return pipline.results['energy']
+    def _sanity_check_before_processing(self):
+        if self.loader is None:
+            msg = ("'meter.loader' is not set!"
+                   " Cannot process data without a loader!")
+            raise RuntimeError(msg)
         
     def dropout_rate(self):
         """returns a DropoutRateResults object."""

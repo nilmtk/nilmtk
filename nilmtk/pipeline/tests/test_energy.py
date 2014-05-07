@@ -11,6 +11,14 @@ import numpy as np
 import pandas as pd
 from datetime import timedelta
 
+def check_energy_numbers(testcase, energy):
+    energy = energy.combined
+    true_active_kwh =  0.0163888888889
+    testcase.assertAlmostEqual(energy['active'], true_active_kwh)
+    testcase.assertAlmostEqual(energy['reactive'], true_active_kwh*0.9)
+    testcase.assertAlmostEqual(energy['apparent'], true_active_kwh*1.1)
+
+
 class TestEnergy(unittest.TestCase):
 
     @classmethod
@@ -34,11 +42,8 @@ class TestEnergy(unittest.TestCase):
         nodes = [ClipNode(), EnergyNode()]
         pipeline = Pipeline(nodes)
         pipeline.run(meter)
-        energy = pipeline.results['energy'].combined
-        true_active_kwh =  0.0163888888889
-        self.assertAlmostEqual(energy['active'], true_active_kwh)
-        self.assertAlmostEqual(energy['reactive'], true_active_kwh*0.9)
-        self.assertAlmostEqual(energy['apparent'], true_active_kwh*1.1)
+        energy = pipeline.results['energy']
+        check_energy_numbers(self, energy)
 
 
 if __name__ == '__main__':

@@ -20,6 +20,7 @@ class TestPipeline(unittest.TestCase):
         nodes = [ClipNode(), EnergyNode()]
         pipeline = Pipeline(nodes)
         pipeline.run(meter)
+        pipeline = Pipeline(nodes)
         meter.loader.mask = [TimeFrame('2012-01-01 00:00:00', '2012-01-01 01:00:00'),
                              TimeFrame('2012-01-01 01:00:00', '2012-01-01 02:00:00'),
                              TimeFrame('2012-01-01 02:00:00', '2012-01-01 03:00:00'),
