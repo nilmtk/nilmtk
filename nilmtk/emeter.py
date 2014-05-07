@@ -33,7 +33,7 @@ class EMeter(object):
             measurements : list of nilmtk.measurement objects, e.g.
                 [Power('active'), Voltage()]
             measurement_limits : dict, e.g.:
-                {Power('active'): [0, 3000]}
+                {Power('active'): {'lower': 0, 'upper': 3000}}
 
     """
     meter_devices = {}

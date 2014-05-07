@@ -1,7 +1,7 @@
 #!/usr/bin/python
 from __future__ import print_function, division
 import unittest
-from nilmtk.pipeline import Pipeline, EnergyNode, LocateGoodSectionsNode
+from nilmtk.pipeline import Pipeline, EnergyNode, ClipNode
 from nilmtk import TimeFrame, EMeter, HDFDataStore, Loader
 from nilmtk.tests.testingtools import data_dir
 from os.path import join
@@ -17,7 +17,7 @@ class TestPipeline(unittest.TestCase):
     def test_pipeline(self):
         meter = EMeter()
         meter.load(self.loader)
-        nodes = [LocateGoodSectionsNode(), EnergyNode()]
+        nodes = [ClipNode(), EnergyNode()]
         pipeline = Pipeline(nodes)
         pipeline.run(meter)
         meter.loader.mask = [TimeFrame('2012-01-01 00:00:00', '2012-01-01 01:00:00'),

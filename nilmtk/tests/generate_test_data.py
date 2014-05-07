@@ -74,10 +74,11 @@ def create_random_df_hierarchical_column_index():
                                    N_METERS*N_MEASUREMENTS_PER_METER))
     return pd.DataFrame(data=data, index=rng, columns=columns, dtype=np.float32)
 
+MEASUREMENTS = [Power('active'), Energy('reactive'), Voltage()]
 
 def create_random_df():
     N_PERIODS = 1E4
-    columns = [Power('active'), Energy('reactive'), Voltage()]
+    columns = MEASUREMENTS
     rng = pd.date_range('2012-01-01', freq='S', periods=N_PERIODS)
     data = np.random.randint(low=0, high=1000, size=(N_PERIODS, len(columns)))
     return pd.DataFrame(data=data, index=rng, columns=columns, dtype=np.float32)
@@ -87,8 +88,11 @@ TEST_METER = {'manufacturer': 'Test Manufacturer',
               'model': 'Random Meter', 
               'sample_period': 10,
               'max_sample_period': MAX_SAMPLE_PERIOD,
-              'measurements': [Power('apparent')]
+              'measurements': [Power('apparent')],
+              'measurement_limits': {}
           }
+for col in MEASUREMENTS:
+    TEST_METER['measurement_limits'][col] = {'lower': 0, 'upper': 6000}
 
 
 def create_random_hdf5():
@@ -121,8 +125,11 @@ def create_energy_hdf5(simple=True):
              'model': 'Energy Meter', 
              'sample_period': 10,
              'max_sample_period': MAX_SAMPLE_PERIOD,
-             'measurements': df.columns
+             'measurements': df.columns,
+             'measurement_limits': {}
          }
+    for col in df.columns:
+        meter['measurement_limits'][col] = {'lower': 0, 'upper': 6000}
 
     store = pd.HDFStore(FILENAME, 'w', complevel=9, complib='bzip2')
 
@@ -137,3 +144,8 @@ def create_energy_hdf5(simple=True):
     store.root._v_attrs.dataset = {'meter_devices': {meter['model']: meter}}
     store.flush()
     store.close()
+
+
+def create_all():
+    create_energy_hdf5()
+    create_random_hdf5()

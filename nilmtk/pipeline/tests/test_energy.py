@@ -1,7 +1,7 @@
 #!/usr/bin/python
 from __future__ import print_function, division
 import unittest
-from nilmtk.pipeline import Pipeline, EnergyNode, LocateGoodSectionsNode
+from nilmtk.pipeline import Pipeline, EnergyNode, ClipNode
 from nilmtk.pipeline.energynode import _energy_for_power_series
 from nilmtk import TimeFrame, EMeter, HDFDataStore, Loader
 from nilmtk.consts import JOULES_PER_KWH
@@ -25,12 +25,13 @@ class TestEnergy(unittest.TestCase):
         true_kwh = ((data[:-1] * np.diff(secs)) / JOULES_PER_KWH).sum()
         index = [pd.Timestamp('2010-01-01') + timedelta(seconds=sec) for sec in secs]
         df = pd.Series(data=data, index=index)
-        self.assertAlmostEqual(true_kwh, _energy_for_power_series(df))
+        kwh = _energy_for_power_series(df, max_sample_period=15)
+        self.assertAlmostEqual(true_kwh, kwh)
 
     def test_pipeline(self):
         meter = EMeter()
         meter.load(self.loader)
-        nodes = [LocateGoodSectionsNode(), EnergyNode()]
+        nodes = [ClipNode(), EnergyNode()]
         pipeline = Pipeline(nodes)
         pipeline.run(meter)
         energy = pipeline.results['energy'].combined

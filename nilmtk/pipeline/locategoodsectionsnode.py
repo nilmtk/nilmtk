@@ -18,12 +18,12 @@ class LocateGoodSectionsNode(Node):
 
     requirements = {'device': {'max_sample_period': 'ANY VALUE'}}
     postconditions =  {'preprocessing': {'good_sections_located': True}}
+    name='good_sections'
 
-    def __init__(self, name='good_sections'):        
-        super(LocateGoodSectionsNode, self).__init__(name)
+    def __init__(self):        
         self.previous_chunk_ended_with_open_ended_good_section = False
 
-    def process(self, df, metadata=None):
+    def process(self, df, metadata):
         """
         Parameters
         ----------
@@ -43,7 +43,6 @@ class LocateGoodSectionsNode(Node):
             `end=None`.  If this df starts with an open-ended good section
             then the first TimeFrame will have `start=None`.
         """
-        assert metadata is not None
         assert hasattr(df, 'timeframe')
 
         max_sample_period = metadata['device']['max_sample_period']    

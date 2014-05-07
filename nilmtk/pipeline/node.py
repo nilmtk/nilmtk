@@ -51,9 +51,6 @@ class Node(object):
     requirements = {}
     postconditions = {}
 
-    def __init__(self, name):
-        self.name = name
-
     def update_state(self, state):
         """Recursively updates `state` dict with `postconditions`.
 
