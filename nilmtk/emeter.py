@@ -1,5 +1,5 @@
 from __future__ import print_function, division
-from nilmtk.pipeline import Pipeline, ClipNode, EnergyNode
+from nilmtk.pipeline import Pipeline, ClipNode, EnergyNode, LocateGoodSectionsNode
 from warnings import warn
 
 class EMeter(object):
@@ -105,11 +105,9 @@ class EMeter(object):
         -------
         nilmtk.pipeline.EnergyResults object
         """
-        self._sanity_check_before_processing()
         nodes = [ClipNode(), EnergyNode()]
-        pipeline = Pipeline(nodes)
-        pipeline.run(self)
-        return pipeline.results['energy']
+        results = self._run_pipeline(nodes)
+        return results['energy']
 
     def _sanity_check_before_processing(self):
         if self.loader is None:
@@ -121,9 +119,21 @@ class EMeter(object):
         """returns a DropoutRateResults object."""
         raise NotImplementedError
         
-    def gaps(self): 
-        """returns Mask object"""
-        raise NotImplementedError
+    def good_sections(self):
+        """
+        Returns
+        -------
+        sections: list of nilmtk.TimeFrame objects
+        """
+        nodes = [LocateGoodSectionsNode()]
+        results = self._run_pipeline(nodes)
+        return results['good_sections']
+
+    def _run_pipeline(self, nodes):
+        self._sanity_check_before_processing()
+        pipeline = Pipeline(nodes)
+        pipeline.run(self)
+        return pipeline.results        
         
     def contiguous_sections(self):
         """retuns Mask object"""
