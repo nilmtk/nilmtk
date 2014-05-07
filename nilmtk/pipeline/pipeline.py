@@ -16,7 +16,7 @@ class Pipeline(object):
     if there are K chunks then the pipeline runs K times; and on each
     iteration the output from the loader/splitter is a single DataFrame
     (with metatdata such as sample_period, max_sample_period, 
-    chunk_start_datetime, chunk_end_datetime, gaps_bookended_with_zeros, etc).
+    chunk_start_datetime, chunk_end_datetime, etc).
     
     The Loader contains a DataStore object which defines how to pull
     data from the physical data store (disk / network / device).
@@ -64,7 +64,7 @@ class Pipeline(object):
     Calculate total energy and save the preprocessed data
     and the energy data back to disk:
     
-    >>> nodes = [BookendGapsWithZeros(), 
+    >>> nodes = [LocateGoodSections(), 
                  Energy(), 
                  HDFTableExport('meter1_preprocessed.h5', table_path)]
     >>> pipeline = Pipeline(nodes)

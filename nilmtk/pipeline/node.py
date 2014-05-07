@@ -108,11 +108,11 @@ class Node(object):
     
         or
     
-        "ComputeEnergy node needs gaps to be bookended with zeros" (if
+        "ComputeEnergy node needs good sections to be located" (if
         none of the previous nodes provide this service then check
         source.metadata to see if zeros have already been inserted; if the
         haven't then raise an error to tell the user to add a
-        BookendGapsWithZeros node.)
+        LocateGoodSectionsNode.)
         """
         # If a subclass has complex rules for preconditions then
         # override this default method definition.

@@ -15,7 +15,7 @@ class EMeter(object):
           each describing a preprocessing Node.
           preprocessing to be applied before returning any stats answers; or before exporting.
           e.g. power normalisation or removing gaps.  Properties:
-          - 'gaps_bookended_with_zeros': bool
+          - 'good_sections_located': bool
           - 'energy_computed': bool
         device_model : string, the model name of the meter device.
 
