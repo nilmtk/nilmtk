@@ -8,6 +8,7 @@
    import numpy as np
    import matplotlib.pyplot as plt
    import calendar
+   import seaborn
    
 **********************************
 Statistics and dataset diagnostics

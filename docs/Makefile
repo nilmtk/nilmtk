@@ -5,7 +5,7 @@
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 PAPER         =
-BUILDDIR      = ../../nilmtkdocs
+BUILDDIR      = ../../nilmtksite/nilmtk
 PDFBUILDDIR   = /tmp
 PDF           = ../manual.pdf
 
@@ -44,7 +44,7 @@ clean:
 	-rm -rf $(BUILDDIR)/*
 
 html:
-	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
+	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
