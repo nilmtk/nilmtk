@@ -35,6 +35,8 @@ class ApplianceGroup(object):
         -------
         Appliance
         """
+        # TODO: use self.wiring_graph to establish if this Appliance
+        # is the only appliance on this meter, if not then warn.
         if isinstance(key, str):
             # default to get first appliance
             return self[(key, 1)]
@@ -125,6 +127,12 @@ class ApplianceGroup(object):
         else:
             return False
 
+    def wiring_graph(self):
+        """Returns a networkx.DAG of connections between meters; and between
+        meters and appliances.
+        """
+        raise NotImplementedError
+
     def total_on_duration(self):
         """Return timedelta"""
         raise NotImplementedError
@@ -173,7 +181,7 @@ class ApplianceGroup(object):
         self.itemised_energy().ix[:k]
     
     def itemised_energy(self):
-        """ Needs to do it per-meter???  Return sorted.
+        """Needs to do it per-meter???  Return sorted.
         'kitchen lights': 234.5
         ['hall lights, bedroom lights'] : 32.1 
         need to subtract kitchen lights energy from lighting circuit!

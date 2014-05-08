@@ -30,15 +30,13 @@ class Appliance(Mains):
     # just hard coding for now to get MVP finished.
     appliance_types = {'fridge': {'category': 'cold'}}
 
-    def __init__(self, metadata=None):
-        self.metadata = {} if metadata is None else metadata
-        if not isinstance(self.metadata, dict):
-            raise TypeError()
-        if not all([self.metadata.has_key(k) for k in ['type', 'instance']]):
+    def __init__(self, **metadata):
+        if not all([metadata.has_key(k) for k in ['type', 'instance']]):
             raise ValueError("An Appliance must have a 'type' and 'instance'.")
-        if not Appliance.appliance_types.has_key(self.metadata['type']):
+        if not Appliance.appliance_types.has_key(metadata['type']):
             raise ValueError("'{}' is not a recognised appliance type."
-                             .format(self.metadata['type']))
+                             .format(metadata['type']))
+        self.metadata = metadata
 
     @property
     def type(self):
@@ -79,6 +77,9 @@ class Appliance(Mains):
             return self.id == other.id
         else:
             return False
+
+    def __hash__(self):
+        return hash(((k,v) for k,v in self.id.iteritems()))
 
     def __repr__(self):
         md = self.metadata

@@ -3,9 +3,29 @@ class Mains(object):
     Attributes
     ----------
     meters : list of nilmtk.EMeter objects
+
+    metadata : dict
+        dataset : str
+        building : str
+        nominal_voltage : float
     """
-    def __init__(self, meters):
+    def __init__(self, meters, dataset, building):
         self.meters = meters
+        self.metadata = {'dataset': dataset, 'building': building}
+
+    def __repr__(self):
+        md = self.metadata
+        return ("{:s}(dataset={}, building={})"
+                .format(self.__class__.__name__, 
+                        md.get('dataset'), md.get('building')))
+
+    @property
+    def id(self):
+        md = self.metadata
+        return {'dataset': md.get('dataset'), 'building': md.get('bulding')}
+
+    def __hash__(self):
+        return hash(((k,v) for k,v in self.id.iteritems()))
         
     def power_series(self, **kwargs):
         """Power series.  Sums together three phases / dual split power.
@@ -58,14 +78,7 @@ class Mains(object):
         # objects taken from meters_dict
         raise NotImplementedError
     
-    def set_loader_attributes(self, **kwargs):
-        # TODO: is this really the best way to do this?
-        # what attributes do we want to set?  Just mask?  If so
-        # then maybe we should has a set_mask() method?
-
-        # TODO: I guess each meter's loader needs to be setup so
-        # we get chunks spanning the same time windows so, for example,
-        # we can still calculate energy per time period?
+    def set_mask(self, mask):
         for meter in self.meters:
-            meter.set_loader_attributes(**kwargs)
+            meter.mask = mask
             

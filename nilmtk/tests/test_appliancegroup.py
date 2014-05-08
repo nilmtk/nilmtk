@@ -5,7 +5,7 @@ from nilmtk import Appliance, ApplianceGroup
 
 class TestApplianceGroup(unittest.TestCase):
     def test_getitem(self):
-        fridge = Appliance({'type':'fridge', 'instance':1})
+        fridge = Appliance(type='fridge', instance=1)
         ag = ApplianceGroup([fridge])
 
         # test good keys
@@ -25,7 +25,7 @@ class TestApplianceGroup(unittest.TestCase):
                 ag[key]
 
     def test_select(self):
-        fridge = Appliance({'type':'fridge', 'instance':1})
+        fridge = Appliance(type='fridge', instance=1)
         ag = ApplianceGroup([fridge])
 
         self.assertEqual(ag.select(category='cold'), ag)
