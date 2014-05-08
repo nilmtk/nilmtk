@@ -7,12 +7,21 @@ class ApplianceGroup(object):
     
     Attributes
     ----------
-    appliances : list of Appliance or ApplianceGroup objects 
+    appliances : set of Appliances
     """
     def __init__(self, appliances=None):
-        self.appliances = [] if appliances is None else appliances
-        if not isinstance(self.appliances, list):
+        self.appliances = set() if appliances is None else set(appliances)
+
+    def union(self, other):
+        """
+        Returns
+        -------
+        new ApplianceGroup where its set of `appliances` is the union of
+        `self.appliances` and `other.appliances`.
+        """
+        if not isinstance(other, ApplianceGroup):
             raise TypeError()
+        return ApplianceGroup(self.appliances.union(other.appliances))
 
     def __getitem__(self, key):
         """Get a single appliance.
@@ -54,7 +63,7 @@ class ApplianceGroup(object):
 
         Returns
         -------
-        new ApplianceGroup
+        new ApplianceGroup of selected appliances.
 
         Plans for the future (not implemented yet!)
         -------------------------------------------

@@ -66,6 +66,20 @@ class Appliance(Mains):
                     return False
         return True
 
+    @property
+    def id(self):
+        key_attrs = ['type', 'instance', 'dataset', 'building']
+        id_dict = {}
+        for key in key_attrs:
+            id_dict[key] = self.metadata.get(key)
+        return id_dict
+
+    def __eq__(self, other):
+        if isinstance(other, Appliance):
+            return self.id == other.id
+        else:
+            return False
+
     def __repr__(self):
         md = self.metadata
         return ("{:s}(type={}, instance={}, dataset={}, building={})"
