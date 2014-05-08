@@ -1,7 +1,8 @@
 from __future__ import print_function, division
 
 class ApplianceGroup(object):
-    """
+    """A group of Appliance objects.
+
     Implements many of the same methods as Appliance.
     
     Attributes
@@ -10,7 +11,7 @@ class ApplianceGroup(object):
     """
     def __init__(self, appliances=None):
         self.appliances = [] if appliances is None else appliances
-        if not isinstance(appliances, list):
+        if not isinstance(self.appliances, list):
             raise TypeError()
 
     def __getitem__(self, key):
@@ -42,16 +43,29 @@ class ApplianceGroup(object):
             raise TypeError()
 
     def select(self, *args, **kwargs):
-        """
+        """Select a group of appliances.
+
         e.g. 
         * select(category='lighting')
+        * select(type='fridge')
+        * select(building=1, category='lighting')
+
+        If multiple criteria are supplied then these are ANDed together.
+
+        Returns
+        -------
+        new ApplianceGroup
+
+        Plans for the future (not implemented yet!)
+        -------------------------------------------
+
         * select(category=['ict', 'lighting'])
         * select([(fridge, 1), (tv, 1)]) # get specifically fridge 1 and tv 1
         * select(name=['fridge', 'tv']) # get all fridges and tvs
         * select(category='lighting', except={'room'=['kitchen lights']})
         * select('all', except=[('tv', 1)])
         
-        TODO: see if we can do select(category='lighting' | name='tree lights')
+        Also: see if we can do select(category='lighting' | name='tree lights')
         or select(energy > 100)??  Perhaps using:
         * Python's eval function something like this:
           >>> s = pd.Series(np.random.randn(5))
@@ -77,12 +91,13 @@ class ApplianceGroup(object):
         * see Pandas.eval(): 
           * http://pandas.pydata.org/pandas-docs/stable/indexing.html#the-query-method-experimental
           * https://github.com/pydata/pandas/blob/master/pandas/computation/eval.py#L119
-        
-        Returns
-        -------
-        A new ApplianceGroup
         """
-        raise NotImplementedError
+        selected_appliances = []
+        for appliance in self.appliances:
+            if appliance.matches(kwargs):
+                selected_appliances.append(appliance)
+
+        return ApplianceGroup(selected_appliances)
         
     def groupby(self, **kwargs):
         """
@@ -90,16 +105,23 @@ class ApplianceGroup(object):
         
         Returns
         -------
-        A new ApplianceGroup or ApplianceGroup objects
+        A dict of ApplianceGroup objects e.g.:
+          {'cold': ApplianceGroup, 'hot': ApplianceGroup}
         """
         raise NotImplementedError
         
+    def __eq__(self, other):
+        if isinstance(other, ApplianceGroup):
+            return other.appliances == self.appliances
+        else:
+            return False
+
     def total_on_duration(self):
         """Return timedelta"""
         raise NotImplementedError
     
     def on_durations(self):
-        self.get_unique_upstream_meters()
+        # self.get_unique_upstream_meters()
         # for each meter, get the on time, 
         # assuming the on-power-threshold for the 
         # smallest appliance connected to that meter???
@@ -130,7 +152,7 @@ class ApplianceGroup(object):
         raise NotImplementedError
         
     def total_energy(self):
-        self.get_unique_upstream_meters()
+        # self.get_unique_upstream_meters()
         # adds energy on a meter-by-meter basis
         raise NotImplementedError
     

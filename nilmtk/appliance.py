@@ -25,10 +25,24 @@ class Appliance(Mains):
       and for voltage normalisation.)
        
     """
+    
+    # TODO: appliance_types will be loaded from disk
+    # just hard coding for now to get MVP finished.
+    appliance_types = {'fridge': {'category': 'cold'}}
+
     def __init__(self, metadata=None):
         self.metadata = {} if metadata is None else metadata
         if not isinstance(self.metadata, dict):
             raise TypeError()
+        if not all([self.metadata.has_key(k) for k in ['type', 'instance']]):
+            raise ValueError("An Appliance must have a 'type' and 'instance'.")
+        if not Appliance.appliance_types.has_key(self.metadata['type']):
+            raise ValueError("'{}' is not a recognised appliance type."
+                             .format(self.metadata['type']))
+
+    @property
+    def type(self):
+        return Appliance.appliance_types[self.metadata['type']]
 
     def matches(self, key):
         """
@@ -38,11 +52,19 @@ class Appliance(Mains):
 
         Returns
         -------
-        True if all key:value pairs in `key` match `appliance.metadata`.
+        True if all key:value pairs in `key` match `appliance.metadata`
+        or `Appliance.appliance_types[appliance.metadata['type']]`.
         """
         if not isinstance(key, dict):
             raise TypeError()
-        return all([v == self.metadata[k] for k,v in key.iteritems()])
+        for k, v in key.iteritems():
+            if self.metadata.has_key(k):
+                if self.metadata[k] != v:
+                    return False
+            else:
+                if self.type.get(k) != v:
+                    return False
+        return True
 
     def __repr__(self):
         md = self.metadata

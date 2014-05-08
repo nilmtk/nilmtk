@@ -24,5 +24,13 @@ class TestApplianceGroup(unittest.TestCase):
             with self.assertRaises(TypeError):
                 ag[key]
 
+    def test_select(self):
+        fridge = Appliance({'type':'fridge', 'instance':1})
+        ag = ApplianceGroup([fridge])
+
+        self.assertEqual(ag.select(category='cold'), ag)
+        # TODO: make this test more rigorous!
+        
+
 if __name__ == '__main__':
     unittest.main()
