@@ -46,6 +46,8 @@ Bibtex:
 
 The project is in its early stages.
 
+Please note that NILMTK is currently a research tool.  It is not yet ready for use by end-users, although we certainly hope that NILMTK will be capable of doing 'plug and play' disaggregation in the future.
+
 At present, NILMTK can:
 
 * import data from the following data sets: REDD, Pecan Street, AMPds, iAWE, SMART* and UKPD
@@ -57,6 +59,7 @@ At present, NILMTK can:
 * disaggregate data using two supervised benchmark algorithms: combinatorial optimisation and factorial hidden Markov model (these are not competitive with the current state-of-the-art.  More sophisticated NILM algorithms will be added to NILMTK later this year.)
 * compute a range of NILM performance metrics (confusion matrices, error in assigned energy, F1 score, fraction of energy assigned correctly etc).
 * work has started on a disaggregation web interface.  [Here's a demo](http://energy.iiitd.edu.in:5002/).
+
 
 ##### Installing
 
