@@ -1,18 +1,46 @@
+from __future__ import print_function, division
+
 class ApplianceGroup(object):
     """
     Implements many of the same methods as Appliance.
     
     Attributes
     ----------
-    items : dict of Appliance or ApplianceGroup objects 
+    appliances : list of Appliance or ApplianceGroup objects 
     """
-    def __getattr__(self, key):
-        """Gets a single appliance.
-        If no instance is specified then default to 1.
-        e.g. appliancegroup['toaster'] or ['toaster', 2]
+    def __init__(self, appliances=None):
+        self.appliances = [] if appliances is None else appliances
+        if not isinstance(appliances, list):
+            raise TypeError()
+
+    def __getitem__(self, key):
+        """Get a single appliance.
+        
+        Three formats for `key` are accepted:
+        * ['toaster']    - retrieves toaster instance 1
+        * ['toaster', 2] - retrieves toaster instance 2
+        * [{'dataset': 'redd', 'building': 3, 'type': 'toaster', 'instance': 2}]
+
+        Returns
+        -------
+        Appliance
         """
-        raise NotImplementedError
-            
+        if isinstance(key, str):
+            # default to get first appliance
+            return self[(key, 1)]
+        elif isinstance(key, tuple):
+            if len(key) == 2:
+                return self[{'type': key[0], 'instance': key[1]}]
+            else:
+                raise TypeError()
+        elif isinstance(key, dict):
+            for appliance in self.appliances:
+                if appliance.matches(key):
+                    return appliance
+            raise KeyError(key)
+        else:
+            raise TypeError()
+
     def select(self, *args, **kwargs):
         """
         e.g. 

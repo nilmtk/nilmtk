@@ -6,8 +6,10 @@ class Appliance(Mains):
     ----------
     
     metadata : pd.DataFrame single row and columns:
-       name : string
-       instance : int
+       type : string (e.g. 'fridge' or 'television')
+       instance : int (starting at 1)
+       dataset : string (e.g. 'REDD')
+       building : int (starting at 1)
        
        Only need to specify name & instance.  Then NILMTK will get the generic metadata
        for that name from the central appliance database.  Any additional
@@ -23,6 +25,32 @@ class Appliance(Mains):
       and for voltage normalisation.)
        
     """
+    def __init__(self, metadata=None):
+        self.metadata = {} if metadata is None else metadata
+        if not isinstance(self.metadata, dict):
+            raise TypeError()
+
+    def matches(self, key):
+        """
+        Parameters
+        ----------
+        key : dict
+
+        Returns
+        -------
+        True if all key:value pairs in `key` match `appliance.metadata`.
+        """
+        if not isinstance(key, dict):
+            raise TypeError()
+        return all([v == self.metadata[k] for k,v in key.iteritems()])
+
+    def __repr__(self):
+        md = self.metadata
+        return ("{:s}(type={}, instance={}, dataset={}, building={})"
+                .format(self.__class__.__name__, 
+                        md.get('type'), md.get('instance'), 
+                        md.get('dataset'), md.get('building')))
+
     def total_on_duration(self):
         """Return timedelta"""
         raise NotImplementedError
