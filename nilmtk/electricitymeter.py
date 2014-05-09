@@ -1,8 +1,9 @@
 from __future__ import print_function, division
 from nilmtk.pipeline import Pipeline, ClipNode, EnergyNode, LocateGoodSectionsNode
+from .hashable import Hashable
 from warnings import warn
 
-class ElectricityMeter(object):
+class ElectricityMeter(Hashable):
     """Represents a physical electricity meter.
     
     Attributes
@@ -55,7 +56,7 @@ class ElectricityMeter(object):
     """
     meter_devices = {}
 
-    key_attrs = ['instance', 'dataset', 'building'] # used for ID
+    KEY_ATTRIBUTES = ['instance', 'dataset', 'building'] # used for ID
 
     def __init__(self):
         self.metadata = {}
@@ -103,22 +104,6 @@ class ElectricityMeter(object):
             if appliance.matches(key):
                 return True
         return False
-
-    @property
-    def id(self):
-        id_dict = {}
-        for key in ElectricityMeter.key_attrs:
-            id_dict[key] = self.metadata.get(key)
-        return id_dict
-
-    def __eq__(self, other):
-        if isinstance(other, ElectricityMeter):
-            return self.id == other.id
-        else:
-            return False
-
-    def __hash__(self):
-        return hash((self.metadata.get(k) for k in ElectricityMeter.key_attrs))
 
     def power_series(self, measurement_preferences=None, 
                      required_measurement=None,

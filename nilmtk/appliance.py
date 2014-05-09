@@ -1,4 +1,6 @@
-class Appliance(object):
+from .hashable import Hashable
+
+class Appliance(Hashable):
     """
     Attributes
     ----------
@@ -18,6 +20,8 @@ class Appliance(object):
        minimum_on_duration : timedelta       
     """
     
+    KEY_ATTRIBUTES = ['type', 'instance', 'dataset', 'building']
+
     # TODO: appliance_types will be loaded from disk
     # just hard coding for now to get MVP finished.
     appliance_types = {'fridge': {'category': 'cold'}}
@@ -55,29 +59,4 @@ class Appliance(object):
                 if self.type.get(k) != v:
                     return False
         return True
-
-    @property
-    def id(self):
-        key_attrs = ['type', 'instance', 'dataset', 'building']
-        id_dict = {}
-        for key in key_attrs:
-            id_dict[key] = self.metadata.get(key)
-        return id_dict
-
-    def __eq__(self, other):
-        if isinstance(other, Appliance):
-            return self.id == other.id
-        else:
-            return False
-
-    def __hash__(self):
-        return hash(((k,v) for k,v in self.id.iteritems()))
-
-    def __repr__(self):
-        md = self.metadata
-        return ("{:s}(type={}, instance={}, dataset={}, building={})"
-                .format(self.__class__.__name__, 
-                        md.get('type'), md.get('instance'), 
-                        md.get('dataset'), md.get('building')))
-
     

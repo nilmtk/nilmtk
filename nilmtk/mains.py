@@ -1,4 +1,6 @@
-class Mains(object):
+from .hashable import Hashable
+
+class Mains(Hashable):
     """
     Attributes
     ----------
@@ -9,23 +11,11 @@ class Mains(object):
         building : str
         nominal_voltage : float
     """
+    KEY_ATTRIBUTES = ['dataset', 'building']
+
     def __init__(self, meters, dataset, building):
         self.meters = meters
         self.metadata = {'dataset': dataset, 'building': building}
-
-    def __repr__(self):
-        md = self.metadata
-        return ("{:s}(dataset={}, building={})"
-                .format(self.__class__.__name__, 
-                        md.get('dataset'), md.get('building')))
-
-    @property
-    def id(self):
-        md = self.metadata
-        return {'dataset': md.get('dataset'), 'building': md.get('bulding')}
-
-    def __hash__(self):
-        return hash(((k,v) for k,v in self.id.iteritems()))
         
     def power_series(self, **kwargs):
         """Power series.  Sums together three phases / dual split power.
