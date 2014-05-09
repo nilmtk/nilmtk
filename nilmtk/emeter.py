@@ -24,7 +24,9 @@ class EMeter(object):
     key : key into nilmtk.DataStore to access data
     
     metadata : dict.  Including keys:
-        id : int, meter ID    
+        instance : int, meter instance within this building, starting from 1
+        building : int, building instance, starting from 1
+        dataset : str e.g. 'REDD'
         submeter_of : int, ID of upstream meter       
         preprocessing : list of strings (why not actual Node objects?), 
           each describing a preprocessing Node.
@@ -52,6 +54,8 @@ class EMeter(object):
 
     """
     meter_devices = {}
+
+    key_attrs = ['instance', 'dataset', 'building'] # used for ID
 
     def __init__(self):
         self.metadata = {}
@@ -102,9 +106,8 @@ class EMeter(object):
 
     @property
     def id(self):
-        key_attrs = ['id', 'dataset', 'building']
         id_dict = {}
-        for key in key_attrs:
+        for key in EMeter.key_attrs:
             id_dict[key] = self.metadata.get(key)
         return id_dict
 
@@ -115,7 +118,7 @@ class EMeter(object):
             return False
 
     def __hash__(self):
-        return hash(((k,v) for k,v in self.id.iteritems()))
+        return hash((self.metadata.get(k) for k in EMeter.key_attrs))
 
     def power_series(self, measurement_preferences=None, 
                      required_measurement=None,
@@ -203,7 +206,7 @@ class EMeter(object):
     def proportion_of_energy(self):
         # Mask out gaps from mains
         good_mains_timeframes = self.mains.good_timeframes()
-        proportion_of_energy = (self.total_energy(timeframes=good_mains_timeframes) / 
+        proportion_of_energy = (self.total_energy(timeframes=good_mains_timeframes) /
                                 self. mains.total_energy())
         return proportion_of_energy 
 
