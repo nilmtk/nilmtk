@@ -7,6 +7,18 @@ class EMeter(object):
     
     Attributes
     ----------
+    appliances : list of Appliance objects connected immediately downstream
+      of this meter.  Will be [] if no appliances are connected directly
+      to this meter.
+
+    dominant_appliance : reference to Appliance which is responsibly for 
+      most of the power demand on this channel.
+
+    mains : Mains (used so appliance methods can default to use
+      the same measured parameter (active / apparent / reactive) 
+      as Mains; and also for use in proportion of energy submetered
+      and for voltage normalisation.)
+
     store : nilmtk.DataStore
 
     key : key into nilmtk.DataStore to access data
@@ -45,6 +57,9 @@ class EMeter(object):
         self.metadata = {}
         self.store = None
         self.key = None
+        self.appliances = []
+        self.mains = None
+        self.dominant_appliance = None
 
     @classmethod
     def _load_meter_devices(cls, store):
@@ -68,7 +83,40 @@ class EMeter(object):
         """
         # destination.write_metadata(key, self.metadata)
         raise NotImplementedError
-                
+
+    def matches(self, key):
+        """
+        Parameters
+        ----------
+        key : dict
+
+        Returns
+        -------
+        True if all key:value pairs in `key` match any appliance
+        in `self.appliances`.
+        """
+        for appliance in self.appliances:
+            if appliance.matches(key):
+                return True
+        return False
+
+    @property
+    def id(self):
+        key_attrs = ['id', 'dataset', 'building']
+        id_dict = {}
+        for key in key_attrs:
+            id_dict[key] = self.metadata.get(key)
+        return id_dict
+
+    def __eq__(self, other):
+        if isinstance(other, EMeter):
+            return self.id == other.id
+        else:
+            return False
+
+    def __hash__(self):
+        return hash(((k,v) for k,v in self.id.iteritems()))
+
     def power_series(self, measurement_preferences=None, 
                      required_measurement=None,
                      normalise=False, voltage_series=None, 
@@ -112,12 +160,6 @@ class EMeter(object):
         nodes = [ClipNode(), EnergyNode()]
         results = self._run_pipeline(nodes, **load_kwargs)
         return results['energy']
-
-    def _sanity_check_before_processing(self):
-        if self.store is None:
-            msg = ("'meter.loader' is not set!"
-                   " Cannot process data without a loader!")
-            raise RuntimeError(msg)
         
     def dropout_rate(self):
         """returns a DropoutRateResults object."""
@@ -132,13 +174,39 @@ class EMeter(object):
         nodes = [LocateGoodSectionsNode()]
         results = self._run_pipeline(nodes)
         return results['good_sections']
-
-    def _run_pipeline(self, nodes, **load_kwargs): 
-        self._sanity_check_before_processing()
-        pipeline = Pipeline(nodes)
-        pipeline.run(meter=self, **load_kwargs)
-        return pipeline.results        
         
+    def total_on_duration(self):
+        """Return timedelta"""
+        raise NotImplementedError
+    
+    def on_durations(self):
+        raise NotImplementedError
+    
+    def activity_distribution(self, bin_size, timespan):
+        raise NotImplementedError
+    
+    def when_on(self):
+        """Return Series of bools"""
+        raise NotImplementedError    
+
+    def on_off_events(self):
+        # use self.metadata.minimum_[off|on]_duration
+        raise NotImplementedError
+    
+    def discrete_appliance_activations(self):
+        """
+        Return a Mask defining the start and end times of each appliance
+        activation.
+        """
+        raise NotImplementedError
+    
+    def proportion_of_energy(self):
+        # Mask out gaps from mains
+        good_mains_timeframes = self.mains.good_timeframes()
+        proportion_of_energy = (self.total_energy(timeframes=good_mains_timeframes) / 
+                                self. mains.total_energy())
+        return proportion_of_energy 
+
     def contiguous_sections(self):
         """retuns Mask object"""
         raise NotImplementedError
@@ -150,3 +218,11 @@ class EMeter(object):
         implausible values removed)"""
         raise NotImplementedError
         
+    def _run_pipeline(self, nodes, **load_kwargs): 
+        if self.store is None:
+            msg = ("'meter.loader' is not set!"
+                   " Cannot process data without a loader!")
+            raise RuntimeError(msg)
+        pipeline = Pipeline(nodes)
+        pipeline.run(meter=self, **load_kwargs)
+        return pipeline.results        

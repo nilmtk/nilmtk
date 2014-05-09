@@ -1,34 +1,38 @@
 #!/usr/bin/python
 from __future__ import print_function, division
 import unittest
-from nilmtk import Appliance, ApplianceGroup
+from nilmtk import Appliance, MeterGroup, EMeter
 
-class TestApplianceGroup(unittest.TestCase):
+class TestMeterGroup(unittest.TestCase):
     def test_getitem(self):
+        fridge_meter = EMeter()
         fridge = Appliance(type='fridge', instance=1)
-        ag = ApplianceGroup([fridge])
+        fridge_meter.appliances = [fridge]
+        mg = MeterGroup([fridge_meter])
 
         # test good keys
         for key in ['fridge', ('fridge', 1), {'type':'fridge'}, 
                     {'type':'fridge', 'instance': 1}]:
-            self.assertEqual(ag[key], fridge)
+            self.assertEqual(mg[key], fridge_meter)
         
         # test bad key values
         for key in ['foo', ('foo', 2), ('fridge', 2), 
                     {'type':'fridge', 'instance': -12}]:
             with self.assertRaises(KeyError):
-                ag[key]
+                mg[key]
 
         # test bad key types
         for key in [True, False, 3, (1,2,3), (1), ['fridge']]:
             with self.assertRaises(TypeError):
-                ag[key]
+                mg[key]
 
     def test_select(self):
+        fridge_meter = EMeter()
         fridge = Appliance(type='fridge', instance=1)
-        ag = ApplianceGroup([fridge])
+        fridge_meter.appliances = [fridge]
+        mg = MeterGroup([fridge_meter])
 
-        self.assertEqual(ag.select(category='cold'), ag)
+        self.assertEqual(mg.select(category='cold'), mg)
         # TODO: make this test more rigorous!
         
 

@@ -1,30 +1,30 @@
 from __future__ import print_function, division
 
-class ApplianceGroup(object):
-    """A group of Appliance objects.
+class MeterGroup(object):
+    """A group of EMeter objects.
 
-    Implements many of the same methods as Appliance.
+    Implements many of the same methods as Meter.
     
     Attributes
     ----------
-    appliances : set of Appliances
+    meters : set of EMeters
     """
-    def __init__(self, appliances=None):
-        self.appliances = set() if appliances is None else set(appliances)
+    def __init__(self, meters=None):
+        self.meters = set() if meters is None else set(meters)
 
     def union(self, other):
         """
         Returns
         -------
-        new ApplianceGroup where its set of `appliances` is the union of
-        `self.appliances` and `other.appliances`.
+        new MeterGroup where its set of `meters` is the union of
+        `self.meters` and `other.meters`.
         """
-        if not isinstance(other, ApplianceGroup):
+        if not isinstance(other, MeterGroup):
             raise TypeError()
-        return ApplianceGroup(self.appliances.union(other.appliances))
+        return MeterGroup(self.meters.union(other.meters))
 
     def __getitem__(self, key):
-        """Get a single appliance.
+        """Get a single meter.
         
         Three formats for `key` are accepted:
         * ['toaster']    - retrieves toaster instance 1
@@ -33,12 +33,10 @@ class ApplianceGroup(object):
 
         Returns
         -------
-        Appliance
+        Meter
         """
-        # TODO: use self.wiring_graph to establish if this Appliance
-        # is the only appliance on this meter, if not then warn.
         if isinstance(key, str):
-            # default to get first appliance
+            # default to get first meter
             return self[(key, 1)]
         elif isinstance(key, tuple):
             if len(key) == 2:
@@ -46,15 +44,15 @@ class ApplianceGroup(object):
             else:
                 raise TypeError()
         elif isinstance(key, dict):
-            for appliance in self.appliances:
-                if appliance.matches(key):
-                    return appliance
+            for meter in self.meters:
+                if meter.matches(key):
+                    return meter
             raise KeyError(key)
         else:
             raise TypeError()
 
     def select(self, *args, **kwargs):
-        """Select a group of appliances.
+        """Select a group of meters.
 
         e.g. 
         * select(category='lighting')
@@ -65,7 +63,7 @@ class ApplianceGroup(object):
 
         Returns
         -------
-        new ApplianceGroup of selected appliances.
+        new MeterGroup of selected meters.
 
         Plans for the future (not implemented yet!)
         -------------------------------------------
@@ -103,12 +101,12 @@ class ApplianceGroup(object):
           * http://pandas.pydata.org/pandas-docs/stable/indexing.html#the-query-method-experimental
           * https://github.com/pydata/pandas/blob/master/pandas/computation/eval.py#L119
         """
-        selected_appliances = []
-        for appliance in self.appliances:
-            if appliance.matches(kwargs):
-                selected_appliances.append(appliance)
+        selected_meters = []
+        for meter in self.meters:
+            if meter.matches(kwargs):
+                selected_meters.append(meter)
 
-        return ApplianceGroup(selected_appliances)
+        return MeterGroup(selected_meters)
         
     def groupby(self, **kwargs):
         """
@@ -116,20 +114,20 @@ class ApplianceGroup(object):
         
         Returns
         -------
-        A dict of ApplianceGroup objects e.g.:
-          {'cold': ApplianceGroup, 'hot': ApplianceGroup}
+        A dict of MeterGroup objects e.g.:
+          {'cold': MeterGroup, 'hot': MeterGroup}
         """
         raise NotImplementedError
         
     def __eq__(self, other):
-        if isinstance(other, ApplianceGroup):
-            return other.appliances == self.appliances
+        if isinstance(other, MeterGroup):
+            return other.meters == self.meters
         else:
             return False
 
     def wiring_graph(self):
         """Returns a networkx.DAG of connections between meters; and between
-        meters and appliances.
+        meters and meters.
         """
         raise NotImplementedError
 
@@ -162,7 +160,7 @@ class ApplianceGroup(object):
         
     def unique_meters_without_double_counting(self):
         """Returns a set of all meters ensuring that each appliance only appears once."""
-        # Gets unique meters from all appliances in this ApplianceGroup
+        # Gets unique meters from all appliances in this MeterGroup
         # Creates graph of meters.  
         # Removes all but the furthest upstream meters.
         # Warns if we also measure energy for one or more appliances not in selection
@@ -177,7 +175,7 @@ class ApplianceGroup(object):
         raise NotImplementedError
     
     def top_k(self, k=5):
-        """Return new ApplianceGroup?"""
+        """Return new MeterGroup?"""
         self.itemised_energy().ix[:k]
     
     def itemised_energy(self):
@@ -186,17 +184,17 @@ class ApplianceGroup(object):
         ['hall lights, bedroom lights'] : 32.1 
         need to subtract kitchen lights energy from lighting circuit!
         """ 
-        # keys could be actual Appliance / ApplianceGroup objects?
-        # e.g. when we want to select top_k Appliances.
+        # keys could be actual Appliance / MeterGroup objects?
+        # e.g. when we want to select top_k Meters.
         raise NotImplementedError
         
     def proportion_above(self, threshold_proportion):
-        """Return new ApplianceGroup with all appliances whose proportion of
+        """Return new MeterGroup with all meters whose proportion of
         energy usage is above threshold"""
         raise NotImplementedError
         
     def itemised_proportions(self):
-        """Proportion of energy per appliance. Return sorted."""
+        """Proportion of energy per meter. Return sorted."""
         raise NotImplementedError
     
     def power_series(self):

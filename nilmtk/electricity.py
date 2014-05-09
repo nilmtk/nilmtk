@@ -1,7 +1,7 @@
 from __future__ import print_function, division
-from .appliancegroup import ApplianceGroup
+from .appliancegroup import MeterGroup
 
-class Electricity(ApplianceGroup):
+class Electricity(MeterGroup):
     """Represents mains circuit in a single building.
     
     Attributes
@@ -21,7 +21,7 @@ class Electricity(ApplianceGroup):
         """
         raise NotImplementedError
         wiring_graph = self.wiring_graph()
-        # return meters (not appliances) one hop from root (mains)
+        # return meters (not meters) one hop from root (mains)
 
     def proportion_energy_submetered(self):
         good_mains_timeframes = self.mains.good_timeframes()
