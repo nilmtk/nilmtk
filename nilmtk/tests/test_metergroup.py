@@ -1,11 +1,11 @@
 #!/usr/bin/python
 from __future__ import print_function, division
 import unittest
-from nilmtk import Appliance, MeterGroup, EMeter
+from nilmtk import Appliance, MeterGroup, ElectricityMeter
 
 class TestMeterGroup(unittest.TestCase):
     def test_getitem(self):
-        fridge_meter = EMeter()
+        fridge_meter = ElectricityMeter()
         fridge = Appliance(type='fridge', instance=1)
         fridge_meter.appliances = [fridge]
         mg = MeterGroup([fridge_meter])
@@ -27,7 +27,7 @@ class TestMeterGroup(unittest.TestCase):
                 mg[key]
 
     def test_select(self):
-        fridge_meter = EMeter()
+        fridge_meter = ElectricityMeter()
         fridge = Appliance(type='fridge', instance=1)
         fridge_meter.appliances = [fridge]
         mg = MeterGroup([fridge_meter])

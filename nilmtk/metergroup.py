@@ -1,13 +1,13 @@
 from __future__ import print_function, division
 
 class MeterGroup(object):
-    """A group of EMeter objects.
+    """A group of ElectricityMeter objects.
 
     Implements many of the same methods as Meter.
     
     Attributes
     ----------
-    meters : set of EMeters
+    meters : set of ElectricityMeters
     """
     def __init__(self, meters=None):
         self.meters = set() if meters is None else set(meters)

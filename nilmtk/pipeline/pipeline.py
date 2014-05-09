@@ -75,7 +75,7 @@ class Pipeline(object):
         """
         Parameters
         ----------
-        meter : nilmtk.EMeter
+        meter : nilmtk.ElectricityMeter
         **load_kwargs : key word arguments for store.load() e.g.:
             - periods : list of nilmtk.TimeFrame objects
         """

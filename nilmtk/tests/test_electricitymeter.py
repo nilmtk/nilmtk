@@ -6,12 +6,12 @@ import pandas as pd
 from datetime import timedelta
 from testingtools import data_dir, WarningTestMixin
 from nilmtk.datastore import HDFDataStore
-from nilmtk import EMeter
+from nilmtk import ElectricityMeter
 from nilmtk.pipeline.tests.test_energy import check_energy_numbers
 
 KEY = '/building1/electric/meter1'
 
-class TestEMeter(WarningTestMixin, unittest.TestCase):
+class TestElectricityMeter(WarningTestMixin, unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -23,13 +23,13 @@ class TestEMeter(WarningTestMixin, unittest.TestCase):
         cls.datastore.close()
 
     def test_load(self):
-        meter = EMeter()
+        meter = ElectricityMeter()
         meter.load(self.datastore, key=KEY)
         self.assertEqual(meter.metadata['device_model'], 'Energy Meter')
         self.assertEqual(meter.metadata['device']['sample_period'], 10)
 
     def test_total_energy(self):
-        meter = EMeter()
+        meter = ElectricityMeter()
         with self.assertRaises(RuntimeError):
             meter.total_energy()
         meter.load(self.datastore, KEY)

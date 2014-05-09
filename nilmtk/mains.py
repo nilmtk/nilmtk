@@ -2,7 +2,7 @@ class Mains(object):
     """
     Attributes
     ----------
-    meters : list of nilmtk.EMeter objects
+    meters : list of nilmtk.ElectricityMeter objects
 
     metadata : dict
         dataset : str

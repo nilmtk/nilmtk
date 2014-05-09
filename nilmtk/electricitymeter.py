@@ -2,7 +2,7 @@ from __future__ import print_function, division
 from nilmtk.pipeline import Pipeline, ClipNode, EnergyNode, LocateGoodSectionsNode
 from warnings import warn
 
-class EMeter(object):
+class ElectricityMeter(object):
     """Represents a physical electricity meter.
     
     Attributes
@@ -68,16 +68,16 @@ class EMeter(object):
     @classmethod
     def _load_meter_devices(cls, store):
         dataset_metadata = store.load_metadata()
-        EMeter.meter_devices.update(dataset_metadata.get('meter_devices', {}))
+        ElectricityMeter.meter_devices.update(dataset_metadata.get('meter_devices', {}))
 
     # TODO: why not just have this as __init__(store)???
     def load(self, store, key):
         self.store = store
         self.key = key
         self.metadata = self.store.load_metadata(self.key)
-        EMeter._load_meter_devices(store)
+        ElectricityMeter._load_meter_devices(store)
         device_model = self.metadata['device_model']
-        self.metadata['device'] = EMeter.meter_devices[device_model]
+        self.metadata['device'] = ElectricityMeter.meter_devices[device_model]
 
     def save(self, destination, key):
         """
@@ -107,18 +107,18 @@ class EMeter(object):
     @property
     def id(self):
         id_dict = {}
-        for key in EMeter.key_attrs:
+        for key in ElectricityMeter.key_attrs:
             id_dict[key] = self.metadata.get(key)
         return id_dict
 
     def __eq__(self, other):
-        if isinstance(other, EMeter):
+        if isinstance(other, ElectricityMeter):
             return self.id == other.id
         else:
             return False
 
     def __hash__(self):
-        return hash((self.metadata.get(k) for k in EMeter.key_attrs))
+        return hash((self.metadata.get(k) for k in ElectricityMeter.key_attrs))
 
     def power_series(self, measurement_preferences=None, 
                      required_measurement=None,
@@ -139,7 +139,7 @@ class EMeter(object):
         measurement_preferences : list of Measurements, optional. Defaults to active > apparent > reactive
         required_measurements : Measurement, optional.  Raises MeasurementError if not available.
         normalise : boolean, optional, defaults to False
-        voltage_series : EMeter object with voltage measurements available.  If not supplied and if normalise is True
+        voltage_series : ElectricityMeter object with voltage measurements available.  If not supplied and if normalise is True
             then will attempt to use voltage data from this meter.
         nominal_voltage : float
 
