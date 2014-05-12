@@ -21,7 +21,7 @@ class Electricity(MeterGroup):
         """
         raise NotImplementedError
         wiring_graph = self.wiring_graph()
-        # return meters (not meters) one hop from root (mains)
+        # return meters one hop from root (mains)
 
     def proportion_energy_submetered(self):
         good_mains_timeframes = self.mains.good_timeframes()

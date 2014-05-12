@@ -21,7 +21,7 @@ class Hashable(object):
 
     def __repr__(self):
         s = "{:s}(".format(self.__class__.__name__)
-        s += ",".join(["{:s}={}".format(k, self.metadata.get(k))
+        s += ", ".join(["{:s}={}".format(k, self.metadata.get(k))
                        for k in self.__class__.KEY_ATTRIBUTES])
         s += ")"
         return s

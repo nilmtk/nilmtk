@@ -17,8 +17,11 @@ class Appliance(Hashable):
        
        on_power_threshold : float, watts
        minimum_off_duration : timedelta
-       minimum_on_duration : timedelta       
+       minimum_on_duration : timedelta
     """
+
+    # TODO: now that Appliances are stored inside ElectricityMeters,
+    # do we still need to keep 'dataset' and 'building' with each Appliance?
     
     KEY_ATTRIBUTES = ['type', 'instance', 'dataset', 'building']
 
@@ -37,6 +40,10 @@ class Appliance(Hashable):
     @property
     def type(self):
         return Appliance.appliance_types[self.metadata['type']]
+
+    def type_and_instance_string(self):
+        md = self.metadata
+        return "({}, {})".format(md.get('type'), md.get('instance'))
 
     def matches(self, key):
         """

@@ -8,8 +8,8 @@ class ElectricityMeter(Hashable):
     
     Attributes
     ----------
-    appliances : list of Appliance objects connected immediately downstream
-      of this meter.  Will be [] if no appliances are connected directly
+    appliances : set of Appliance objects connected immediately downstream
+      of this meter.  Will be empty set if no appliances are connected directly
       to this meter.
 
     dominant_appliance : reference to Appliance which is responsibly for 
@@ -58,11 +58,14 @@ class ElectricityMeter(Hashable):
 
     KEY_ATTRIBUTES = ['instance', 'dataset', 'building'] # used for ID
 
-    def __init__(self):
-        self.metadata = {}
+    def __init__(self, instance=None, dataset=None, building=None, 
+                 appliances=None):
+        self.metadata = {'instance': instance,
+                         'dataset': dataset,
+                         'building': building}
         self.store = None
         self.key = None
-        self.appliances = []
+        self.appliances = set() if appliances is None else set(appliances)
         self.mains = None
         self.dominant_appliance = None
 
@@ -88,6 +91,14 @@ class ElectricityMeter(Hashable):
         """
         # destination.write_metadata(key, self.metadata)
         raise NotImplementedError
+
+    def __repr__(self):
+        string = super(ElectricityMeter, self).__repr__()
+        # Now add list of appliances...
+        string = string[:-1] # remove last bracket
+        appliances = [a.type_and_instance_string() for a in self.appliances]
+        string += ', appliances={})'.format(str(appliances).replace("'", ""))
+        return string
 
     def matches(self, key):
         """
