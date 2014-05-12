@@ -68,6 +68,10 @@ class ElectricityMeter(Hashable):
         Keys are ElectricityMeterID objects.
         Values are ElectricityMeter objects.
     """
+
+    # TODO maybe, instead of putting 'device' into 'metadata', we should
+    # have a @property `device` method?  Would need to change Pipeline.
+
     meter_devices = {}
     meters = {}
 
@@ -84,6 +88,17 @@ class ElectricityMeter(Hashable):
         self.mains = None
         self.dominant_appliance = None
         ElectricityMeter.meters[self.identifier] = self
+
+    # TODO: why not just have this as __init__(store)???
+    # (because, at least for testing, we want to initialise a Meter
+    #  object without requiring a Datastore)
+    def load(self, store, key):
+        self.store = store
+        self.key = key
+        self.metadata = self.store.load_metadata(self.key)
+        ElectricityMeter._load_meter_devices(store)
+        device_model = self.metadata['device_model']
+        self.metadata['device'] = ElectricityMeter.meter_devices[device_model]
 
     @property
     def upstream_meter(self):
@@ -105,15 +120,6 @@ class ElectricityMeter(Hashable):
     def _load_meter_devices(cls, store):
         dataset_metadata = store.load_metadata()
         ElectricityMeter.meter_devices.update(dataset_metadata.get('meter_devices', {}))
-
-    # TODO: why not just have this as __init__(store)???
-    def load(self, store, key):
-        self.store = store
-        self.key = key
-        self.metadata = self.store.load_metadata(self.key)
-        ElectricityMeter._load_meter_devices(store)
-        device_model = self.metadata['device_model']
-        self.metadata['device'] = ElectricityMeter.meter_devices[device_model]
 
     def save(self, destination, key):
         """

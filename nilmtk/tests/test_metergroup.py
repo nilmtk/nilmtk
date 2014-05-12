@@ -45,10 +45,7 @@ class TestMeterGroup(unittest.TestCase):
         mg = MeterGroup([meter1, meter2, meter3])
         wiring_graph = mg.wiring_graph()
         self.assertEqual(wiring_graph.nodes(), [meter2, meter3, mains])
-        
-        self.assertIs(mg.mains(), mains)
-        self.assertEqual(mg.meters_directly_downstream_of_mains(), [meter2])
-        
+                
 
 if __name__ == '__main__':
     unittest.main()

@@ -6,3 +6,4 @@ from nilmtk.datastore import DataStore, HDFDataStore
 from nilmtk.metergroup import MeterGroup
 from nilmtk.appliance import Appliance
 from nilmtk.mains import Mains
+from nilmtk.electricity import Electricity

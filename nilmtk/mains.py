@@ -7,7 +7,7 @@ class Mains(Hashable):
     """
     Attributes
     ----------
-    meters : set of nilmtk.ElectricityMeter objects
+    meters : list of nilmtk.ElectricityMeter objects
 
     identifier : MainsID namedtuple with fields:
         building : int
@@ -17,16 +17,26 @@ class Mains(Hashable):
         nominal_voltage : float
     """
 
+    # TODO: Perhaps mains should be a subclass of Meter?  Like
+    # DualSupplyMeter??
+
     def __init__(self, building, dataset, meters=None):
         assert isinstance(building, int)
         assert isinstance(dataset, str)
         self.identifier = MainsID(building, dataset)
-        self.meters = set() if meters is None else set(meters)
-        assert isinstance(self.meters, set)
+        self.meters = [] if meters is None else meters
+        assert isinstance(self.meters, list)
         for meter in self.meters:
             assert meter.identifier.dataset == self.identifier.dataset
             assert meter.identifier.building == self.identifier.building
         
+    def available_measurements(self):
+        measurements = set(self.meters[0].metadata['device']['measurements'])
+        for meter in self.meters[1:]:
+            meter_measurements = set(meter.metadata['device']['measurements'])
+            measurements = measurements.intersection(meter_measurements)
+        return measurements
+
     def power_series(self, **kwargs):
         """Power series.  Sums together three phases / dual split power.
         

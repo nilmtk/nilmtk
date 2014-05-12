@@ -26,7 +26,8 @@ def tree_root(graph):
     """
     # from http://stackoverflow.com/a/4123177/732596
     roots = [n for n,d in graph.in_degree().iteritems() if d==0]
-    assert len(roots) == 1
+    assert len(roots) < 2, 'Tree has more than one root!'
+    assert len(roots) == 1, 'Tree has no root!'
     return roots[0]
 
 def nodes_adjacent_to_root(graph):

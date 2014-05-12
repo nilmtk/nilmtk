@@ -1,6 +1,5 @@
 from __future__ import print_function, division
 import networkx as nx
-from .utils import tree_root, nodes_adjacent_to_root
 
 class MeterGroup(object):
     """A group of ElectricityMeter objects.
@@ -137,12 +136,6 @@ class MeterGroup(object):
             if meter.upstream_meter is not None:
                 wiring_graph.add_edge(meter.upstream_meter, meter)
         return wiring_graph
-
-    def mains(self):
-        return tree_root(self.wiring_graph())
-
-    def meters_directly_downstream_of_mains(self):
-        return nodes_adjacent_to_root(self.wiring_graph())
 
     def total_on_duration(self):
         """Return timedelta"""
