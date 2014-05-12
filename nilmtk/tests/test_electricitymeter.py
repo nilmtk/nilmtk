@@ -36,6 +36,10 @@ class TestElectricityMeter(WarningTestMixin, unittest.TestCase):
         energy = meter.total_energy()
         check_energy_numbers(self, energy)
         
+    def test_upstream_meter(self):
+        meter1 = ElectricityMeter(1,1,'REDD')
+        meter2 = ElectricityMeter(2,1,'REDD',metadata={'submeter_of': 1})
+        self.assertIs(meter2.upstream_meter, meter1)
 
 if __name__ == '__main__':
     unittest.main()

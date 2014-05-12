@@ -47,6 +47,10 @@ class ElectricityMeter(Hashable):
 
         device : dict (instantiated from meter_devices static class attribute)
     
+
+    STATIC ATTRIBUTES
+    -----------------
+
     meter_devices : dict, static class attribute
         Keys are devices.  Values are dicts:
             manufacturer : string
@@ -58,10 +62,16 @@ class ElectricityMeter(Hashable):
             measurement_limits : dict, e.g.:
                 {Power('active'): {'lower': 0, 'upper': 3000}}
 
+    meters : dict, static class attribute:
+        Required for resolving `upstream_of` to an ElectricityMeter object
+        Keys are ElectricityMeterID objects.
+        Values are ElectricityMeter objects.
     """
     meter_devices = {}
+    meters = {}
 
-    def __init__(self, instance, building, dataset, appliances=None):
+    def __init__(self, instance, building, dataset, 
+                 appliances=None, metadata=None):
         assert isinstance(instance, int)
         assert isinstance(building, int)
         assert isinstance(dataset, str)
@@ -69,8 +79,17 @@ class ElectricityMeter(Hashable):
         self.store = None
         self.key = None
         self.appliances = set() if appliances is None else set(appliances)
+        self.metadata = {} if metadata is None else metadata
         self.mains = None
         self.dominant_appliance = None
+        ElectricityMeter.meters[self.identifier] = self
+
+    @property
+    def upstream_meter(self):
+        id_of_upstream = ElectricityMeterID(instance=self.metadata['submeter_of'], 
+                                            building=self.identifier.building, 
+                                            dataset=self.identifier.dataset,)
+        return ElectricityMeter.meters[id_of_upstream]
 
     @classmethod
     def _load_meter_devices(cls, store):
