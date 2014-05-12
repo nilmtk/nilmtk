@@ -242,7 +242,7 @@ class HDFDataStore(DataStore):
         metadata : dict
         """
         if key is None:
-            metadata = self.store.root._v_attrs.dataset            
+            metadata = self.store.root._v_attrs.metadata
         else:
             metadata = self._get_storer(key).attrs.metadata
         return metadata

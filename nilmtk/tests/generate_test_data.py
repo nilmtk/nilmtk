@@ -109,8 +109,8 @@ def create_random_hdf5():
             'submeter_of': 1}
 
     # Save dataset-wide metadata
-    store.root._v_attrs.dataset = {'meter_devices': {TEST_METER['model']: TEST_METER}}
-    print(store.root._v_attrs.dataset)
+    store.root._v_attrs.metadata = {'meter_devices': {TEST_METER['model']: TEST_METER}}
+    print(store.root._v_attrs.metadata)
     store.flush()
     store.close()
 
@@ -164,11 +164,12 @@ def create_energy_hdf5(simple=True):
         'submeter_of': 2}
 
     # Save dataset-wide metadata
-    store.root._v_attrs.dataset = {'meter_devices': {meter['model']: meter}}
+    store.root._v_attrs.metadata = {'meter_devices': {meter['model']: meter}}
     store.flush()
     store.close()
 
 
 def create_all():
     create_energy_hdf5()
+    create_energy_hdf5(simple=False)
     create_random_hdf5()

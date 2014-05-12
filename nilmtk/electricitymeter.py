@@ -33,14 +33,14 @@ class ElectricityMeter(Hashable):
     metadata : dict.  Including keys:
         submeter_of : int, instance of upstream meter
         site_meter : bool, True if this is a site meter (i.e. furthest upstream meter)
-        preprocessing : list of strings (why not actual Node objects?), 
+        preprocessing : list of strings (TODO: why not actual Node objects?), 
           each describing a preprocessing Node.
           preprocessing to be applied before returning any stats answers; or before exporting.
           e.g. power normalisation or removing gaps.  Properties:
           - 'good_sections_located': bool
           - 'energy_computed': bool
         device_model : string, the model name of the meter device.
-        dominant_appliance : reference to Appliance which is responsibly for 
+        dominant_appliance : (<appliance_type), <instance>) which is responsible for 
           most of the power demand on this channel.
 
         --------- THE FOLLOWING ATTRIBUTES ARE SET AUTOMATICALLY, ---------

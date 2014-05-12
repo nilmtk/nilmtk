@@ -12,11 +12,7 @@ class Appliance(Hashable):
        type : string (e.g. 'fridge' or 'television')
        instance : int (starting at 1)
 
-    metadata : pd.DataFrame single row and columns:       
-       Only need to specify name & instance.  Then NILMTK will get the generic metadata
-       for that name from the central appliance database.  Any additional
-       metadata will override defaults.  e.g.:
-       
+    metadata : dict
        on_power_threshold : float, watts
        minimum_off_duration : timedelta
        minimum_on_duration : timedelta
