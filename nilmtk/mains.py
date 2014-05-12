@@ -23,6 +23,9 @@ class Mains(Hashable):
         self.identifier = MainsID(building, dataset)
         self.meters = set() if meters is None else set(meters)
         assert isinstance(self.meters, set)
+        for meter in self.meters:
+            assert meter.identifier.dataset == self.identifier.dataset
+            assert meter.identifier.building == self.identifier.building
         
     def power_series(self, **kwargs):
         """Power series.  Sums together three phases / dual split power.

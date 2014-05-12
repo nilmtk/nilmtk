@@ -31,7 +31,8 @@ class ElectricityMeter(Hashable):
         dataset : str e.g. 'REDD'
     
     metadata : dict.  Including keys:
-        submeter_of : int, instance of upstream meter       
+        submeter_of : int, instance of upstream meter
+        site_meter : bool, True if this is a site meter (i.e. furthest upstream meter)
         preprocessing : list of strings (why not actual Node objects?), 
           each describing a preprocessing Node.
           preprocessing to be applied before returning any stats answers; or before exporting.
@@ -86,10 +87,19 @@ class ElectricityMeter(Hashable):
 
     @property
     def upstream_meter(self):
-        id_of_upstream = ElectricityMeterID(instance=self.metadata['submeter_of'], 
+        submeter_of = self.metadata.get('submeter_of')
+        if submeter_of is None:
+            return
+        if submeter_of == 0:
+            return self.mains 
+        id_of_upstream = ElectricityMeterID(instance=submeter_of, 
                                             building=self.identifier.building, 
                                             dataset=self.identifier.dataset,)
-        return ElectricityMeter.meters[id_of_upstream]
+        upstream_meter =  ElectricityMeter.meters[id_of_upstream]
+        if upstream_meter.metadata.get('site_meter'):
+            return self.mains
+        else:
+            return upstream_meter
 
     @classmethod
     def _load_meter_devices(cls, store):
