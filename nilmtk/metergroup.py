@@ -1,4 +1,6 @@
 from __future__ import print_function, division
+import networkx as nx
+from .utils import tree_root, nodes_adjacent_to_root
 
 class MeterGroup(object):
     """A group of ElectricityMeter objects.
@@ -127,8 +129,20 @@ class MeterGroup(object):
 
     def wiring_graph(self):
         """Returns a networkx.DiGraph of connections between meters.
+
+        The root will be a Mains object.
         """
-        raise NotImplementedError
+        wiring_graph = nx.DiGraph()
+        for meter in self.meters:
+            if meter.upstream_meter is not None:
+                wiring_graph.add_edge(meter.upstream_meter, meter)
+        return wiring_graph
+
+    def mains(self):
+        return tree_root(self.wiring_graph())
+
+    def meters_directly_downstream_of_mains(self):
+        return nodes_adjacent_to_root(self.wiring_graph())
 
     def total_on_duration(self):
         """Return timedelta"""
@@ -151,20 +165,7 @@ class MeterGroup(object):
     def cross_correlation(self):
         """Correlation between items."""
         raise NotImplementedError
-        
-    def all_unique_meters(self):
-        """Returns a set of all unique meters.  
-        Some meters might measure the same appliances."""
-        raise NotImplementedError
-        
-    def unique_meters_without_double_counting(self):
-        """Returns a set of all meters ensuring that each appliance only appears once."""
-        # Gets unique meters from all appliances in this MeterGroup
-        # Creates graph of meters.  
-        # Removes all but the furthest upstream meters.
-        # Warns if we also measure energy for one or more appliances not in selection
-        raise NotImplementedError
-        
+                
     def total_energy(self):
         # self.get_unique_upstream_meters()
         # adds energy on a meter-by-meter basis

@@ -16,3 +16,19 @@ def timedelta64_to_secs(timedelta):
         return np.array([])
     else:
         return timedelta / np.timedelta64(1, 's')
+
+def tree_root(graph):
+    """Returns the object that is the root of the tree.
+
+    Parameters
+    ----------
+    graph : networkx.Graph
+    """
+    # from http://stackoverflow.com/a/4123177/732596
+    roots = [n for n,d in graph.in_degree().iteritems() if d==0]
+    assert len(roots) == 1
+    return roots[0]
+
+def nodes_adjacent_to_root(graph):
+    root = tree_root(graph)
+    return graph.successors(root)
