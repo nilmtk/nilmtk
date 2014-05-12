@@ -126,8 +126,7 @@ class MeterGroup(object):
             return False
 
     def wiring_graph(self):
-        """Returns a networkx.DAG of connections between meters; and between
-        meters and meters.
+        """Returns a networkx.DiGraph of connections between meters.
         """
         raise NotImplementedError
 

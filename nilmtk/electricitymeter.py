@@ -28,7 +28,7 @@ class ElectricityMeter(Hashable):
         instance : int, meter instance within this building, starting from 1
         building : int, building instance, starting from 1
         dataset : str e.g. 'REDD'
-        submeter_of : int, ID of upstream meter       
+        submeter_of : int, instance of upstream meter       
         preprocessing : list of strings (why not actual Node objects?), 
           each describing a preprocessing Node.
           preprocessing to be applied before returning any stats answers; or before exporting.
