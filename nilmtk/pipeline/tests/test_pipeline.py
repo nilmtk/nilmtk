@@ -16,7 +16,7 @@ class TestPipeline(unittest.TestCase):
         cls.datastore = HDFDataStore(filename)
 
     def test_pipeline(self):
-        meter = ElectricityMeter()
+        meter = ElectricityMeter(1, 1, 'REDD')
         meter.load(self.datastore, KEY)
         nodes = [ClipNode(), EnergyNode()]
         pipeline = Pipeline(nodes)

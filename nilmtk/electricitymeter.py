@@ -2,6 +2,10 @@ from __future__ import print_function, division
 from nilmtk.pipeline import Pipeline, ClipNode, EnergyNode, LocateGoodSectionsNode
 from .hashable import Hashable
 from warnings import warn
+from collections import namedtuple
+
+ElectricityMeterID = namedtuple('ElectricityMeterID',    
+                                ['instance', 'building', 'dataset'])
 
 class ElectricityMeter(Hashable):
     """Represents a physical electricity meter.
@@ -12,9 +16,6 @@ class ElectricityMeter(Hashable):
       of this meter.  Will be empty set if no appliances are connected directly
       to this meter.
 
-    dominant_appliance : reference to Appliance which is responsibly for 
-      most of the power demand on this channel.
-
     mains : Mains (used so appliance methods can default to use
       the same measured parameter (active / apparent / reactive) 
       as Mains; and also for use in proportion of energy submetered
@@ -23,11 +24,13 @@ class ElectricityMeter(Hashable):
     store : nilmtk.DataStore
 
     key : key into nilmtk.DataStore to access data
-    
-    metadata : dict.  Including keys:
+
+    identifier : ElectricityMeterID namedtuple with fields:
         instance : int, meter instance within this building, starting from 1
         building : int, building instance, starting from 1
         dataset : str e.g. 'REDD'
+    
+    metadata : dict.  Including keys:
         submeter_of : int, instance of upstream meter       
         preprocessing : list of strings (why not actual Node objects?), 
           each describing a preprocessing Node.
@@ -36,6 +39,8 @@ class ElectricityMeter(Hashable):
           - 'good_sections_located': bool
           - 'energy_computed': bool
         device_model : string, the model name of the meter device.
+        dominant_appliance : reference to Appliance which is responsibly for 
+          most of the power demand on this channel.
 
         --------- THE FOLLOWING ATTRIBUTES ARE SET AUTOMATICALLY, ---------
         --------- i.e. THEY DO NOT EXIST IN THE ON-DISK METADATA. ---------
@@ -56,13 +61,11 @@ class ElectricityMeter(Hashable):
     """
     meter_devices = {}
 
-    KEY_ATTRIBUTES = ['instance', 'dataset', 'building'] # used for ID
-
-    def __init__(self, instance=None, dataset=None, building=None, 
-                 appliances=None):
-        self.metadata = {'instance': instance,
-                         'dataset': dataset,
-                         'building': building}
+    def __init__(self, instance, building, dataset, appliances=None):
+        assert isinstance(instance, int)
+        assert isinstance(building, int)
+        assert isinstance(dataset, str)
+        self.identifier = ElectricityMeterID(instance, building, dataset)
         self.store = None
         self.key = None
         self.appliances = set() if appliances is None else set(appliances)
@@ -96,8 +99,8 @@ class ElectricityMeter(Hashable):
         string = super(ElectricityMeter, self).__repr__()
         # Now add list of appliances...
         string = string[:-1] # remove last bracket
-        appliances = [a.type_and_instance_string() for a in self.appliances]
-        string += ', appliances={})'.format(str(appliances).replace("'", ""))
+#        appliances = [a.type_and_instance_string() for a in self.appliances]
+        string += ', appliances={})'.format(self.appliances)
         return string
 
     def matches(self, key):

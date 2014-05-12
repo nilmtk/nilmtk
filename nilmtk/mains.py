@@ -1,21 +1,28 @@
 from .hashable import Hashable
+from collections import namedtuple
+
+MainsID = namedtuple('MainsID', ['building', 'dataset'])
 
 class Mains(Hashable):
     """
     Attributes
     ----------
-    meters : list of nilmtk.ElectricityMeter objects
+    meters : set of nilmtk.ElectricityMeter objects
+
+    identifier : MainsID namedtuple with fields:
+        building : int
+        dataset : str
 
     metadata : dict
-        dataset : str
-        building : str
         nominal_voltage : float
     """
-    KEY_ATTRIBUTES = ['dataset', 'building']
 
-    def __init__(self, meters, dataset, building):
-        self.meters = meters
-        self.metadata = {'dataset': dataset, 'building': building}
+    def __init__(self, building, dataset, meters=None):
+        assert isinstance(building, int)
+        assert isinstance(dataset, str)
+        self.identifier = MainsID(building, dataset)
+        self.meters = set() if meters is None else set(meters)
+        assert isinstance(self.meters, set)
         
     def power_series(self, **kwargs):
         """Power series.  Sums together three phases / dual split power.

@@ -23,7 +23,7 @@ class TestLocateGaps(unittest.TestCase):
         cls.datastore = HDFDataStore(filename)
 
     def test_pipeline(self):
-        meter = ElectricityMeter()
+        meter = ElectricityMeter(1, 1, 'REDD')
         meter.load(self.datastore, KEY)
         nodes = [LocateGoodSectionsNode()]
         pipeline = Pipeline(nodes)

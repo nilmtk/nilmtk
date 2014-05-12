@@ -23,13 +23,13 @@ class TestElectricityMeter(WarningTestMixin, unittest.TestCase):
         cls.datastore.close()
 
     def test_load(self):
-        meter = ElectricityMeter()
+        meter = ElectricityMeter(1, 1, 'REDD')
         meter.load(self.datastore, key=KEY)
         self.assertEqual(meter.metadata['device_model'], 'Energy Meter')
         self.assertEqual(meter.metadata['device']['sample_period'], 10)
 
     def test_total_energy(self):
-        meter = ElectricityMeter()
+        meter = ElectricityMeter(1, 1, 'REDD')
         with self.assertRaises(RuntimeError):
             meter.total_energy()
         meter.load(self.datastore, KEY)
