@@ -19,12 +19,14 @@ class TimeFrame(object):
         If False then behave as if both _end and _start are None
     _empty : boolean
         If True then represents an empty time frame
+    include_end : boolean
     """
 
     def __init__(self, start=None, end=None):
         self.clear()
         self.start = start
         self.end = end
+        self.include_end = False
 
     @property
     def start(self):
@@ -96,6 +98,7 @@ class TimeFrame(object):
 
         assert isinstance(other, TimeFrame)
 
+        include_end = False
         if self.empty or other.empty:
             start = None
             end = None
@@ -111,9 +114,15 @@ class TimeFrame(object):
             if other.end is None:
                 end = self.end
             elif self.end is None:
-                end = other.end
+                end = other.end                
             else:
                 end = min(self.end, other.end)
+
+            # set include_end
+            if end == other.end:
+                include_end = other.include_end
+            elif end == self.end:
+                include_end = self.include_end
 
             empty = False
 
@@ -125,6 +134,7 @@ class TimeFrame(object):
         
         intersect = TimeFrame(start, end)
         intersect._empty = empty
+        intersect.include_end = include_end
         return intersect
 
     def query_terms(self, variable_name='timeframe'):
@@ -134,7 +144,8 @@ class TimeFrame(object):
         if self.start is not None:
             terms.append("index>=" + variable_name + ".start")
         if self.end is not None:
-            terms.append("index<" + variable_name + ".end")
+            terms.append("index<" + ("=" if self.include_end else "")
+                         + variable_name + ".end")
         return None if terms == [] else terms
 
     def clear(self):

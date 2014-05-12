@@ -58,4 +58,6 @@ class LocateGoodSectionsResults(Results):
             end_date_of_prev_row = row['end']
             sections.extend(row_sections)
 
+        sections[-1].include_end = True
+
         return sections

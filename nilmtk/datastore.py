@@ -81,7 +81,7 @@ class HDFDataStore(DataStore):
         """
         self._check_key(key)
         self._check_columns(key, cols)
-        periods = periods if periods else [TimeFrame()]
+        periods = [TimeFrame()] if periods is None else periods
 
         start_row = 0 # row to start search in table
         for period in periods:
@@ -91,7 +91,9 @@ class HDFDataStore(DataStore):
             else:
                 terms = window_intersect.query_terms('window_intersect')
                 coords = self.store.select_as_coordinates(
-                    key=key, where=terms, start=start_row, stop=-1)
+                    key=key, where=terms, 
+                    start=None if start_row is 0 else start_row,
+                    stop=None if start_row is 0 else -1)
                 if len(coords) > 0:
                     self.check_data_will_fit_in_memory(
                         key=key, nrows=len(coords), cols=cols)
@@ -109,7 +111,8 @@ class HDFDataStore(DataStore):
             try:
                 look_ahead_coords = self.store.select_as_coordinates(
                     key=key, where="index >= period.end", 
-                    start=start_row, stop=start_row+n_look_ahead_rows)
+                    start=start_row, 
+                    stop=start_row+n_look_ahead_rows)
             except IndexError:
                 look_ahead_coords = []
 

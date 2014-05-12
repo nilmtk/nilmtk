@@ -11,44 +11,39 @@ def check_ac_type(ac_type):
         msg = "'ac_type' must be one of {}, not '{}'.".format(AC_TYPES, ac_type)
         raise ValueError(msg)
 
-def select_best_ac_type(results, mains=None, physical_quantity='power'):
-    """Selects the 'best' alternating current measurement type from `results`.
+def select_best_ac_type(available_ac_types, mains_ac_types=None):
+    """Selects the 'best' alternating current measurement type from `available_ac_types`.
 
     Parameters
     ----------
-    results : dict or pandas.DataFrame
-        keys must be measurement objects (Power, Energy, Voltage)
-    mains : nilmtk.Mains object, optional
-        if provided then will try to select the best AC type from `results`
-        which is also in `mains`.
-    physical_quantity : {'power', 'energy'}
+    available_ac_types : list of strings
+        e.g. ['active', 'reactive']
+    mains_ac_types : list of strings, optional
+        if provided then will try to select the best AC type from `available_ac_types`
+        which is also in `mains_ac_types`.
 
     Returns
     -------
-    `results[ac_type]` where `ac_type` is the selected AC type.
+    best_ac_type : string
     """
-    physical_quantity_map = {'power': Power, 'energy': Energy}
-    try:
-        phys_quantity_class = physical_quantity_map[physical_quantity]
-    except KeyError:
-        raise ValueError("'{}' is not a recognised physical quantity."
-                         .format(physical_quantity))
-    order_of_preference = [phys_quantity_class(ac_type) for ac_type in AC_TYPES]
-    if mains is not None:
-        order_of_preference = [ac_type for ac_type in order_of_preference
-                               if ac_type in mains.available_measurements()]
+
+    if mains_ac_types is None:
+        order_of_preference = AC_TYPES
+    else:
+        order_of_preference = [ac_type for ac_type in AC_TYPES
+                               if ac_type in mains_ac_types]
 
     for ac_type in order_of_preference:
-        if ac_type in results:
-            return results[ac_type]
+        if ac_type in available_ac_types:
+            return ac_type
 
-    # if we get to here then we haven't found any relevant ac_type in results
-    if mains is None:
-        raise KeyError()
+    # if we get to here then we haven't found any relevant ac_type in available_ac_types
+    if mains_ac_types is None:
+        raise KeyError('No relevant measurements in {}'.format(available_ac_types))
     else:
-        warn("None of the AC types recorded by Mains are present in `results`."
+        warn("None of the AC types recorded by Mains are present in `available_ac_types`."
              " Will use try using one of {}.".format(AC_TYPES))
-        return select_best_ac_type(results)
+        return select_best_ac_type(available_ac_types)
 
 class Power(namedtuple('Power', ['ac_type'])):
     """Mains electricity alternating current (AC) power demand.

@@ -1,5 +1,7 @@
 from .hashable import Hashable
+from nilmtk.measurement import Power
 from collections import namedtuple
+
 
 MainsID = namedtuple('MainsID', ['building', 'dataset'])
 
@@ -22,7 +24,6 @@ class Mains(Hashable):
 
     def __init__(self, building, dataset, meters=None):
         assert isinstance(building, int)
-        assert isinstance(dataset, str)
         self.identifier = MainsID(building, dataset)
         self.meters = [] if meters is None else meters
         assert isinstance(self.meters, list)
@@ -30,12 +31,12 @@ class Mains(Hashable):
             assert meter.identifier.dataset == self.identifier.dataset
             assert meter.identifier.building == self.identifier.building
         
-    def available_measurements(self):
+    def available_ac_types(self):
         measurements = set(self.meters[0].metadata['device']['measurements'])
         for meter in self.meters[1:]:
             meter_measurements = set(meter.metadata['device']['measurements'])
             measurements = measurements.intersection(meter_measurements)
-        return measurements
+        return [m.ac_type for m in measurements if isinstance(m, Power)]
 
     def power_series(self, **kwargs):
         """Power series.  Sums together three phases / dual split power.

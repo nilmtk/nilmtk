@@ -137,8 +137,31 @@ def create_energy_hdf5(simple=True):
     print("Saving", key)
     store.put(key, df, format='table')
     store.get_storer(key).attrs.metadata = {
+        'instance': 1,
+        'building': 1,
+        'dataset': 'REDD',
+        'device_model': meter['model'], 
+        'site_meter': True}
+
+    key = 'building1/electric/meter2'
+    print("Saving", key)
+    store.put(key, df, format='table')
+    store.get_storer(key).attrs.metadata = {
+        'instance': 2,
+        'building': 1,
+        'dataset': 'REDD',
         'device_model': meter['model'], 
         'submeter_of': 1}
+
+    key = 'building1/electric/meter3'
+    print("Saving", key)
+    store.put(key, df, format='table')
+    store.get_storer(key).attrs.metadata = {
+        'instance': 3,
+        'building': 1,
+        'dataset': 'REDD',
+        'device_model': meter['model'], 
+        'submeter_of': 2}
 
     # Save dataset-wide metadata
     store.root._v_attrs.dataset = {'meter_devices': {meter['model']: meter}}

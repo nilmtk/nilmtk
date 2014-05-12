@@ -75,11 +75,8 @@ class ElectricityMeter(Hashable):
     meter_devices = {}
     meters = {}
 
-    def __init__(self, instance, building, dataset, 
+    def __init__(self, instance=None, building=None, dataset=None, 
                  appliances=None, metadata=None):
-        assert isinstance(instance, int)
-        assert isinstance(building, int)
-        assert isinstance(dataset, str)
         self.identifier = ElectricityMeterID(instance, building, dataset)
         self.store = None
         self.key = None
@@ -89,9 +86,6 @@ class ElectricityMeter(Hashable):
         self.dominant_appliance = None
         ElectricityMeter.meters[self.identifier] = self
 
-    # TODO: why not just have this as __init__(store)???
-    # (because, at least for testing, we want to initialise a Meter
-    #  object without requiring a Datastore)
     def load(self, store, key):
         self.store = store
         self.key = key
@@ -99,7 +93,12 @@ class ElectricityMeter(Hashable):
         ElectricityMeter._load_meter_devices(store)
         device_model = self.metadata['device_model']
         self.metadata['device'] = ElectricityMeter.meter_devices[device_model]
-
+        md = self.metadata
+        self.identifier = ElectricityMeterID(md.get('instance'), 
+                                             md.get('building'), 
+                                             md.get('dataset'))
+        ElectricityMeter.meters[self.identifier] = self
+        
     @property
     def upstream_meter(self):
         submeter_of = self.metadata.get('submeter_of')

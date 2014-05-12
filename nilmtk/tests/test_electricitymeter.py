@@ -4,7 +4,7 @@ import unittest
 from os.path import join
 import pandas as pd
 from datetime import timedelta
-from testingtools import data_dir, WarningTestMixin
+from .testingtools import data_dir, WarningTestMixin
 from nilmtk.datastore import HDFDataStore
 from nilmtk import ElectricityMeter, Mains
 from nilmtk.pipeline.tests.test_energy import check_energy_numbers
