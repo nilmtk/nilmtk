@@ -40,7 +40,7 @@ class HDFDataStore(DataStore):
         ----------
         filename : string
         """
-        self.store = pd.HDFStore(filename)
+        self.store = pd.HDFStore(filename, 'r')
         super(HDFDataStore, self).__init__()
 
     def load(self, key, cols=None, periods=None, n_look_ahead_rows=10):
@@ -256,3 +256,66 @@ class HDFDataStore(DataStore):
         """
         self._get_storer(key).attrs.metadata = metadata
         self.store.flush()
+
+    def key_tree(self):
+        """
+        Returns
+        -------
+        dict
+            e.g. {'building1': 
+                   {'electric': 
+                     {'meter1': {}, 'meter2': {}}}}
+        """
+        # TODO can probably remove this
+        keys = self.store.keys()
+        tree = {}
+        for key in keys:
+            split = key.strip('/').split('/')
+            tree_branch = tree
+            for element in split:
+                tree_branch = tree_branch.setdefault(element, {})
+        return tree
+
+    # def elements_below_key(self, key):
+    #     tree = self.key_tree()
+    #     split_key = key.strip('/').split('/')
+    #     for k in split_key:
+    #         if k:
+    #             tree = tree[k]
+    #     return tree.keys()
+
+    def elements_below_key(self, key='/'):
+        """
+        Returns
+        -------
+        list of strings
+        """
+        if key == '/' or not key:
+            node = self.store.root
+        else:
+            node = self.store.get_node(key)
+        return node._v_children.keys()
+
+
+
+def join_key(*args):
+    """
+    Examples
+    --------
+    >>> join_key('building1', 'electric', 'meter1')
+    '/building1/electric/meter1'
+
+    >>> join_key('/')
+    '/'
+
+    >>> join_key('')
+    '/'
+    """
+    key = '/'
+    for arg in args:
+        arg_stripped = str(arg).strip('/')
+        if arg_stripped:
+            key += arg_stripped + '/'
+    if len(key) > 1:
+        key = key[:-1] # remove last trailing slash
+    return key

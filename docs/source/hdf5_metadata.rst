@@ -6,6 +6,7 @@ HDF5 Metadata structure
 
 HDF5 files are structured in the form ``/building1/electric/meter1``
 
+
 ``store.root._v_attrs.metadata``
 -------------------------------
 
@@ -24,6 +25,14 @@ HDF5 files are structured in the form ``/building1/electric/meter1``
     and ``upper``, each mapping to a number representing the limits in
     units of watts.
     e.g. ``{Power('apparent'): {'lower':0, 'upper': 3000}}``
+
+
+``store.get_storer('/building1').attrs.metadata``
+-----------------------------------------------------------------
+
+:instance: (int) The building instance in this dataset, starting from 1
+:dataset: (string)
+:original_name: (string)
 
 
 ``store.get_storer('/building1/electric/meter1').attrs.metadata``

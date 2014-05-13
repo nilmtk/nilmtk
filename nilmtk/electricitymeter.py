@@ -87,6 +87,7 @@ class ElectricityMeter(Hashable):
         ElectricityMeter.meters[self.identifier] = self
 
     def load(self, store, key):
+        print("Loading ElectricityMeter from key", key)
         self.store = store
         self.key = key
         self.metadata = self.store.load_metadata(self.key)

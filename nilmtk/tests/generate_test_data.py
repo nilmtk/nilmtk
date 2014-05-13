@@ -106,7 +106,10 @@ def create_random_hdf5():
         store.put(key, create_random_df(), format='table')
         store.get_storer(key).attrs.metadata = {
             'device_model': TEST_METER['model'], 
-            'submeter_of': 1}
+            'submeter_of': 1,
+            'instance': meter,
+            'dataset': 'REDD',
+            'building': 1}
 
     # Save dataset-wide metadata
     store.root._v_attrs.metadata = {'meter_devices': {TEST_METER['model']: TEST_METER}}
