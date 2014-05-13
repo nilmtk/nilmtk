@@ -10,13 +10,15 @@ HDF5 files are structured in the form ``/building1/electric/meter1``
 ``store.root._v_attrs.metadata``
 -------------------------------
 
-:meter_devices: (string)
+:meter_devices: (dict)
   Keys are device model names (e.g. 'EnviR').
   The purpose is to record information about
   specific  models of meter.  Values are also dicts with keys:
 
   :model: (string) The model name for this meter device.
+  :model_url: (string)
   :manufacturer: (string)
+  :manufacturer_url: (string)
   :sample_period: (number) seconds
   :max_sample_period: (number) seconds
   :measurements: (list of ``nilmtk.Measurement`` objects) e.g. ``[Power('apparent')]``
