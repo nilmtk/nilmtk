@@ -27,7 +27,7 @@ HDF5 files are structured in the form ``/building1/electric/meter1``
     e.g. ``{Power('apparent'): {'lower':0, 'upper': 3000}}``
 
 
-``store.get_storer('/building1').attrs.metadata``
+``store.root.building1._v_attrs.metadata``
 -----------------------------------------------------------------
 
 :instance: (int) The building instance in this dataset, starting from 1
@@ -35,7 +35,7 @@ HDF5 files are structured in the form ``/building1/electric/meter1``
 :original_name: (string)
 
 
-``store.get_storer('/building1/electric/meter1').attrs.metadata``
+``store.root.building1.electric.meter1._v_attrs.metadata``
 -----------------------------------------------------------------
 
 :device_model: (string): ``model`` which keys into ``meter_devices``
@@ -50,7 +50,7 @@ HDF5 files are structured in the form ``/building1/electric/meter1``
           most of the power demand on this channel.
 
 
-``store.get_storer('/building1/electric/meter1').attrs.appliances``
+``store.root.building1.electric.meter1._v_attrs.appliances``
 -------------------------------------------------------------------
 
 A list of appliance dicts.  Each dict has:
@@ -62,4 +62,3 @@ A list of appliance dicts.  Each dict has:
 :on_power_threshold: (number) watts
 :minimum_off_duration: (timedelta)
 :minimum_on_duration: (timedelta)
-

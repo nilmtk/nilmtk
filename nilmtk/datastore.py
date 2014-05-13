@@ -230,7 +230,7 @@ class HDFDataStore(DataStore):
         if key not in self.keys():
             raise KeyError(key + ' not in store')
 
-    def load_metadata(self, key=None):
+    def load_metadata(self, key='/'):
         """
         Parameters
         ----------
@@ -241,10 +241,12 @@ class HDFDataStore(DataStore):
         -------
         metadata : dict
         """
-        if key is None:
-            metadata = self.store.root._v_attrs.metadata
+        if key == '/':
+            node = self.store.root
         else:
-            metadata = self._get_storer(key).attrs.metadata
+            node = self.store.get_node(key)
+
+        metadata = node._v_attrs.metadata
         return metadata
 
     def save_metadata(self, key, metadata):
@@ -254,7 +256,13 @@ class HDFDataStore(DataStore):
         key : string
         metadata : dict
         """
-        self._get_storer(key).attrs.metadata = metadata
+
+        if key == '/':
+            node = self.store.root
+        else:
+            node = self.store.get_node(key)
+
+        node._v_attrs.metadata = metadata
         self.store.flush()
 
     def key_tree(self):

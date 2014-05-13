@@ -76,6 +76,7 @@ def create_random_df_hierarchical_column_index():
 
 MEASUREMENTS = [Power('active'), Energy('reactive'), Voltage()]
 
+
 def create_random_df():
     N_PERIODS = 1E4
     columns = MEASUREMENTS
@@ -93,6 +94,15 @@ TEST_METER = {'manufacturer': 'Test Manufacturer',
           }
 for col in MEASUREMENTS:
     TEST_METER['measurement_limits'][col] = {'lower': 0, 'upper': 6000}
+
+
+def add_building_metadata(store, key='building1'):
+    node = store.get_node(key)
+    md = {
+        'instance': 1,
+        'dataset': 'REDD'
+    }
+    node._f_setattr('metadata', md)
 
 
 def create_random_hdf5():
@@ -113,6 +123,7 @@ def create_random_hdf5():
 
     # Save dataset-wide metadata
     store.root._v_attrs.metadata = {'meter_devices': {TEST_METER['model']: TEST_METER}}
+    add_building_metadata(store)
     print(store.root._v_attrs.metadata)
     store.flush()
     store.close()
@@ -168,6 +179,7 @@ def create_energy_hdf5(simple=True):
 
     # Save dataset-wide metadata
     store.root._v_attrs.metadata = {'meter_devices': {meter['model']: meter}}
+    add_building_metadata(store)
     store.flush()
     store.close()
 

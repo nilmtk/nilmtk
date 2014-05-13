@@ -1,9 +1,7 @@
-from collections import namedtuple
-
 class Hashable(object):
     """Simple mix-in class to add functions necessary to make
     an object hashable.  Just requires the child class to have
-    a `KEY_ATTRIBUTES` static variable and a `metadata` dict."""
+    an `identifier` namedtuple."""
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
