@@ -6,8 +6,77 @@ from measurement import Power
 from timeframe import TimeFrame
 import os
 
+
+map_redd_labels_to_nilmtk = {
+    'air_conditioning': 
+        {'type': 'air conditioner'},
+    'bathroom_gfi': # ground fault interrupter? (A type of RCD.)
+        {'type': 'unspecified', 'room': {'name': 'bathroom'}},
+    'dishwaser': 
+        {'type': 'dish washer'},
+    'disposal': 
+        {'type': 'waste disposal unit'},
+    'electric_heat': 
+        {'type': 'electric space heater'},
+    'electronics':  
+        {'type': 'ICT appliance'},
+    'furance':  
+        {'type': 'electric boiler'},
+    'kitchen_outlets':  
+        {'type': 'sockets', 'room': {'name': 'kitchen'},
+    'lighting':  
+        {'type': 'light'},
+    'microwave':  
+        {'type': 'microwave'},
+    'miscellaeneous':  
+        {'type': 'unspecified'},
+    'outdoor_outlets':  
+         {'type': 'sockets', 'room' {'name': 'outdoors'}},
+    'outlets_unknown':  # TODO
+        {'type': ''},
+    'oven':  
+        {'type': ''},
+    'refrigerator':  
+        {'type': ''},
+    'smoke_alarms':  
+        {'type': ''},
+    'stove':  
+        {'type': ''},
+    'subpanel':  
+        {'type': ''},
+    'washer_dryer':  
+        {'type': ''}   
+}
+
+
 def _split_key(key):
     return key.strip('/').split('/')
+
+
+def load_labels(data_dir):
+    """Loads data from labels.dat file.
+
+    Parameters
+    ----------
+    data_dir : str
+
+    Returns
+    -------
+    labels : dict
+        mapping channel numbers (ints) to appliance names (str)
+    """
+    filename = os.path.join(data_dir, 'labels.dat')
+    with open(filename) as labels_file:
+        lines = labels_file.readlines()
+
+    labels = {}
+    for line in lines:
+        line = line.split(' ')
+        # TODO add error handling if line[0] not an int
+        labels[int(line[0])] = line[1].strip()
+
+    return labels
+
 
 class REDDStore(DataStore):
     def __init__(self, path):
@@ -123,16 +192,24 @@ class REDDStore(DataStore):
         # meter-level metadata
         meter_instance = int(split_key[-1].replace('meter', ''))
 
-        metadata = {
+        meter_metadata = {
             'device_model': 'REDD_whole_house' if meter_instance in [1,2] else 'eMonitor',
             'instance': meter_instance,
             'building': building_instance,
-            'dataset': 'REDD'
+            'dataset': 'REDD'            
         }
+        if meter_instance in [1,2]:
+            meter_metadata.update({'site_meter': True})
+        else:
+            meter_metadata.update({'submeter_of': 0})
 
+        building_path = self._path_for_house(key)
+        labels = load_labels(building_path)
+        redd_label = labels[meter_instance]
+        nilmtk_label = map_redd_labels_to_nilmtk[redd_label]
+        
         #TODO: submeter and site_meter and dominant_appliance and appliance data...
 
-        path = self._path_for_house(key)
         
 
         raise NotImplementedError()

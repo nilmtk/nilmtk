@@ -44,7 +44,8 @@ HDF5 files are structured in the form ``/building1/electric/meter1``
 :instance: (int starting from 1) the meter instance within the building.
 :building: (int starting from 1) the building instance.
 :dataset: (string)
-:submeter_of: (int): the meter instance of the upstream meter.
+:submeter_of: (int): the meter instance of the upstream meter.  Or 0
+              to mean 'one of the site_meters'.
 :site_meter: (boolean): True if this is a site meter (i.e. furthest
              upstream meter)
 :preprocessing:
@@ -64,3 +65,4 @@ A list of appliance dicts.  Each dict has:
 :on_power_threshold: (number) watts
 :minimum_off_duration: (timedelta)
 :minimum_on_duration: (timedelta)
+:room: (dict) with ``name`` and ``instance``
