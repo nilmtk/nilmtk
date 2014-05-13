@@ -95,7 +95,7 @@ class HDFDataStore(DataStore):
                     start=None if start_row is 0 else start_row,
                     stop=None if start_row is 0 else -1)
                 if len(coords) > 0:
-                    self.check_data_will_fit_in_memory(
+                    self._check_data_will_fit_in_memory(
                         key=key, nrows=len(coords), cols=cols)
                     data = self.store.select(key=key, where=coords, columns=cols)
                     start_row = coords[-1]+1
@@ -105,7 +105,7 @@ class HDFDataStore(DataStore):
                 data = data.index
 
             data.timeframe = (window_intersect if window_intersect 
-                              else self.timeframe(key))
+                              else self._get_timeframe(key))
 
             # Load 'look ahead'
             try:
@@ -123,112 +123,6 @@ class HDFDataStore(DataStore):
                 data.look_ahead = pd.DataFrame()
 
             yield data
-    
-    def _check_columns(self, key, columns):
-        if columns is None:
-            return
-        if not self.table_has_column_names(key, columns):
-            raise KeyError('at least one of ' + str(columns) + 
-                           ' is not a valid column')
-
-    def close(self):
-        self.store.close()
-
-    def open(self):
-        self.store.close()
-
-    def table_has_column_names(self, key, cols):
-        """
-        Parameters
-        ----------
-        cols : string or list of strings
-        
-        Returns
-        -------
-        boolean
-        """
-        assert cols is not None
-        self._check_key(key)
-        if isinstance(cols, str):
-            cols = [cols]
-        query_cols = set(cols)
-        table_cols = set(self.column_names(key) + ['index'])
-        return query_cols.issubset(table_cols)
-
-    def check_data_will_fit_in_memory(self, key, nrows, cols=None):
-        # Check we won't use too much memory
-        mem_requirement = self.estimate_memory_requirement(key, nrows, cols)
-        if mem_requirement > MAX_MEM_ALLOWANCE_IN_BYTES:
-            raise MemoryError('Requested data would use {:.3f}MBytes:'
-                              ' too much memory.'
-                              .format(mem_requirement / 1E6))
-
-    def estimate_memory_requirement(self, key, nrows, cols=None):
-        """Returns estimated mem requirement in bytes."""
-        BYTES_PER_ELEMENT = 4
-        BYTES_PER_TIMESTAMP = 8
-        self._check_key(key)
-        if cols is None:
-            cols = self.column_names(key)
-        else:
-            self._check_columns(key, cols)
-        ncols = len(cols)
-        est_mem_usage_for_data = nrows * ncols * BYTES_PER_ELEMENT
-        est_mem_usage_for_index = nrows * BYTES_PER_TIMESTAMP
-        if cols == ['index']:
-            return est_mem_usage_for_index
-        else:
-            return est_mem_usage_for_data + est_mem_usage_for_index
-    
-    def column_names(self, key):
-        self._check_key(key)
-        storer = self._get_storer(key)
-        col_names = storer.non_index_axes[0][1:][0]
-        return col_names
-    
-    def nrows(self, key, timeframe=None):
-        """
-        Returns
-        -------
-        nrows : int
-        """
-        self._check_key(key)
-        timeframe_intersect = self.window.intersect(timeframe)
-        if timeframe_intersect.empty:
-            nrows = 0
-        elif timeframe_intersect:
-            terms = timeframe_intersect.query_terms('timeframe_intersect')
-            coords = self.store.select_as_coordinates(key, terms)
-            nrows = len(coords)
-        else:
-            storer = self._get_storer(key)
-            nrows = storer.nrows
-        return nrows
-        
-    def timeframe(self, key):
-        """
-        Returns
-        -------
-        nilmtk.TimeFrame of entire table after intersecting with self.window.
-        """
-        self._check_key(key)
-        data_start_date = self.store.select(key, [0]).index[0]
-        data_end_date = self.store.select(key, start=-1).index[0]
-        timeframe = TimeFrame(data_start_date, data_end_date)
-        return self.window.intersect(timeframe)
-    
-    def keys(self):
-        return self.store.keys()
-
-    def _get_storer(self, key):
-        self._check_key(key)
-        storer = self.store.get_storer(key)
-        assert storer is not None, "cannot get storer for key = " + key
-        return storer
-    
-    def _check_key(self, key):
-        if key not in self.keys():
-            raise KeyError(key + ' not in store')
 
     def load_metadata(self, key='/'):
         """
@@ -265,33 +159,6 @@ class HDFDataStore(DataStore):
         node._v_attrs.metadata = metadata
         self.store.flush()
 
-    def key_tree(self):
-        """
-        Returns
-        -------
-        dict
-            e.g. {'building1': 
-                   {'electric': 
-                     {'meter1': {}, 'meter2': {}}}}
-        """
-        # TODO can probably remove this
-        keys = self.store.keys()
-        tree = {}
-        for key in keys:
-            split = key.strip('/').split('/')
-            tree_branch = tree
-            for element in split:
-                tree_branch = tree_branch.setdefault(element, {})
-        return tree
-
-    # def elements_below_key(self, key):
-    #     tree = self.key_tree()
-    #     split_key = key.strip('/').split('/')
-    #     for k in split_key:
-    #         if k:
-    #             tree = tree[k]
-    #     return tree.keys()
-
     def elements_below_key(self, key='/'):
         """
         Returns
@@ -303,6 +170,112 @@ class HDFDataStore(DataStore):
         else:
             node = self.store.get_node(key)
         return node._v_children.keys()
+
+    def close(self):
+        self.store.close()
+
+    def open(self):
+        self.store.close()
+    
+    def _check_columns(self, key, columns):
+        if columns is None:
+            return
+        if not self._table_has_column_names(key, columns):
+            raise KeyError('at least one of ' + str(columns) + 
+                           ' is not a valid column')
+
+    def _table_has_column_names(self, key, cols):
+        """
+        Parameters
+        ----------
+        cols : string or list of strings
+        
+        Returns
+        -------
+        boolean
+        """
+        assert cols is not None
+        self._check_key(key)
+        if isinstance(cols, str):
+            cols = [cols]
+        query_cols = set(cols)
+        table_cols = set(self._column_names(key) + ['index'])
+        return query_cols.issubset(table_cols)
+
+    def _column_names(self, key):
+        self._check_key(key)
+        storer = self._get_storer(key)
+        col_names = storer.non_index_axes[0][1:][0]
+        return col_names
+
+    def _check_data_will_fit_in_memory(self, key, nrows, cols=None):
+        # Check we won't use too much memory
+        mem_requirement = self._estimate_memory_requirement(key, nrows, cols)
+        if mem_requirement > MAX_MEM_ALLOWANCE_IN_BYTES:
+            raise MemoryError('Requested data would use {:.3f}MBytes:'
+                              ' too much memory.'
+                              .format(mem_requirement / 1E6))
+
+    def _estimate_memory_requirement(self, key, nrows, cols=None):
+        """Returns estimated mem requirement in bytes."""
+        BYTES_PER_ELEMENT = 4
+        BYTES_PER_TIMESTAMP = 8
+        self._check_key(key)
+        if cols is None:
+            cols = self._column_names(key)
+        else:
+            self._check_columns(key, cols)
+        ncols = len(cols)
+        est_mem_usage_for_data = nrows * ncols * BYTES_PER_ELEMENT
+        est_mem_usage_for_index = nrows * BYTES_PER_TIMESTAMP
+        if cols == ['index']:
+            return est_mem_usage_for_index
+        else:
+            return est_mem_usage_for_data + est_mem_usage_for_index
+       
+    def _nrows(self, key, timeframe=None):
+        """
+        Returns
+        -------
+        nrows : int
+        """
+        self._check_key(key)
+        timeframe_intersect = self.window.intersect(timeframe)
+        if timeframe_intersect.empty:
+            nrows = 0
+        elif timeframe_intersect:
+            terms = timeframe_intersect.query_terms('timeframe_intersect')
+            coords = self.store.select_as_coordinates(key, terms)
+            nrows = len(coords)
+        else:
+            storer = self._get_storer(key)
+            nrows = storer.nrows
+        return nrows
+        
+    def _get_timeframe(self, key):
+        """
+        Returns
+        -------
+        nilmtk.TimeFrame of entire table after intersecting with self.window.
+        """
+        self._check_key(key)
+        data_start_date = self.store.select(key, [0]).index[0]
+        data_end_date = self.store.select(key, start=-1).index[0]
+        timeframe = TimeFrame(data_start_date, data_end_date)
+        return self.window.intersect(timeframe)
+    
+    def _keys(self):
+        return self.store.keys()
+
+    def _get_storer(self, key):
+        self._check_key(key)
+        storer = self.store.get_storer(key)
+        assert storer is not None, "cannot get storer for key = " + key
+        return storer
+    
+    def _check_key(self, key):
+        if key not in self._keys():
+            raise KeyError(key + ' not in store')
 
 
 

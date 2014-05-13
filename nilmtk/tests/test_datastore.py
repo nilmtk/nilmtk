@@ -27,41 +27,41 @@ class TestHDFDataStore(unittest.TestCase):
         cls.datastore.close()
 
     def test_keys(self):
-        self.assertEqual(self.datastore.keys(), self.keys)
+        self.assertEqual(self.datastore._keys(), self.keys)
 
     def test_column_names(self):
         for key in self.keys:
-            self.assertEqual(self.datastore.column_names(key), 
+            self.assertEqual(self.datastore._column_names(key), 
                              [Power('active'), Energy('reactive'), Voltage()])
 
     def test_timeframe(self):
         self.datastore.window.clear()
         for key in self.keys:
-            self.assertEqual(self.datastore.timeframe(key), self.TIMEFRAME)
+            self.assertEqual(self.datastore._get_timeframe(key), self.TIMEFRAME)
 
         self._apply_mask()
         for key in self.keys:
             self.datastore.window.enabled = False
-            self.assertEqual(self.datastore.timeframe(key), self.TIMEFRAME)
+            self.assertEqual(self.datastore._get_timeframe(key), self.TIMEFRAME)
             self.datastore.window.enabled = True
-            self.assertEqual(self.datastore.timeframe(key), self.datastore.window)
+            self.assertEqual(self.datastore._get_timeframe(key), self.datastore.window)
 
     def test_n_rows(self):
         self._apply_mask()
         for key in self.keys:
             self.datastore.window.enabled = True
-            self.assertEqual(self.datastore.nrows(key), 10*60)
+            self.assertEqual(self.datastore._nrows(key), 10*60)
             self.datastore.window.enabled = False
-            self.assertEqual(self.datastore.nrows(key), self.NROWS)
+            self.assertEqual(self.datastore._nrows(key), self.NROWS)
 
     def test_estimate_memory_requirement(self):
         self._apply_mask()
         for key in self.keys:
             self.datastore.window.enabled = True
-            mem = self.datastore.estimate_memory_requirement(key, self.datastore.nrows(key))
+            mem = self.datastore._estimate_memory_requirement(key, self.datastore._nrows(key))
             self.assertEqual(mem, 12000)
             self.datastore.window.enabled = False
-            mem = self.datastore.estimate_memory_requirement(key, self.datastore.nrows(key))
+            mem = self.datastore._estimate_memory_requirement(key, self.datastore._nrows(key))
             self.assertEqual(mem, 200000)
 
     def test_load(self):
