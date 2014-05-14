@@ -137,8 +137,24 @@ class ElectricityMeter(Hashable):
         string = super(ElectricityMeter, self).__repr__()
         # Now add list of appliances...
         string = string[:-1] # remove last bracket
-#        appliances = [a.type_and_instance_string() for a in self.appliances]
-        string += ', appliances={})'.format(self.appliances)
+        string += ",\n" + (" " * 18)
+        string += 'appliances={}'.format(self.appliances)
+        
+        # METER CATEGORY
+        category = self.metadata.get('category')
+        if category:
+            string += ', category={}'.format(category)
+
+        # METER ROOM
+        room = self.metadata.get('room')
+        if room:
+            string += ', room={}'.format(room['name'])
+            try:
+                string += '{:d}'.format(room['instance'])
+            except KeyError:
+                pass
+
+        string += ')'
         return string
 
     def matches(self, key):

@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 import pandas as pd
 import numpy as np
+from copy import deepcopy
 from datastore import DataStore, Key
 from measurement import Power
 from timeframe import TimeFrame
@@ -215,7 +216,17 @@ class REDDStore(DataStore):
         except KeyError:
             raise ValueError("{} is not a recognised meter instance for building {}."
                              .format(key_obj.meter, key_obj.building))
-        meter_metadata.update(MAP_REDD_LABELS_TO_NILMTK[redd_label])
+        meter_metadata.update(deepcopy(MAP_REDD_LABELS_TO_NILMTK[redd_label]))
+
+        # Appliance instance count:
+        appliances = meter_metadata.get('appliances', [])
+        for appliance_i, appliance in enumerate(appliances):
+            instance = 1
+            for i in range(1, key_obj.meter):
+                if labels[i] == redd_label:
+                    instance += 1
+            appliances[appliance_i]['instance'] = instance
+
         return meter_metadata
 
     def elements_below_key(self, key='/'):
@@ -240,3 +251,11 @@ class REDDStore(DataStore):
         house_path = self._path_for_house(key_obj)
         labels = load_labels(house_path)
         return ["meter{:d}".format(meter) for meter in labels.keys()]
+
+
+def test():
+    from nilmtk import DataSet
+    redd = REDDStore('/data/REDD/low_freq')
+    dataset = DataSet()
+    dataset.load(redd)
+    print(dataset.buildings[1].electric.meters)
