@@ -26,3 +26,8 @@ class EnergyResults(Results):
                            str(AC_TYPES))
         super(EnergyResults, self).append(timeframe, new_results)
 
+    def unify(self, other):
+        super(EnergyResults, self).unify(other)
+        for i, row in self._data.iterrows():
+            for ac_type in AC_TYPES:
+                self._data[ac_type].loc[i] += other._data[ac_type].loc[i]

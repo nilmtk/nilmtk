@@ -10,6 +10,7 @@ from os.path import join
 import numpy as np
 import pandas as pd
 from datetime import timedelta
+from copy import deepcopy
 
 KEY = '/building1/electric/meter1'
 
@@ -43,9 +44,16 @@ class TestEnergy(unittest.TestCase):
         nodes = [ClipNode(), EnergyNode()]
         pipeline = Pipeline(nodes)
         pipeline.run(meter)
-        energy = pipeline.results['energy']
+        energy = deepcopy(pipeline.results['energy'])
         check_energy_numbers(self, energy)
 
+        # test multiple keys
+        multi_meter = ElectricityMeter()
+        multi_meter.load(self.datastore, keys=[KEY, KEY])
+        pipeline.run(multi_meter)
+        multi_meter_energy = deepcopy(pipeline.results['energy'])
+        for ac_type, en in multi_meter_energy.combined.iteritems():
+            self.assertEqual(energy.combined[ac_type]*2, en)
 
 if __name__ == '__main__':
     unittest.main()

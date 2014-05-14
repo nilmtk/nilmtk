@@ -67,11 +67,13 @@ class Results(object):
         self._data.sort_index(inplace=True)
 
     def update(self, new_result):
-        """Update with new results.
+        """Add results from a new chunk.
         
-        Parameters
-        ----------
-        new_result : Results subclass (same class as self)
+        Parameters 
+        ---------- 
+        new_result : Results subclass (same
+            class as self) from new chunk of data.
+
         """
         if not isinstance(new_result, self.__class__):
             raise TypeError("new_results must be of type '{}'"
@@ -79,6 +81,20 @@ class Results(object):
 
         self._data = self._data.append(new_result._data, verify_integrity=True)
         self._data.sort_index(inplace=True)
+
+    def unify(self, other):
+        """Take results from another table of data (another physical meter)
+        and merge those results into self.  For example, if we have a dual-split
+        mains supply then we want to merge the results from each physical meter.
+
+        Parameters
+        ----------
+        other : Results subclass (same class as self).
+            Results calculated from another table of data.
+        """
+        assert isinstance(other, self.__class__)
+        for i, row in self._data.iterrows():
+            assert other._data['end'].loc[i] == row['end']
 
     def _columns_with_end_removed(self):
         cols = set(self._data.columns)
