@@ -28,6 +28,7 @@ class ElectricityMeter(Hashable):
 
     keys : list of strings
         each string is a key into nilmtk.DataStore to access data.
+        Metadata for this ElectricityMeter is stored with keys[0].
     
     metadata : dict.  Including keys:
         instance : int, meter instance within this building, starting from 1
@@ -78,17 +79,24 @@ class ElectricityMeter(Hashable):
 
     def __init__(self, metadata=None):
         self.store = None
-        self.key = None
+        self.keys = []
         self.appliances = []
         self.metadata = {} if metadata is None else metadata
         self.mains = None
         ElectricityMeter.meters[self.identifier] = self
 
-    def load(self, store, key):
-        print("Loading ElectricityMeter from key", key)
+    def load(self, store, keys):
+        """
+        Parameters
+        ----------
+        store : nilmtk.DataStore
+        keys : list of strings
+        """
+        assert isinstance(keys, list)
+        print("Loading ElectricityMeter from keys", keys)
         self.store = store
-        self.key = key
-        self.metadata = self.store.load_metadata(self.key)
+        self.keys = keys
+        self.metadata = self.store.load_metadata(self.keys[0])
         ElectricityMeter._load_meter_devices(store)
         device_model = self.metadata['device_model']
         self.metadata['device'] = ElectricityMeter.meter_devices[device_model]
@@ -134,6 +142,7 @@ class ElectricityMeter(Hashable):
         by key
         """
         # destination.write_metadata(key, self.metadata)
+        # then save data
         raise NotImplementedError
 
     def __repr__(self):

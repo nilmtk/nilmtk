@@ -54,6 +54,7 @@ class Pipeline(object):
     --------
     
     >>> store = HDFDataStore('redd.h5')
+    >>> meter = ElectricityMeter(store, ['building1/electric/meter1'])
 
     Calculate total energy and save the preprocessed data
     and the energy data back to disk:
@@ -62,7 +63,7 @@ class Pipeline(object):
                  Energy(), 
                  HDFTableExport('meter1_preprocessed.h5', table_path)]
     >>> pipeline = Pipeline(nodes)
-    >>> pipeline.run(store, 'building1/electric/meter1', metadata, mask)
+    >>> pipeline.run(meter)
     >>> energy = pipeline.results['energy'].combined
     >>> print("Active energy =", energy['active'], "kWh",
     >>>       "and reactive =", energy['reactive'], "kWh")
@@ -79,19 +80,28 @@ class Pipeline(object):
         **load_kwargs : key word arguments for store.load() e.g.:
             - periods : list of nilmtk.TimeFrame objects
         """
-        self._reset()
+        self.results = {}
         self._check_requirements(meter.metadata)
 
         # Run pipeline
         # TODO only load required measurements
-        for chunk in meter.store.load(key=meter.key, **load_kwargs):
-            processed_chunk = self._run_chunk_through_pipeline(chunk, meter.metadata)
-            self._update_results(processed_chunk.results)
+        for key in meter.keys:
+            for node in self.nodes:
+                node.reset()
+            self.results[key] = {}
+            for chunk in meter.store.load(key=key, **load_kwargs):
+                processed_chunk = self._run_chunk_through_pipeline(chunk, meter.metadata)
+                self._update_results(processed_chunk.results, key)
 
-    def _reset(self):
-        self.results = {}
-        for node in self.nodes:
-            node.reset()
+        # Copy the results for the first table to the base of 
+        # the results dict (which is what most users will want to access),
+        # ready for merging any results from other tables into this master result.
+        self.results.update(deepcopy(self.results[meter.keys[0]]))
+
+        # combine results from multiple tables
+        for key in meter.keys[1:]:
+            for statistic, result in self.results[key].iteritems():
+                self.results[statistic].unify(result)
 
     def _check_requirements(self, metadata):
         state = deepcopy(metadata)
@@ -102,13 +112,19 @@ class Pipeline(object):
             state = node.update_state(state)
 
     def _run_chunk_through_pipeline(self, chunk, metadata):
+        """
+        Returns
+        -------
+        Processes DataFrame of data, including a `.results` dict of `Results`
+        objects for this chunk.
+        """
         for node in self.nodes:
             chunk = node.process(chunk, metadata)
         return chunk
     
-    def _update_results(self, results_for_chunk):
+    def _update_results(self, results_for_chunk, key):
         for statistic, result in results_for_chunk.iteritems():
             try:
-                self.results[statistic].update(result)
+                self.results[key][statistic].update(result)
             except KeyError:
-                self.results[statistic] = result
+                self.results[key][statistic] = result

@@ -32,7 +32,7 @@ class TestElectricity(unittest.TestCase):
         meters = []
         for i in [1,2,3]:
             meter = ElectricityMeter()
-            meter.load(self.datastore, key='/building1/electric/meter{:d}'.format(i))
+            meter.load(self.datastore, keys=['/building1/electric/meter{:d}'.format(i)])
             meters.append(meter)
 
         mains = Mains(1, 'REDD', meters=[meters[0]])

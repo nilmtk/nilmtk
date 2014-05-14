@@ -39,7 +39,7 @@ class TestEnergy(unittest.TestCase):
 
     def test_pipeline(self):
         meter = ElectricityMeter()
-        meter.load(self.datastore, KEY)
+        meter.load(self.datastore, keys=[KEY])
         nodes = [ClipNode(), EnergyNode()]
         pipeline = Pipeline(nodes)
         pipeline.run(meter)
