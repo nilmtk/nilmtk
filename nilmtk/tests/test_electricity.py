@@ -13,11 +13,14 @@ class TestElectricity(unittest.TestCase):
         cls.datastore = HDFDataStore(filename)
 
     def test_wiring_graph(self):
-        meter1 = ElectricityMeter(1,1,'REDD',metadata={'site_meter': True})
+        meter1 = ElectricityMeter()
+        meter1.metadata = {'site_meter': True, 'dataset': 'REDD', 'building': 1, 'instance' :1}
         mains = Mains(1, 'REDD', meters=[meter1])
-        meter2 = ElectricityMeter(2,1,'REDD',metadata={'submeter_of': 1})
+        meter2 = ElectricityMeter()
+        meter2.metadata = {'submeter_of': 1, 'instance': 2, 'dataset': 'REDD', 'building': 1}
         meter2.mains = mains
-        meter3 = ElectricityMeter(3,1,'REDD',metadata={'submeter_of': 2})
+        meter3 = ElectricityMeter()
+        meter3.metadata = {'submeter_of': 2, 'instance': 3, 'dataset': 'REDD', 'building': 1}
         elec = Electricity([meter1, meter2, meter3])
         wiring_graph = elec.wiring_graph()
         

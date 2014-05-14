@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+from warnings import warn
 from .hashable import Hashable
 from collections import namedtuple
 
@@ -20,12 +22,12 @@ class Appliance(Hashable):
     # just hard coding for now to get MVP finished.
     appliance_types = {'fridge': {'category': 'cold'}}
 
-    def __init__(self, type, instance, metadata=None):
-        if not Appliance.appliance_types.has_key(type):
-            raise ValueError("'{}' is not a recognised appliance type."
-                             .format(type))
+    def __init__(self, metadata=None):
         self.metadata = {} if metadata is None else metadata
-        self.metadata.update({'type': type, 'instance': instance})
+        if (self.identifier.type and 
+            not Appliance.appliance_types.has_key(self.identifier.type)):
+            warn("'{}' is not a recognised appliance type."
+                 .format(self.identifier.type), RuntimeWarning)
 
     @property
     def identifier(self):

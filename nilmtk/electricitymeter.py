@@ -76,20 +76,12 @@ class ElectricityMeter(Hashable):
     meter_devices = {}
     meters = {}
 
-    def __init__(self, instance=None, building=None, dataset=None, 
-                 appliances=None, metadata=None):
+    def __init__(self, metadata=None):
         self.store = None
         self.key = None
-        self.appliances = [] if appliances is None else list(appliances)
+        self.appliances = []
         self.metadata = {} if metadata is None else metadata
-        for var, var_name in [(instance, 'instance'), 
-                              (building, 'building'),
-                              (dataset, 'dataset')]:
-            if var is not None:
-                self.metadata.update({var_name: var})
-
         self.mains = None
-        self.dominant_appliance = None
         ElectricityMeter.meters[self.identifier] = self
 
     def load(self, store, key):
@@ -115,7 +107,7 @@ class ElectricityMeter(Hashable):
     def upstream_meter(self):
         submeter_of = self.metadata.get('submeter_of')
         if submeter_of is None:
-            return
+            raise ValueError("This meter has no 'submeter_of' metadata attribute.")
         if submeter_of == 0:
             return self.mains 
         id_of_upstream = ElectricityMeterID(instance=submeter_of, 
@@ -129,7 +121,7 @@ class ElectricityMeter(Hashable):
 
     @classmethod
     def _load_meter_devices(cls, store):
-        dataset_metadata = store.load_metadata()
+        dataset_metadata = store.load_metadata('/')
         ElectricityMeter.meter_devices.update(dataset_metadata.get('meter_devices', {}))
 
     def save(self, destination, key):

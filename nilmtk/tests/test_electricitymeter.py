@@ -23,13 +23,13 @@ class TestElectricityMeter(WarningTestMixin, unittest.TestCase):
         cls.datastore.close()
 
     def test_load(self):
-        meter = ElectricityMeter(1, 1, 'REDD')
+        meter = ElectricityMeter()
         meter.load(self.datastore, key=KEY)
         self.assertEqual(meter.metadata['device_model'], 'Energy Meter')
         self.assertEqual(meter.metadata['device']['sample_period'], 10)
 
     def test_total_energy(self):
-        meter = ElectricityMeter(1, 1, 'REDD')
+        meter = ElectricityMeter()
         with self.assertRaises(RuntimeError):
             meter.total_energy()
         meter.load(self.datastore, KEY)
@@ -37,13 +37,17 @@ class TestElectricityMeter(WarningTestMixin, unittest.TestCase):
         check_energy_numbers(self, energy)
         
     def test_upstream_meter(self):
-        meter1 = ElectricityMeter(1,1,'REDD',metadata={'site_meter': True})
-        self.assertIsNone(meter1.upstream_meter)
-        meter2 = ElectricityMeter(2,1,'REDD',metadata={'submeter_of': 1})
+        meter1 = ElectricityMeter({'site_meter': True, 'dataset': 'REDD', 
+                                   'building': 1, 'instance': 1})
+        with self.assertRaises(ValueError):
+            meter1.upstream_meter
+        meter2 = ElectricityMeter({'submeter_of': 1, 'dataset': 'REDD', 
+                                   'building': 1, 'instance': 2})
         mains = Mains(1, 'REDD', meters=[meter1])
         meter2.mains = mains
         self.assertIs(meter2.upstream_meter, mains)
-        meter3 = ElectricityMeter(3,1,'REDD',metadata={'submeter_of': 2})
+        meter3 = ElectricityMeter({'submeter_of': 2, 'dataset': 'REDD', 
+                                   'building': 1, 'instance': 3})
         self.assertIs(meter3.upstream_meter, meter2)
 
 if __name__ == '__main__':

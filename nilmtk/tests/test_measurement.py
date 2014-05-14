@@ -74,10 +74,8 @@ class TestMeasurement(unittest.TestCase):
 
         self.assertEqual(measure.select_best_ac_type(['active', 'reactive', 'apparent']), 'active')
 
-        meter = ElectricityMeter(1,1,'REDD',
-                                 metadata={'device':
-                                           {'measurements': 
-                                            [measure.Power('apparent')]}})
+        meter = ElectricityMeter({'device': {'measurements': [measure.Power('apparent')]},
+                                  'dataset': 'REDD', 'building': 1, 'instance': 1})
         mains = Mains(1,'REDD',[meter])
         
         self.assertEqual(measure.select_best_ac_type(['reactive'], mains.available_ac_types()), 'reactive')

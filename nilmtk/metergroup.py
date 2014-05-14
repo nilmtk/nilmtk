@@ -143,7 +143,11 @@ class MeterGroup(object):
         """
         wiring_graph = nx.DiGraph()
         for meter in self.meters:
-            if meter.upstream_meter is not None:
+            try:
+                upstream_meter = meter.upstream_meter
+            except ValueError:
+                pass # no upstream meter
+            else:
                 wiring_graph.add_edge(meter.upstream_meter, meter)
         return wiring_graph
 

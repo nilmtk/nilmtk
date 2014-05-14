@@ -6,8 +6,8 @@ from nilmtk.utils import tree_root, nodes_adjacent_to_root
 
 class TestMeterGroup(unittest.TestCase):
     def test_getitem(self):
-        fridge_meter = ElectricityMeter(1, 1, 'REDD')
-        fridge = Appliance(type='fridge', instance=1)
+        fridge_meter = ElectricityMeter()
+        fridge = Appliance({'type':'fridge', 'instance':1})
         fridge_meter.appliances = [fridge]
         mg = MeterGroup([fridge_meter])
 
@@ -28,8 +28,8 @@ class TestMeterGroup(unittest.TestCase):
                 mg[key]
 
     def test_select(self):
-        fridge_meter = ElectricityMeter(1, 1, 'REDD')
-        fridge = Appliance(type='fridge', instance=1)
+        fridge_meter = ElectricityMeter()
+        fridge = Appliance({'type':'fridge', 'instance':1})
         fridge_meter.appliances = [fridge]
         mg = MeterGroup([fridge_meter])
 
@@ -37,11 +37,14 @@ class TestMeterGroup(unittest.TestCase):
         # TODO: make this test more rigorous!
         
     def test_wiring_graph(self):
-        meter1 = ElectricityMeter(1,1,'REDD',metadata={'site_meter': True})
+        meter1 = ElectricityMeter({'site_meter': True, 'dataset':'REDD', 
+                                   'building': 1, 'instance': 1})
         mains = Mains(1, 'REDD', meters=[meter1])
-        meter2 = ElectricityMeter(2,1,'REDD',metadata={'submeter_of': 1})
+        meter2 = ElectricityMeter({'submeter_of': 1, 'dataset':'REDD', 
+                                   'building': 1, 'instance': 2})
         meter2.mains = mains
-        meter3 = ElectricityMeter(3,1,'REDD',metadata={'submeter_of': 2})
+        meter3 = ElectricityMeter({'submeter_of': 2, 'dataset':'REDD', 
+                                   'building': 1, 'instance': 3})
         mg = MeterGroup([meter1, meter2, meter3])
         wiring_graph = mg.wiring_graph()
         self.assertEqual(wiring_graph.nodes(), [meter2, meter3, mains])
