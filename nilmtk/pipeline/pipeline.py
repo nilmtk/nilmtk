@@ -83,7 +83,8 @@ class Pipeline(object):
         self._check_requirements(meter.metadata)
 
         # Run pipeline
-        for chunk in meter.store.load(key=meter.key, **load_kwargs): # TODO only load required measurements
+        # TODO only load required measurements
+        for chunk in meter.store.load(key=meter.key, **load_kwargs):
             processed_chunk = self._run_chunk_through_pipeline(chunk, meter.metadata)
             self._update_results(processed_chunk.results)
 

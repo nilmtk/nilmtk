@@ -92,8 +92,11 @@ class ElectricityMeter(Hashable):
         ElectricityMeter._load_meter_devices(store)
         device_model = self.metadata['device_model']
         self.metadata['device'] = ElectricityMeter.meter_devices[device_model]
+
+        # Load appliances
         for appliance_metadata in self.metadata.get('appliances', []):
             self.appliances.append(Appliance(appliance_metadata))
+
         ElectricityMeter.meters[self.identifier] = self
         
     @property
@@ -276,8 +279,8 @@ class ElectricityMeter(Hashable):
         
     def _run_pipeline(self, nodes, **load_kwargs): 
         if self.store is None:
-            msg = ("'meter.loader' is not set!"
-                   " Cannot process data without a loader!")
+            msg = ("'meter.store' is not set!"
+                   " Cannot process data without a DataStore!")
             raise RuntimeError(msg)
         pipeline = Pipeline(nodes)
         pipeline.run(meter=self, **load_kwargs)
