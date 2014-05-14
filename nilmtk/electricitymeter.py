@@ -17,21 +17,22 @@ class ElectricityMeter(Hashable):
       of this meter.  Will be [] if no appliances are connected directly
       to this meter.
 
-    mains : Mains (used so appliance methods can default to use
-      the same measured parameter (active / apparent / reactive) 
-      as Mains; and also for use in proportion of energy submetered
-      and for voltage normalisation.)
+    mains : ElectricityMeter which is the site_meter. (used so
+      appliance methods can default to use the same measured parameter
+      (active / apparent / reactive) as Mains; and also for use in
+      proportion of energy submetered and for voltage normalisation.)
+      DON'T IMPLEMENT THIS UNTIL I'M SURE I NEED IT.  FEELS SLIGHTLY
+      OFF-COLOUR.
 
     store : nilmtk.DataStore
 
-    key : key into nilmtk.DataStore to access data
-
-    identifier : ElectricityMeterID namedtuple with fields:
+    keys : list of strings
+        each string is a key into nilmtk.DataStore to access data.
+    
+    metadata : dict.  Including keys:
         instance : int, meter instance within this building, starting from 1
         building : int, building instance, starting from 1
         dataset : str e.g. 'REDD'
-    
-    metadata : dict.  Including keys:
         submeter_of : int, instance of upstream meter
         site_meter : bool, True if this is a site meter (i.e. furthest upstream meter)
         preprocessing : list of strings (TODO: why not actual Node objects?), 
@@ -48,6 +49,7 @@ class ElectricityMeter(Hashable):
         --------- i.e. THEY DO NOT EXIST IN THE ON-DISK METADATA. ---------
 
         device : dict (instantiated from meter_devices static class attribute)
+          TODO: `device` might be implemented as a property of ElectricityMeter.
     
 
     STATIC ATTRIBUTES
@@ -65,13 +67,11 @@ class ElectricityMeter(Hashable):
                 {Power('active'): {'lower': 0, 'upper': 3000}}
 
     meters : dict, static class attribute:
-        Required for resolving `upstream_of` to an ElectricityMeter object
+        Required for resolving `upstream_of` to an ElectricityMeter object.
         Keys are ElectricityMeterID objects.
         Values are ElectricityMeter objects.
-    """
 
-    # TODO maybe, instead of putting 'device' into 'metadata', we should
-    # have a @property `device` method?  Would need to change Pipeline.
+    """
 
     meter_devices = {}
     meters = {}
