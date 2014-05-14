@@ -1,5 +1,6 @@
 from __future__ import print_function, division
 import numpy as np
+import networkx as nx
 
 def timedelta64_to_secs(timedelta):
     """Convert `timedelta` to seconds.
@@ -25,7 +26,8 @@ def tree_root(graph):
     graph : networkx.Graph
     """
     # from http://stackoverflow.com/a/4123177/732596
-    roots = [n for n,d in graph.in_degree().iteritems() if d==0]
+    assert isinstance(graph, nx.Graph)
+    roots = [n for n,d in graph.in_degree_iter() if d==0]
     assert len(roots) < 2, 'Tree has more than one root!'
     assert len(roots) == 1, 'Tree has no root!'
     return roots[0]

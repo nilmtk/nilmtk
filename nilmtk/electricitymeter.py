@@ -3,6 +3,7 @@ from .pipeline import Pipeline, ClipNode, EnergyNode, LocateGoodSectionsNode
 from .hashable import Hashable
 from .appliance import Appliance
 from .datastore import Key
+from .measurement import Power
 from warnings import warn
 from collections import namedtuple
 from copy import deepcopy
@@ -132,15 +133,12 @@ class ElectricityMeter(Hashable):
         if submeter_of is None:
             raise ValueError("This meter has no 'submeter_of' metadata attribute.")
         if submeter_of == 0:
-            return self.mains 
+            raise ValueError("Setting 'submeter_of' to 0 is not supported. Set it to >= 1.")
         id_of_upstream = ElectricityMeterID(instance=submeter_of, 
                                             building=self.identifier.building, 
                                             dataset=self.identifier.dataset,)
         upstream_meter =  ElectricityMeter.meters[id_of_upstream]
-        if upstream_meter.metadata.get('site_meter'):
-            return self.mains
-        else:
-            return upstream_meter
+        return upstream_meter
 
     @classmethod
     def _load_meter_devices(cls, store):
@@ -156,6 +154,15 @@ class ElectricityMeter(Hashable):
         # destination.write_metadata(key, self.metadata)
         # then save data
         raise NotImplementedError
+
+    @property
+    def device(self):
+        device_model = self.metadata['device_model']
+        return ElectricityMeter.meter_devices[device_model]
+
+    def available_ac_types(self):
+        measurements = self.device['measurements']
+        return [m.ac_type for m in measurements if isinstance(m, Power)]
 
     def __repr__(self):
         string = super(ElectricityMeter, self).__repr__()

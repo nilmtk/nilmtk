@@ -101,7 +101,7 @@ class REDDStore(DataStore):
         self.path = path
         super(REDDStore, self).__init__()
 
-    def load(self, key):
+    def load(self, key, periods=None):
         """
         Parameters
         ----------
@@ -138,7 +138,11 @@ class REDDStore(DataStore):
         df.timeframe = TimeFrame(df.index[0], df.index[-1])
         df.timeframe.include_end = True
 
-        yield df
+        if periods:
+            for period in periods:
+                yield period.slice(df)
+        else:
+            yield df
 
     def _path_for_house(self, key_obj):
         assert isinstance(key_obj, Key)
@@ -209,7 +213,7 @@ class REDDStore(DataStore):
         elif key_obj.meter == 2:
             raise ValueError("Mains channel 2 is loaded by meter1.")
         else:
-            meter_metadata.update({'submeter_of': 0})
+            meter_metadata.update({'submeter_of': 1})
 
         # Load appliance metadata
         building_path = self._path_for_house(key_obj)

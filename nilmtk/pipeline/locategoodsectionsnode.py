@@ -60,17 +60,18 @@ class LocateGoodSectionsNode(Node):
 
         # Use df.look_ahead to see if we need to append a 
         # good sect start or good sect end.
-        if not df.look_ahead.empty:
+        look_ahead_valid = hasattr(df, 'look_ahead') and not df.look_ahead.empty
+        if look_ahead_valid:
             look_ahead_timedelta = df.look_ahead.dropna().index[0] - index[-1]
             look_ahead_gap = look_ahead_timedelta.total_seconds()
         if timedeltas_check[-1]: # current chunk ends with a good section
-            if df.look_ahead.empty or look_ahead_gap > max_sample_period:
+            if not look_ahead_valid or look_ahead_gap > max_sample_period:
                 # current chunk ends with a good section which needs to 
                 # be closed because next chunk either does not exist
                 # or starts with a sample which is more than max_sample_period
                 # away from df.index[-1]
                 good_sect_ends += [index[-1]]
-        elif not df.look_ahead.empty and look_ahead_gap <= max_sample_period:
+        elif look_ahead_valid and look_ahead_gap <= max_sample_period:
             # Current chunk appears to end with a bad section
             # but last sample is the start of a good section
             good_sect_starts += [index[-1]]

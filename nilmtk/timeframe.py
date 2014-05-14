@@ -166,7 +166,14 @@ class TimeFrame(object):
         frame : sliced frame
         """
         if not self.empty:
-            return frame.loc[self.start:self.end]
+            if self.include_end:
+                sliced = frame[(frame.index >= self.start) & 
+                               (frame.index <= self.end)]
+            else:
+                sliced = frame[(frame.index >= self.start) & 
+                               (frame.index < self.end)]
+        sliced.timeframe = self
+        return sliced
 
     def __nonzero__(self):
         if self.empty:
