@@ -1,56 +1,66 @@
 from __future__ import print_function, division
 import pandas as pd
 import numpy as np
-from datastore import DataStore
+from datastore import DataStore, Key
 from measurement import Power
 from timeframe import TimeFrame
 import os
 
 
-map_redd_labels_to_nilmtk = {
-    'air_conditioning': 
-        {'type': 'air conditioner'},
-    'bathroom_gfi': # ground fault interrupter? (A type of RCD.)
-        {'type': 'unspecified', 'room': {'name': 'bathroom'}},
-    'dishwaser': 
-        {'type': 'dish washer'},
-    'disposal': 
-        {'type': 'waste disposal unit'},
-    'electric_heat': 
-        {'type': 'electric space heater'},
-    'electronics':  
-        {'type': 'ICT appliance'},
-    'furance':  
-        {'type': 'electric boiler'},
-    'kitchen_outlets':  
-        {'type': 'sockets', 'room': {'name': 'kitchen'},
-    'lighting':  
-        {'type': 'light'},
-    'microwave':  
-        {'type': 'microwave'},
-    'miscellaeneous':  
-        {'type': 'unspecified'},
-    'outdoor_outlets':  
-         {'type': 'sockets', 'room' {'name': 'outdoors'}},
-    'outlets_unknown':  # TODO
-        {'type': ''},
-    'oven':  
-        {'type': ''},
-    'refrigerator':  
-        {'type': ''},
-    'smoke_alarms':  
-        {'type': ''},
-    'stove':  
-        {'type': ''},
-    'subpanel':  
-        {'type': ''},
-    'washer_dryer':  
-        {'type': ''}   
+MAP_REDD_LABELS_TO_NILMTK = {
+    'air_conditioning':
+        {'appliances': [
+            {'type': 'air conditioner'}]},
+    'bathroom_gfi': # GFI = ground fault interrupter (a type of RCD)?
+        {'room': {'name': 'bathroom'},
+         'category': 'misc'},
+    'dishwaser':
+        {'appliances': [
+            {'type': 'dish washer'}]},
+    'disposal':
+        {'appliances': [
+            {'type': 'waste disposal unit'}]},
+    'electric_heat':
+        {'appliances': [
+            {'type': 'electric space heater'}]},
+    'electronics':
+        {'category': 'consumer electronics'},
+    'furance':
+        {'appliances': [
+            {'type': 'electric boiler'}]},
+    'kitchen_outlets':
+        {'room': {'name': 'kitchen'},
+         'category': 'sockets'},
+    'lighting':
+        {'category': 'lighting'},
+    'microwave':
+        {'appliances': [
+            {'type': 'microwave'}]},
+    'miscellaeneous':
+        {'category': 'misc'},
+    'outdoor_outlets':
+        {'room': {'name': 'outdoors'},
+         'category': 'sockets'},
+    'outlets_unknown':
+        {'category': 'sockets'},
+    'oven':
+        {'appliances': [
+            {'type': 'electric oven'}]},
+    'refrigerator':
+        {'appliances': [
+            {'type': 'fridge'}]},
+    'smoke_alarms':
+        {'appliances': [
+            {'type': 'smoke alarm', 'multiple': True}]},
+    'stove':
+        {'appliances': [
+            {'type': 'electric stove'}]},
+    'subpanel': # not an appliance
+        {}, 
+    'washer_dryer':
+        {'appliances': [
+            {'type': 'washer dryer'}]}
 }
-
-
-def _split_key(key):
-    return key.strip('/').split('/')
 
 
 def load_labels(data_dir):
@@ -72,7 +82,6 @@ def load_labels(data_dir):
     labels = {}
     for line in lines:
         line = line.split(' ')
-        # TODO add error handling if line[0] not an int
         labels[int(line[0])] = line[1].strip()
 
     return labels
@@ -108,11 +117,11 @@ class REDDStore(DataStore):
                     disk immediately after `period.end`; i.e. it ignores
                     the next `period.start`.
         """
-        path = self._path_for_house(key)
+        key_obj = Key(key)
+        path = self._path_for_house(key_obj)
 
         # Get filename
-        split_key = _split_key(key)
-        filename = split_key[-1].replace('meter', 'channel_') + '.dat'
+        filename = 'channel_{:d}.dat'.format(key_obj.meter)
         filename = os.path.join(path, filename)
 
         # load data
@@ -130,13 +139,9 @@ class REDDStore(DataStore):
 
         yield df
 
-    def _path_for_house(self, key):
-        split_key = _split_key(key)
-        assert split_key[0].startswith('building')
-        assert split_key[-1].startswith('meter')
-
-        # Get path of house
-        house_dir = split_key[0].replace('building', 'house_')
+    def _path_for_house(self, key_obj):
+        assert isinstance(key_obj, Key)
+        house_dir = 'house_{:d}'.format(key_obj.building)
         path = os.path.join(self.path, house_dir)
         assert os.path.isdir(path)
         return path
@@ -146,7 +151,7 @@ class REDDStore(DataStore):
         Parameters
         ----------
         key : string, optional
-            if None then load metadata for the whole dataset.
+            if '/' then load metadata for the whole dataset.
 
         Returns
         -------
@@ -177,42 +182,41 @@ class REDDStore(DataStore):
                 }
             }
         
-        split_key = key.strip('/').split('/')
-        building_instance = int(split_key[0].replace('building', ''))
-        assert 1 <= building_instance <= 6
-
         # building metadata
-        if len(split_key) == 1:
+        key_obj = Key(key)
+        if not 1 <= key_obj.building <= 6:
+            raise ValueError("Building {} is not a valid building instance."
+                             .format(key_obj.building))
+        if key_obj.meter is None:
             return {
-                'building_instance': building_instance,
+                'instance': key_obj.building,
                 'dataset': 'REDD',
-                'original_name': 'house_{:d}'.format(building_instance)
+                'original_name': 'house_{:d}'.format(key_obj.building)
             }
 
         # meter-level metadata
-        meter_instance = int(split_key[-1].replace('meter', ''))
-
         meter_metadata = {
-            'device_model': 'REDD_whole_house' if meter_instance in [1,2] else 'eMonitor',
-            'instance': meter_instance,
-            'building': building_instance,
+            'device_model': 'REDD_whole_house' if key_obj.meter in [1,2] else 'eMonitor',
+            'instance': key_obj.meter,
+            'building': key_obj.building,
             'dataset': 'REDD'            
         }
-        if meter_instance in [1,2]:
+        if key_obj.meter in [1,2]:
             meter_metadata.update({'site_meter': True})
+            return meter_metadata
         else:
             meter_metadata.update({'submeter_of': 0})
 
-        building_path = self._path_for_house(key)
+        # Load appliance metadata
+        building_path = self._path_for_house(key_obj)
         labels = load_labels(building_path)
-        redd_label = labels[meter_instance]
-        nilmtk_label = map_redd_labels_to_nilmtk[redd_label]
-        
-        #TODO: submeter and site_meter and dominant_appliance and appliance data...
-
-        
-
-        raise NotImplementedError()
+        try:
+            redd_label = labels[key_obj.meter]
+        except KeyError:
+            raise ValueError("{} is not a recognised meter instance for building {}."
+                             .format(key_obj.meter, key_obj.building))
+        meter_metadata.update(MAP_REDD_LABELS_TO_NILMTK[redd_label])
+        return meter_metadata
 
     def elements_below_key(self, key='/'):
         """
@@ -220,4 +224,19 @@ class REDDStore(DataStore):
         -------
         list of strings
         """
-        raise NotImplementedError()
+        if key is None or key == '/':
+            return ['building{:d}'.format(b) for b in range(1,7)]
+
+        key_obj = Key(key)
+        assert key_obj.building is not None
+        assert key_obj.meter is None
+        if not 1 <= key_obj.building <= 6:
+            raise ValueError("Building {} is not a valid building instance."
+                             .format(key_obj.building))
+
+        if key_obj.utility is None:
+            return ['electric']
+
+        house_path = self._path_for_house(key_obj)
+        labels = load_labels(house_path)
+        return ["meter{:d}".format(meter) for meter in labels.keys()]

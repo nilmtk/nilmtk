@@ -33,6 +33,61 @@ class DataStore(object):
         self.window = TimeFrame()
 
 
+class Key(object):
+    """A location of data or metadata within NILMTK.
+    
+    Attributes
+    ----------
+    building : int
+    meter : int
+    utility : str
+    """
+
+    def __init__(self, string=None, building=None, meter=None):
+        """
+        Parameters
+        ----------
+        string : str, optional
+            e.g. 'building1/electric/meter1'
+        building : int, optional
+        meter : int, optional
+        """
+        self.utility = None
+        if string is None:
+            self.building = building
+            self.meter = meter
+        else:
+            split = string.strip('/').split('/')
+            assert split[0].startswith('building'), "The first element must be 'building<I>', e.g. 'building1'; not '{}'.".format(split[0])
+            try:
+                self.building = int(split[0].replace("building", ""))
+            except ValueError as e:
+                raise ValueError("'building' must be followed by an integer.\n{}"
+                                 .format(e))
+            if len(split) > 1:
+                self.utility = split[1]
+            if len(split) == 3:
+                assert split[2].startswith('meter')
+                self.meter = int(split[-1].replace("meter", ""))
+            else:
+                self.meter = None
+        self._check()
+
+    def _check(self):
+        assert isinstance(self.building, int)
+        assert self.building >= 1
+        if self.meter is not None:
+            assert isinstance(self.meter, int)
+            assert self.meter >= 1
+
+    def __repr__(self):
+        self._check()
+        s = "/building{:d}".format(self.building)
+        if self.meter is not None:
+            s += "/electric/meter{:d}".format(self.meter)
+        return s
+
+
 class HDFDataStore(DataStore):
     def __init__(self, filename):
         """
@@ -129,7 +184,7 @@ class HDFDataStore(DataStore):
         Parameters
         ----------
         key : string, optional
-            if None then load metadata for the whole dataset.
+            if '/' then load metadata for the whole dataset.
 
         Returns
         -------
@@ -274,6 +329,11 @@ class HDFDataStore(DataStore):
         return storer
     
     def _check_key(self, key):
+        """
+        Parameters
+        ----------
+        key : string
+        """
         if key not in self._keys():
             raise KeyError(key + ' not in store')
 

@@ -68,6 +68,7 @@ class MeterGroup(object):
         * select(category='lighting')
         * select(type='fridge')
         * select(building=1, category='lighting')
+        * select(room='bathroom')
 
         If multiple criteria are supplied then these are ANDed together.
 

@@ -8,11 +8,9 @@ class Appliance(Hashable):
     Attributes
     ----------
 
-    identifier : ApplianceID named tuple with fields:    
+    metadata : dict
        type : string (e.g. 'fridge' or 'television')
        instance : int (starting at 1)
-
-    metadata : dict
        on_power_threshold : float, watts
        minimum_off_duration : timedelta
        minimum_on_duration : timedelta
@@ -26,8 +24,13 @@ class Appliance(Hashable):
         if not Appliance.appliance_types.has_key(type):
             raise ValueError("'{}' is not a recognised appliance type."
                              .format(type))
-        self.identifier = ApplianceID(type, instance)
         self.metadata = {} if metadata is None else metadata
+        self.metadata.update({'type': type, 'instance': instance})
+
+    @property
+    def identifier(self):
+        md = self.metadata
+        return ApplianceID(md.get('type'), md.get('instance'))
 
     @property
     def type(self):
