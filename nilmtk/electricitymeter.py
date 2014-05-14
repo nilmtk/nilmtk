@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 from nilmtk.pipeline import Pipeline, ClipNode, EnergyNode, LocateGoodSectionsNode
 from .hashable import Hashable
+from .appliance import Appliance
 from warnings import warn
 from collections import namedtuple
 
@@ -12,8 +13,8 @@ class ElectricityMeter(Hashable):
     
     Attributes
     ----------
-    appliances : set of Appliance objects connected immediately downstream
-      of this meter.  Will be empty set if no appliances are connected directly
+    appliances : list of Appliance objects connected immediately downstream
+      of this meter.  Will be [] if no appliances are connected directly
       to this meter.
 
     mains : Mains (used so appliance methods can default to use
@@ -77,11 +78,16 @@ class ElectricityMeter(Hashable):
 
     def __init__(self, instance=None, building=None, dataset=None, 
                  appliances=None, metadata=None):
-        self.identifier = ElectricityMeterID(instance, building, dataset)
         self.store = None
         self.key = None
-        self.appliances = set() if appliances is None else set(appliances)
+        self.appliances = [] if appliances is None else list(appliances)
         self.metadata = {} if metadata is None else metadata
+        for var, var_name in [(instance, 'instance'), 
+                              (building, 'building'),
+                              (dataset, 'dataset')]:
+            if var is not None:
+                self.metadata.update({var_name: var})
+
         self.mains = None
         self.dominant_appliance = None
         ElectricityMeter.meters[self.identifier] = self
@@ -94,12 +100,17 @@ class ElectricityMeter(Hashable):
         ElectricityMeter._load_meter_devices(store)
         device_model = self.metadata['device_model']
         self.metadata['device'] = ElectricityMeter.meter_devices[device_model]
-        md = self.metadata
-        self.identifier = ElectricityMeterID(md.get('instance'), 
-                                             md.get('building'), 
-                                             md.get('dataset'))
+        for appliance_metadata in self.metadata.get('appliances', []):
+            self.appliances.append(Appliance(appliance_metadata))
         ElectricityMeter.meters[self.identifier] = self
         
+    @property
+    def identifier(self):
+        md = self.metadata
+        return ElectricityMeterID(md.get('instance'), 
+                                  md.get('building'), 
+                                  md.get('dataset'))
+
     @property
     def upstream_meter(self):
         submeter_of = self.metadata.get('submeter_of')

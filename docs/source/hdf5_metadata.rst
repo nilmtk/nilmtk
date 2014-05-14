@@ -66,13 +66,13 @@ Meter metadata
            in which case we use ``'category': 'lighting'``.
            Must use the same controlled vocabulary as for
            appliance types.
+:appliances: (list of dicts) See section below on 'Appliance metadata'.
 
 
 Appliance metadata
 ------------------
 
-``store.root.building1.electric.meter1._v_attrs.appliances`` stores a
-list of appliance dicts.  Each dict has:
+Each appliance dict has:
 
 :type: (string): appliance type. Use NILM Metadata controlled
        vocabulary.
@@ -88,8 +88,9 @@ list of appliance dicts.  Each dict has:
            number of these appliances.  If there are more than one
            appliance and the exact number is known then use ``count``.
 
-Category names
---------------
+
+Categories
+----------
 
 :Traditional: wet, cold, consumer electronics, ICT, cooking, heating
 :Misc: misc, sockets

@@ -10,17 +10,17 @@ class MeterGroup(object):
     
     Attributes
     ----------
-    meters : set of ElectricityMeters
+    meters : list of ElectricityMeters
     """
     def __init__(self, meters=None):
-        self.meters = set() if meters is None else set(meters)
+        self.meters = [] if meters is None else list(meters)
 
     def load(self, store, key):
         meter_names = store.elements_below_key(key) # ['meter1', 'meter2', etc]
         for meter_name in meter_names:
             meter = ElectricityMeter()
             meter.load(store, join_key(key, meter_name))
-            self.meters.add(meter)
+            self.meters.append(meter)
 
     def union(self, other):
         """
@@ -31,7 +31,7 @@ class MeterGroup(object):
         """
         if not isinstance(other, MeterGroup):
             raise TypeError()
-        return MeterGroup(self.meters.union(other.meters))
+        return MeterGroup(set(self.meters).union(other.meters))
 
     def __getitem__(self, key):
         """Get a single meter.
