@@ -67,7 +67,11 @@ Meter metadata
            Must use the same controlled vocabulary as for
            appliance types.
 :appliances: (list of dicts) See section below on 'Appliance metadata'.
-
+:additional_channels: (list of ints) Some homes have a split-phase mains
+                    supply. Some homes have 3-phase mains.  Some
+                    appliances take two or three supplies.  All these
+                    situations are handled by specifying the other
+                    channel numbers for the other meter devices.
 
 Appliance metadata
 ------------------

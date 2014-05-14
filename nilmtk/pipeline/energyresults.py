@@ -2,8 +2,8 @@ from results import Results
 import pandas as pd
 import numpy as np
 import copy
-from nilmtk import TimeFrame
-from nilmtk.measurement import AC_TYPES
+from ..timeframe import TimeFrame
+from ..measurement import AC_TYPES
 
 class EnergyResults(Results):
     """
@@ -28,6 +28,7 @@ class EnergyResults(Results):
 
     def unify(self, other):
         super(EnergyResults, self).unify(other)
+        ac_types = set(self._data.columns) - set(['end'])
         for i, row in self._data.iterrows():
-            for ac_type in AC_TYPES:
+            for ac_type in ac_types:
                 self._data[ac_type].loc[i] += other._data[ac_type].loc[i]

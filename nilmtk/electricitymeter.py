@@ -1,9 +1,11 @@
 from __future__ import print_function, division
-from nilmtk.pipeline import Pipeline, ClipNode, EnergyNode, LocateGoodSectionsNode
+from .pipeline import Pipeline, ClipNode, EnergyNode, LocateGoodSectionsNode
 from .hashable import Hashable
 from .appliance import Appliance
+from .datastore import Key
 from warnings import warn
 from collections import namedtuple
+from copy import deepcopy
 
 ElectricityMeterID = namedtuple('ElectricityMeterID',    
                                 ['instance', 'building', 'dataset'])
@@ -85,18 +87,28 @@ class ElectricityMeter(Hashable):
         self.mains = None
         ElectricityMeter.meters[self.identifier] = self
 
-    def load(self, store, keys):
+    def load(self, store, key):
         """
         Parameters
         ----------
         store : nilmtk.DataStore
-        keys : list of strings
+        key : string
+            primary key (others will be loaded if specified by 
+            the metadata for `key`).
         """
-        assert isinstance(keys, list)
-        print("Loading ElectricityMeter from keys", keys)
+        assert isinstance(key, str)
+        print("Loading ElectricityMeter from key", key)
         self.store = store
-        self.keys = keys
-        self.metadata = self.store.load_metadata(self.keys[0])
+        self.metadata = self.store.load_metadata(key)
+
+        self.keys = [key]
+        key_obj = Key(key)
+        assert key_obj.meter is not None
+        for chan in self.metadata.get('additional_channels', []):
+            new_key_obj = deepcopy(key_obj)
+            new_key_obj.meter = chan
+            self.keys.append(str(new_key_obj))
+            
         ElectricityMeter._load_meter_devices(store)
         device_model = self.metadata['device_model']
         self.metadata['device'] = ElectricityMeter.meter_devices[device_model]

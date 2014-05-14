@@ -2,10 +2,10 @@ from __future__ import print_function, division
 import pandas as pd
 import numpy as np
 from copy import deepcopy
-from datastore import DataStore, Key
-from measurement import Power
-from timeframe import TimeFrame
 import os
+from .datastore import DataStore, Key
+from .measurement import Power
+from .timeframe import TimeFrame
 
 
 MAP_REDD_LABELS_TO_NILMTK = {
@@ -197,14 +197,17 @@ class REDDStore(DataStore):
 
         # meter-level metadata
         meter_metadata = {
-            'device_model': 'REDD_whole_house' if key_obj.meter in [1,2] else 'eMonitor',
+            'device_model': 'REDD_whole_house' if key_obj.meter == 1 else 'eMonitor',
             'instance': key_obj.meter,
             'building': key_obj.building,
             'dataset': 'REDD'            
         }
-        if key_obj.meter in [1,2]:
-            meter_metadata.update({'site_meter': True})
+        if key_obj.meter == 1:
+            meter_metadata.update({'site_meter': True, 
+                                   'additional_channels': [2]})
             return meter_metadata
+        elif key_obj.meter == 2:
+            raise ValueError("Mains channel 2 is loaded by meter1.")
         else:
             meter_metadata.update({'submeter_of': 0})
 
@@ -235,9 +238,11 @@ class REDDStore(DataStore):
         -------
         list of strings
         """
+        # List buildings
         if key is None or key == '/':
             return ['building{:d}'.format(b) for b in range(1,7)]
 
+        # List meters
         key_obj = Key(key)
         assert key_obj.building is not None
         assert key_obj.meter is None
@@ -250,7 +255,8 @@ class REDDStore(DataStore):
 
         house_path = self._path_for_house(key_obj)
         labels = load_labels(house_path)
-        return ["meter{:d}".format(meter) for meter in labels.keys()]
+        return ["meter{:d}".format(meter) for meter in labels.keys()
+                if meter not in [2]] # second mains channel is loaded as meter1
 
 
 def test():
@@ -259,3 +265,4 @@ def test():
     dataset = DataSet()
     dataset.load(redd)
     print(dataset.buildings[1].electric.meters)
+    return dataset

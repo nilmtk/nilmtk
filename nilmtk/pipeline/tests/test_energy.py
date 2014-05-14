@@ -40,7 +40,7 @@ class TestEnergy(unittest.TestCase):
 
     def test_pipeline(self):
         meter = ElectricityMeter()
-        meter.load(self.datastore, keys=[KEY])
+        meter.load(self.datastore, key=KEY)
         nodes = [ClipNode(), EnergyNode()]
         pipeline = Pipeline(nodes)
         pipeline.run(meter)
@@ -49,7 +49,8 @@ class TestEnergy(unittest.TestCase):
 
         # test multiple keys
         multi_meter = ElectricityMeter()
-        multi_meter.load(self.datastore, keys=[KEY, KEY])
+        multi_meter.load(self.datastore, key=KEY)
+        multi_meter.keys = [KEY, KEY]
         pipeline.run(multi_meter)
         multi_meter_energy = deepcopy(pipeline.results['energy'])
         for ac_type, en in multi_meter_energy.combined.iteritems():

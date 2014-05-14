@@ -1,7 +1,7 @@
 import abc
 import pandas as pd
 import copy
-from nilmtk import TimeFrame
+from ..timeframe import TimeFrame
 
 class Results(object):
     """Metadata results from each node need to be assigned to a specific
@@ -48,8 +48,8 @@ class Results(object):
         timeframe : nilmtk.TimeFrame
         new_results : dict
         """
-        assert isinstance(timeframe, TimeFrame)
-        assert isinstance(new_results, dict)
+        assert isinstance(timeframe, TimeFrame), type(timeframe)
+        assert isinstance(new_results, dict), type(new_results)
 
         # check that there is no overlap
         for index, series in self._data.iterrows():
