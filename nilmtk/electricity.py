@@ -31,6 +31,7 @@ class Electricity(MeterGroup):
         """
         mains = self.mains()
         good_mains_sections = mains.good_sections().combined
+        print("number of good sections =", len(good_mains_sections))
         submetered_energy = 0.0
         common_ac_types = None
         for meter in self.meters_directly_downstream_of_mains():

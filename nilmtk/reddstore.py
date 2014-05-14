@@ -106,6 +106,7 @@ class REDDStore(DataStore):
         Parameters
         ----------
         key : string, the location of a table within the DataStore.
+        periods : list of TimeFrame objects.
 
         Returns
         ------- 
@@ -172,14 +173,14 @@ class REDDStore(DataStore):
                         'manufacturer': 'Powerhouse Dynamics',
                         'manufacturer_url': 'http://powerhousedynamics.com',
                         'sample_period': 3,
-                        'max_sample_period': 30,
+                        'max_sample_period': 50,
                         'measurements': [Power('active')],
                         'measurement_limits': {
                             Power('active'): {'lower': 0, 'upper': 5000}}
                         },
                     'REDD_whole_house': {
                         'sample_period': 1,
-                        'max_sample_period': 10,
+                        'max_sample_period': 30,
                         'measurements': [Power('active')],
                         'measurement_limits': {
                             Power('active'): {'lower': 0, 'upper': 50000}}
