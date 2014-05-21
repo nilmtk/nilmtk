@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 from collections import namedtuple
-from .electricity import Electricity
+from .metergroup import MeterGroup
 from .datastore import join_key
 
 BuildingID = namedtuple('BuildingID', ['instance', 'dataset'])
@@ -9,6 +9,8 @@ class Building(object):
     """
     Attributes
     ----------
+    elec : MeterGroup
+
     metadata : dict
         See http://nilm-metadata.readthedocs.org/en/latest/dataset_metadata.html#building
         Also stores: 
@@ -17,7 +19,7 @@ class Building(object):
         original_name : string
     """
     def __init__(self):
-        self.elec = Electricity()
+        self.elec = MeterGroup()
         self.metadata = {}
     
     def load(self, store, key):
