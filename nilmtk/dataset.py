@@ -10,6 +10,9 @@ class DataSet(object):
     buildings : OrderedDict
         Each key is an integer, starting from 1.
         Each value is a nilmtk.Building object.
+
+    metadata : dict
+        See http://nilm-metadata.readthedocs.org/en/latest/dataset_metadata.html#dataset
     """
 
     def __init__(self):

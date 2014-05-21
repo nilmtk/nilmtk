@@ -42,15 +42,7 @@ class ElecMeter(Hashable):
     -----------------
 
     meter_devices : dict, static class attribute
-        Keys are devices.  Values are dicts:
-            manufacturer : string
-            model : string, model name
-            sample_period : float, seconds
-            max_sample_period : float, seconds
-            measurements : list of nilmtk.measurement objects, e.g.
-                [Power('active'), Voltage()]
-            measurement_limits : dict, e.g.:
-                {Power('active'): {'lower_limit': 0, 'upper_limit': 3000}}
+        See http://nilm-metadata.readthedocs.org/en/latest/dataset_metadata.html#meterdevice
 
     meters : dict, static class attribute:
         Required for resolving `upstream_of` to an ElecMeter object.
@@ -71,14 +63,6 @@ class ElecMeter(Hashable):
             assert not isinstance(self.store, dict)
         if meter_instance is not None:
             metadata.update({'instance': meter_instance})
-
-        # TODO: don't do this any more... I think it's
-        # only pipeline which requires this...
-        device_model = self.metadata.get('device_model')
-        if device_model is None:
-            self.metadata['device'] = {}
-        else:
-            self.metadata['device'] = ElecMeter.meter_devices[device_model]
 
         # Load appliances
         self.appliances = []

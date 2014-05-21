@@ -54,7 +54,8 @@ class Pipeline(object):
     --------
     
     >>> store = HDFDataStore('redd.h5')
-    >>> meter = ElecMeter(store, ['building1/electric/meter1'])
+    >>> meter = ElecMeter(store, 
+            {'sensors': [{'data_location': 'building1/elec/sensor1'}]))
 
     Calculate total energy and save the preprocessed data
     and the energy data back to disk:
@@ -81,7 +82,9 @@ class Pipeline(object):
             - periods : list of nilmtk.TimeFrame objects
         """
         self.results = {}
-        self._check_requirements(meter.metadata)
+        meter_metadata = deepcopy(meter.metadata)
+        meter_metadata.update({'device': meter.device})
+        self._check_requirements(meter_metadata)
 
         # Run pipeline
         # TODO only load required measurements
@@ -90,7 +93,7 @@ class Pipeline(object):
                 node.reset()
             self.results[key] = {}
             for chunk in meter.store.load(key=key, **load_kwargs):
-                processed_chunk = self._run_chunk_through_pipeline(chunk, meter.metadata)
+                processed_chunk = self._run_chunk_through_pipeline(chunk, meter_metadata)
                 self._update_results(processed_chunk.results, key)
 
         # Copy the results for the first table to the base of 

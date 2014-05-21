@@ -20,7 +20,7 @@ class MeterGroup(object):
         Parameters
         ----------
         store : nilmtk.DataStore
-        elec_meters : list of dicts
+        elec_meters : dict of dicts
             metadata for each ElecMeter
         """
         ElecMeter.load_meter_devices(store)

@@ -28,7 +28,7 @@ class TestElecMeter(WarningTestMixin, unittest.TestCase):
         meter = ElecMeter(store=self.datastore, metadata=self.meter_meta, 
                           meter_instance=METER_INSTANCE)
         self.assertEqual(meter.metadata['device_model'], 'Energy Meter')
-        self.assertEqual(meter.metadata['device']['sample_period'], 10)
+        self.assertEqual(meter.device['sample_period'], 10)
 
     def test_total_energy(self):
         meter = ElecMeter()

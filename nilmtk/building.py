@@ -10,6 +10,8 @@ class Building(object):
     Attributes
     ----------
     metadata : dict
+        See http://nilm-metadata.readthedocs.org/en/latest/dataset_metadata.html#building
+        Also stores: 
         instance : int, building instance, starts from 1
         dataset : string
         original_name : string
