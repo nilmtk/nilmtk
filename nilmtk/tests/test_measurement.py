@@ -4,7 +4,7 @@ import unittest
 import pandas as pd
 import numpy as np
 import nilmtk.measurement as measure
-from nilmtk import ElectricityMeter
+from nilmtk import ElecMeter
 
 BAD_AC_TYPES = ['foo', '', None, True, {'a':'b'}, 
                 (1,2), [], ['reactive'], 'reaactive']
@@ -74,9 +74,9 @@ class TestMeasurement(unittest.TestCase):
 
         self.assertEqual(measure.select_best_ac_type(['active', 'reactive', 'apparent']), 'active')
 
-        ElectricityMeter.meter_devices.update(
+        ElecMeter.meter_devices.update(
             {'test model': {'measurements': [measure.Power('apparent')]}})
-        meter = ElectricityMeter({'device_model': 'test model',
+        meter = ElecMeter({'device_model': 'test model',
                                   'dataset': 'REDD', 'building': 1, 'instance': 1})
         
         self.assertEqual(measure.select_best_ac_type(['reactive'], 

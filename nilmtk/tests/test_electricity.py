@@ -3,7 +3,7 @@ from __future__ import print_function, division
 import unittest
 from os.path import join
 from .testingtools import data_dir
-from nilmtk import Electricity, ElectricityMeter, HDFDataStore
+from nilmtk import Electricity, ElecMeter, HDFDataStore
 
 class TestElectricity(unittest.TestCase):
         
@@ -13,11 +13,11 @@ class TestElectricity(unittest.TestCase):
         cls.datastore = HDFDataStore(filename)
 
     def test_wiring_graph(self):
-        meter1 = ElectricityMeter(
+        meter1 = ElecMeter(
             {'site_meter': True, 'dataset': 'REDD', 'building': 1, 'instance' :1})
-        meter2 = ElectricityMeter(
+        meter2 = ElecMeter(
             {'submeter_of': 1, 'instance': 2, 'dataset': 'REDD', 'building': 1})
-        meter3 = ElectricityMeter(
+        meter3 = ElecMeter(
             {'submeter_of': 2, 'instance': 3, 'dataset': 'REDD', 'building': 1})
         elec = Electricity([meter1, meter2, meter3])
         wiring_graph = elec.wiring_graph()
@@ -29,7 +29,7 @@ class TestElectricity(unittest.TestCase):
     def test_proportion_of_energy_submetered(self):
         meters = []
         for i in [1,2,3]:
-            meter = ElectricityMeter()
+            meter = ElecMeter()
             meter.load(self.datastore, key='/building1/electric/meter{:d}'.format(i))
             meters.append(meter)
 

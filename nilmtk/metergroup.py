@@ -1,10 +1,10 @@
 from __future__ import print_function, division
 import networkx as nx
-from .electricitymeter import ElectricityMeter
+from .electricitymeter import ElecMeter
 from .datastore import join_key
 
 class MeterGroup(object):
-    """A group of ElectricityMeter objects.
+    """A group of ElecMeter objects.
 
     Implements many of the same methods as Meter.
     
@@ -18,7 +18,7 @@ class MeterGroup(object):
     def load(self, store, key):
         meter_names = store.elements_below_key(key) # ['meter1', 'meter2', etc]
         for meter_name in meter_names:
-            meter = ElectricityMeter()
+            meter = ElecMeter()
             meter.load(store, join_key(key, meter_name))
             self.meters.append(meter)
 

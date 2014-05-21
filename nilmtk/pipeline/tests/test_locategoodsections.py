@@ -5,7 +5,7 @@ from nilmtk.pipeline import Pipeline, EnergyNode, LocateGoodSectionsNode
 from nilmtk.pipeline.locategoodsectionsnode import reframe_index
 from nilmtk.pipeline.locategoodsectionsresults import LocateGoodSectionsResults
 from nilmtk.pipeline.energynode import _energy_for_power_series
-from nilmtk import TimeFrame, ElectricityMeter, HDFDataStore
+from nilmtk import TimeFrame, ElecMeter, HDFDataStore
 from nilmtk.consts import JOULES_PER_KWH
 from nilmtk.tests.testingtools import data_dir
 from os.path import join
@@ -23,7 +23,7 @@ class TestLocateGaps(unittest.TestCase):
         cls.datastore = HDFDataStore(filename)
 
     def test_pipeline(self):
-        meter = ElectricityMeter()
+        meter = ElecMeter()
         meter.load(self.datastore, key=KEY)
         nodes = [LocateGoodSectionsNode()]
         pipeline = Pipeline(nodes)

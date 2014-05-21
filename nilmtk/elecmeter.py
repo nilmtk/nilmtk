@@ -8,10 +8,9 @@ from warnings import warn
 from collections import namedtuple
 from copy import deepcopy
 
-ElectricityMeterID = namedtuple('ElectricityMeterID',    
-                                ['instance', 'building', 'dataset'])
+ElecMeterID = namedtuple('ElecMeterID', ['instance', 'building', 'dataset'])
 
-class ElectricityMeter(Hashable):
+class ElecMeter(Hashable):
     """Represents a physical electricity meter.
     
     Attributes
@@ -24,7 +23,7 @@ class ElectricityMeter(Hashable):
 
     keys : list of strings
         each string is a key into nilmtk.DataStore to access data.
-        Metadata for this ElectricityMeter is stored with keys[0].
+        Metadata for this ElecMeter is stored with keys[0].
     
     metadata : dict.  Including keys:
         instance : int, meter instance within this building, starting from 1
@@ -46,7 +45,7 @@ class ElectricityMeter(Hashable):
         --------- i.e. THEY DO NOT EXIST IN THE ON-DISK METADATA. ---------
 
         device : dict (instantiated from meter_devices static class attribute)
-          TODO: `device` might be implemented as a property of ElectricityMeter.
+          TODO: `device` might be implemented as a property of ElecMeter.
     
 
     STATIC ATTRIBUTES
@@ -64,9 +63,9 @@ class ElectricityMeter(Hashable):
                 {Power('active'): {'lower': 0, 'upper': 3000}}
 
     meters : dict, static class attribute:
-        Required for resolving `upstream_of` to an ElectricityMeter object.
-        Keys are ElectricityMeterID objects.
-        Values are ElectricityMeter objects.
+        Required for resolving `upstream_of` to an ElecMeter object.
+        Keys are ElecMeterID objects.
+        Values are ElecMeter objects.
 
     """
 
@@ -78,7 +77,7 @@ class ElectricityMeter(Hashable):
         self.keys = []
         self.appliances = []
         self.metadata = {} if metadata is None else metadata
-        ElectricityMeter.meters[self.identifier] = self
+        ElecMeter.meters[self.identifier] = self
 
     def load(self, store, key):
         """
@@ -90,7 +89,7 @@ class ElectricityMeter(Hashable):
             the metadata for `key`).
         """
         assert isinstance(key, str)
-        print("Loading ElectricityMeter from key", key)
+        print("Loading ElecMeter from key", key)
         self.store = store
         self.metadata = self.store.load_metadata(key)
 
@@ -102,20 +101,20 @@ class ElectricityMeter(Hashable):
             new_key_obj.meter = chan
             self.keys.append(str(new_key_obj))
             
-        ElectricityMeter._load_meter_devices(store)
+        ElecMeter._load_meter_devices(store)
         device_model = self.metadata['device_model']
-        self.metadata['device'] = ElectricityMeter.meter_devices[device_model]
+        self.metadata['device'] = ElecMeter.meter_devices[device_model]
 
         # Load appliances
         for appliance_metadata in self.metadata.get('appliances', []):
             self.appliances.append(Appliance(appliance_metadata))
 
-        ElectricityMeter.meters[self.identifier] = self
+        ElecMeter.meters[self.identifier] = self
         
     @property
     def identifier(self):
         md = self.metadata
-        return ElectricityMeterID(md.get('instance'), 
+        return ElecMeterID(md.get('instance'), 
                                   md.get('building'), 
                                   md.get('dataset'))
 
@@ -129,16 +128,16 @@ class ElectricityMeter(Hashable):
         upstream_meter_in_building = self.metadata.get('upstream_meter_in_building')
         if upstream_meter_in_building is None:
             upstream_meter_in_building = self.identifier.building
-        id_of_upstream = ElectricityMeterID(instance=submeter_of, 
+        id_of_upstream = ElecMeterID(instance=submeter_of, 
                                             building=upstream_meter_in_building,
                                             dataset=self.identifier.dataset)
-        upstream_meter =  ElectricityMeter.meters[id_of_upstream]
+        upstream_meter =  ElecMeter.meters[id_of_upstream]
         return upstream_meter
 
     @classmethod
     def _load_meter_devices(cls, store):
         dataset_metadata = store.load_metadata('/')
-        ElectricityMeter.meter_devices.update(dataset_metadata.get('meter_devices', {}))
+        ElecMeter.meter_devices.update(dataset_metadata.get('meter_devices', {}))
 
     def save(self, destination, key):
         """
@@ -153,7 +152,7 @@ class ElectricityMeter(Hashable):
     @property
     def device(self):
         device_model = self.metadata['device_model']
-        return ElectricityMeter.meter_devices[device_model]
+        return ElecMeter.meter_devices[device_model]
 
     def available_ac_types(self):
         """Finds available alternating current types from measurements.
@@ -166,7 +165,7 @@ class ElectricityMeter(Hashable):
         return [m.ac_type for m in measurements if isinstance(m, Power)]
 
     def __repr__(self):
-        string = super(ElectricityMeter, self).__repr__()
+        string = super(ElecMeter, self).__repr__()
         # Now add list of appliances...
         string = string[:-1] # remove last bracket
         string += ",\n" + (" " * 18)
@@ -224,7 +223,7 @@ class ElectricityMeter(Hashable):
         measurement_preferences : list of Measurements, optional. Defaults to active > apparent > reactive
         required_measurements : Measurement, optional.  Raises MeasurementError if not available.
         normalise : boolean, optional, defaults to False
-        voltage_series : ElectricityMeter object with voltage measurements available.  If not supplied and if normalise is True
+        voltage_series : ElecMeter object with voltage measurements available.  If not supplied and if normalise is True
             then will attempt to use voltage data from this meter.
         nominal_voltage : float
 

@@ -1,12 +1,12 @@
 #!/usr/bin/python
 from __future__ import print_function, division
 import unittest
-from nilmtk import Appliance, MeterGroup, ElectricityMeter
+from nilmtk import Appliance, MeterGroup, ElecMeter
 from nilmtk.utils import tree_root, nodes_adjacent_to_root
 
 class TestMeterGroup(unittest.TestCase):
     def test_getitem(self):
-        fridge_meter = ElectricityMeter()
+        fridge_meter = ElecMeter()
         fridge = Appliance({'type':'fridge', 'instance':1})
         fridge_meter.appliances = [fridge]
         mg = MeterGroup([fridge_meter])
@@ -28,7 +28,7 @@ class TestMeterGroup(unittest.TestCase):
                 mg[key]
 
     def test_select(self):
-        fridge_meter = ElectricityMeter()
+        fridge_meter = ElecMeter()
         fridge = Appliance({'type':'fridge', 'instance':1})
         fridge_meter.appliances = [fridge]
         mg = MeterGroup([fridge_meter])
@@ -37,11 +37,11 @@ class TestMeterGroup(unittest.TestCase):
         # TODO: make this test more rigorous!
         
     def test_wiring_graph(self):
-        meter1 = ElectricityMeter({'site_meter': True, 'dataset':'REDD', 
+        meter1 = ElecMeter({'site_meter': True, 'dataset':'REDD', 
                                    'building': 1, 'instance': 1})
-        meter2 = ElectricityMeter({'submeter_of': 1, 'dataset':'REDD', 
+        meter2 = ElecMeter({'submeter_of': 1, 'dataset':'REDD', 
                                    'building': 1, 'instance': 2})
-        meter3 = ElectricityMeter({'submeter_of': 2, 'dataset':'REDD', 
+        meter3 = ElecMeter({'submeter_of': 2, 'dataset':'REDD', 
                                    'building': 1, 'instance': 3})
         mg = MeterGroup([meter1, meter2, meter3])
         wiring_graph = mg.wiring_graph()

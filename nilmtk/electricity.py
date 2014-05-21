@@ -2,7 +2,7 @@ from __future__ import print_function, division
 from .metergroup import MeterGroup
 from .measurement import select_best_ac_type
 from .utils import tree_root, nodes_adjacent_to_root
-from .electricitymeter import ElectricityMeter
+from .elecmeter import ElecMeter
 
 class Electricity(MeterGroup):
     """Represents mains circuit in a single building.
@@ -15,7 +15,7 @@ class Electricity(MeterGroup):
     def mains(self):
         graph = self.wiring_graph()
         mains = tree_root(graph)
-        assert isinstance(mains, ElectricityMeter), type(mains)
+        assert isinstance(mains, ElecMeter), type(mains)
         return mains
 
     def meters_directly_downstream_of_mains(self):

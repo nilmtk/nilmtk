@@ -1,7 +1,7 @@
 from nilmtk import *
 from nilmtk.version import version as __version__
 from nilmtk.timeframe import TimeFrame
-from nilmtk.electricitymeter import ElectricityMeter
+from nilmtk.elecmeter import ElecMeter
 from nilmtk.datastore import DataStore, HDFDataStore
 from nilmtk.reddstore import REDDStore
 from nilmtk.metergroup import MeterGroup

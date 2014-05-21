@@ -3,7 +3,7 @@ from __future__ import print_function, division
 import unittest
 from nilmtk.pipeline import Pipeline, EnergyNode, ClipNode
 from nilmtk.pipeline.energynode import _energy_for_power_series
-from nilmtk import TimeFrame, ElectricityMeter, HDFDataStore
+from nilmtk import TimeFrame, ElecMeter, HDFDataStore
 from nilmtk.consts import JOULES_PER_KWH
 from nilmtk.tests.testingtools import data_dir
 from os.path import join
@@ -39,7 +39,7 @@ class TestEnergy(unittest.TestCase):
         self.assertAlmostEqual(true_kwh, kwh)
 
     def test_pipeline(self):
-        meter = ElectricityMeter()
+        meter = ElecMeter()
         meter.load(self.datastore, key=KEY)
         nodes = [ClipNode(), EnergyNode()]
         pipeline = Pipeline(nodes)
@@ -48,7 +48,7 @@ class TestEnergy(unittest.TestCase):
         check_energy_numbers(self, energy)
 
         # test multiple keys
-        multi_meter = ElectricityMeter()
+        multi_meter = ElecMeter()
         multi_meter.load(self.datastore, key=KEY)
         multi_meter.keys = [KEY, KEY]
         pipeline.run(multi_meter)

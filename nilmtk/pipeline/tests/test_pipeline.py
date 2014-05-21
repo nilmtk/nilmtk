@@ -2,7 +2,7 @@
 from __future__ import print_function, division
 import unittest
 from nilmtk.pipeline import Pipeline, EnergyNode, ClipNode
-from nilmtk import TimeFrame, ElectricityMeter, HDFDataStore
+from nilmtk import TimeFrame, ElecMeter, HDFDataStore
 from nilmtk.tests.testingtools import data_dir
 from os.path import join
 
@@ -16,7 +16,7 @@ class TestPipeline(unittest.TestCase):
         cls.datastore = HDFDataStore(filename)
 
     def test_pipeline(self):
-        meter = ElectricityMeter()
+        meter = ElecMeter()
         meter.load(self.datastore, key=KEY)
         nodes = [ClipNode(), EnergyNode()]
         pipeline = Pipeline(nodes)
