@@ -17,17 +17,17 @@ class Building(object):
         original_name : string
     """
     def __init__(self):
-        self.electric = Electricity()
+        self.elec = Electricity()
         self.metadata = {}
     
     def load(self, store, key):
         self.metadata = store.load_metadata(key)
         elec_meters = self.metadata.get('elec_meters', [])
-        self.electric.load(store, elec_meters, self.identifier)
+        self.elec.load(store, elec_meters, self.identifier)
                 
     def save(self, destination, key):
         destination.write_metadata(key, self.metadata)
-        self.electric.save(destination, join_key(key, 'electric'))
+        self.elec.save(destination, join_key(key, 'elec'))
 
     @property
     def identifier(self):

@@ -256,7 +256,7 @@ class REDDStore(DataStore):
                              .format(key_obj.building))
 
         if key_obj.utility is None:
-            return ['electric']
+            return ['elec']
 
         house_path = self._path_for_house(key_obj)
         labels = load_labels(house_path)
@@ -269,5 +269,5 @@ def test():
     redd = REDDStore('/data/REDD/low_freq')
     dataset = DataSet()
     dataset.load(redd)
-    print(dataset.buildings[1].electric.meters)
+    print(dataset.buildings[1].elec.meters)
     return dataset

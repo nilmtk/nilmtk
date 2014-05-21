@@ -113,14 +113,12 @@ def create_random_hdf5():
     store = pd.HDFStore(FILENAME, 'w', complevel=9, complib='bzip2')
     elec_meter_metadata = {}
     for meter in range(1, N_METERS+1):
-        key = 'building1/electric/sensor{:d}'.format(meter)
+        key = 'building1/elec/sensor{:d}'.format(meter)
         print("Saving", key)
         store.put(key, create_random_df(), format='table')
         elec_meter_metadata[meter] = {
             'device_model': TEST_METER['model'], 
             'submeter_of': 1,
-#            'dataset': 'REDD',
-#            'building': 1,
             'sensors': [{'data_location': key}]
         }
 
@@ -157,12 +155,10 @@ def create_energy_hdf5(simple=True):
 
     # Save sensor data
     for meter_i in [1,2,3]:
-        key = 'building1/electric/sensor{:d}'.format(meter_i)
+        key = 'building1/elec/sensor{:d}'.format(meter_i)
         print("Saving", key)
         store.put(key, df, format='table')
         meta = {
-#            'building': 1,
-#            'dataset': 'REDD',
             'device_model': meter_device['model'],
             'sensors': [{'data_location': key}]
         }
@@ -187,4 +183,4 @@ def create_energy_hdf5(simple=True):
 def create_all():
     create_energy_hdf5()
     create_energy_hdf5(simple=False)
-    create_random_hdf5()
+    create_random_hdf5() 

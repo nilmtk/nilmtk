@@ -48,7 +48,7 @@ class Key(object):
         Parameters
         ----------
         string : str, optional
-            e.g. 'building1/electric/meter1'
+            e.g. 'building1/elec/meter1'
         building : int, optional
         meter : int, optional
         """
@@ -84,7 +84,7 @@ class Key(object):
         self._check()
         s = "/building{:d}".format(self.building)
         if self.meter is not None:
-            s += "/electric/meter{:d}".format(self.meter)
+            s += "/elec/meter{:d}".format(self.meter)
         return s
 
 
@@ -349,8 +349,8 @@ def join_key(*args):
     """
     Examples
     --------
-    >>> join_key('building1', 'electric', 'meter1')
-    '/building1/electric/meter1'
+    >>> join_key('building1', 'elec', 'meter1')
+    '/building1/elec/meter1'
 
     >>> join_key('/')
     '/'
