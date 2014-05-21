@@ -96,11 +96,12 @@ for col in MEASUREMENTS:
     TEST_METER['measurement_limits'][col] = {'lower': 0, 'upper': 6000}
 
 
-def add_building_metadata(store, key='building1'):
+def add_building_metadata(store, elec_meters, key='building1'):
     node = store.get_node(key)
     md = {
         'instance': 1,
-        'dataset': 'REDD'
+        'dataset': 'REDD',
+        'elec_meter': elec_meters
     }
     node._f_setattr('metadata', md)
 
@@ -110,21 +111,27 @@ def create_random_hdf5():
     N_METERS = 5
 
     store = pd.HDFStore(FILENAME, 'w', complevel=9, complib='bzip2')
+    elec_meter_metadata = []
     for meter in range(1, N_METERS+1):
-        key = 'building1/electric/meter{:d}'.format(meter)
+        key = 'building1/electric/sensor{:d}'.format(meter)
         print("Saving", key)
         store.put(key, create_random_df(), format='table')
-        store.get_storer(key).attrs.metadata = {
+        elec_meter_metadata.append({
             'device_model': TEST_METER['model'], 
             'submeter_of': 1,
             'instance': meter,
             'dataset': 'REDD',
-            'building': 1}
+            'building': 1,
+            'sensors': [{'data_location': key}]
+        })
 
     # Save dataset-wide metadata
     store.root._v_attrs.metadata = {'meter_devices': {TEST_METER['model']: TEST_METER}}
-    add_building_metadata(store)
     print(store.root._v_attrs.metadata)
+
+    # Building metadata
+    add_building_metadata(store, elec_meter_metadata)
+
     store.flush()
     store.close()
 
@@ -135,7 +142,7 @@ def create_energy_hdf5(simple=True):
 
     df = power_data(simple=simple)
 
-    meter = {'manufacturer': 'Test Manufacturer', 
+    meter_device = {'manufacturer': 'Test Manufacturer', 
              'model': 'Energy Meter', 
              'sample_period': 10,
              'max_sample_period': MAX_SAMPLE_PERIOD,
@@ -143,43 +150,38 @@ def create_energy_hdf5(simple=True):
              'measurement_limits': {}
          }
     for col in df.columns:
-        meter['measurement_limits'][col] = {'lower': 0, 'upper': 6000}
+        meter_device['measurement_limits'][col] = {'lower': 0, 'upper': 6000}
 
     store = pd.HDFStore(FILENAME, 'w', complevel=9, complib='bzip2')
 
-    key = 'building1/electric/meter1'
-    print("Saving", key)
-    store.put(key, df, format='table')
-    store.get_storer(key).attrs.metadata = {
-        'instance': 1,
-        'building': 1,
-        'dataset': 'REDD',
-        'device_model': meter['model'], 
-        'site_meter': True}
+    elec_meter_metadata = []
 
-    key = 'building1/electric/meter2'
-    print("Saving", key)
-    store.put(key, df, format='table')
-    store.get_storer(key).attrs.metadata = {
-        'instance': 2,
-        'building': 1,
-        'dataset': 'REDD',
-        'device_model': meter['model'], 
-        'submeter_of': 1}
-
-    key = 'building1/electric/meter3'
-    print("Saving", key)
-    store.put(key, df, format='table')
-    store.get_storer(key).attrs.metadata = {
-        'instance': 3,
-        'building': 1,
-        'dataset': 'REDD',
-        'device_model': meter['model'], 
-        'submeter_of': 2}
+    # Save sensor data
+    for meter_i in [1,2,3]:
+        key = 'building1/electric/sensor{:d}'.format(meter_i)
+        print("Saving", key)
+        store.put(key, df, format='table')
+        meta = {
+            'instance': meter_i,
+            'building': 1,
+            'dataset': 'REDD',
+            'device_model': meter_device['model'],
+            'sensors': [{'data_location': key}]
+        }
+        additional_meta = {
+            1: {'site_meter': True},
+            2: {'submeter_of': 1},
+            3: {'submeter_of': 2}
+        }
+        meta.update(additional_meta[meter_i])
+        elec_meter_metadata.append(meta)
 
     # Save dataset-wide metadata
-    store.root._v_attrs.metadata = {'meter_devices': {meter['model']: meter}}
-    add_building_metadata(store)
+    store.root._v_attrs.metadata = {'meter_devices': {meter_device['model']: meter_device}}
+
+    # Add building metadata 
+    add_building_metadata(store, elec_meter_metadata)
+
     store.flush()
     store.close()
 

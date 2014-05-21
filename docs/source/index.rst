@@ -9,7 +9,7 @@ Non intrusive load monitoring
    nilmtk
    userguide
    contribute
-   hdf5_metadata
+   fileformats
 
 
 Indices and tables

@@ -79,6 +79,7 @@ class ElecMeter(Hashable):
         ElecMeter.meters[self.identifier] = self
 
     def load(self, store, key):
+        # TODO maybe we just pass metadata into __init__, then pass just store into load()?
         """
         Parameters
         ----------

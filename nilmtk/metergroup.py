@@ -16,6 +16,8 @@ class MeterGroup(object):
         self.meters = [] if meters is None else list(meters)
 
     def load(self, store, key):
+        # TODO: pass in store and list of elec meters dicts.
+        # then iterate through elec meter dicts, passing the dict and store to each ElecMeter.
         meter_names = store.elements_below_key(key) # ['meter1', 'meter2', etc]
         for meter_name in meter_names:
             meter = ElecMeter()
