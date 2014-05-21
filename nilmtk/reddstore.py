@@ -176,14 +176,14 @@ class REDDStore(DataStore):
                         'max_sample_period': 50,
                         'measurements': [Power('active')],
                         'measurement_limits': {
-                            Power('active'): {'lower': 0, 'upper': 5000}}
+                            Power('active'): {'lower_limit': 0, 'upper_limit': 5000}}
                         },
                     'REDD_whole_house': {
                         'sample_period': 1,
                         'max_sample_period': 30,
                         'measurements': [Power('active')],
                         'measurement_limits': {
-                            Power('active'): {'lower': 0, 'upper': 50000}}
+                            Power('active'): {'lower_limit': 0, 'upper_limit': 50000}}
                     }
                 }
             }

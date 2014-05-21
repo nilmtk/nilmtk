@@ -105,7 +105,7 @@ class Pipeline(object):
 
     def _check_requirements(self, metadata):
         state = deepcopy(metadata)
-        required_measurements = set()
+        required_measurements = set() # Not yet fully implemented?
         for node in self.nodes:
             node.check_requirements(state)
             required_measurements.update(node.required_measurements(state))

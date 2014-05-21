@@ -5,7 +5,7 @@ from warnings import warn
 class ClipNode(Node):
 
     requirements = {'device': {'measurement_limits': 'ANY VALUE'}}
-    postconditions =  {'preprocessing': {'clipped': True}}
+    postconditions =  {'preprocessing_applied': {'clip': {}}}
     name = 'clip'
 
     def process(self, df, metadata):
@@ -17,8 +17,8 @@ class ClipNode(Node):
                 warn('No measurement limits for {}.'.format(measurement),
                      RuntimeWarning)
             else:
-                lower = lim_for_measurement['lower']
-                upper = lim_for_measurement['upper']
+                lower = lim_for_measurement['lower_limit']
+                upper = lim_for_measurement['upper_limit']
                 df[measurement] = df[measurement].clip(lower, upper)
 
         return df

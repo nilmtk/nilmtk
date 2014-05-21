@@ -93,7 +93,7 @@ TEST_METER = {'manufacturer': 'Test Manufacturer',
               'measurement_limits': {}
           }
 for col in MEASUREMENTS:
-    TEST_METER['measurement_limits'][col] = {'lower': 0, 'upper': 6000}
+    TEST_METER['measurement_limits'][col] = {'lower_limit': 0, 'upper_limit': 6000}
 
 
 def add_building_metadata(store, elec_meters, key='building1'):
@@ -149,7 +149,7 @@ def create_energy_hdf5(simple=True):
              'measurement_limits': {}
          }
     for col in df.columns:
-        meter_device['measurement_limits'][col] = {'lower': 0, 'upper': 6000}
+        meter_device['measurement_limits'][col] = {'lower_limit': 0, 'upper_limit': 6000}
 
     store = pd.HDFStore(FILENAME, 'w', complevel=9, complib='bzip2')
 

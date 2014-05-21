@@ -18,11 +18,11 @@ def find_unsatisfied_requirements(state, requirements):
     then returns an empty list.
     """
     unsatisfied = []
-    def unsatisfied_requirements(cond, req):
+    def unsatisfied_requirements(st, req):
         # Recursively find requirements
         for key, value in req.iteritems():
             try:
-                cond_value = cond[key]
+                cond_value = st[key]
             except KeyError:
                 msg = ("Requires '{}={}' but '{}' not in state dict."
                        .format(key, value, key))
@@ -80,7 +80,11 @@ class Node(object):
                     state[key] = value
                 else:
                     if isinstance(value, dict):
+                        assert isinstance(state_value, dict)
                         _update_state(state_value, value)
+                    elif isinstance(value, list):
+                        assert isinstance(state_value, list)
+                        state_value.extend(value)
                     else:
                         state[key] = value
             return state
@@ -122,7 +126,6 @@ class Node(object):
         unsatisfied = find_unsatisfied_requirements(state, self.requirements)
         if unsatisfied:
             msg = str(self) + " not satisfied by:\n" + str(unsatisfied)
-            msg += "  State dict = " + str(state)
             raise UnsatisfiedRequirementsError(msg)
             
     def required_measurements(self, state):

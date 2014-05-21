@@ -24,21 +24,12 @@ class ElecMeter(Hashable):
     sensor_keys : list of strings
         each string is a key into nilmtk.DataStore to access data.
     
-    metadata : dict.  Including sensor_keys:
+    metadata : dict.
+        See http://nilm-metadata.readthedocs.org/en/latest/dataset_metadata.html#elecmeter
+        Also stores:
         instance : int, meter instance within this building, starting from 1
         building : int, building instance, starting from 1
         dataset : str e.g. 'REDD'
-        submeter_of : int, instance of upstream meter
-        site_meter : bool, True if this is a site meter (i.e. furthest upstream meter)
-        preprocessing : list of strings (TODO: why not actual Node objects?), 
-          each describing a preprocessing Node.
-          preprocessing to be applied before returning any stats answers; or before exporting.
-          e.g. power normalisation or removing gaps.  Properties:
-          - 'good_sections_located': bool
-          - 'energy_computed': bool
-        device_model : string, the model name of the meter device.
-        dominant_appliance : (<appliance_type), <instance>) which is responsible for 
-          most of the power demand on this channel.
 
         --------- THE FOLLOWING ATTRIBUTES ARE SET AUTOMATICALLY, ---------
         --------- i.e. THEY DO NOT EXIST IN THE ON-DISK METADATA. ---------
@@ -59,7 +50,7 @@ class ElecMeter(Hashable):
             measurements : list of nilmtk.measurement objects, e.g.
                 [Power('active'), Voltage()]
             measurement_limits : dict, e.g.:
-                {Power('active'): {'lower': 0, 'upper': 3000}}
+                {Power('active'): {'lower_limit': 0, 'upper_limit': 3000}}
 
     meters : dict, static class attribute:
         Required for resolving `upstream_of` to an ElecMeter object.

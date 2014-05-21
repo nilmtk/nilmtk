@@ -17,7 +17,7 @@ class LocateGoodSectionsNode(Node):
     """
 
     requirements = {'device': {'max_sample_period': 'ANY VALUE'}}
-    postconditions =  {'preprocessing': {'good_sections_located': True}}
+    postconditions =  {'statistics': {'good_sections': []}}
     name='good_sections'
         
     def reset(self):

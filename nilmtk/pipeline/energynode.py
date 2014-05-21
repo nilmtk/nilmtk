@@ -12,8 +12,8 @@ from nilmtk.measurement import Power, Energy
 class EnergyNode(Node):
 
     requirements = {'device': {'max_sample_period': 'ANY VALUE'},
-                    'preprocessing': {'clipped': True}}
-    postconditions =  {'preprocessing': {'energy_computed': True}}
+                    'preprocessing_applied': {'clip': 'ANY VALUE'}}
+    postconditions =  {'statistics': {'energy': {}}}
     name = 'energy'
 
     def process(self, df, metadata):
