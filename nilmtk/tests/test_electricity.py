@@ -4,6 +4,8 @@ import unittest
 from os.path import join
 from .testingtools import data_dir
 from nilmtk import Electricity, ElecMeter, HDFDataStore
+from nilmtk.elecmeter import ElecMeterID
+
 
 class TestElectricity(unittest.TestCase):
         
@@ -14,24 +16,24 @@ class TestElectricity(unittest.TestCase):
         ElecMeter.load_meter_devices(cls.datastore)
 
     def test_wiring_graph(self):
-        meter1 = ElecMeter(metadata=
-            {'site_meter': True, 'dataset': 'REDD', 'building': 1, 'instance' :1})
-        meter2 = ElecMeter(metadata=
-            {'submeter_of': 1, 'instance': 2, 'dataset': 'REDD', 'building': 1})
-        meter3 = ElecMeter(metadata=
-            {'submeter_of': 2, 'instance': 3, 'dataset': 'REDD', 'building': 1})
+        meter1 = ElecMeter(metadata={'site_meter': True}, 
+                           meter_id=ElecMeterID(1,1,'REDD'))
+        meter2 = ElecMeter(metadata={'submeter_of': 1}, 
+                           meter_id=ElecMeterID(2,1,'REDD'))
+        meter3 = ElecMeter(metadata={'submeter_of': 2},
+                           meter_id=ElecMeterID(3,1,'REDD'))
         elec = Electricity([meter1, meter2, meter3])
         wiring_graph = elec.wiring_graph()
         
         self.assertIs(elec.mains(), meter1)
         self.assertEqual(elec.meters_directly_downstream_of_mains(), [meter2])
-        
 
     def test_proportion_of_energy_submetered(self):
         meters = []
         for i in [1,2,3]:
             meter_meta = self.datastore.load_metadata('building1')['elec_meters'][i]
-            meter = ElecMeter(self.datastore, meter_meta, i)
+            meter_id = ElecMeterID(i, 1, 'REDD')
+            meter = ElecMeter(self.datastore, meter_meta, meter_id)
             meters.append(meter)
 
         mains = meters[0]

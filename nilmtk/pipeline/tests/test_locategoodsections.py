@@ -6,6 +6,7 @@ from nilmtk.pipeline.locategoodsectionsnode import reframe_index
 from nilmtk.pipeline.locategoodsectionsresults import LocateGoodSectionsResults
 from nilmtk.pipeline.energynode import _energy_for_power_series
 from nilmtk import TimeFrame, ElecMeter, HDFDataStore
+from nilmtk.elecmeter import ElecMeterID
 from nilmtk.consts import JOULES_PER_KWH
 from nilmtk.tests.testingtools import data_dir
 from os.path import join
@@ -13,7 +14,7 @@ import numpy as np
 import pandas as pd
 from datetime import timedelta
 
-METER_INSTANCE = 1
+METER_ID = ElecMeterID(instance=1, building=1, dataset='REDD')
 
 class TestLocateGaps(unittest.TestCase):
 
@@ -22,11 +23,11 @@ class TestLocateGaps(unittest.TestCase):
         filename = join(data_dir(), 'energy_complex.h5')
         cls.datastore = HDFDataStore(filename)
         ElecMeter.load_meter_devices(cls.datastore)
-        cls.meter_meta = cls.datastore.load_metadata('building1')['elec_meters'][METER_INSTANCE]
+        cls.meter_meta = cls.datastore.load_metadata('building1')['elec_meters'][METER_ID.instance]
 
     def test_pipeline(self):
         meter = ElecMeter(store=self.datastore, metadata=self.meter_meta, 
-                          meter_instance=METER_INSTANCE)
+                          meter_id=METER_ID)
         nodes = [LocateGoodSectionsNode()]
         pipeline = Pipeline(nodes)
         pipeline.run(meter)

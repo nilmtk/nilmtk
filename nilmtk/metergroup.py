@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 import networkx as nx
-from .electricitymeter import ElecMeter
+from .elecmeter import ElecMeter, ElecMeterID
 from .datastore import join_key
 
 class MeterGroup(object):
@@ -15,17 +15,21 @@ class MeterGroup(object):
     def __init__(self, meters=None):
         self.meters = [] if meters is None else list(meters)
 
-    def load(self, store, elec_meters):
+    def load(self, store, elec_meters, building_id):
         """
         Parameters
         ----------
         store : nilmtk.DataStore
         elec_meters : dict of dicts
             metadata for each ElecMeter
+        building_id : BuildingID
         """
         ElecMeter.load_meter_devices(store)
         for meter_i, meter_metadata_dict in elec_meters.iteritems():
-            meter = ElecMeter(store, meter_metadata_dict, meter_i)
+            meter_id = ElecMeterID(instance=meter_i, 
+                                   building=building_id.instance,
+                                   dataset=building_id.dataset)
+            meter = ElecMeter(store, meter_metadata_dict, meter_id)
             self.meters.append(meter)
 
     def union(self, other):

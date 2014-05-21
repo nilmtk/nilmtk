@@ -3,6 +3,7 @@ from __future__ import print_function, division
 import unittest
 from nilmtk import Appliance, MeterGroup, ElecMeter
 from nilmtk.utils import tree_root, nodes_adjacent_to_root
+from nilmtk.elecmeter import ElecMeterID
 
 class TestMeterGroup(unittest.TestCase):
     def test_getitem(self):
@@ -37,12 +38,12 @@ class TestMeterGroup(unittest.TestCase):
         # TODO: make this test more rigorous!
         
     def test_wiring_graph(self):
-        meter1 = ElecMeter(metadata={'site_meter': True, 'dataset':'REDD', 
-                                     'building': 1, 'instance': 1})
-        meter2 = ElecMeter(metadata={'submeter_of': 1, 'dataset':'REDD', 
-                                     'building': 1, 'instance': 2})
-        meter3 = ElecMeter(metadata={'submeter_of': 2, 'dataset':'REDD', 
-                                     'building': 1, 'instance': 3})
+        meter1 = ElecMeter(metadata={'site_meter': True}, 
+                           meter_id=ElecMeterID(1,1,'REDD'))
+        meter2 = ElecMeter(metadata={'submeter_of': 1},
+                           meter_id=ElecMeterID(2,1,'REDD'))
+        meter3 = ElecMeter(metadata={'submeter_of': 2},
+                           meter_id=ElecMeterID(3,1,'REDD'))
         mg = MeterGroup([meter1, meter2, meter3])
         wiring_graph = mg.wiring_graph()
         self.assertEqual(wiring_graph.nodes(), [meter2, meter3, meter1])

@@ -119,8 +119,8 @@ def create_random_hdf5():
         elec_meter_metadata[meter] = {
             'device_model': TEST_METER['model'], 
             'submeter_of': 1,
-            'dataset': 'REDD',
-            'building': 1,
+#            'dataset': 'REDD',
+#            'building': 1,
             'sensors': [{'data_location': key}]
         }
 
@@ -161,8 +161,8 @@ def create_energy_hdf5(simple=True):
         print("Saving", key)
         store.put(key, df, format='table')
         meta = {
-            'building': 1,
-            'dataset': 'REDD',
+#            'building': 1,
+#            'dataset': 'REDD',
             'device_model': meter_device['model'],
             'sensors': [{'data_location': key}]
         }

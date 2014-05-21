@@ -4,6 +4,7 @@ import unittest
 from nilmtk.pipeline import Pipeline, EnergyNode, ClipNode
 from nilmtk.pipeline.energynode import _energy_for_power_series
 from nilmtk import TimeFrame, ElecMeter, HDFDataStore
+from nilmtk.elecmeter import ElecMeterID
 from nilmtk.consts import JOULES_PER_KWH
 from nilmtk.tests.testingtools import data_dir
 from os.path import join
@@ -12,7 +13,7 @@ import pandas as pd
 from datetime import timedelta
 from copy import deepcopy
 
-METER_INSTANCE = 1
+METER_ID = ElecMeterID(instance=1, building=1, dataset='REDD')
 
 def check_energy_numbers(testcase, energy):
     energy = energy.combined
@@ -29,7 +30,7 @@ class TestEnergy(unittest.TestCase):
         filename = join(data_dir(), 'energy.h5')
         cls.datastore = HDFDataStore(filename)
         ElecMeter.load_meter_devices(cls.datastore)
-        cls.meter_meta = cls.datastore.load_metadata('building1')['elec_meters'][METER_INSTANCE]
+        cls.meter_meta = cls.datastore.load_metadata('building1')['elec_meters'][METER_ID.instance]
 
     def test_energy_per_power_series(self):
         data = np.array([0,  0,  0, 100, 100, 100, 150, 150, 200,   0,   0, 100, 5000,    0])
@@ -42,7 +43,7 @@ class TestEnergy(unittest.TestCase):
 
     def test_pipeline(self):
         meter = ElecMeter(store=self.datastore, metadata=self.meter_meta, 
-                          meter_instance=METER_INSTANCE)
+                          meter_id=METER_ID)
         nodes = [ClipNode(), EnergyNode()]
         pipeline = Pipeline(nodes)
         pipeline.run(meter)
@@ -53,7 +54,7 @@ class TestEnergy(unittest.TestCase):
         multi_meter_meta = deepcopy(self.meter_meta)
         multi_meter_meta['sensors'] += multi_meter_meta['sensors']
         multi_meter = ElecMeter(store=self.datastore, metadata=multi_meter_meta,
-                                meter_instance=METER_INSTANCE)
+                                meter_id=METER_ID)
         pipeline.run(multi_meter)
         multi_meter_energy = deepcopy(pipeline.results['energy'])
         for ac_type, en in multi_meter_energy.combined.iteritems():

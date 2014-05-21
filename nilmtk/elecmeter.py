@@ -25,18 +25,7 @@ class ElecMeter(Hashable):
         each string is a key into nilmtk.DataStore to access data.
     
     metadata : dict.
-        See http://nilm-metadata.readthedocs.org/en/latest/dataset_metadata.html#elecmeter
-        Also stores:
-        instance : int, meter instance within this building, starting from 1
-        building : int, building instance, starting from 1
-        dataset : str e.g. 'REDD'
-
-        --------- THE FOLLOWING ATTRIBUTES ARE SET AUTOMATICALLY, ---------
-        --------- i.e. THEY DO NOT EXIST IN THE ON-DISK METADATA. ---------
-
-        device : dict (instantiated from meter_devices static class attribute)
-          TODO: `device` might be implemented as a property of ElecMeter.
-    
+        See http://nilm-metadata.readthedocs.org/en/latest/dataset_metadata.html#elecmeter    
 
     STATIC ATTRIBUTES
     -----------------
@@ -54,29 +43,22 @@ class ElecMeter(Hashable):
     meter_devices = {}
     meters = {}
 
-    def __init__(self, store=None, metadata=None, meter_instance=None):
+    def __init__(self, store=None, metadata=None, meter_id=None):
         # Store and check parameters
         self.metadata = {} if metadata is None else metadata
         assert isinstance(self.metadata, dict)
         self.store = store
         if self.store is not None:
             assert not isinstance(self.store, dict)
-        if meter_instance is not None:
-            metadata.update({'instance': meter_instance})
+        self.identifier = meter_id
+        if self.identifier is not None:
+            assert isinstance(meter_id, ElecMeterID)
+            ElecMeter.meters[self.identifier] = self
 
         # Load appliances
         self.appliances = []
         for appliance_metadata in self.metadata.get('appliances', []):
             self.appliances.append(Appliance(appliance_metadata))
-
-        ElecMeter.meters[self.identifier] = self
-        
-    @property
-    def identifier(self):
-        md = self.metadata
-        return ElecMeterID(md.get('instance'), 
-                                  md.get('building'), 
-                                  md.get('dataset'))
 
     @property
     def sensor_keys(self):

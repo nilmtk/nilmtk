@@ -3,10 +3,11 @@ from __future__ import print_function, division
 import unittest
 from nilmtk.pipeline import Pipeline, EnergyNode, ClipNode
 from nilmtk import TimeFrame, ElecMeter, HDFDataStore
+from nilmtk.elecmeter import ElecMeterID
 from nilmtk.tests.testingtools import data_dir
 from os.path import join
 
-METER_INSTANCE = 1
+METER_ID = ElecMeterID(instance=1, building=1, dataset='REDD')
 
 class TestPipeline(unittest.TestCase):
 
@@ -15,11 +16,11 @@ class TestPipeline(unittest.TestCase):
         filename = join(data_dir(), 'random.h5')
         cls.datastore = HDFDataStore(filename)
         ElecMeter.load_meter_devices(cls.datastore)
-        cls.meter_meta = cls.datastore.load_metadata('building1')['elec_meters'][METER_INSTANCE]
+        cls.meter_meta = cls.datastore.load_metadata('building1')['elec_meters'][METER_ID.instance]
 
     def test_pipeline(self):
         meter = ElecMeter(store=self.datastore, metadata=self.meter_meta, 
-                          meter_instance=METER_INSTANCE)
+                          meter_id=METER_ID)
         nodes = [ClipNode(), EnergyNode()]
         pipeline = Pipeline(nodes)
         pipeline.run(meter)
