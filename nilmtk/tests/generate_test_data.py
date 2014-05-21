@@ -101,7 +101,7 @@ def add_building_metadata(store, elec_meters, key='building1'):
     md = {
         'instance': 1,
         'dataset': 'REDD',
-        'elec_meter': elec_meters
+        'elec_meters': elec_meters
     }
     node._f_setattr('metadata', md)
 

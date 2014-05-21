@@ -20,7 +20,8 @@ class Building(object):
     
     def load(self, store, key):
         self.metadata = store.load_metadata(key)
-        self.electric.load(store, join_key(key, 'electric'))
+        elec_meters = self.metadata.get('elec_meters', [])
+        self.electric.load(store, elec_meters)
                 
     def save(self, destination, key):
         destination.write_metadata(key, self.metadata)

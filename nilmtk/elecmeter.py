@@ -71,41 +71,24 @@ class ElecMeter(Hashable):
     meter_devices = {}
     meters = {}
 
-    def __init__(self, metadata=None):
-        self.store = None
-        self.sensor_keys = []
-        self.appliances = []
+    def __init__(self, store=None, metadata=None):
+        # Store and check parameters
         self.metadata = {} if metadata is None else metadata
-        ElecMeter.meters[self.identifier] = self
-
-    def load(self, store, key):
-        # TODO maybe we just pass metadata into __init__, then pass just store into load()?
-        """
-        Parameters
-        ----------
-        store : nilmtk.DataStore
-        key : string
-            primary key (others will be loaded if specified by 
-            the metadata for `key`).
-        """
-        assert isinstance(key, str)
-        print("Loading ElecMeter from key", key)
+        assert isinstance(self.metadata, dict)
         self.store = store
-        self.metadata = self.store.load_metadata(key)
+        if self.store is not None:
+            assert not isinstance(self.store, dict)
 
-        self.sensor_keys = [key]
-        key_obj = Key(key)
-        assert key_obj.meter is not None
-        for chan in self.metadata.get('additional_channels', []):
-            new_key_obj = deepcopy(key_obj)
-            new_key_obj.meter = chan
-            self.sensor_keys.append(str(new_key_obj))
-            
-        ElecMeter._load_meter_devices(store)
-        device_model = self.metadata['device_model']
-        self.metadata['device'] = ElecMeter.meter_devices[device_model]
+        # TODO: don't do this any more... I think it's
+        # only pipeline which requires this...
+        device_model = self.metadata.get('device_model')
+        if device_model is None:
+            self.metadata['device'] = {}
+        else:
+            self.metadata['device'] = ElecMeter.meter_devices[device_model]
 
         # Load appliances
+        self.appliances = []
         for appliance_metadata in self.metadata.get('appliances', []):
             self.appliances.append(Appliance(appliance_metadata))
 
@@ -117,6 +100,10 @@ class ElecMeter(Hashable):
         return ElecMeterID(md.get('instance'), 
                                   md.get('building'), 
                                   md.get('dataset'))
+
+    @property
+    def sensor_keys(self):
+        return [sensor['data_location'] for sensor in self.metadata['sensors']]
 
     @property
     def upstream_meter(self):
@@ -135,7 +122,7 @@ class ElecMeter(Hashable):
         return upstream_meter
 
     @classmethod
-    def _load_meter_devices(cls, store):
+    def load_meter_devices(cls, store):
         dataset_metadata = store.load_metadata('/')
         ElecMeter.meter_devices.update(dataset_metadata.get('meter_devices', {}))
 

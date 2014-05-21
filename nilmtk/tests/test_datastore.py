@@ -19,7 +19,7 @@ class TestHDFDataStore(unittest.TestCase):
     def setUpClass(cls):
         filename = join(data_dir(), 'random.h5')
         cls.datastore = HDFDataStore(filename)
-        cls.keys = ['/building1/electric/meter{:d}'.format(i) 
+        cls.keys = ['/building1/electric/sensor{:d}'.format(i) 
                     for i in range(1,6)]
 
     @classmethod

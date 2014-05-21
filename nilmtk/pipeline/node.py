@@ -122,6 +122,7 @@ class Node(object):
         unsatisfied = find_unsatisfied_requirements(state, self.requirements)
         if unsatisfied:
             msg = str(self) + " not satisfied by:\n" + str(unsatisfied)
+            msg += "  State dict = " + str(state)
             raise UnsatisfiedRequirementsError(msg)
             
     def required_measurements(self, state):

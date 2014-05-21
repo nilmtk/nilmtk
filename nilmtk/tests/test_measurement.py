@@ -76,8 +76,8 @@ class TestMeasurement(unittest.TestCase):
 
         ElecMeter.meter_devices.update(
             {'test model': {'measurements': [measure.Power('apparent')]}})
-        meter = ElecMeter({'device_model': 'test model',
-                                  'dataset': 'REDD', 'building': 1, 'instance': 1})
+        meter = ElecMeter(metadata={'device_model': 'test model',
+                                    'dataset': 'REDD', 'building': 1, 'instance': 1})
         
         self.assertEqual(measure.select_best_ac_type(['reactive'], 
                                                      meter.available_ac_types()),

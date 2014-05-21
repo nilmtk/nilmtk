@@ -134,6 +134,12 @@ class HDFDataStore(DataStore):
         ------
         MemoryError if we try to load too much data.
         """
+        # Make sure key has a slash at the front but not at the end.
+        if key[0] != '/':
+            key = '/' + key
+        if len(key) > 1 and key[-1] == '/':
+            key = key[:-1]
+
         self._check_key(key)
         self._check_columns(key, cols)
         periods = [TimeFrame()] if periods is None else periods

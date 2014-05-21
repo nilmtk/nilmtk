@@ -6,18 +6,17 @@ from nilmtk import TimeFrame, ElecMeter, HDFDataStore
 from nilmtk.tests.testingtools import data_dir
 from os.path import join
 
-KEY = '/building1/electric/meter1'
-
 class TestPipeline(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
         filename = join(data_dir(), 'random.h5')
         cls.datastore = HDFDataStore(filename)
+        ElecMeter.load_meter_devices(cls.datastore)
+        cls.meter_meta = cls.datastore.load_metadata('building1')['elec_meters'][0]
 
     def test_pipeline(self):
-        meter = ElecMeter()
-        meter.load(self.datastore, key=KEY)
+        meter = ElecMeter(store=self.datastore, metadata=self.meter_meta)
         nodes = [ClipNode(), EnergyNode()]
         pipeline = Pipeline(nodes)
         pipeline.run(meter)

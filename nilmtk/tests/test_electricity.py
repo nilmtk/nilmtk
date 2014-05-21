@@ -11,13 +11,14 @@ class TestElectricity(unittest.TestCase):
     def setUpClass(cls):
         filename = join(data_dir(), 'energy.h5')
         cls.datastore = HDFDataStore(filename)
+        ElecMeter.load_meter_devices(cls.datastore)
 
     def test_wiring_graph(self):
-        meter1 = ElecMeter(
+        meter1 = ElecMeter(metadata=
             {'site_meter': True, 'dataset': 'REDD', 'building': 1, 'instance' :1})
-        meter2 = ElecMeter(
+        meter2 = ElecMeter(metadata=
             {'submeter_of': 1, 'instance': 2, 'dataset': 'REDD', 'building': 1})
-        meter3 = ElecMeter(
+        meter3 = ElecMeter(metadata=
             {'submeter_of': 2, 'instance': 3, 'dataset': 'REDD', 'building': 1})
         elec = Electricity([meter1, meter2, meter3])
         wiring_graph = elec.wiring_graph()
@@ -29,8 +30,8 @@ class TestElectricity(unittest.TestCase):
     def test_proportion_of_energy_submetered(self):
         meters = []
         for i in [1,2,3]:
-            meter = ElecMeter()
-            meter.load(self.datastore, key='/building1/electric/meter{:d}'.format(i))
+            meter_meta = self.datastore.load_metadata('building1')['elec_meters'][i-1]
+            meter = ElecMeter(self.datastore, meter_meta)
             meters.append(meter)
 
         mains = meters[0]

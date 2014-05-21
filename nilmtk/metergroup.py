@@ -15,13 +15,17 @@ class MeterGroup(object):
     def __init__(self, meters=None):
         self.meters = [] if meters is None else list(meters)
 
-    def load(self, store, key):
-        # TODO: pass in store and list of elec meters dicts.
-        # then iterate through elec meter dicts, passing the dict and store to each ElecMeter.
-        meter_names = store.elements_below_key(key) # ['meter1', 'meter2', etc]
-        for meter_name in meter_names:
-            meter = ElecMeter()
-            meter.load(store, join_key(key, meter_name))
+    def load(self, store, elec_meters):
+        """
+        Parameters
+        ----------
+        store : nilmtk.DataStore
+        elec_meters : list of dicts
+            metadata for each ElecMeter
+        """
+        ElecMeter.load_meter_devices(store)
+        for meter_metadata_dict in elec_meters:
+            meter = ElecMeter(store, meter_metadata_dict)
             self.meters.append(meter)
 
     def union(self, other):

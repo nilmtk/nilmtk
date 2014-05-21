@@ -12,8 +12,6 @@ import pandas as pd
 from datetime import timedelta
 from copy import deepcopy
 
-KEY = '/building1/electric/meter1'
-
 def check_energy_numbers(testcase, energy):
     energy = energy.combined
     true_active_kwh =  0.0163888888889
@@ -28,6 +26,8 @@ class TestEnergy(unittest.TestCase):
     def setUpClass(cls):
         filename = join(data_dir(), 'energy.h5')
         cls.datastore = HDFDataStore(filename)
+        ElecMeter.load_meter_devices(cls.datastore)
+        cls.meter_meta = cls.datastore.load_metadata('building1')['elec_meters'][0]
 
     def test_energy_per_power_series(self):
         data = np.array([0,  0,  0, 100, 100, 100, 150, 150, 200,   0,   0, 100, 5000,    0])
@@ -39,8 +39,7 @@ class TestEnergy(unittest.TestCase):
         self.assertAlmostEqual(true_kwh, kwh)
 
     def test_pipeline(self):
-        meter = ElecMeter()
-        meter.load(self.datastore, key=KEY)
+        meter = ElecMeter(store=self.datastore, metadata=self.meter_meta)
         nodes = [ClipNode(), EnergyNode()]
         pipeline = Pipeline(nodes)
         pipeline.run(meter)
@@ -48,9 +47,9 @@ class TestEnergy(unittest.TestCase):
         check_energy_numbers(self, energy)
 
         # test multiple keys
-        multi_meter = ElecMeter()
-        multi_meter.load(self.datastore, key=KEY)
-        multi_meter.sensor_keys = [KEY, KEY]
+        multi_meter_meta = deepcopy(self.meter_meta)
+        multi_meter_meta['sensors'] += multi_meter_meta['sensors']
+        multi_meter = ElecMeter(store=self.datastore, metadata=multi_meter_meta)
         pipeline.run(multi_meter)
         multi_meter_energy = deepcopy(pipeline.results['energy'])
         for ac_type, en in multi_meter_energy.combined.iteritems():
@@ -58,3 +57,6 @@ class TestEnergy(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+
