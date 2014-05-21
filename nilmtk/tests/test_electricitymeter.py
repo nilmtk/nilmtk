@@ -6,7 +6,7 @@ import pandas as pd
 from datetime import timedelta
 from .testingtools import data_dir, WarningTestMixin
 from nilmtk.datastore import HDFDataStore
-from nilmtk import ElectricityMeter, Mains
+from nilmtk import ElectricityMeter
 from nilmtk.pipeline.tests.test_energy import check_energy_numbers
 
 KEY = '/building1/electric/meter1'
@@ -43,9 +43,7 @@ class TestElectricityMeter(WarningTestMixin, unittest.TestCase):
             meter1.upstream_meter
         meter2 = ElectricityMeter({'submeter_of': 1, 'dataset': 'REDD', 
                                    'building': 1, 'instance': 2})
-        mains = Mains(1, 'REDD', meters=[meter1])
-        meter2.mains = mains
-        self.assertIs(meter2.upstream_meter, mains)
+        self.assertIs(meter2.upstream_meter, meter1)
         meter3 = ElectricityMeter({'submeter_of': 2, 'dataset': 'REDD', 
                                    'building': 1, 'instance': 3})
         self.assertIs(meter3.upstream_meter, meter2)

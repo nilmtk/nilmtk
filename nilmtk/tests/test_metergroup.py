@@ -1,7 +1,7 @@
 #!/usr/bin/python
 from __future__ import print_function, division
 import unittest
-from nilmtk import Appliance, MeterGroup, ElectricityMeter, Mains
+from nilmtk import Appliance, MeterGroup, ElectricityMeter
 from nilmtk.utils import tree_root, nodes_adjacent_to_root
 
 class TestMeterGroup(unittest.TestCase):
@@ -39,15 +39,13 @@ class TestMeterGroup(unittest.TestCase):
     def test_wiring_graph(self):
         meter1 = ElectricityMeter({'site_meter': True, 'dataset':'REDD', 
                                    'building': 1, 'instance': 1})
-        mains = Mains(1, 'REDD', meters=[meter1])
         meter2 = ElectricityMeter({'submeter_of': 1, 'dataset':'REDD', 
                                    'building': 1, 'instance': 2})
-        meter2.mains = mains
         meter3 = ElectricityMeter({'submeter_of': 2, 'dataset':'REDD', 
                                    'building': 1, 'instance': 3})
         mg = MeterGroup([meter1, meter2, meter3])
         wiring_graph = mg.wiring_graph()
-        self.assertEqual(wiring_graph.nodes(), [meter2, meter3, mains])
+        self.assertEqual(wiring_graph.nodes(), [meter2, meter3, meter1])
                 
 
 if __name__ == '__main__':

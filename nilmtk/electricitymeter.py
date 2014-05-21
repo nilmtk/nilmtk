@@ -20,13 +20,6 @@ class ElectricityMeter(Hashable):
       of this meter.  Will be [] if no appliances are connected directly
       to this meter.
 
-    mains : ElectricityMeter which is the site_meter. (used so
-      appliance methods can default to use the same measured parameter
-      (active / apparent / reactive) as Mains; and also for use in
-      proportion of energy submetered and for voltage normalisation.)
-      DON'T IMPLEMENT THIS UNTIL I'M SURE I NEED IT.  FEELS SLIGHTLY
-      OFF-COLOUR.
-
     store : nilmtk.DataStore
 
     keys : list of strings
@@ -85,7 +78,6 @@ class ElectricityMeter(Hashable):
         self.keys = []
         self.appliances = []
         self.metadata = {} if metadata is None else metadata
-        self.mains = None
         ElectricityMeter.meters[self.identifier] = self
 
     def load(self, store, key):
@@ -132,11 +124,14 @@ class ElectricityMeter(Hashable):
         submeter_of = self.metadata.get('submeter_of')
         if submeter_of is None:
             raise ValueError("This meter has no 'submeter_of' metadata attribute.")
-        if submeter_of == 0:
-            raise ValueError("Setting 'submeter_of' to 0 is not supported. Set it to >= 1.")
+        if submeter_of <= 0:
+            raise ValueError("'submeter_of' must be >= 1.")
+        upstream_meter_in_building = self.metadata.get('upstream_meter_in_building')
+        if upstream_meter_in_building is None:
+            upstream_meter_in_building = self.identifier.building
         id_of_upstream = ElectricityMeterID(instance=submeter_of, 
-                                            building=self.identifier.building, 
-                                            dataset=self.identifier.dataset,)
+                                            building=upstream_meter_in_building,
+                                            dataset=self.identifier.dataset)
         upstream_meter =  ElectricityMeter.meters[id_of_upstream]
         return upstream_meter
 
@@ -161,6 +156,12 @@ class ElectricityMeter(Hashable):
         return ElectricityMeter.meter_devices[device_model]
 
     def available_ac_types(self):
+        """Finds available alternating current types from measurements.
+
+        Returns
+        -------
+        list of strings e.g. ['apparent', 'active']
+        """
         measurements = self.device['measurements']
         return [m.ac_type for m in measurements if isinstance(m, Power)]
 
@@ -287,11 +288,11 @@ class ElectricityMeter(Hashable):
         """
         raise NotImplementedError
     
-    def proportion_of_energy(self):
+    def proportion_of_energy(self, mains):
         # Mask out gaps from mains
-        good_mains_timeframes = self.mains.good_timeframes()
+        good_mains_timeframes = mains.good_timeframes()
         proportion_of_energy = (self.total_energy(timeframes=good_mains_timeframes) /
-                                self. mains.total_energy())
+                                mains.total_energy(timeframes=good_mains_timeframes))
         return proportion_of_energy 
 
     def contiguous_sections(self):
