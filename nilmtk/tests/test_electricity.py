@@ -30,8 +30,8 @@ class TestElectricity(unittest.TestCase):
     def test_proportion_of_energy_submetered(self):
         meters = []
         for i in [1,2,3]:
-            meter_meta = self.datastore.load_metadata('building1')['elec_meters'][i-1]
-            meter = ElecMeter(self.datastore, meter_meta)
+            meter_meta = self.datastore.load_metadata('building1')['elec_meters'][i]
+            meter = ElecMeter(self.datastore, meter_meta, i)
             meters.append(meter)
 
         mains = meters[0]

@@ -9,7 +9,7 @@ from nilmtk.datastore import HDFDataStore
 from nilmtk import ElecMeter
 from nilmtk.pipeline.tests.test_energy import check_energy_numbers
 
-KEY = '/building1/electric/meter1'
+METER_INSTANCE = 1
 
 class TestElecMeter(WarningTestMixin, unittest.TestCase):
 
@@ -18,14 +18,15 @@ class TestElecMeter(WarningTestMixin, unittest.TestCase):
         filename = join(data_dir(), 'energy.h5')
         cls.datastore = HDFDataStore(filename)
         ElecMeter.load_meter_devices(cls.datastore)
-        cls.meter_meta = cls.datastore.load_metadata('building1')['elec_meters'][0]
+        cls.meter_meta = cls.datastore.load_metadata('building1')['elec_meters'][METER_INSTANCE]
 
     @classmethod
     def tearDownClass(cls):
         cls.datastore.close()
 
     def test_load(self):
-        meter = ElecMeter(store=self.datastore, metadata=self.meter_meta)
+        meter = ElecMeter(store=self.datastore, metadata=self.meter_meta, 
+                          meter_instance=METER_INSTANCE)
         self.assertEqual(meter.metadata['device_model'], 'Energy Meter')
         self.assertEqual(meter.metadata['device']['sample_period'], 10)
 
@@ -33,7 +34,8 @@ class TestElecMeter(WarningTestMixin, unittest.TestCase):
         meter = ElecMeter()
         with self.assertRaises(RuntimeError):
             meter.total_energy()
-        meter = ElecMeter(store=self.datastore, metadata=self.meter_meta)
+        meter = ElecMeter(store=self.datastore, metadata=self.meter_meta, 
+                          meter_instance=METER_INSTANCE)
         energy = meter.total_energy()
         check_energy_numbers(self, energy)
         

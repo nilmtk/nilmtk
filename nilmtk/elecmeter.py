@@ -71,13 +71,15 @@ class ElecMeter(Hashable):
     meter_devices = {}
     meters = {}
 
-    def __init__(self, store=None, metadata=None):
+    def __init__(self, store=None, metadata=None, meter_instance=None):
         # Store and check parameters
         self.metadata = {} if metadata is None else metadata
         assert isinstance(self.metadata, dict)
         self.store = store
         if self.store is not None:
             assert not isinstance(self.store, dict)
+        if meter_instance is not None:
+            metadata.update({'instance': meter_instance})
 
         # TODO: don't do this any more... I think it's
         # only pipeline which requires this...

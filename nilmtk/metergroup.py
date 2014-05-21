@@ -24,8 +24,8 @@ class MeterGroup(object):
             metadata for each ElecMeter
         """
         ElecMeter.load_meter_devices(store)
-        for meter_metadata_dict in elec_meters:
-            meter = ElecMeter(store, meter_metadata_dict)
+        for meter_i, meter_metadata_dict in elec_meters.iteritems():
+            meter = ElecMeter(store, meter_metadata_dict, meter_i)
             self.meters.append(meter)
 
     def union(self, other):

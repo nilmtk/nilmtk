@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 from datetime import timedelta
 
-KEY = '/building1/electric/meter1'
+METER_INSTANCE = 1
 
 class TestLocateGaps(unittest.TestCase):
 
@@ -22,10 +22,11 @@ class TestLocateGaps(unittest.TestCase):
         filename = join(data_dir(), 'energy_complex.h5')
         cls.datastore = HDFDataStore(filename)
         ElecMeter.load_meter_devices(cls.datastore)
-        cls.meter_meta = cls.datastore.load_metadata('building1')['elec_meters'][0]
+        cls.meter_meta = cls.datastore.load_metadata('building1')['elec_meters'][METER_INSTANCE]
 
     def test_pipeline(self):
-        meter = ElecMeter(store=self.datastore, metadata=self.meter_meta)
+        meter = ElecMeter(store=self.datastore, metadata=self.meter_meta, 
+                          meter_instance=METER_INSTANCE)
         nodes = [LocateGoodSectionsNode()]
         pipeline = Pipeline(nodes)
         pipeline.run(meter)
