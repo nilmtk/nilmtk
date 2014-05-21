@@ -11,7 +11,7 @@ from nilmtk.pipeline.tests.test_energy import check_energy_numbers
 
 KEY = '/building1/electric/meter1'
 
-class TestElectricityMeter(WarningTestMixin, unittest.TestCase):
+class TestElecMeter(WarningTestMixin, unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):

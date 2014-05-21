@@ -21,11 +21,10 @@ class ElecMeter(Hashable):
 
     store : nilmtk.DataStore
 
-    keys : list of strings
+    sensor_keys : list of strings
         each string is a key into nilmtk.DataStore to access data.
-        Metadata for this ElecMeter is stored with keys[0].
     
-    metadata : dict.  Including keys:
+    metadata : dict.  Including sensor_keys:
         instance : int, meter instance within this building, starting from 1
         building : int, building instance, starting from 1
         dataset : str e.g. 'REDD'
@@ -74,7 +73,7 @@ class ElecMeter(Hashable):
 
     def __init__(self, metadata=None):
         self.store = None
-        self.keys = []
+        self.sensor_keys = []
         self.appliances = []
         self.metadata = {} if metadata is None else metadata
         ElecMeter.meters[self.identifier] = self
@@ -93,13 +92,13 @@ class ElecMeter(Hashable):
         self.store = store
         self.metadata = self.store.load_metadata(key)
 
-        self.keys = [key]
+        self.sensor_keys = [key]
         key_obj = Key(key)
         assert key_obj.meter is not None
         for chan in self.metadata.get('additional_channels', []):
             new_key_obj = deepcopy(key_obj)
             new_key_obj.meter = chan
-            self.keys.append(str(new_key_obj))
+            self.sensor_keys.append(str(new_key_obj))
             
         ElecMeter._load_meter_devices(store)
         device_model = self.metadata['device_model']

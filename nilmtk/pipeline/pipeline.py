@@ -54,7 +54,7 @@ class Pipeline(object):
     --------
     
     >>> store = HDFDataStore('redd.h5')
-    >>> meter = ElectricityMeter(store, ['building1/electric/meter1'])
+    >>> meter = ElecMeter(store, ['building1/electric/meter1'])
 
     Calculate total energy and save the preprocessed data
     and the energy data back to disk:
@@ -76,7 +76,7 @@ class Pipeline(object):
         """
         Parameters
         ----------
-        meter : nilmtk.ElectricityMeter
+        meter : nilmtk.ElecMeter
         **load_kwargs : key word arguments for store.load() e.g.:
             - periods : list of nilmtk.TimeFrame objects
         """
@@ -85,7 +85,7 @@ class Pipeline(object):
 
         # Run pipeline
         # TODO only load required measurements
-        for key in meter.keys:
+        for key in meter.sensor_keys:
             for node in self.nodes:
                 node.reset()
             self.results[key] = {}
@@ -96,10 +96,10 @@ class Pipeline(object):
         # Copy the results for the first table to the base of 
         # the results dict (which is what most users will want to access),
         # ready for merging any results from other tables into this master result.
-        self.results.update(deepcopy(self.results[meter.keys[0]]))
+        self.results.update(deepcopy(self.results[meter.sensor_keys[0]]))
 
         # combine results from multiple tables
-        for key in meter.keys[1:]:
+        for key in meter.sensor_keys[1:]:
             for statistic, result in self.results[key].iteritems():
                 self.results[statistic].unify(result)
 

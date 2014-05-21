@@ -50,7 +50,7 @@ class TestEnergy(unittest.TestCase):
         # test multiple keys
         multi_meter = ElecMeter()
         multi_meter.load(self.datastore, key=KEY)
-        multi_meter.keys = [KEY, KEY]
+        multi_meter.sensor_keys = [KEY, KEY]
         pipeline.run(multi_meter)
         multi_meter_energy = deepcopy(pipeline.results['energy'])
         for ac_type, en in multi_meter_energy.combined.iteritems():
