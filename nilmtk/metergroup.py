@@ -294,12 +294,16 @@ class MeterGroup(object):
         assert isinstance(meters, list)
         return meters
 
-    def dataframe_of_submeters(self, rule='1T'):
+    def dataframe_of_meters(self, rule='1T'):
         """
         Returns
         -------
         DataFrame
-            Each column is a submeter.  We select the most appropriate measurement.
+            Each column is a meter.  We select the most appropriate measurement.
+            First column is mains.
+            All NaNs are zeroed out.
+            Chunks (which may not be consecutive) are put together. i.e. there 
+            will be breaks in the index where there were holes in the mains data.
 
         Note
         ----
@@ -313,20 +317,26 @@ class MeterGroup(object):
         energy_threshold = mains_energy[energy_ac_type] * 0.05
 
         # TODO: should iterate through 'most distal' meters
-        for submeter in self.meters_directly_downstream_of_mains():
-            submeter_energy = submeter.total_energy(periods=mains_good_sections).combined
-            submeter_energy_ac_type = select_best_ac_type(submeter_energy.keys(),
-                                                          mains_energy.keys())
-            if submeter_energy[submeter_energy_ac_type] < energy_threshold:
+        for meter in [self.mains()] + self.meters_directly_downstream_of_mains():
+            meter_energy = meter.total_energy(periods=mains_good_sections).combined
+            meter_energy_ac_type = select_best_ac_type(meter_energy.keys(),
+                                                       mains_energy.keys())
+            if meter_energy[meter_energy_ac_type] < energy_threshold:
                 continue
 
             # TODO: resampling etc should happen in pipeline
             chunks = []
-            for chunk in submeter.power_series(periods=mains_good_sections):
-                chunks.append(chunk)
+            for chunk in meter.power_series(periods=mains_good_sections):
+                chunk = chunk.resample(rule=rule, how='mean')
+
+                # Protect against getting duplicate indicies
+                if chunks and chunks[-1].index[-1] == chunk.index[0]:
+                    chunks.append(chunk.iloc[1:])
+                else:
+                    chunks.append(chunk)
+                
             power_series = pd.concat(chunks)
 
-            power_series = power_series.resample(rule=rule, how='mean')
             # need to make sure 
             # resample stays in sync with mains power_series.  Maybe want reindex???
             # If we're careful then I think we can get power_series with index
@@ -335,7 +345,7 @@ class MeterGroup(object):
 
             # TODO: insert zeros and then ffill
             power_series.fillna(value=0, inplace=True)
-            submeters_dict[submeter.identifier] = power_series
+            submeters_dict[meter.identifier] = power_series
         return pd.DataFrame(submeters_dict)
 
     def proportion_of_energy_submetered(self):
