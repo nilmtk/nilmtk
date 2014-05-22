@@ -61,3 +61,7 @@ class LocateGoodSectionsResults(Results):
         sections[-1].include_end = True
 
         return sections
+
+    def unify(self, other):
+        # TODO!
+        super(LocateGoodSectionsResults, self).unify(other)
