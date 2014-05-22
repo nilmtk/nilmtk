@@ -287,7 +287,7 @@ class MeterGroup(object):
         assert isinstance(meters, list)
         return meters
 
-    def prepare_for_disaggregation(self, downsample_rule='1T'):
+    def prepare_for_disaggregation(self, rule='1T'):
         mains = self.mains()
         mains_good_sections = mains.good_sections().combined
         mains_energy = mains.total_energy(periods=mains_good_sections)
@@ -299,17 +299,20 @@ class MeterGroup(object):
             if submeter_energy < energy_threshold:
                 continue
 
-            power_series = submeter.power_series(periods=mains_good_sections)
-        #     power_series = submeter.power_series(mains_good_sections)
-        #     power_series = power_series.resample('1T') # need to make sure 
-        #     # resample stays in sync with mains power_series.  Maybe want reindex???
-        #     # If we're careful then I think we can get power_series with index
-        #     # in common with mains, without having to post-process it
-        #     # like prepb.make_common_index(building)
-        #     insert zeros
-        #     fill forwards
-        #     yield processed Series for disaggregator.train()
+            # TODO: should cope with multiple chunks
+            # TODO: resampling etc should happen in pipeline
+            power_series = next(submeter.power_series(periods=mains_good_sections))
 
+            power_series = power_series.resample(rule=rule, how='mean').dropna()
+            # need to make sure 
+            # resample stays in sync with mains power_series.  Maybe want reindex???
+            # If we're careful then I think we can get power_series with index
+            # in common with mains, without having to post-process it
+            # like prepb.make_common_index(building)
+
+            # TODO: insert zeros
+            power_series.fillna(method='ffill', inplace=True)
+            yield submeter.appliance_label(), power_series
 
     def proportion_of_energy_submetered(self):
         """

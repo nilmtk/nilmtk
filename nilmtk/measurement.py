@@ -44,7 +44,7 @@ def select_best_ac_type(available_ac_types, mains_ac_types=None):
         raise KeyError('No relevant measurements in {}'.format(available_ac_types))
     else:
         warn("None of the AC types recorded by Mains are present in `available_ac_types`."
-             " Will use try using one of {}.".format(AC_TYPES))
+             " Will use try using one of {}.".format(AC_TYPES), RuntimeWarning)
         return select_best_ac_type(available_ac_types)
 
 class Power(namedtuple('Power', ['ac_type'])):

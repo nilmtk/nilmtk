@@ -57,7 +57,8 @@ class ElecMeter(Hashable):
 
         # Load appliances
         self.appliances = []
-        for appliance_metadata in self.metadata.get('appliances', []):
+        appliance_dicts = self.metadata.pop('appliances', [])
+        for appliance_metadata in appliance_dicts:
             self.appliances.append(Appliance(appliance_metadata))
 
     @property
@@ -99,6 +100,40 @@ class ElecMeter(Hashable):
     def device(self):
         device_model = self.metadata['device_model']
         return ElecMeter.meter_devices[device_model]
+
+    def dominant_appliance(self):
+        n_appliances = len(self.appliances)
+        if n_appliances == 0:
+            return
+        elif n_appliances == 1:
+            return self.appliances[0]
+        else:
+            for app in self.appliances:
+                if app.metadata.get('dominant_appliance'):
+                    return app
+            warn('Multiple appliances are associated with meter {}'
+                 ' but none are marked as the dominant appliance. Hence'
+                 ' returning the first appliance in the list.', RuntimeWarning)
+            return self.appliances[0]
+
+    def appliance_label(self):
+        """
+        Returns
+        -------
+        string : A label listing all the appliance types or the category.
+        """
+        appliance_names = []
+        dominant = self.dominant_appliance()
+        for appliance in self.appliances:
+            appliance_name = str(appliance)
+            if appliance.metadata.get('dominant_appliance'):
+                appliance_name = appliance_name.upper()
+            appliance_names.append(appliance_name)
+        label = ", ".join(appliance_names) 
+        category = self.metadata.get('category')
+        if category:
+            label += " meter category = '{}'".format(category)
+        return label
 
     def available_ac_types(self):
         """Finds available alternating current types from measurements.
