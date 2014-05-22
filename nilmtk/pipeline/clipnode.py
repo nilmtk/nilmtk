@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 from node import Node
 from warnings import warn
+from nilmtk.utils import index_of_column_name
 
 class ClipNode(Node):
 
@@ -19,6 +20,7 @@ class ClipNode(Node):
             else:
                 lower = lim_for_measurement['lower_limit']
                 upper = lim_for_measurement['upper_limit']
-                df[measurement] = df[measurement].clip(lower, upper)
+                icol = index_of_column_name(df, measurement)
+                df.iloc[:,icol] = df.iloc[:,icol].clip(lower, upper)
 
         return df

@@ -35,3 +35,9 @@ def tree_root(graph):
 def nodes_adjacent_to_root(graph):
     root = tree_root(graph)
     return graph.successors(root)
+
+def index_of_column_name(df, name):
+    for i, col_name in enumerate(df.columns):
+        if col_name == name:
+            return i
+    raise KeyError(name)
