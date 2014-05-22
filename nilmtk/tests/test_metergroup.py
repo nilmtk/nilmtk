@@ -32,7 +32,7 @@ class TestMeterGroup(unittest.TestCase):
                 mg[key]
 
         # test bad key types
-        for key in [True, False, 3, (1,2,3), (1), ['fridge']]:
+        for key in [True, False, (1,2,3), ['fridge']]:
             with self.assertRaises(TypeError):
                 mg[key]
 

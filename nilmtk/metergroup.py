@@ -55,6 +55,9 @@ class MeterGroup(object):
         """Get a single meter.
         
         Three formats for `key` are accepted:
+        * [1] - retrieves meter instance 1, raises Exception if there are 
+                more than one meter with this instance, raises KeyError
+                if none are found.
         * ['toaster']    - retrieves toaster instance 1
         * ['toaster', 2] - retrieves toaster instance 2
         * [{'dataset': 'redd', 'building': 3, 'type': 'toaster', 'instance': 2}]
@@ -76,6 +79,20 @@ class MeterGroup(object):
                 if meter.matches(key):
                     return meter
             raise KeyError(key)
+        elif isinstance(key, int) and not isinstance(key, bool):
+            meters_found = []
+            for meter in self.meters:
+                if (meter.identifier is not None and 
+                    meter.identifier.instance == key):
+                    meters_found.append(meter)
+            n_meters_found = len(meters_found)
+            if n_meters_found > 1:
+                raise Exception('{} meters found with instance == {}'
+                                .format(n_meters_found, key))
+            elif n_meters_found == 0:
+                raise KeyError('No meters found with instance == {}'.format(key))
+            else:
+                return meters_found[0]
         else:
             raise TypeError()
 
