@@ -1,5 +1,6 @@
 from __future__ import print_function, division
 import networkx as nx
+import pandas as pd
 from warnings import warn
 from .elecmeter import ElecMeter, ElecMeterID
 from .datastore import join_key
@@ -58,6 +59,7 @@ class MeterGroup(object):
         * [1] - retrieves meter instance 1, raises Exception if there are 
                 more than one meter with this instance, raises KeyError
                 if none are found.
+        * [ElecMeterID(1, 1, 'REDD')] - retrieves meter with specified meter ID
         * ['toaster']    - retrieves toaster instance 1
         * ['toaster', 2] - retrieves toaster instance 2
         * [{'dataset': 'redd', 'building': 3, 'type': 'toaster', 'instance': 2}]
@@ -69,6 +71,11 @@ class MeterGroup(object):
         if isinstance(key, str):
             # default to get first meter
             return self[(key, 1)]
+        elif isinstance(key, ElecMeterID):
+            for meter in self.meters:
+                if meter.identifier == key:
+                    return meter
+            raise KeyError(key)
         elif isinstance(key, tuple):
             if len(key) == 2:
                 return self[{'type': key[0], 'instance': key[1]}]
@@ -287,12 +294,18 @@ class MeterGroup(object):
         assert isinstance(meters, list)
         return meters
 
-    def prepare_for_disaggregation(self, rule='1T'):
+    def dataframe_of_submeters(self, rule='1T'):
         """
         Returns
         -------
-        generator of tuples (ElecMeter, processed_power_series)
+        DataFrame
+            Each column is a submeter.  We select the most appropriate measurement.
+
+        Note
+        ----
+        * we use 'meters_directly_downsteam_of_mains' instead of most distal meters
         """
+        submeters_dict = {}
         mains = self.mains()
         mains_good_sections = mains.good_sections().combined
         mains_energy = mains.total_energy(periods=mains_good_sections).combined
@@ -307,9 +320,11 @@ class MeterGroup(object):
             if submeter_energy[submeter_energy_ac_type] < energy_threshold:
                 continue
 
-            # TODO: should cope with multiple chunks
             # TODO: resampling etc should happen in pipeline
-            power_series = next(submeter.power_series(periods=mains_good_sections))
+            chunks = []
+            for chunk in submeter.power_series(periods=mains_good_sections):
+                chunks.append(chunk)
+            power_series = pd.concat(chunks)
 
             power_series = power_series.resample(rule=rule, how='mean')
             # need to make sure 
@@ -320,7 +335,8 @@ class MeterGroup(object):
 
             # TODO: insert zeros and then ffill
             power_series.fillna(value=0, inplace=True)
-            yield submeter, power_series
+            submeters_dict[submeter.identifier] = power_series
+        return pd.DataFrame(submeters_dict)
 
     def proportion_of_energy_submetered(self):
         """

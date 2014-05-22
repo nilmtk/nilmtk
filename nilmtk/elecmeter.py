@@ -129,7 +129,7 @@ class ElecMeter(Hashable):
         appliance_names = []
         dominant = self.dominant_appliance()
         for appliance in self.appliances:
-            appliance_name = str(appliance)
+            appliance_name = appliance.label()
             if appliance.metadata.get('dominant_appliance'):
                 appliance_name = appliance_name.upper()
             appliance_names.append(appliance_name)
@@ -153,7 +153,7 @@ class ElecMeter(Hashable):
         string = super(ElecMeter, self).__repr__()
         # Now add list of appliances...
         string = string[:-1] # remove last bracket
-        string += 'appliances={}'.format(self.appliances)
+        string += ', appliances={}'.format(self.appliances)
         
         # METER CATEGORY
         category = self.metadata.get('category')
@@ -222,12 +222,21 @@ class ElecMeter(Hashable):
             then will attempt to use voltage data from this meter.
         nominal_voltage : float
         """
-        chunk = next(self.store.load(key=self.sensor_keys[0], **load_kwargs))
-        for key in self.sensor_keys[1:]:
-            chunk += next(self.store.load(key=key, **load_kwargs))
         best_ac_type = select_best_ac_type(self.available_ac_types(),
                                            measurement_ac_type_prefs)
-        yield chunk[Power(best_ac_type)].dropna()
+
+        generators = []
+        for key in self.sensor_keys:
+            generators.append(self.store.load(key=key, **load_kwargs))
+
+        while True:
+            try:
+                chunk = next(generators[0])
+            except StopIteration:
+                break
+            for generator in generators[1:]:
+                chunk += next(generator)
+            yield chunk[Power(best_ac_type)].dropna()
         
     def voltage_series(self):
         """Returns a generator of pd.Series of voltage, if available."""

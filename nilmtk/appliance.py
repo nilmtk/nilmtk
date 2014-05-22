@@ -34,6 +34,9 @@ class Appliance(Hashable):
     def type(self):
         return Appliance.appliance_types[self.identifier.type]
 
+    def label(self):
+        return str(tuple(self.identifier))
+
     def matches(self, key):
         """
         Parameters
