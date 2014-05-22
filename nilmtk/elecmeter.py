@@ -83,7 +83,6 @@ class ElecMeter(Hashable):
     @classmethod
     def load_meter_devices(cls, store):
         dataset_metadata = store.load_metadata('/')
-        print("Updating meter devices with", dataset_metadata)
         ElecMeter.meter_devices.update(dataset_metadata.get('meter_devices', {}))
 
     def save(self, destination, key):
@@ -151,24 +150,30 @@ class ElecMeter(Hashable):
                 return True
         return False
 
-    def power_series(self, **load_kwargs):
+    def power_series(self, measurement_ac_type_prefs=None, **load_kwargs):
         """Get power Series.
-        
-        The following cleaning steps will be run if the relevant entries
-        in meter.cleaning are True:
-
-        * remove implausable values
-        * gaps will be bookended with zeros
         
         Parameters
         ----------
-        
+        measurement_ac_type_prefs : list of strings, optional
+            if provided then will try to select the best AC type from 
+            self.available_ac_types  which is also in measurement_ac_type_prefs.
+            If none of the measurements from measurement_ac_type_prefs are 
+            available then will raise a warning and will select another ac type.
+
+
         Returns
         -------
         generator of pd.Series of power measurements.
 
         TODO
         -----
+        The following cleaning steps will be run if the relevant entries
+        in meter.cleaning are True:
+
+        * remove implausable values
+        * gaps will be bookended with zeros
+
         measurement_preferences : list of Measurements, optional.
             Defaults to active > apparent > reactive
         required_measurements : Measurement, optional.  
@@ -178,12 +183,12 @@ class ElecMeter(Hashable):
             If not supplied and if normalise is True
             then will attempt to use voltage data from this meter.
         nominal_voltage : float
-
         """
         chunk = next(self.store.load(key=self.sensor_keys[0], **load_kwargs))
         for key in self.sensor_keys[1:]:
             chunk += next(self.store.load(key=key, **load_kwargs))
-        best_ac_type = select_best_ac_type(self.available_ac_types())
+        best_ac_type = select_best_ac_type(self.available_ac_types(),
+                                           measurement_ac_type_prefs)
         yield chunk[Power(best_ac_type)].dropna()
         
     def voltage_series(self):

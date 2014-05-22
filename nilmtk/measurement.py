@@ -21,6 +21,8 @@ def select_best_ac_type(available_ac_types, mains_ac_types=None):
     mains_ac_types : list of strings, optional
         if provided then will try to select the best AC type from `available_ac_types`
         which is also in `mains_ac_types`.
+        If none of the measurements from `mains_ac_types` are 
+        available then will raise a warning and will select another ac type.
 
     Returns
     -------
