@@ -102,6 +102,10 @@ class ElecMeter(Hashable):
         return ElecMeter.meter_devices[device_model]
 
     def dominant_appliance(self):
+        """Tries to find the most dominant appliance on this meter,
+        and then returns that appliance object.  Will return None
+        if there are no appliances on this meter.
+        """
         n_appliances = len(self.appliances)
         if n_appliances == 0:
             return
@@ -120,7 +124,7 @@ class ElecMeter(Hashable):
         """
         Returns
         -------
-        string : A label listing all the appliance types or the category.
+        string : A label listing all the appliance types and the meter's category.
         """
         appliance_names = []
         dominant = self.dominant_appliance()
@@ -149,7 +153,6 @@ class ElecMeter(Hashable):
         string = super(ElecMeter, self).__repr__()
         # Now add list of appliances...
         string = string[:-1] # remove last bracket
-        string += ",\n" + (" " * 18)
         string += 'appliances={}'.format(self.appliances)
         
         # METER CATEGORY
