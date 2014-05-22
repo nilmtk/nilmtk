@@ -83,6 +83,7 @@ class ElecMeter(Hashable):
     @classmethod
     def load_meter_devices(cls, store):
         dataset_metadata = store.load_metadata('/')
+        print("Updating meter devices with", dataset_metadata)
         ElecMeter.meter_devices.update(dataset_metadata.get('meter_devices', {}))
 
     def save(self, destination, key):
