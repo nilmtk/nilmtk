@@ -39,23 +39,23 @@ class Key(object):
     Attributes
     ----------
     building : int
-    meter : int
+    sensor : int
     utility : str
     """
 
-    def __init__(self, string=None, building=None, meter=None):
+    def __init__(self, string=None, building=None, sensor=None):
         """
         Parameters
         ----------
         string : str, optional
-            e.g. 'building1/elec/meter1'
+            e.g. 'building1/elec/sensor1'
         building : int, optional
-        meter : int, optional
+        sensor : int, optional
         """
         self.utility = None
         if string is None:
             self.building = building
-            self.meter = meter
+            self.sensor = sensor
         else:
             split = string.strip('/').split('/')
             assert split[0].startswith('building'), "The first element must be 'building<I>', e.g. 'building1'; not '{}'.".format(split[0])
@@ -67,24 +67,24 @@ class Key(object):
             if len(split) > 1:
                 self.utility = split[1]
             if len(split) == 3:
-                assert split[2].startswith('meter')
-                self.meter = int(split[-1].replace("meter", ""))
+                assert split[2].startswith('sensor')
+                self.sensor = int(split[-1].replace("sensor", ""))
             else:
-                self.meter = None
+                self.sensor = None
         self._check()
 
     def _check(self):
         assert isinstance(self.building, int)
         assert self.building >= 1
-        if self.meter is not None:
-            assert isinstance(self.meter, int)
-            assert self.meter >= 1
+        if self.sensor is not None:
+            assert isinstance(self.sensor, int)
+            assert self.sensor >= 1
 
     def __repr__(self):
         self._check()
         s = "/building{:d}".format(self.building)
-        if self.meter is not None:
-            s += "/elec/meter{:d}".format(self.meter)
+        if self.sensor is not None:
+            s += "/elec/sensor{:d}".format(self.sensor)
         return s
 
 

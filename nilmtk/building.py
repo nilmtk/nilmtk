@@ -24,7 +24,7 @@ class Building(object):
     
     def load(self, store, key):
         self.metadata = store.load_metadata(key)
-        elec_meters = self.metadata.get('elec_meters', [])
+        elec_meters = self.metadata.get('elec_meters', {})
         self.elec.load(store, elec_meters, self.identifier)
                 
     def save(self, destination, key):

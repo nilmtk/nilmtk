@@ -123,7 +123,7 @@ class REDDStore(DataStore):
         path = self._path_for_house(key_obj)
 
         # Get filename
-        filename = 'channel_{:d}.dat'.format(key_obj.meter)
+        filename = 'channel_{:d}.dat'.format(key_obj.sensor)
         filename = os.path.join(path, filename)
 
         # load data
@@ -190,7 +190,7 @@ class REDDStore(DataStore):
         
         # building metadata
         key_obj = Key(key)
-        assert key_obj.meter is None
+        assert key_obj.sensor is None
         if not 1 <= key_obj.building <= 6:
             raise ValueError("Building {} is not a valid building instance."
                              .format(key_obj.building))
@@ -203,15 +203,25 @@ class REDDStore(DataStore):
         appliance_instances = {} # map NILMTK appliance name to int
         for meter_i, label in labels.iteritems():
             if meter_i == 1:
-                meter_metadata = {'site_meter': True,
-                                  'device_model': 'REDD_whole_house',
-                                  'sensors': []} # TODO. Maybe should pass DAT file???
+                meter_metadata = {
+                    'site_meter': True,
+                    'device_model': 'REDD_whole_house',
+                    'sensors': [
+                        {'data_location':
+                         str(Key(building=key_obj.building, sensor=1))},
+                        {'data_location':
+                         str(Key(building=key_obj.building, sensor=2))}]
+                    }
             elif meter_i == 2:
-                pass # split-phase mains is handled by meter 1
+                continue # split-phase mains is handled by meter 1
             else:
-                meter_metadata = {'submeter_of': 1,
-                                  'device_model': 'eMonitor',
-                                  'sensors': []} # TODO
+                meter_metadata = {
+                    'submeter_of': 1,
+                    'device_model': 'eMonitor',
+                    'sensors': [
+                        {'data_location':
+                         str(Key(building=key_obj.building, sensor=meter_i))}]
+                }
                 meter_metadata.update(deepcopy(MAP_REDD_LABELS_TO_NILMTK[label]))
                 appliances = meter_metadata.get('appliances', [])
                 for appliance_i, appliance_dict in enumerate(appliances):
@@ -219,9 +229,10 @@ class REDDStore(DataStore):
                     instance = appliance_instances.setdefault(appliance_type, 1)
                     appliances[appliance_i]['instance'] = instance
                     appliance_instances[appliance_type] += 1
+
             elec_meters[meter_i] = meter_metadata
 
-        return {
+        return { # building metadata
             'instance': key_obj.building,
             'dataset': 'REDD',
             'original_name': 'house_{:d}'.format(key_obj.building),
@@ -241,7 +252,7 @@ class REDDStore(DataStore):
         # List meters
         key_obj = Key(key)
         assert key_obj.building is not None
-        assert key_obj.meter is None
+        assert key_obj.sensor is None
         if not 1 <= key_obj.building <= 6:
             raise ValueError("Building {} is not a valid building instance."
                              .format(key_obj.building))
