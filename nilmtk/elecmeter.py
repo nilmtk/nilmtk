@@ -3,7 +3,7 @@ from .pipeline import Pipeline, ClipNode, EnergyNode, LocateGoodSectionsNode
 from .hashable import Hashable
 from .appliance import Appliance
 from .datastore import Key
-from .measurement import Power
+from .measurement import Power, select_best_ac_type
 from warnings import warn
 from collections import namedtuple
 from copy import deepcopy
@@ -150,13 +150,8 @@ class ElecMeter(Hashable):
                 return True
         return False
 
-    def power_series(self, measurement_preferences=None, 
-                     required_measurement=None,
-                     normalise=False, voltage_series=None, 
-                     nominal_voltage=None):
-        """Power timeseries.
-        
-        Set meter.loader parameters to configure chunk sizes, start date etc.
+    def power_series(self, **load_kwargs):
+        """Get power Series.
         
         The following cleaning steps will be run if the relevant entries
         in meter.cleaning are True:
@@ -166,19 +161,29 @@ class ElecMeter(Hashable):
         
         Parameters
         ----------
-        measurement_preferences : list of Measurements, optional. Defaults to active > apparent > reactive
-        required_measurements : Measurement, optional.  Raises MeasurementError if not available.
-        normalise : boolean, optional, defaults to False
-        voltage_series : ElecMeter object with voltage measurements available.  If not supplied and if normalise is True
-            then will attempt to use voltage data from this meter.
-        nominal_voltage : float
-
         
         Returns
         -------
         generator of pd.Series of power measurements.
+
+        TODO
+        -----
+        measurement_preferences : list of Measurements, optional.
+            Defaults to active > apparent > reactive
+        required_measurements : Measurement, optional.  
+            Raises MeasurementError if not available.
+        normalise : boolean, optional, defaults to False
+        voltage_series : ElecMeter object with voltage measurements available.
+            If not supplied and if normalise is True
+            then will attempt to use voltage data from this meter.
+        nominal_voltage : float
+
         """
-        raise NotImplementedError
+        chunk = next(self.store.load(key=self.sensor_keys[0], **load_kwargs))
+        for key in self.sensor_keys[1:]:
+            chunk += next(self.store.load(key=key, **load_kwargs))
+        best_ac_type = select_best_ac_type(self.available_ac_types())
+        yield chunk[Power(best_ac_type)].dropna()
         
     def voltage_series(self):
         """Returns a generator of pd.Series of voltage, if available."""

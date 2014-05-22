@@ -276,6 +276,7 @@ class MeterGroup(object):
         raise NotImplementedError
 
     def mains(self):
+        """Get the mains ElecMeter object."""
         graph = self.wiring_graph()
         mains = tree_root(graph)
         assert isinstance(mains, ElecMeter), type(mains)
@@ -285,6 +286,30 @@ class MeterGroup(object):
         meters = nodes_adjacent_to_root(self.wiring_graph())
         assert isinstance(meters, list)
         return meters
+
+    def prepare_for_disaggregation(self, downsample_rule='1T'):
+        mains = self.mains()
+        mains_good_sections = mains.good_sections().combined
+        mains_energy = mains.total_energy(periods=mains_good_sections)
+        energy_threshold = mains_energy * 0.05
+
+        # TODO: should iterate through 'most distal' meters
+        for submeter in self.meters_directly_downstream_of_mains():
+            submeter_energy = submeter.total_energy(periods=mains_good_sections)
+            if submeter_energy < energy_threshold:
+                continue
+
+            power_series = submeter.power_series(periods=mains_good_sections)
+        #     power_series = submeter.power_series(mains_good_sections)
+        #     power_series = power_series.resample('1T') # need to make sure 
+        #     # resample stays in sync with mains power_series.  Maybe want reindex???
+        #     # If we're careful then I think we can get power_series with index
+        #     # in common with mains, without having to post-process it
+        #     # like prepb.make_common_index(building)
+        #     insert zeros
+        #     fill forwards
+        #     yield processed Series for disaggregator.train()
+
 
     def proportion_of_energy_submetered(self):
         """
