@@ -37,4 +37,4 @@ class DataSet(object):
         for b_key in buildings:
             building = Building()
             building.load(store, '/'+b_key)
-            self.buildings[building.identifier().instance] = building
+            self.buildings[building.identifier.instance] = building

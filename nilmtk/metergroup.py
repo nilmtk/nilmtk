@@ -1,5 +1,6 @@
 from __future__ import print_function, division
 import networkx as nx
+from warnings import warn
 from .elecmeter import ElecMeter, ElecMeterID
 from .datastore import join_key
 from .utils import tree_root, nodes_adjacent_to_root
@@ -26,6 +27,11 @@ class MeterGroup(object):
             metadata for each ElecMeter
         building_id : BuildingID
         """
+        assert isinstance(elec_meters, dict)
+        if not elec_meters:
+            warn("Building {} has an empty 'elec_meters' object."
+                 .format(building_id.instance), RuntimeWarning)
+
         ElecMeter.load_meter_devices(store)
         for meter_i, meter_metadata_dict in elec_meters.iteritems():
             meter_id = ElecMeterID(instance=meter_i, 

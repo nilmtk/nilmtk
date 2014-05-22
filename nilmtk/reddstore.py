@@ -190,52 +190,43 @@ class REDDStore(DataStore):
         
         # building metadata
         key_obj = Key(key)
+        assert key_obj.meter is None
         if not 1 <= key_obj.building <= 6:
             raise ValueError("Building {} is not a valid building instance."
                              .format(key_obj.building))
-        if key_obj.meter is None:
-            return {
-                'instance': key_obj.building,
-                'dataset': 'REDD',
-                'original_name': 'house_{:d}'.format(key_obj.building)
-            }
 
-        # meter-level metadata
-        meter_metadata = {
-            'device_model': 'REDD_whole_house' if key_obj.meter == 1 else 'eMonitor',
-            'instance': key_obj.meter,
-            'building': key_obj.building,
-            'dataset': 'REDD'            
-        }
-        if key_obj.meter == 1:
-            meter_metadata.update({'site_meter': True, 
-                                   'additional_channels': [2]})
-            return meter_metadata
-        elif key_obj.meter == 2:
-            raise ValueError("Mains channel 2 is loaded by meter1.")
-        else:
-            meter_metadata.update({'submeter_of': 1})
+        # Build dict of elec meter metadata dicts
+        elec_meters = {}
 
-        # Load appliance metadata
         building_path = self._path_for_house(key_obj)
         labels = load_labels(building_path)
-        try:
-            redd_label = labels[key_obj.meter]
-        except KeyError:
-            raise ValueError("{} is not a recognised meter instance for building {}."
-                             .format(key_obj.meter, key_obj.building))
-        meter_metadata.update(deepcopy(MAP_REDD_LABELS_TO_NILMTK[redd_label]))
+        appliance_instances = {} # map NILMTK appliance name to int
+        for meter_i, label in labels.iteritems():
+            if meter_i == 1:
+                meter_metadata = {'site_meter': True,
+                                  'device_model': 'REDD_whole_house',
+                                  'sensors': []} # TODO. Maybe should pass DAT file???
+            elif meter_i == 2:
+                pass # split-phase mains is handled by meter 1
+            else:
+                meter_metadata = {'submeter_of': 1,
+                                  'device_model': 'eMonitor',
+                                  'sensors': []} # TODO
+                meter_metadata.update(deepcopy(MAP_REDD_LABELS_TO_NILMTK[label]))
+                appliances = meter_metadata.get('appliances', [])
+                for appliance_i, appliance_dict in enumerate(appliances):
+                    appliance_type = appliance_dict['type']
+                    instance = appliance_instances.setdefault(appliance_type, 1)
+                    appliances[appliance_i]['instance'] = instance
+                    appliance_instances[appliance_type] += 1
+            elec_meters[meter_i] = meter_metadata
 
-        # Appliance instance count:
-        appliances = meter_metadata.get('appliances', [])
-        for appliance_i, appliance in enumerate(appliances):
-            instance = 1
-            for i in range(1, key_obj.meter):
-                if labels[i] == redd_label:
-                    instance += 1
-            appliances[appliance_i]['instance'] = instance
-
-        return meter_metadata
+        return {
+            'instance': key_obj.building,
+            'dataset': 'REDD',
+            'original_name': 'house_{:d}'.format(key_obj.building),
+            'elec_meters': elec_meters
+        }
 
     def elements_below_key(self, key='/'):
         """
