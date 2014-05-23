@@ -19,6 +19,8 @@ Below is an illustration<sup>1</sup> of what NILM, in general, can do.
 
 http://nilmtk.github.io/nilmtk/
 
+A fairly complete [demo of the entire NILMTK pipeline](http://nbviewer.ipython.org/github/nilmtk/nilmtk/blob/master/notebooks/NILM_Workshop_2014_demo.ipynb) is available.
+
 ##### Academic paper on NILMTK
 
 Batra, N., Kelly, J., Parson, O., Dutta, H., Knottenbelt, W., Rogers, A., Singh, A., Srivastava, M. (2014). NILMTK: An Open Source Toolkit for Non-intrusive Load Monitoring. In Fifth International Conference on Future Energy Systems (ACM e-Energy). Cambridge, UK. arXiv:[1404.3878](http://arxiv.org/abs/1404.3878) DOI:[10.1145/2602044.2602051](http://dx.doi.org/10.1145/2602044.2602051)
