@@ -68,7 +68,10 @@ def load_chan(building_dir, chan=None, filename=None, colnames=None,
     else:
         filename = os.path.join(building_dir, filename)
 
-    print('Attempting to load', filename, '...', end='')
+    if chan is None:
+        print('Attempting to load', filename, '...', end='')
+    else:
+        print(' {:d}'.format(chan), end='')
     if usecols:
         if 0 not in usecols:
             usecols.insert(0,0)
@@ -90,7 +93,7 @@ def load_chan(building_dir, chan=None, filename=None, colnames=None,
         print('failed:', str(e))
         raise
     else:
-        print('done.')
+#        print('done.')
         df.index = pd.to_datetime((df.index.values*1E9).astype(int), utc=True)
     return df
 
@@ -151,6 +154,9 @@ class REDD(DataSet):
         building_number = int(building_name[-1])
         building_dir = os.path.join(root_directory, building_name)
         labels = load_labels(building_dir)
+
+        print("Loading building {:d}:\n  chans: ".format(building_number), end="")
+        sys.stdout.flush()
 
         # Remove dud channels
         try:
@@ -229,7 +235,7 @@ class REDD(DataSet):
             n_dual_supply_columns = len(dual_supply_columns)
             if n_dual_supply_columns == 1:
                 col = dual_supply_columns[0]
-                print("converting", appliance_name, "in building", building_number)
+#                print("converting", appliance_name, "in building", building_number)
                 appliances[appliance_name].rename(columns={col:col.measurement},
                                                   inplace=True)
 
@@ -238,6 +244,7 @@ class REDD(DataSet):
         # Set up wiring
 
         self.buildings[building_number] = building
+        print("")
 
     def load_building_names(self, root_directory):
         dirs = get_immediate_subdirectories(root_directory)

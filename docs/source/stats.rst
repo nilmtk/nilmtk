@@ -139,10 +139,10 @@ And some more stats:
 
    nstats.get_sample_period(oven)
 
-   # Get the number of hours the oven has been on for:
+   # Get the number of hours the oven was on for:
    nstats.hours_on(oven, on_power_threshold=1000)
 
-   # Get the total kWh consumed by the over:
+   # Get the total kWh consumed by the oven:
    nstats.energy(oven)
 
    # Or the joules consumed:
@@ -183,7 +183,7 @@ Or the behaviour day-by-day over an average week:
    plt.xticks(np.arange(7)+0.5, calendar.day_name[0:7])
    @savefig activity_dist_week.png
    plt.bar(x, dist.values)
-   
+    
 .. ipython:: python
    :suppress:
 
@@ -212,7 +212,3 @@ across the dataset.
    :suppress:
 
    plt.close('all')
-
-
-
-

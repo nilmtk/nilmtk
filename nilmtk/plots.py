@@ -15,18 +15,20 @@ def plot_series(series, **kwargs):
 
     Parameters
     ----------
+    series : pd.Series
     ax : matplotlib Axes, optional
         If not provided then will generate our own axes.
-
-    fig
-
+    fig : matplotlib Figure
     date_format : str, optional, default='%d/%m/%y %H:%M:%S'
+    tz_localize : boolean, optional, default is True
+        if False then display UTC times.
 
     Can also use all **kwargs expected by `ax.plot`
     """
     ax = kwargs.pop('ax', None)
     fig = kwargs.pop('fig', None)
     date_format = kwargs.pop('date_format', '%d/%m/%y %H:%M:%S')
+    tz_localize = kwargs.pop('tz_localize', True)
 
     if ax is None:
         ax = plt.gca()
@@ -36,8 +38,9 @@ def plot_series(series, **kwargs):
 
     x = _to_ordinalf_np_vectorized(series.index.to_pydatetime())
     ax.plot(x, series, **kwargs)
+    tz = series.index.tzinfo if tz_localize else None
     ax.xaxis.set_major_formatter(mdates.DateFormatter(date_format, 
-                                                      tz=series.index.tzinfo))
+                                                      tz=tz))
     ax.set_ylabel('watts')
     fig.autofmt_xdate()
     return ax

@@ -37,7 +37,7 @@ def get_sample_period(data):
     ------
     TooFewSamplesError
     """
-    N_SAMPLES = 90
+    N_SAMPLES = 35
     if len(data) < N_SAMPLES:
         try:
             name = data.name
