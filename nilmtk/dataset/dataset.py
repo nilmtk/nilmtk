@@ -390,10 +390,10 @@ class DataSet(object):
             'n_appliances': [],
             'energy_submetered': [],
             'proportion_up': [],
-#            'dropout_rate': [],
+            'dropout_rate': [],
             'dropout_rate_ignoring_gaps': [],
             'uptime': [],
-#            'prop_timeslices': []
+            'prop_timeslices': []
             }
 
         for building_num, building in self.buildings.iteritems():
@@ -402,7 +402,7 @@ class DataSet(object):
             stats['n_appliances'].append(len(electric.appliances))
             stats['energy_submetered'].append(
                 proportion_of_energy_submetered(electric))
-#            stats['dropout_rate'].extend(get_dropout_rates(electric))
+            stats['dropout_rate'].extend(get_dropout_rates(electric))
             stats['dropout_rate_ignoring_gaps'].extend(
                 get_dropout_rates(electric, ignore_gaps=True))
             uptime = get_uptime(electric.mains.values()[0])
@@ -410,8 +410,8 @@ class DataSet(object):
             start, end = electric.get_start_and_end_dates()
             stats['proportion_up'].append(uptime / ((end-start).total_seconds() 
                                                     / SEC_PER_DAY))
-#            stats['prop_timeslices'].append(
-#                proportion_of_time_where_more_energy_submetered(building))
+            stats['prop_timeslices'].append(
+                proportion_of_time_where_more_energy_submetered(building))
 
         return stats
 
