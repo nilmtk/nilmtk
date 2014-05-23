@@ -429,8 +429,8 @@ def plot_missing_samples_using_bitmap(electricity, ax=None, fig=None,
         max_rate = 1 / gain
         def func_formatter(x, pos):
             s = ''
-            if x == 1:
-                s = '''\ge'''
+#            if x == 1:
+#                s = '''\ge'''
             s += '{:.0%}'.format(x/gain)
             return s
         fmt = FuncFormatter(func_formatter)

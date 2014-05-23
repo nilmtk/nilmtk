@@ -117,7 +117,11 @@ def insert_zeros(single_appliance_dataframe,
     power_columns = []
     non_power_columns = []
     for col in df.columns:
-        if col.physical_quantity == 'power':
+        try:
+            physical_quantity = col.physical_quantity
+        except AttributeError: # DualSupply
+            physical_quantity = col.measurement.physical_quantity
+        if physical_quantity == 'power':
             power_columns.append(col)
         else:
             non_power_columns.append(col)
