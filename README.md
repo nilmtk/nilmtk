@@ -106,7 +106,7 @@ Please see [the nilmtk wiki](https://github.com/nilmtk/nilmtk/wiki) for more det
 
 Please sign up to the [NILMTK-Announce mailing list](https://groups.google.com/forum/#!forum/nilmtk-announce) to be kept up to speed on NILMTK.  It will be a fairly low-traffic mailing list.  We'll just announce new versions, new docs etc.
 
-[NILMTK is also on Twitter](twitter.com/nilmtk).
+[NILMTK is also on Twitter](https://twitter.com/nilmtk).
 
 ##### Development plans for June and July 2014:
 
