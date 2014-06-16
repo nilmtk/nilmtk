@@ -102,12 +102,17 @@ We also have [API documentation](http://nilmtk.github.io/nilmtk/nilmtk.html).  T
 
 Please see [the nilmtk wiki](https://github.com/nilmtk/nilmtk/wiki) for more details.
 
-##### Development plans for April and May 2014:
+##### Keeping up to date with NILMTK
 
-* To make the code as easy as possible to use and to maintain, it will be undergoing some refactoring in April and May 2014.
+Please sign up to the [NILMTK-Announce mailing list](https://groups.google.com/forum/#!forum/nilmtk-announce) to be kept up to speed on NILMTK.  It will be a fairly low-traffic mailing list.  We'll just announce new versions, new docs etc.
+
+[NILMTK is also on Twitter](https://twitter.com/nilmtk).
+
+##### Development plans for June and July 2014:
+
+* To make the code as easy as possible to use and to maintain, it will be undergoing some refactoring, ready for NILMTK v0.2
 * Improve the documentation
 * Write more unit tests
-* easy installation via pip
 * [Build a semantic wiki for storing information relevant to NILM (e.g. a database of appliances)](http://jack-kelly.com/wiki_and_online_community_for_electricity_disaggregation) - NILMTK will integrate with the wiki wherever possible, especially regarding appliance metadata.
 
 ##### Notes
