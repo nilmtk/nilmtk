@@ -26,6 +26,9 @@ The hierarchy used in HDF follows the pattern
 starting from 1.  ``sensor<j>`` belongs to ``ElecMeter`` instance ``<j>``
 (i.e. we use the same number).
 
+Physical quantities are defined in the metadata.  We always use SI
+units or SI derived units.  e.g. Watts (not kW).
+
 Some ElecMeters measure multiple phases (e.g. for a 3-phase mains
 supply) or legs (e.g. north American homes often have a single phase
 mains supply split into two 120 volt legs).  In this case, a single
