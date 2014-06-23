@@ -54,6 +54,7 @@ def _wikienergy_dataframe_to_hdf(wikienergy_dataframe, hdf5_store):
         for column in feeds_dataframe.columns:
             if feeds_dataframe[column].notnull().sum() > 0:
                 feed_dataframe = pd.DataFrame(feeds_dataframe[column])
+                feed_dataframe.columns = [Power('active')]
                 key = 'building{:d}/elec/meter{:d}'.format(building_id, meter_id)
                 hdf5_store.append(key, feed_dataframe)
             meter_id = meter_id + 1
