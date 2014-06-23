@@ -32,7 +32,6 @@ wikienergy.download_dataset(
 """
 TODO:
 * intelligently handle queries that fail due to network
-* fix issue on appending to an existing HDF5 store
 """
 
 # Maps from UKPD name to:
