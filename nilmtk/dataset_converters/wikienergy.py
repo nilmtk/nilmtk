@@ -45,16 +45,26 @@ APPLIANCE_NAME_MAP = {
     
 def _wikienergy_dataframe_to_hdf(wikienergy_dataframe, hdf5_store):
     local_dataframe = wikienergy_dataframe.copy()
+    
+    # remove timezone information to avoid append errors
+    local_dataframe['localminute'] = pd.DatetimeIndex([i.replace(tzinfo=None) 
+                                                       for i in local_dataframe['localminute']])
+    # set timestamp as frame index
     local_dataframe = local_dataframe.set_index('localminute')
     
     for building_id in local_dataframe['dataid'].unique():
+        # remove building id column
         feeds_dataframe = local_dataframe.drop('dataid', axis=1)
-        feeds_dataframe = feeds_dataframe.mul(1000) # convert from kW to W
+        # convert from kW to W
+        feeds_dataframe = feeds_dataframe.mul(1000)
         meter_id = 1
         for column in feeds_dataframe.columns:
             if feeds_dataframe[column].notnull().sum() > 0:
+                # convert timeseries into dataframe
                 feed_dataframe = pd.DataFrame(feeds_dataframe[column])
+                # set nilmtk column name
                 feed_dataframe.columns = [Power('active')]
+                
                 key = 'building{:d}/elec/meter{:d}'.format(building_id, meter_id)
                 hdf5_store.append(key, feed_dataframe)
             meter_id = meter_id + 1
@@ -70,7 +80,7 @@ class WikiEnergy(DataSet):
             'name': 'WikiEnergy'
         }
     
-    def download_dataset(self, database_username, database_password, output_directory, periods_to_load=None):
+    def download_dataset(self, database_username, database_password, output_filepath, periods_to_load=None):
         """
         Parameters
         ----------
@@ -89,10 +99,9 @@ class WikiEnergy(DataSet):
         database_schema = 'PecanStreet_SharedData'
         
         # set up a new HDF5 datastore
-        full_directory = output_directory + 'wikienergy.h5'
-        if os.path.isfile(full_directory):
-            os.remove(full_directory)
-        hdf5_store = HDFStore(full_directory)
+        if os.path.isfile(output_filepath):
+            os.remove(output_filepath)
+        hdf5_store = HDFStore(output_filepath)
         
         # try to connect to database
         try:
