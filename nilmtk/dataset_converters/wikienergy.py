@@ -4,22 +4,25 @@ import os
 import datetime
 import sys
 import pandas as pd
+from pandas import HDFStore
 import numpy as np
 from collections import namedtuple
 from nilmtk.dataset import DataSet
 from nilmtk.building import Building
+from nilmtk.measurement import Power
 
 """
 MANUAL:
 
 WikiEnergy is a large dataset hosted in a remote SQL database. This class provides 
 a function to download the dataset and save it to disk as NILMTK-DF. Since downloading
-the entire dataset will likely take > 24 hours, this this class provides some options to allow
+the entire dataset will likely take > 24 hours, this class provides some options to allow
 you to download only a subset of the data.
 
 For example, to only load house 26 for April 2014:
 
-wikienergy.download_dataset('username',
+wikienergy.download_dataset(
+           'username',
            'password',
            '/path_to_output_directory/'
            periods_to_load = {26: ('2014-04-01', '2014-05-01')}
@@ -28,8 +31,8 @@ wikienergy.download_dataset('username',
 
 """
 TODO:
-* save downloaded data to disk in NILMTK-DF format
 * intelligently handle queries that fail due to network
+* fix issue on appending to an existing HDF5 store
 """
 
 # Maps from UKPD name to:
@@ -40,12 +43,25 @@ APPLIANCE_NAME_MAP = {
     #    'oven': ApplianceMetadata('oven', {'fuel':'electricity', 'dualsupply': True}),
 }
     
-def _save_wikienergy_dataframe_chunk_to_disk(dataframe, output_directory):
+def _wikienergy_dataframe_to_hdf(wikienergy_dataframe, hdf5_store):
+    local_dataframe = wikienergy_dataframe.copy()
+    local_dataframe = local_dataframe.set_index('localminute')
+    
+    for building_id in local_dataframe['dataid'].unique():
+        feeds_dataframe = local_dataframe.drop('dataid', axis=1)
+        feeds_dataframe = feeds_dataframe.mul(1000) # convert from kW to W
+        meter_id = 1
+        for column in feeds_dataframe.columns:
+            if feeds_dataframe[column].notnull().sum() > 0:
+                feed_dataframe = pd.DataFrame(feeds_dataframe[column])
+                key = 'building{:d}/elec/meter{:d}'.format(building_id, meter_id)
+                hdf5_store.append(key, feed_dataframe)
+            meter_id = meter_id + 1
     return 0
     
 class WikiEnergy(DataSet):
 
-    """Load data from UKPD."""
+    """Load data from WikiEnergy."""
 
     def __init__(self):
         super(WikiEnergy, self).__init__()
@@ -70,6 +86,12 @@ class WikiEnergy(DataSet):
         database_host = 'db.wiki-energy.org'
         database_name = 'postgres'
         database_schema = 'PecanStreet_SharedData'
+        
+        # set up a new HDF5 datastore
+        full_directory = output_directory + 'wikienergy.h5'
+        if os.path.isfile(full_directory):
+            os.remove(full_directory)
+        hdf5_store = HDFStore(full_directory)
         
         # try to connect to database
         try:
@@ -105,11 +127,13 @@ class WikiEnergy(DataSet):
         
         # for each user specified building or all buildings in database
         for building_id in buildings_to_load:
-            print("Loading building {:d}".format(building_id))
+            print("Loading building {:d}".format(building_id) + ' @ ' + str(datetime.datetime.now()))
             sys.stdout.flush()
+            
+            # create new list of chunks for csv writing
+            dataframe_list = []
         
             # for each table of 1 month data
-            dataframe_list = []
             for database_table in database_tables:
                 print("  Loading table {:s}".format(database_table))
                 sys.stdout.flush()
@@ -180,7 +204,7 @@ class WikiEnergy(DataSet):
                             chunk_dataframe = pd.read_sql(sql_query, conn)
                             
                             # convert to nilmtk-df and save to disk
-                            _save_wikienergy_dataframe_chunk_to_disk(chunk_dataframe, output_directory)
+                            nilmtk_dataframe = _wikienergy_dataframe_to_hdf(chunk_dataframe, hdf5_store)
                             
                             # print progress
                             print('    ' + str(chunk_start) + ' -> ' + 
@@ -188,17 +212,18 @@ class WikiEnergy(DataSet):
                                   str(len(chunk_dataframe.index)) + ' rows')
                             sys.stdout.flush()
                             
-                            # append all chunks into list 
+                            # append all chunks into list for csv writing
                             dataframe_list.append(chunk_dataframe)
                             
                             # move on to next chunk
                             chunk_start = chunk_start + chunk_size
                         
-            # concatenate all dataframes in list
+            # saves all chunks in list to csv
             if len(dataframe_list) > 0:
                 dataframe_concat = pd.concat(dataframe_list)
-                dataframe_concat.to_csv(output_directory + str(building_id) + '.csv')
+                #dataframe_concat.to_csv(output_directory + str(building_id) + '.csv')
                 
+        hdf5_store.close()
         conn.close()
         
         
