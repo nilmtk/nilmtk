@@ -123,7 +123,7 @@ class REDDStore(DataStore):
         path = self._path_for_house(key_obj)
 
         # Get filename
-        filename = 'channel_{:d}.dat'.format(key_obj.sensor)
+        filename = 'channel_{:d}.dat'.format(key_obj.meter)
         filename = os.path.join(path, filename)
 
         # load data
@@ -190,7 +190,7 @@ class REDDStore(DataStore):
         
         # building metadata
         key_obj = Key(key)
-        assert key_obj.sensor is None
+        assert key_obj.meter is None
         if not 1 <= key_obj.building <= 6:
             raise ValueError("Building {} is not a valid building instance."
                              .format(key_obj.building))
@@ -208,9 +208,9 @@ class REDDStore(DataStore):
                     'device_model': 'REDD_whole_house',
                     'sensors': [
                         {'data_location':
-                         str(Key(building=key_obj.building, sensor=1))},
+                         str(Key(building=key_obj.building, meter=1))},
                         {'data_location':
-                         str(Key(building=key_obj.building, sensor=2))}]
+                         str(Key(building=key_obj.building, meter=2))}]
                     }
             elif meter_i == 2:
                 continue # split-phase mains is handled by meter 1
@@ -220,7 +220,7 @@ class REDDStore(DataStore):
                     'device_model': 'eMonitor',
                     'sensors': [
                         {'data_location':
-                         str(Key(building=key_obj.building, sensor=meter_i))}]
+                         str(Key(building=key_obj.building, meter=meter_i))}]
                 }
                 meter_metadata.update(deepcopy(MAP_REDD_LABELS_TO_NILMTK[label]))
                 appliances = meter_metadata.get('appliances', [])
@@ -252,7 +252,7 @@ class REDDStore(DataStore):
         # List meters
         key_obj = Key(key)
         assert key_obj.building is not None
-        assert key_obj.sensor is None
+        assert key_obj.meter is None
         if not 1 <= key_obj.building <= 6:
             raise ValueError("Building {} is not a valid building instance."
                              .format(key_obj.building))

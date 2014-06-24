@@ -96,12 +96,12 @@ for col in MEASUREMENTS:
     TEST_METER['measurement_limits'][col] = {'lower_limit': 0, 'upper_limit': 6000}
 
 
-def add_building_metadata(store, elec_meters, key='building1'):
+def add_building_metadata(store, elec_meters, key='building1', appliances=[]):
     node = store.get_node(key)
     md = {
         'instance': 1,
-        'dataset': 'REDD',
-        'elec_meters': elec_meters
+        'elec_meters': elec_meters,
+        'appliances': appliances
     }
     node._f_setattr('metadata', md)
 
@@ -113,13 +113,13 @@ def create_random_hdf5():
     store = pd.HDFStore(FILENAME, 'w', complevel=9, complib='bzip2')
     elec_meter_metadata = {}
     for meter in range(1, N_METERS+1):
-        key = 'building1/elec/sensor{:d}'.format(meter)
+        key = 'building1/elec/meter{:d}'.format(meter)
         print("Saving", key)
         store.put(key, create_random_df(), format='table')
         elec_meter_metadata[meter] = {
             'device_model': TEST_METER['model'], 
             'submeter_of': 1,
-            'sensors': [{'data_location': key}]
+            'data_location': key
         }
 
     # Save dataset-wide metadata
@@ -155,12 +155,12 @@ def create_energy_hdf5(simple=True):
 
     # Save sensor data
     for meter_i in [1,2,3]:
-        key = 'building1/elec/sensor{:d}'.format(meter_i)
+        key = 'building1/elec/meter{:d}'.format(meter_i)
         print("Saving", key)
         store.put(key, df, format='table')
         meta = {
             'device_model': meter_device['model'],
-            'sensors': [{'data_location': key}]
+            'data_location': key
         }
         additional_meta = {
             1: {'site_meter': True},

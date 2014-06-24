@@ -122,6 +122,8 @@ class MeterGroup(object):
                     return meter
             raise KeyError(key)
         elif isinstance(key, list): # find MeterGroup from list of ElecMeterIDs
+            if not all([isinstance(item, tuple) for item in key]):
+                raise TypeError("requires a list of ElecMeterID objects.")
             for meter in self.meters: # TODO: write unit tests for this
                 if isinstance(meter, MeterGroup):
                     metergroup = meter
@@ -222,18 +224,7 @@ class MeterGroup(object):
                 selected_meters.append(meter)
 
         return MeterGroup(selected_meters)
-        
-    def groupby(self, **kwargs):
-        """
-        e.g. groupby('category')
-        
-        Returns
-        -------
-        A dict of MeterGroup objects e.g.:
-          {'cold': MeterGroup, 'hot': MeterGroup}
-        """
-        raise NotImplementedError
-        
+                
     def __eq__(self, other):
         if isinstance(other, MeterGroup):
             return other.meters == self.meters
@@ -255,95 +246,45 @@ class MeterGroup(object):
                 wiring_graph.add_edge(meter.upstream_meter, meter)
         return wiring_graph
 
-    def total_on_duration(self):
-        """Return timedelta"""
-        raise NotImplementedError
-    
-    def on_durations(self):
-        # self.get_unique_upstream_meters()
-        # for each meter, get the on time, 
-        # assuming the on-power-threshold for the 
-        # smallest appliance connected to that meter???
-        raise NotImplementedError
-    
-    def activity_distribution(self, bin_size, timespan):
-        raise NotImplementedError
-    
-    def when_on(self, on_power_threshold):
-        """Return Series of bools"""
-        raise NotImplementedError
-    
-    def cross_correlation(self):
-        """Correlation between items."""
-        raise NotImplementedError
-                
-    def total_energy(self):
-        # self.get_unique_upstream_meters()
-        # adds energy on a meter-by-meter basis
-        raise NotImplementedError
-    
-    def on_off_events(self, minimum_state_duration):
-        raise NotImplementedError
-    
-    def top_k(self, k=5):
-        """Return new MeterGroup?"""
-        self.itemised_energy().ix[:k]
-    
-    def itemised_energy(self):
-        """Needs to do it per-meter???  Return sorted.
-        'kitchen lights': 234.5
-        ['hall lights, bedroom lights'] : 32.1 
-        need to subtract kitchen lights energy from lighting circuit!
-        """ 
-        # keys could be actual Appliance / MeterGroup objects?
-        # e.g. when we want to select top_k Meters.
-        raise NotImplementedError
-        
-    def proportion_above(self, threshold_proportion):
-        """Return new MeterGroup with all meters whose proportion of
-        energy usage is above threshold"""
-        raise NotImplementedError
-        
-    def itemised_proportions(self):
-        """Proportion of energy per meter. Return sorted."""
-        raise NotImplementedError
-    
-    def power_series(self):
-        # Get all upstream meters. Add series.  Return generator of series.
+    def power_series(self, measurement_ac_type_prefs=None, **load_kwargs):
+        """Sum together all meters and return power Series.
+
+        Parameters
+        ----------
+        measurement_ac_type_prefs : list of strings, optional
+            if provided then will try to select the best AC type from 
+            self.available_ac_types which is also in measurement_ac_type_prefs.
+            If none of the measurements from measurement_ac_type_prefs are 
+            available then will raise a warning and will select another ac type.
+
+        Returns
+        -------
+        generator of pd.Series of power measurements.        
+        """
+
+        # TODO
         # What happens if indicies don't match?  Automatically re-sample?  Or down-sample?
         # Probably best to raise exception and make user pre-process???  How?
         # lighting.resample('6S').power_series() ???? or
         # lighting.preprocessing = [Resample('6S')]
         # lighting.power_series()
-        raise NotImplementedError
-            
-    def init_new_dataset(self):
-        self.infer_and_set_meter_connections()
-        self.infer_and_set_dual_supply_appliances()
-            
-    def infer_and_set_meter_connections(self):
-        """
-        Arguments
-        ---------
-        meters : list of Meter objects
-        """
-        # Maybe this should be a stand-alone function which
-        # takes a list of meters???
-        raise NotImplementedError
-        
-    def infer_and_set_dual_supply_appliances(self):
-        raise NotImplementedError
-    
-    def plot(self, how='stacked'):
-        """
-        Arguments
-        ---------
-        stacked : {'stacked', 'heatmap', 'lines', 'snakey'}
-        """
-        # pretty snakey:
-        # http://www.cl.cam.ac.uk/research/srg/netos/c-aware/joule/V4.00/
-        raise NotImplementedError
 
+        # Get a list of generators
+        generators = []
+        for meter in self.meters:
+            generators.append(meter.power_series(measurement_ac_type_prefs,
+                                                 **load_kwargs))
+        # Now load each generator and yield the sum
+        while True:
+            try:
+                chunk = next(generators[0])
+            except StopIteration:
+                break
+            for generator in generators[1:]:
+                chunk += next(generator)
+            yield chunk.dropna()
+        
+            
     def mains(self):
         """Get the mains ElecMeter object."""
         graph = self.wiring_graph()
@@ -435,3 +376,98 @@ class MeterGroup(object):
         ac_type = select_best_ac_type(mains_energy.keys(), common_ac_types)
         return submetered_energy / mains_energy[ac_type]
     
+
+
+    ################## NOT IMPLEMENTED FUNCTIONS ###################
+    def init_new_dataset(self):
+        self.infer_and_set_meter_connections()
+        self.infer_and_set_dual_supply_appliances()
+            
+    def infer_and_set_meter_connections(self):
+        """
+        Arguments
+        ---------
+        meters : list of Meter objects
+        """
+        # Maybe this should be a stand-alone function which
+        # takes a list of meters???
+        raise NotImplementedError
+        
+    def infer_and_set_dual_supply_appliances(self):
+        raise NotImplementedError
+    
+    def plot(self, how='stacked'):
+        """
+        Arguments
+        ---------
+        stacked : {'stacked', 'heatmap', 'lines', 'snakey'}
+        """
+        # pretty snakey:
+        # http://www.cl.cam.ac.uk/research/srg/netos/c-aware/joule/V4.00/
+        raise NotImplementedError
+
+    def total_on_duration(self):
+        """Return timedelta"""
+        raise NotImplementedError
+    
+    def on_durations(self):
+        # self.get_unique_upstream_meters()
+        # for each meter, get the on time, 
+        # assuming the on-power-threshold for the 
+        # smallest appliance connected to that meter???
+        raise NotImplementedError
+    
+    def activity_distribution(self, bin_size, timespan):
+        raise NotImplementedError
+    
+    def when_on(self, on_power_threshold):
+        """Return Series of bools"""
+        raise NotImplementedError
+    
+    def cross_correlation(self):
+        """Correlation between items."""
+        raise NotImplementedError
+                
+    def total_energy(self):
+        # self.get_unique_upstream_meters()
+        # adds energy on a meter-by-meter basis
+        raise NotImplementedError
+    
+    def on_off_events(self, minimum_state_duration):
+        raise NotImplementedError
+    
+    def top_k(self, k=5):
+        """Return new MeterGroup?"""
+        self.itemised_energy().ix[:k]
+    
+    def itemised_energy(self):
+        """Needs to do it per-meter???  Return sorted.
+        'kitchen lights': 234.5
+        ['hall lights, bedroom lights'] : 32.1 
+        need to subtract kitchen lights energy from lighting circuit!
+        """ 
+        # keys could be actual Appliance / MeterGroup objects?
+        # e.g. when we want to select top_k Meters.
+        raise NotImplementedError
+        
+    def proportion_above(self, threshold_proportion):
+        """Return new MeterGroup with all meters whose proportion of
+        energy usage is above threshold"""
+        raise NotImplementedError
+        
+    def itemised_proportions(self):
+        """Proportion of energy per meter. Return sorted."""
+        raise NotImplementedError
+    
+    # SELECTION FUNCTIONS NOT IMPLEMENTED YET
+
+    def groupby(self, **kwargs):
+        """
+        e.g. groupby('category')
+        
+        Returns
+        -------
+        A dict of MeterGroup objects e.g.:
+          {'cold': MeterGroup, 'hot': MeterGroup}
+        """
+        raise NotImplementedError

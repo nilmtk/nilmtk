@@ -21,8 +21,8 @@ class ElecMeter(Hashable):
 
     store : nilmtk.DataStore
 
-    sensor_keys : list of strings
-        each string is a key into nilmtk.DataStore to access data.
+    key : string
+        key into nilmtk.DataStore to access data.
     
     metadata : dict.
         See http://nilm-metadata.readthedocs.org/en/latest/dataset_metadata.html#elecmeter    
@@ -54,12 +54,11 @@ class ElecMeter(Hashable):
         if self.identifier is not None:
             assert isinstance(meter_id, ElecMeterID)
             ElecMeter.meters[self.identifier] = self
-
         self.appliances = []
 
     @property
-    def sensor_keys(self):
-        return [sensor['data_location'] for sensor in self.metadata['sensors']]
+    def key(self):
+        return self.metadata['data_location']
 
     @property
     def upstream_meter(self):
@@ -191,10 +190,9 @@ class ElecMeter(Hashable):
         ----------
         measurement_ac_type_prefs : list of strings, optional
             if provided then will try to select the best AC type from 
-            self.available_ac_types  which is also in measurement_ac_type_prefs.
+            self.available_ac_types which is also in measurement_ac_type_prefs.
             If none of the measurements from measurement_ac_type_prefs are 
             available then will raise a warning and will select another ac type.
-
 
         Returns
         -------
@@ -208,8 +206,6 @@ class ElecMeter(Hashable):
         * remove implausable values
         * gaps will be bookended with zeros
 
-        measurement_preferences : list of Measurements, optional.
-            Defaults to active > apparent > reactive
         required_measurements : Measurement, optional.  
             Raises MeasurementError if not available.
         normalise : boolean, optional, defaults to False
@@ -220,20 +216,8 @@ class ElecMeter(Hashable):
         """
         best_ac_type = select_best_ac_type(self.available_ac_types(),
                                            measurement_ac_type_prefs)
+        return self.store.load(key=self.key, cols=[best_ac_type], **load_kwargs)
 
-        generators = []
-        for key in self.sensor_keys:
-            generators.append(self.store.load(key=key, **load_kwargs))
-
-        while True:
-            try:
-                chunk = next(generators[0])
-            except StopIteration:
-                break
-            for generator in generators[1:]:
-                chunk += next(generator)
-            yield chunk[Power(best_ac_type)].dropna()
-        
     def voltage_series(self):
         """Returns a generator of pd.Series of voltage, if available."""
         raise NotImplementedError
