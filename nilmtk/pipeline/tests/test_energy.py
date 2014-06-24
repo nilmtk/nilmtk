@@ -51,16 +51,6 @@ class TestEnergy(unittest.TestCase):
         energy = deepcopy(pipeline.results['energy'])
         check_energy_numbers(self, energy)
 
-        # TODO test appliance with multiple meters 
-        # multi_meter_meta = deepcopy(self.meter_meta)
-        # multi_meter_meta['sensors'] += multi_meter_meta['sensors']
-        # multi_meter = ElecMeter(store=self.datastore, metadata=multi_meter_meta,
-        #                         meter_id=METER_ID)
-        # pipeline.run(multi_meter)
-        # multi_meter_energy = deepcopy(pipeline.results['energy'])
-        # for ac_type, en in multi_meter_energy.combined.iteritems():
-        #     self.assertEqual(energy.combined[ac_type]*2, en)
-
 if __name__ == '__main__':
     unittest.main()
 

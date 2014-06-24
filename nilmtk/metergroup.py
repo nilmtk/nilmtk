@@ -38,7 +38,7 @@ class MeterGroup(object):
         # Sanity checking
         assert isinstance(elec_meters, dict)
         assert isinstance(appliances, list)
-        assert isinstance(building_id, int)
+        assert isinstance(building_id, tuple)
         if not elec_meters:
             warn("Building {} has an empty 'elec_meters' object."
                  .format(building_id.instance), RuntimeWarning)
@@ -297,6 +297,19 @@ class MeterGroup(object):
         assert isinstance(meters, list)
         return meters
 
+    def total_energy(self, **load_kwargs):
+        """Sums together total energy for each meter and returns a
+        single EnergyResults object.
+        """
+        total_energy = None
+        for meter in self.meters:
+            meter_energy = meter.total_energy(**load_kwargs)
+            if total_energy is None:
+                total_energy = meter_energy
+            else:
+                total_energy.unify(meter_energy)
+        return total_energy
+
     def dataframe_of_meters(self, rule='1T'):
         """
         Returns
@@ -427,12 +440,7 @@ class MeterGroup(object):
     def cross_correlation(self):
         """Correlation between items."""
         raise NotImplementedError
-                
-    def total_energy(self):
-        # self.get_unique_upstream_meters()
-        # adds energy on a meter-by-meter basis
-        raise NotImplementedError
-    
+                    
     def on_off_events(self, minimum_state_duration):
         raise NotImplementedError
     

@@ -93,8 +93,16 @@ class ElecMeter(Hashable):
 
     @property
     def device(self):
-        device_model = self.metadata['device_model']
-        return ElecMeter.meter_devices[device_model]
+        """
+        Returns
+        -------
+        dict describing the MeterDevice for this meter (sample period etc).
+        """
+        device_model = self.metadata.get('device_model')
+        if device_model:
+            return ElecMeter.meter_devices[device_model]
+        else:
+            return {}
 
     def dominant_appliance(self):
         """Tries to find the most dominant appliance on this meter,

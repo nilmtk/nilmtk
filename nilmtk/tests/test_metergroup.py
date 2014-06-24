@@ -2,10 +2,11 @@
 from __future__ import print_function, division
 import unittest
 from os.path import join
-from .testingtools import data_dir
+from nilmtk.tests.testingtools import data_dir
 from nilmtk import Appliance, MeterGroup, ElecMeter, HDFDataStore
 from nilmtk.utils import tree_root, nodes_adjacent_to_root
 from nilmtk.elecmeter import ElecMeterID
+from nilmtk.building import BuildingID
 
 class TestMeterGroup(unittest.TestCase):
     @classmethod
@@ -48,17 +49,6 @@ class TestMeterGroup(unittest.TestCase):
     def test_wiring_graph(self):
         meter1 = ElecMeter(metadata={'site_meter': True}, 
                            meter_id=ElecMeterID(1,1,'REDD'))
-        meter2 = ElecMeter(metadata={'submeter_of': 1},
-                           meter_id=ElecMeterID(2,1,'REDD'))
-        meter3 = ElecMeter(metadata={'submeter_of': 2},
-                           meter_id=ElecMeterID(3,1,'REDD'))
-        mg = MeterGroup([meter1, meter2, meter3])
-        wiring_graph = mg.wiring_graph()
-        self.assertEqual(wiring_graph.nodes(), [meter2, meter3, meter1])
-
-    def test_wiring_graph(self):
-        meter1 = ElecMeter(metadata={'site_meter': True}, 
-                           meter_id=ElecMeterID(1,1,'REDD'))
         meter2 = ElecMeter(metadata={'submeter_of': 1}, 
                            meter_id=ElecMeterID(2,1,'REDD'))
         meter3 = ElecMeter(metadata={'submeter_of': 2},
@@ -68,6 +58,7 @@ class TestMeterGroup(unittest.TestCase):
         
         self.assertIs(mg.mains(), meter1)
         self.assertEqual(mg.meters_directly_downstream_of_mains(), [meter2])
+        self.assertEqual(wiring_graph.nodes(), [meter2, meter3, meter1])
 
     def test_proportion_of_energy_submetered(self):
         meters = []
@@ -80,6 +71,18 @@ class TestMeterGroup(unittest.TestCase):
         mains = meters[0]
         mg = MeterGroup(meters)
         self.assertEqual(mg.proportion_of_energy_submetered(), 1.0) 
+
+    def test_dual_supply(self):
+        elec_meters = {1: {'data_location': '/building1/elec/meter1',
+                           'device_model': 'Energy Meter'},
+                       2: {'data_location': '/building1/elec/meter1',
+                           'device_model': 'Energy Meter'}}
+        appliances = [{'type': 'washer dryer', 'instance': 1, 'meters': [1,2]}]
+        mg = MeterGroup()
+        mg.load(self.datastore, elec_meters, appliances, BuildingID(1, 'REDD'))
+        meter1 = ElecMeter(store=self.datastore, metadata=elec_meters[1])
+        self.assertEqual(mg.total_energy().combined['active'], 
+                         meter1.total_energy().combined['active'] * 2)
 
 
 if __name__ == '__main__':
