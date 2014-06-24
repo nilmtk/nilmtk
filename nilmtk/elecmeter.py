@@ -55,11 +55,7 @@ class ElecMeter(Hashable):
             assert isinstance(meter_id, ElecMeterID)
             ElecMeter.meters[self.identifier] = self
 
-        # Load appliances
         self.appliances = []
-        appliance_dicts = self.metadata.pop('appliances', [])
-        for appliance_metadata in appliance_dicts:
-            self.appliances.append(Appliance(appliance_metadata))
 
     @property
     def sensor_keys(self):

@@ -12,11 +12,10 @@ class Building(object):
     elec : MeterGroup
 
     metadata : dict
+        Metadata just about this building (e.g. geo location etc).
         See http://nilm-metadata.readthedocs.org/en/latest/dataset_metadata.html#building
-        Also stores: 
-        instance : int, building instance, starts from 1
+        Has these additional keys: 
         dataset : string
-        original_name : string
     """
     def __init__(self):
         self.elec = MeterGroup()
@@ -24,8 +23,9 @@ class Building(object):
     
     def load(self, store, key):
         self.metadata = store.load_metadata(key)
-        elec_meters = self.metadata.get('elec_meters', {})
-        self.elec.load(store, elec_meters, self.identifier)
+        elec_meters = self.metadata.pop('elec_meters', {})
+        appliances = self.metadata.pop('appliances', [])
+        self.elec.load(store, elec_meters, appliances, self.identifier)
                 
     def save(self, destination, key):
         destination.write_metadata(key, self.metadata)

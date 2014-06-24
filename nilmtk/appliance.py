@@ -9,9 +9,9 @@ class Appliance(Hashable):
     """
     Attributes
     ----------
-
     metadata : dict
-       see NILMTK documentation for metadata attributes.
+       see here metadata attributes:
+       http://nilm-metadata.readthedocs.org/en/latest/dataset_metadata.html#appliance
     """
 
     # TODO: appliance_types will be loaded from disk
@@ -33,6 +33,10 @@ class Appliance(Hashable):
     @property
     def type(self):
         return Appliance.appliance_types[self.identifier.type]
+
+    @property
+    def n_meters(self):
+        return len(self.metadata['meters'])
 
     def label(self):
         return str(tuple(self.identifier))

@@ -3,6 +3,7 @@ import networkx as nx
 import pandas as pd
 from warnings import warn
 from .elecmeter import ElecMeter, ElecMeterID
+from .appliance import Appliance
 from .datastore import join_key
 from .utils import tree_root, nodes_adjacent_to_root
 from .measurement import select_best_ac_type
@@ -15,31 +16,73 @@ class MeterGroup(object):
     Attributes
     ----------
     meters : list of ElecMeters
+    appliances : list of Appliance objects connected to this MeterGroup 
+        (and not to individual meters within this MeterGroup).  This is used,
+        for example, where multiple meters are used for a single Appliance.
     """
     def __init__(self, meters=None):
         self.meters = [] if meters is None else list(meters)
+        self.appliances = []
 
-    def load(self, store, elec_meters, building_id):
+    def load(self, store, elec_meters, appliances, building_id):
         """
         Parameters
         ----------
         store : nilmtk.DataStore
         elec_meters : dict of dicts
             metadata for each ElecMeter
+        appliances : list of dicts
+            metadata for each Appliance
         building_id : BuildingID
         """
+        # Sanity checking
         assert isinstance(elec_meters, dict)
+        assert isinstance(appliances, list)
+        assert isinstance(building_id, int)
         if not elec_meters:
             warn("Building {} has an empty 'elec_meters' object."
                  .format(building_id.instance), RuntimeWarning)
-
+        if not appliances:
+            warn("Building {} has an empty 'appliances' list."
+                 .format(building_id.instance), RuntimeWarning)
+            
+        # Load static Meter Devices
         ElecMeter.load_meter_devices(store)
+
+        # Load each meter
         for meter_i, meter_metadata_dict in elec_meters.iteritems():
             meter_id = ElecMeterID(instance=meter_i, 
                                    building=building_id.instance,
                                    dataset=building_id.dataset)
             meter = ElecMeter(store, meter_metadata_dict, meter_id)
             self.meters.append(meter)
+
+        # Load each appliance
+        for appliance_md in appliances:
+            appliance = Appliance(appliance_md)
+            meter_ids = [ElecMeterID(instance=meter_instance,
+                                     building=building_id.instance,
+                                     dataset=building_id.dataset)
+                         for meter_instance in appliance.metadata['meters']]
+
+            if appliance.n_meters == 1:
+                # Attach this appliance to just a single meter
+                meter = self[meter_ids[0]]
+                meter.appliances.append(appliance)
+            else:
+                # DualSupply or 3-phase appliance so need a meter group
+                try:
+                    metergroup = self[meter_ids]
+                except KeyError: # MeterGroup of these meters does not yet exist
+                    metergroup = MeterGroup()
+                    metergroup.meters = [self[meter_id] for meter_id in meter_ids]
+                    for meter in metergroup.meters:
+                        # We assume that any meters used for measuring
+                        # dual-supply or 3-phase appliances are not also used
+                        # for measuring single-supply appliances.
+                        self.meters.remove(meter)
+                    self.meters.append(metergroup)
+                metergroup.appliances.append(appliance)
 
     def union(self, other):
         """
@@ -60,8 +103,10 @@ class MeterGroup(object):
                 more than one meter with this instance, raises KeyError
                 if none are found.
         * [ElecMeterID(1, 1, 'REDD')] - retrieves meter with specified meter ID
-        * ['toaster']    - retrieves toaster instance 1
-        * ['toaster', 2] - retrieves toaster instance 2
+        * [[ElecMeterID(1, 1, 'REDD')], [ElecMeterID(2, 1, 'REDD')]] - retrieves
+          MeterGroup containing meter instances 1 and 2.
+        * ['toaster']    - retrieves meter or group upstream of toaster instance 1
+        * ['toaster', 2] - retrieves meter or group upstream of toaster instance 2
         * [{'dataset': 'redd', 'building': 3, 'type': 'toaster', 'instance': 2}]
 
         Returns
@@ -75,6 +120,15 @@ class MeterGroup(object):
             for meter in self.meters:
                 if meter.identifier == key:
                     return meter
+            raise KeyError(key)
+        elif isinstance(key, list): # find MeterGroup from list of ElecMeterIDs
+            for meter in self.meters: # TODO: write unit tests for this
+                if isinstance(meter, MeterGroup):
+                    metergroup = meter
+                    meter_ids = set([m.identifier for m in metergroup.meters
+                                     if isinstance(m, ElecMeter)])
+                    if meter_ids == set(key):
+                        return meter
             raise KeyError(key)
         elif isinstance(key, tuple):
             if len(key) == 2:
@@ -102,6 +156,14 @@ class MeterGroup(object):
                 return meters_found[0]
         else:
             raise TypeError()
+
+    def matches(self, key):
+        try:
+            match = self[key]
+        except (KeyError, TypeError):
+            return False
+        else:
+            return (match is not None)
 
     def select(self, *args, **kwargs):
         """Select a group of meters.

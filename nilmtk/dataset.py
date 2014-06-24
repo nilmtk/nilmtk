@@ -12,6 +12,9 @@ class DataSet(object):
         Each value is a nilmtk.Building object.
 
     metadata : dict
+        Metadata describing the dataset name, authors etc.
+        (Metadata about specific buildings, meters, appliances etc.
+        is stored elsewhere.)
         See http://nilm-metadata.readthedocs.org/en/latest/dataset_metadata.html#dataset
     """
 
@@ -25,6 +28,7 @@ class DataSet(object):
         store : nilmtk.DataStore
         """
         self._init_buildings(store)
+        # TODO: load dataset metadata
         return self
         
     def save(self, destination):
