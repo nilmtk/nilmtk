@@ -76,13 +76,18 @@ class TestMeterGroup(unittest.TestCase):
         elec_meters = {1: {'data_location': '/building1/elec/meter1',
                            'device_model': 'Energy Meter'},
                        2: {'data_location': '/building1/elec/meter1',
+                           'device_model': 'Energy Meter'},
+                       3: {'data_location': '/building1/elec/meter1',
                            'device_model': 'Energy Meter'}}
-        appliances = [{'type': 'washer dryer', 'instance': 1, 'meters': [1,2]}]
+
+        appliances = [{'type': 'washer dryer', 'instance': 1, 'meters': [1,2]},
+                      {'type': 'fridge', 'instance': 1, 'meters': [3]}]
         mg = MeterGroup()
         mg.load(self.datastore, elec_meters, appliances, BuildingID(1, 'REDD'))
-        meter1 = ElecMeter(store=self.datastore, metadata=elec_meters[1])
-        self.assertEqual(mg.total_energy().combined['active'], 
-                         meter1.total_energy().combined['active'] * 2)
+        self.assertEqual(mg['washer dryer'].total_energy().combined['active'], 
+                         mg['fridge'].total_energy().combined['active'] * 2)
+        self.assertIsInstance(mg['washer dryer'], MeterGroup)
+        self.assertIsInstance(mg['fridge'], ElecMeter)
 
 
 if __name__ == '__main__':

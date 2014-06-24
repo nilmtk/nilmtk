@@ -160,12 +160,16 @@ class MeterGroup(object):
             raise TypeError()
 
     def matches(self, key):
-        try:
-            match = self[key]
-        except (KeyError, TypeError):
-            return False
-        else:
-            return (match is not None)
+        for appliance in self.appliances:
+            if appliance.matches(key):
+                return True
+        return False
+        # try:
+        #     match = self[key]
+        # except (KeyError, TypeError):
+        #     return False
+        # else:
+        #     return (match is not None)
 
     def select(self, *args, **kwargs):
         """Select a group of meters.
