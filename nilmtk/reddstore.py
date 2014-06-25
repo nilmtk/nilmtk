@@ -174,7 +174,7 @@ class REDDStore(DataStore):
                         'manufacturer_url': 'http://powerhousedynamics.com',
                         'sample_period': 3,
                         'max_sample_period': 50,
-                        'measurements': [Power('apparent')],
+                        'measurements': [Power('active')], # this page says eMonitor records active power: http://www.energycircle.com/node/14103
                         'measurement_limits': {
                             Power('active'): {'lower_limit': 0, 'upper_limit': 5000}}
                         },
