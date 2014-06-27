@@ -36,7 +36,7 @@ def convert_redd(redd_path, hdf_filename):
 
     # Iterate though all houses and channels
     houses = find_all_houses(redd_path)
-    for house_id in [1]:
+    for house_id in houses:
         print("Loading house", house_id, end="... ")
         stdout.flush()
         chans = find_all_chans(redd_path, house_id)
@@ -45,7 +45,9 @@ def convert_redd(redd_path, hdf_filename):
             stdout.flush()
             key = Key(building=house_id, meter=chan_id)
             df = load_chan(redd_path, key)
-            df.columns = [Power('active')] # modify as per metadata
+            ac_type = 'apparent' if chan_id <= 2 else 'active'
+            df.columns = [Power(ac_type)] # FIXME Doesn't work well with Pandas 0.14.  
+            # Need re-design.  Use hierarhical column indicies???
             store.put(str(key), df, format='table')
             store.flush()
         print()
