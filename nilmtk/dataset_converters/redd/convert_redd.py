@@ -11,9 +11,6 @@ from nilmtk.timeframe import TimeFrame
 """
 TODO:
 * Use a hand-written set of .YAML files for metadata.
-  * Write general function (in NILM Metadata???) for converting YAML to HDF5
-    Do sanity checks (make sure there aren't multiple appliance types with same 
-    instance, or no instance 1).  Make sure we use proper NILM Metadata names.
 
 * The bottleneck appears to be CPU.  So could be sped up by using 
   multiprocessing module to use multiple CPU cores to load REDD channels in 
