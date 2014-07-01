@@ -79,7 +79,7 @@ appliances:
 
 - original_name: bathroom_gfi   # ground fault interrupter
   room: bathroom
-  type: misc
+  type: unknown
   instance: 1
   multiple: true
   meters: [12]
@@ -121,7 +121,7 @@ appliances:
   meters: [18]
 
 - original_name: washer_dryer
-  type: misc
+  type: unknown
   instance: 2
   meters: [19]
   description: >
