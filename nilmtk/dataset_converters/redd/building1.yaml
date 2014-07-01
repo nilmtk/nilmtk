@@ -27,20 +27,20 @@ elec_meters:
   20: *emonitor
 
 appliances:
-- type: electric oven
+- original_name: oven
+  type: electric oven
   instance: 1
   meters: [3, 4]   # draws power from both 120 volt legs
-  original_name: oven
 
-- type: fridge
+- original_name: refrigerator
+  type: fridge
   instance: 1
   meters: [5]
-  original_name: refrigerator
 
-- type: dish washer
+- original_name: dishwaser
+  type: dish washer
   instance: 1
   meters: [6]
-  original_name: dishwaser
 
 - original_name: kitchen_outlets
   room: kitchen
@@ -65,9 +65,17 @@ appliances:
 - original_name: washer_dryer
   type: washer dryer
   instance: 1
-  meters: [10]
+  meters: [10, 20]
+  components:
+  - type: motor
+    meters: [10]
+  - type: electric heating element
+    meters: [20]
 
-########### TODO ###########
+- original_name: microwave
+  type: microwave
+  instance: 1
+  meters: [11]
 
 - original_name: bathroom_gfi   # ground fault interrupter
   room: bathroom
@@ -75,6 +83,30 @@ appliances:
   instance: 1
   multiple: true
   meters: [12]
+
+- original_name: electric_heat
+  type: electric space heater
+  instance: 1
+  meters: [13]
+
+- original_name: stove
+  type: electric stove
+  instance: 1
+  meters: [14]
+
+- original_name: kitchen_outlets
+  room: kitchen
+  type: sockets
+  instance: 3   # 2nd instance of 'sockets' in this building
+  multiple: true   # likely to be more than 1 socket
+  meters: [15]
+
+- original_name: kitchen_outlets
+  room: kitchen
+  type: sockets
+  instance: 4   # 2nd instance of 'sockets' in this building
+  multiple: true   # likely to be more than 1 socket
+  meters: [16]
 
 - original_name: lighting
   type: light
@@ -88,3 +120,10 @@ appliances:
   multiple: true
   meters: [18]
 
+- original_name: washer_dryer
+  type: misc
+  instance: 2
+  meters: [19]
+  description: >
+    This could be a dud channel. It almost certainly is not
+    a washer dryer.

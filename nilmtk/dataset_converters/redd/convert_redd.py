@@ -3,18 +3,17 @@ import pandas as pd
 import numpy as np
 from copy import deepcopy
 from os.path import join, isdir, isfile
-from os import listdir, remove
+from os import listdir
 from sys import stdout
 from nilmtk.datastore import Key
-from nilmtk.measurement import Power
 from nilmtk.timeframe import TimeFrame
 
 """
 TODO:
-* Load just the data into HDF5.
 * Use a hand-written set of .YAML files for metadata.
-* Write general function (in NILM Metadata???) for converting YAML to HDF5
-* remove any imports we don't need.
+  * Write general function (in NILM Metadata???) for converting YAML to HDF5
+    Do sanity checks (make sure there aren't multiple appliance types with same 
+    instance, or no instance 1).  Make sure we use proper NILM Metadata names.
 
 * The bottleneck appears to be CPU.  So could be sped up by using 
   multiprocessing module to use multiple CPU cores to load REDD channels in 
