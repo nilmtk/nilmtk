@@ -15,6 +15,10 @@ TODO:
 * Use a hand-written set of .YAML files for metadata.
 * Write general function (in NILM Metadata???) for converting YAML to HDF5
 * remove any imports we don't need.
+
+* The bottleneck appears to be CPU.  So could be sped up by using 
+  multiprocessing module to use multiple CPU cores to load REDD channels in 
+  parallel.
 """
 
 def convert_redd(redd_path, hdf_filename):
@@ -30,8 +34,6 @@ def convert_redd(redd_path, hdf_filename):
     assert isdir(redd_path)
 
     # Open HDF5 file
-    if isfile(hdf_filename):
-        remove(hdf_filename)
     store = pd.HDFStore(hdf_filename, 'w', complevel=9, complib='bzip2')
 
     # Iterate though all houses and channels
@@ -44,10 +46,8 @@ def convert_redd(redd_path, hdf_filename):
             print(chan_id, end=" ")
             stdout.flush()
             key = Key(building=house_id, meter=chan_id)
-            df = load_chan(redd_path, key)
             ac_type = 'apparent' if chan_id <= 2 else 'active'
-            df.columns = [Power(ac_type)] # FIXME Doesn't work well with Pandas 0.14.  
-            # Need re-design.  Use hierarhical column indicies???
+            df = load_chan(redd_path, key, [('power', ac_type)])
             store.put(str(key), df, format='table')
             store.flush()
         print()
@@ -74,12 +74,13 @@ def find_all_chans(redd_path, house_id):
     return chans
 
 
-def load_chan(redd_path, key_obj):
+def load_chan(redd_path, key_obj, columns):
     """
     Parameters
     ----------
     redd_path : (str) the root path of the REDD low_freq dataset
     key_obj : (nilmtk.Key) the house and channel to load
+    columns : list of tuples (for hierarchical column index)
 
     Returns
     ------- 
@@ -100,8 +101,8 @@ def load_chan(redd_path, key_obj):
     assert isfile(filename)
 
     # Load data
-    df = pd.read_csv(filename, sep=' ', index_col=0, header=None,
-                    dtype={1: np.float32})
+    df = pd.read_csv(filename, sep=' ', names=columns,
+                     dtype={m:np.float32 for m in columns})
 
     # Basic post-processing
     df = df.sort_index() # raw REDD data isn't always sorted
