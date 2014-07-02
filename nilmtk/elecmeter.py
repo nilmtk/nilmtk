@@ -127,7 +127,7 @@ class ElecMeter(Hashable):
         """
         Returns
         -------
-        string : A label listing all the appliance types and the meter's category.
+        string : A label listing all the appliance types.
         """
         appliance_names = []
         dominant = self.dominant_appliance()
@@ -137,9 +137,6 @@ class ElecMeter(Hashable):
                 appliance_name = appliance_name.upper()
             appliance_names.append(appliance_name)
         label = ", ".join(appliance_names) 
-        category = self.metadata.get('category')
-        if category:
-            label += " meter category = '{}'".format(category)
         return label
 
     def available_ac_types(self):
@@ -159,11 +156,6 @@ class ElecMeter(Hashable):
         string = string[:-1] # remove last bracket
         string += ', appliances={}'.format(self.appliances)
         
-        # METER CATEGORY
-        category = self.metadata.get('category')
-        if category:
-            string += ', category={}'.format(category)
-
         # METER ROOM
         room = self.metadata.get('room')
         if room:
