@@ -2,6 +2,7 @@ from __future__ import print_function, division
 from warnings import warn
 from .hashable import Hashable
 from collections import namedtuple
+from nilm_metadata import get_appliance_types
 
 ApplianceID = namedtuple('ApplianceID', ['type', 'instance'])
 
@@ -14,9 +15,7 @@ class Appliance(Hashable):
        http://nilm-metadata.readthedocs.org/en/latest/dataset_metadata.html#appliance
     """
 
-    # TODO: appliance_types will be loaded from disk
-    # just hard coding for now to get MVP finished.
-    appliance_types = {'fridge': {'category': 'cold'}}
+    appliance_types = get_appliance_types()
 
     def __init__(self, metadata=None):
         self.metadata = {} if metadata is None else metadata
@@ -41,6 +40,9 @@ class Appliance(Hashable):
     def label(self):
         return str(tuple(self.identifier))
 
+    def categories(self):
+        return _flattern(self.type.get('categories').values())
+
     def matches(self, key):
         """
         Parameters
@@ -63,7 +65,19 @@ class Appliance(Hashable):
                     if self.metadata[k] != v:
                         return False
                 else:
-                    if self.type.get(k) != v:
+                    if k == 'category':
+                        if v not in self.categories():
+                            return False
+                    elif self.type.get(k) != v:
                         return False
         return True
     
+
+def _flattern(list2d):
+    list1d = []
+    for item in list2d:
+        if isinstance(item, list):
+            list1d.extend(item)
+        else:
+            list1d.append(item)
+    return list1d
