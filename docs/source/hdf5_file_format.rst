@@ -110,3 +110,27 @@ We use ``zlib`` to compress our HDF5 files.  ``bzip2`` results in
 slightly smaller files (261MB for ``bzip2`` versus 273MB for ``zlip``
 for REDD) but doesn't appear to be compatible with `HDFView
 <http://www.hdfgroup.org/products/java/release/download.html>`_.
+
+Metadata
+========
+
+In order for NILMTK to be able to load the dataset, we need to add
+metadata to the HDF5 file.  NILMTK uses the `NILM Metadata schema
+<https://github.com/nilmtk/nilm_metadata>`_.
+
+If the dataset is already described in YAML using the NILM Metadata
+schema then just call ``nilm_metadata.convert_yaml_to_hdf5()``.
+
+If the dataset is not already described using the NILM Metadata schema
+then it will be necessary to do so.  If it is a small dataset then you
+could manually write the YAML files and then convert these to HDF5
+(this is how our REDD converter works).  If it is a large dataset then
+it would be better to programmatically convert the dataset's own
+metadata to NILM Metadata and store the metadata directly in the HDF5
+file.  For an introduction to NILM Metadata first read the `README
+<https://github.com/nilmtk/nilm_metadata/blob/master/README.md>`_ and
+then `the tutorial
+<http://nilm-metadata.readthedocs.org/en/latest/tutorial.html>`_ and
+finally refer to `the dataset_metadata doc page
+<http://nilm-metadata.readthedocs.org/en/latest/dataset_metadata.html>`_
+for the full description of the metadata schema.
