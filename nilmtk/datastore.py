@@ -20,9 +20,9 @@ class DataStore(object):
     * Totally agnostic about what the data 'means'. It could be voltage,
       current, temperature, PIR readings etc.
     * could have subclasses for NILMTK HDF5, NILMTK CSV, Xively, REDD, iAWE,
-      UKPD, etc; MetOffice XLS data, Current Cost meters etc.  
+      UK-DALE, MetOffice XLS data, Current Cost meters etc.
     * One DataStore per HDF5 file or folder or CSV files or Xively
-      feed etc 
+      feed etc.
 
     Attributes
     ----------
