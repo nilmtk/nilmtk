@@ -42,11 +42,12 @@ Table location (keys)
 Tables in HDF5 are identified by a hierarchical key.  Each key is a
 string. Levels in the hierarchy are separated by a ``/`` character in
 the key.  NILMTK uses keys in the form ``/building<i>/elec/meter<j>``
-where ``i`` and ``j`` are integers starting from 1.  For example, the
-table storing data from meter 1 in building 1 would have the key
-``/building1/elec/meter1``.  (We use ``elec`` in the hierarchy to
-allow us, in the future, to add support for other sensor types like
-water and gas meters).
+where ``i`` and ``j`` are integers starting from 1.  ``i`` is the
+building instance and ``j`` is the meter instance.  For example, the
+table storing data from meter instance 1 in building instance 1 would
+have the key ``/building1/elec/meter1``.  (We use ``elec`` in the
+hierarchy to allow us, in the future, to add support for other sensor
+types like water and gas meters).
 
 Contents of each table
 ----------------------
