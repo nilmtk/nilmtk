@@ -2,7 +2,7 @@ from __future__ import print_function, division
 import pandas as pd
 import numpy as np
 from copy import deepcopy
-from os.path import join, isdir, isfile, dirname
+from os.path import join, isdir, isfile, dirname, abspath
 from os import listdir, getcwd
 import re
 from sys import stdout, getfilesystemencoding
@@ -32,7 +32,7 @@ def convert_redd(redd_path, hdf_filename):
     assert isdir(redd_path)
 
     # Open HDF5 file
-    store = pd.HDFStore(hdf_filename, 'w', complevel=9, complib='bzip2')
+    store = pd.HDFStore(hdf_filename, 'w', complevel=9, complib='zlib')
 
     # Iterate though all houses and channels
     houses = _find_all_houses(redd_path)
@@ -136,16 +136,16 @@ def _load_chan(redd_path, key_obj, columns):
     df = pd.read_csv(filename, sep=' ', names=columns,
                      dtype={m:np.float32 for m in columns})
 
+    # Set the names of the two levels in the column labels
+    df.columns.set_names(['physical_quantity', 'type'], inplace=True)
+
     # raw REDD data isn't always sorted
     df = df.sort_index()
 
     # Convert the integer index column to timezone-aware datetime 
-    df.index = pd.to_datetime((df.index.values*1E9).astype(int), utc=True)
+    df.index = pd.to_datetime((df.index.values*1E9).astype(int), utc=True) ####
     df = df.tz_convert('US/Eastern')
 
-    # Add 'timeframe' to dataframe
-    df.timeframe = TimeFrame(df.index[0], df.index[-1])
-    df.timeframe.include_end = True
     return df
 
 

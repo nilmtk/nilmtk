@@ -4,11 +4,12 @@ HDF5 file format for NILMTK
 
 The `HDF5 file format <http://www.hdfgroup.org/HDF5>`_ is developed by
 The HDF Group.  It is an open, binary file format with good support in
-a number of programming languages including Python.  You could use any
-language to create your dataset converter but we would recommend 
-the Python language.  Working with HDF5 files is really easy in Python
-using `Pandas <http://pandas.pydata.org/>`_ (which, in turn, uses the
-excellent `PyTables <http://www.pytables.org>`_ package).
+a number of programming languages including Python.  In principal, you
+could use any language to create your dataset converter but we would
+recommend the Python language and we have not tried writing converters
+in another other language.  Working with HDF5 files is really easy in
+Python using `Pandas <http://pandas.pydata.org/>`_ (which, in turn,
+uses the excellent `PyTables <http://www.pytables.org>`_ package).
 
 **Background reading**
 
@@ -68,7 +69,9 @@ Illustration
 Index column
 ^^^^^^^^^^^^
 
-The index column is a timezone-aware datetime.
+The index column is a datetime represented on disk as a nano-second
+precision (!) UNIX timestamp stored as an unsigned 64-bit int.  In
+Python, we used a timezone-aware ``numpy.datetime64``.
 
 Measurement columns
 ^^^^^^^^^^^^^^^^^^^
@@ -100,3 +103,10 @@ documentation for ``physical_quantity`` and ``type`` under the
 ``measurements`` property for the `MeterDevice object in NILM Metadata
 <http://nilm-metadata.readthedocs.org/en/latest/dataset_metadata.html#meterdevice>`_.
 
+Compression
+^^^^^^^^^^^
+
+We use ``zlib`` to compress our HDF5 files.  ``bzip2`` results in
+slightly smaller files (261MB for ``bzip2`` versus 273MB for ``zlip``
+for REDD) but doesn't appear to be compatible with `HDFView
+<http://www.hdfgroup.org/products/java/release/download.html>`_.
