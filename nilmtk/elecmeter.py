@@ -3,7 +3,7 @@ from .pipeline import Pipeline, ClipNode, EnergyNode, LocateGoodSectionsNode
 from .hashable import Hashable
 from .appliance import Appliance
 from .datastore import Key
-from .measurement import Power, select_best_ac_type
+from .measurement import select_best_ac_type
 from warnings import warn
 from collections import namedtuple
 from copy import deepcopy
@@ -143,14 +143,15 @@ class ElecMeter(Hashable):
         return label
 
     def available_ac_types(self):
-        """Finds available alternating current types from measurements.
+        """Finds available alternating current types from power measurements.
 
         Returns
         -------
         list of strings e.g. ['apparent', 'active']
         """
         measurements = self.device['measurements']
-        return [m.ac_type for m in measurements if isinstance(m, Power)]
+        return [m['type'] for m in measurements 
+                if m['physical_quantity'] == 'power']
 
     def __repr__(self):
         string = super(ElecMeter, self).__repr__()

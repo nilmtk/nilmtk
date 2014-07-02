@@ -5,7 +5,7 @@ import sys
 import pandas as pd
 from pandas import HDFStore
 import psycopg2 as db
-from nilmtk.measurement import Power
+from nilmtk.measurement import measurement_columns
 
 """
 MANUAL:
@@ -45,6 +45,9 @@ def _wikienergy_dataframe_to_hdf(wikienergy_dataframe, hdf5_store):
                                                        for i in local_dataframe['localminute']])
     # set timestamp as frame index
     local_dataframe = local_dataframe.set_index('localminute')
+
+    # Column names for dataframe
+    columns = measurement_columns([('power', 'active')])
     
     for building_id in local_dataframe['dataid'].unique():
         # remove building id column
@@ -55,13 +58,12 @@ def _wikienergy_dataframe_to_hdf(wikienergy_dataframe, hdf5_store):
         for column in feeds_dataframe.columns:
             if feeds_dataframe[column].notnull().sum() > 0:
                 # convert timeseries into dataframe
-                feed_dataframe = pd.DataFrame(feeds_dataframe[column])
-                # set nilmtk column name
-                feed_dataframe.columns = [Power('active')]
+                feed_dataframe = pd.DataFrame(feeds_dataframe[column],
+                                              columns=columns)
                 
                 key = 'building{:d}/elec/meter{:d}'.format(building_id, meter_id)
                 hdf5_store.append(key, feed_dataframe)
-            meter_id = meter_id + 1
+            meter_id += 1
     return 0
 
 

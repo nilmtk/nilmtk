@@ -7,4 +7,3 @@ from nilmtk.metergroup import MeterGroup
 from nilmtk.appliance import Appliance
 from nilmtk.building import Building
 from nilmtk.dataset import DataSet
-from nilmtk.measurement import Power, Energy, Voltage

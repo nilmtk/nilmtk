@@ -7,7 +7,6 @@ from datetime import timedelta
 from testingtools import data_dir
 from nilmtk.datastore import HDFDataStore
 from nilmtk import TimeFrame
-from nilmtk.measurement import Power, Voltage, Energy
 
 class TestHDFDataStore(unittest.TestCase):
     START_DATE = pd.Timestamp('2012-01-01 00:00:00', tz=None)
@@ -19,8 +18,7 @@ class TestHDFDataStore(unittest.TestCase):
     def setUpClass(cls):
         filename = join(data_dir(), 'random.h5')
         cls.datastore = HDFDataStore(filename)
-        cls.keys = ['/building1/elec/meter{:d}'.format(i) 
-                    for i in range(1,6)]
+        cls.keys = ['/building1/elec/meter{:d}'.format(i) for i in range(1,6)]
 
     @classmethod
     def tearDownClass(cls):
@@ -32,7 +30,8 @@ class TestHDFDataStore(unittest.TestCase):
     def test_column_names(self):
         for key in self.keys:
             self.assertEqual(self.datastore._column_names(key), 
-                             [Power('active'), Energy('reactive'), Voltage()])
+                             [('power', 'active'), ('energy', 'reactive'),
+                              ('voltage', '')])
 
     def test_timeframe(self):
         self.datastore.window.clear()
@@ -68,7 +67,7 @@ class TestHDFDataStore(unittest.TestCase):
         timeframe = TimeFrame('2012-01-01 00:00:00', '2012-01-01 00:00:05')
         self.datastore.window.clear()
         gen = self.datastore.load(key=self.keys[0], 
-                                  cols=[Power('active')],
+                                  cols=[('power', 'active')],
                                   periods=[timeframe])
         df = next(gen)
         self.assertEqual(df.index[0], timeframe.start)

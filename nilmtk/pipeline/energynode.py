@@ -6,7 +6,6 @@ from nilmtk.utils import timedelta64_to_secs
 from nilmtk.consts import JOULES_PER_KWH
 from nilmtk.measurement import AC_TYPES
 from nilmtk import TimeFrame
-from nilmtk.measurement import Power, Energy
 
 
 class EnergyNode(Node):
@@ -31,8 +30,10 @@ class EnergyNode(Node):
     def required_measurements(self, state):
         """EnergyNode needs all power and energy measurements."""
         available_measurements = state['device']['measurements']
-        return [measurement for measurement in available_measurements 
-                if isinstance(measurement, (Power, Energy))]
+        return [(measurement['physical_quantity'], measurement['type']) 
+                for measurement in available_measurements 
+                if measurement['physical_quantity'] in 
+                ['power', 'energy', 'cumulative energy']]
 
 
 def _energy_for_chunk(df, max_sample_period):
@@ -45,22 +46,22 @@ def _energy_for_chunk(df, max_sample_period):
 
     energy = {}
     data_source_rank = {} # overwrite Power with Energy with Energy(cumulative)
-    for measurement, series in df.iteritems():
-        if isinstance(measurement, Power):
+    for (physical_quantity, ac_type), series in df.iteritems():
+        if physical_quantity == 'power':
             # Preference is to calculate energy from 
             # native Energy data rather than Power data
             # so don't overwrite with Power data.
-            if not energy.has_key(measurement.ac_type):
-                energy[measurement.ac_type] = _energy_for_power_series(
+            if not energy.has_key(ac_type):
+                energy[ac_type] = _energy_for_power_series(
                     series, max_sample_period)
-                data_source_rank[measurement.ac_type] = 3 # least favourite
-        elif isinstance(measurement, Energy):
-            if measurement.cumulative:
-                energy[measurement.ac_type] = series.iloc[-1] - series.iloc[0]
-                data_source_rank[measurement.ac_type] = 1 # favourite
-            elif data_source_rank.get(measurement.ac_type, 3) > 2:
-                energy[measurement.ac_type] = series.sum()
-                data_source_rank[measurement.ac_type] = 2
+                data_source_rank[ac_type] = 3 # least favourite
+        elif physical_quantity == 'cumulative energy':
+            energy[ac_type] = series.iloc[-1] - series.iloc[0]
+            data_source_rank[ac_type] = 1 # favourite
+        elif (physical_quantity == 'energy' and 
+              data_source_rank.get(ac_type, 3) > 2):
+            energy[ac_type] = series.sum()
+            data_source_rank[ac_type] = 2
     return energy
 
 

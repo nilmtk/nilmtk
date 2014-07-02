@@ -8,9 +8,9 @@ import re
 from sys import stdout, getfilesystemencoding
 from nilmtk.datastore import Key
 from nilmtk.timeframe import TimeFrame
+from nilmtk.measurement import LEVEL_NAMES
 from nilm_metadata import convert_yaml_to_hdf5
 from inspect import currentframe, getfile, getsourcefile
-
 
 """
 TODO:
@@ -137,7 +137,7 @@ def _load_chan(redd_path, key_obj, columns):
                      dtype={m:np.float32 for m in columns})
 
     # Set the names of the two levels in the column labels
-    df.columns.set_names(['physical_quantity', 'type'], inplace=True)
+    df.columns.set_names(LEVEL_NAMES, inplace=True)
 
     # raw REDD data isn't always sorted
     df = df.sort_index()

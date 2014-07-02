@@ -25,39 +25,24 @@ class TestMeasurement(unittest.TestCase):
             with self.assertRaises(ValueError):
                 cls(ac_type=bad_ac_type)
 
-    def test_power_constructor(self):
-        self._test_ac_class(measure.Power)
-
-    def test_energy_constructor(self):
-        self._test_ac_class(measure.Energy)
-        for cumulative in [True, False]:
-            energy = measure.Energy('reactive', cumulative=cumulative)
-            self.assertIsInstance(energy, measure.Energy)
-        for bad_cumulative in ['foo', '', [], [True], ['bar'], (1,2), {'a':'b'}]:
-            with self.assertRaises(TypeError):
-                measure.Energy('reactive', cumulative=bad_cumulative)
-
-    def test_voltage_constructor(self):
-        v = measure.Voltage()
-        self.assertIsInstance(v, measure.Voltage)
-        with self.assertRaises(TypeError):
-            measure.Voltage('blah')
-
     def test_as_dataframe_columns(self):
         N_ROWS = 5
         columns = []
 
         # Create columns using every permutation of ac_type and cumulative
         for ac_type in measure.AC_TYPES:
-            columns.append(measure.Power(ac_type=ac_type))
+            columns.append(('power', ac_type))
             for cumulative in [True, False]:
-                columns.append(measure.Energy(ac_type=ac_type, 
-                                              cumulative=cumulative))
-        columns.append(measure.Voltage())
+                if cumulative:
+                    columns.append(('cumulative energy', ac_type))
+                else:
+                    columns.append(('energy', ac_type))
+        columns.append(('voltage', ''))
 
         # Create DataFrame
         N_COLS = len(columns)
-        df = pd.DataFrame(np.arange(N_COLS).reshape((1,N_COLS)), columns=columns)
+        df = pd.DataFrame(np.arange(N_COLS).reshape((1,N_COLS)), 
+                          columns=measure.measurement_columns(columns))
 
         # Try accessing columns
         i = 0
@@ -75,7 +60,8 @@ class TestMeasurement(unittest.TestCase):
         self.assertEqual(measure.select_best_ac_type(['active', 'reactive', 'apparent']), 'active')
 
         ElecMeter.meter_devices.update(
-            {'test model': {'measurements': [measure.Power('apparent')]}})
+            {'test model': {'measurements': [{'physical_quantity': 'power', 
+                                              'type': 'apparent'}]}})
         meter_id = ElecMeterID(1, 1, 'REDD')
         meter = ElecMeter(metadata={'device_model': 'test model'}, meter_id=meter_id)
         

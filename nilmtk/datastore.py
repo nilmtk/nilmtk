@@ -104,7 +104,7 @@ class HDFDataStore(DataStore):
         ----------
         key : string, the location of a table within the DataStore.
         cols : list of Measurements or ['index'], optional
-            e.g. [Power('active'), Power('reactive'), Voltage()]
+            e.g. [('power', 'active'), ('power', 'reactive'), ('voltage')]
             if not provided then will return all columns from the table.
         periods : list of nilmtk.TimeFrame objects, optional
             defines the time periods to load.  If `self.window` is enabled
@@ -144,6 +144,7 @@ class HDFDataStore(DataStore):
         self._check_columns(key, cols)
         periods = [TimeFrame()] if periods is None else periods
 
+        nrows = self._nrows(key)
         start_row = 0 # row to start search in table
         for period in periods:
             window_intersect = self.window.intersect(period)
@@ -169,12 +170,15 @@ class HDFDataStore(DataStore):
                               else self._get_timeframe(key))
 
             # Load 'look ahead'
-            try:
-                look_ahead_coords = self.store.select_as_coordinates(
-                    key=key, where="index >= period.end", 
-                    start=start_row, 
-                    stop=start_row+n_look_ahead_rows)
-            except IndexError:
+            if start_row < nrows:
+                try:
+                    look_ahead_coords = self.store.select_as_coordinates(
+                        key=key, where="index >= period.end", 
+                        start=start_row, 
+                        stop=start_row+n_look_ahead_rows)
+                except IndexError:
+                    look_ahead_coords = []
+            else:
                 look_ahead_coords = []
 
             if len(look_ahead_coords) > 0:

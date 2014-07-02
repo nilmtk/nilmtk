@@ -5,8 +5,8 @@ from nilmtk.tests.testingtools import data_dir
 from os.path import join
 import itertools
 import numpy as np
-from nilmtk.measurement import Voltage, Energy, Power, AC_TYPES
 from nilmtk.consts import JOULES_PER_KWH
+from nilmtk.measurement import measurement_columns, AC_TYPES
 
 MAX_SAMPLE_PERIOD = 15
 
@@ -31,24 +31,23 @@ def power_data(simple=True):
     apparent = data * 1.1
     
     index = [pd.Timestamp('2010-01-01') + timedelta(seconds=sec) for sec in secs]
-
+    column_tuples = [('power', ac_type) for ac_type in ['active', 'reactive', 'apparent']]
     df = pd.DataFrame(np.array([active, reactive, apparent]).transpose(),
                       index=index, dtype=np.float32, 
-                      columns=[Power(ac_type) for ac_type in 
-                               ['active', 'reactive', 'apparent']])
+                      columns=measurement_columns(column_tuples))
 
     # calculate energy
     # this is not cumulative energy
     timedelta_secs = np.diff(secs).clip(0, MAX_SAMPLE_PERIOD).astype(np.float32)
 
     for ac_type in AC_TYPES:
-        joules = timedelta_secs * df[Power(ac_type)].values[:-1]
+        joules = timedelta_secs * df['power', ac_type].values[:-1]
         joules = np.concatenate([joules, [0]])
         kwh = joules / JOULES_PER_KWH
         if ac_type == 'reactive':
-            df[Energy(ac_type)] = kwh
+            df['energy', ac_type] = kwh
         elif ac_type == 'apparent':
-            df[Energy(ac_type, cumulative=True)] = kwh.cumsum()
+            df['cumulative energy', ac_type] = kwh.cumsum()
 
     return df
 
@@ -74,26 +73,27 @@ def create_random_df_hierarchical_column_index():
                                    N_METERS*N_MEASUREMENTS_PER_METER))
     return pd.DataFrame(data=data, index=rng, columns=columns, dtype=np.float32)
 
-MEASUREMENTS = [Power('active'), Energy('reactive'), Voltage()]
+MEASUREMENTS = [('power', 'active'), ('energy', 'reactive'), ('voltage', '')]
 
 
 def create_random_df():
     N_PERIODS = 1E4
-    columns = MEASUREMENTS
     rng = pd.date_range('2012-01-01', freq='S', periods=N_PERIODS)
-    data = np.random.randint(low=0, high=1000, size=(N_PERIODS, len(columns)))
-    return pd.DataFrame(data=data, index=rng, columns=columns, dtype=np.float32)
+    data = np.random.randint(low=0, high=1000, size=(N_PERIODS, len(MEASUREMENTS)))
+    return pd.DataFrame(data=data, index=rng, dtype=np.float32,
+                        columns=measurement_columns(MEASUREMENTS))
 
 
 TEST_METER = {'manufacturer': 'Test Manufacturer', 
               'model': 'Random Meter', 
               'sample_period': 10,
               'max_sample_period': MAX_SAMPLE_PERIOD,
-              'measurements': [Power('apparent')],
-              'measurement_limits': {}
-          }
+              'measurements': [] }
+
 for col in MEASUREMENTS:
-    TEST_METER['measurement_limits'][col] = {'lower_limit': 0, 'upper_limit': 6000}
+    TEST_METER['measurements'].append({
+        'physical_quantity': col[0], 'type': col[1],
+        'lower_limit': 0, 'upper_limit': 6000})
 
 
 def add_building_metadata(store, elec_meters, key='building1', appliances=[]):
@@ -110,7 +110,7 @@ def create_random_hdf5():
     FILENAME = join(data_dir(), 'random.h5')
     N_METERS = 5
 
-    store = pd.HDFStore(FILENAME, 'w', complevel=9, complib='bzip2')
+    store = pd.HDFStore(FILENAME, 'w', complevel=9, complib='zlib')
     elec_meter_metadata = {}
     for meter in range(1, N_METERS+1):
         key = 'building1/elec/meter{:d}'.format(meter)
@@ -139,17 +139,20 @@ def create_energy_hdf5(simple=True):
 
     df = power_data(simple=simple)
 
-    meter_device = {'manufacturer': 'Test Manufacturer', 
-             'model': 'Energy Meter', 
-             'sample_period': 10,
-             'max_sample_period': MAX_SAMPLE_PERIOD,
-             'measurements': df.columns,
-             'measurement_limits': {}
-         }
-    for col in df.columns:
-        meter_device['measurement_limits'][col] = {'lower_limit': 0, 'upper_limit': 6000}
+    meter_device = {
+        'manufacturer': 'Test Manufacturer', 
+        'model': 'Energy Meter', 
+        'sample_period': 10,
+        'max_sample_period': MAX_SAMPLE_PERIOD,
+        'measurements': []
+    }
 
-    store = pd.HDFStore(FILENAME, 'w', complevel=9, complib='bzip2')
+    for physical_quantity, ac_type in df.columns.tolist():
+        meter_device['measurements'].append({
+            'physical_quantity': physical_quantity, 'type': ac_type,
+            'lower_limit': 0, 'upper_limit': 6000})
+
+    store = pd.HDFStore(FILENAME, 'w', complevel=9, complib='zlib')
 
     elec_meter_metadata = {}
 
