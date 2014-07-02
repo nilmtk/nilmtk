@@ -4,6 +4,7 @@ import numpy as np
 from copy import deepcopy
 from os.path import join, isdir, isfile, dirname
 from os import listdir, getcwd
+import re
 from sys import stdout, getfilesystemencoding
 from nilmtk.datastore import Key
 from nilmtk.timeframe import TimeFrame
@@ -55,25 +56,54 @@ def convert_redd(redd_path, hdf_filename):
     convert_yaml_to_hdf5(join(_get_module_directory(), 'metadata'),
                          hdf_filename)
 
-    print("done!")
+    print("Done converting REDD to HDF5!")
 
 
 def _find_all_houses(redd_path):
-    dir_names = listdir(redd_path)
-    house_ids = [int(directory.replace('house_', '')) for directory in dir_names
-                 if directory.startswith('house_')]
-    house_ids.sort()
-    return house_ids
+    """
+    Returns
+    -------
+    list of integers (house instances)
+    """
+    dir_names = [p for p in listdir(redd_path) if isdir(join(redd_path, p))]
+    return _matching_ints(dir_names, '^house_(\d)$')
 
 
 def _find_all_chans(redd_path, house_id):
+    """
+    Returns
+    -------
+    list of integers (channels)
+    """
     house_path = join(redd_path, 'house_{:d}'.format(house_id))
-    filenames = listdir(house_path)
-    chans = [int(fname.replace('channel_', '').replace('.dat', '')) 
-             for fname in filenames
-             if fname.startswith('channel_') and fname.endswith('.dat')]
-    chans.sort()
-    return chans
+    filenames = [p for p in listdir(house_path) if isfile(join(house_path, p))]
+    return _matching_ints(filenames, '^channel_(\d\d?).dat$')
+
+
+def _matching_ints(strings, regex):
+    """Uses regular expression to select and then extract an integer from
+    strings.
+
+    Parameters
+    ----------
+    strings : list of strings
+    regex : string
+        Regular Expression.  Including one group.  This group is used to
+        extract the integer from each string.
+
+    Returns
+    -------
+    list of ints
+    """
+    ints = []
+    p = re.compile(regex)
+    for string in strings:
+        m = p.match(string)
+        if m:
+            integer = int(m.group(1))
+            ints.append(integer)
+    ints.sort()
+    return ints
 
 
 def _load_chan(redd_path, key_obj, columns):
@@ -106,10 +136,14 @@ def _load_chan(redd_path, key_obj, columns):
     df = pd.read_csv(filename, sep=' ', names=columns,
                      dtype={m:np.float32 for m in columns})
 
-    # Basic post-processing
-    df = df.sort_index() # raw REDD data isn't always sorted
+    # raw REDD data isn't always sorted
+    df = df.sort_index()
+
+    # Convert the integer index column to timezone-aware datetime 
     df.index = pd.to_datetime((df.index.values*1E9).astype(int), utc=True)
     df = df.tz_convert('US/Eastern')
+
+    # Add 'timeframe' to dataframe
     df.timeframe = TimeFrame(df.index[0], df.index[-1])
     df.timeframe.include_end = True
     return df
