@@ -25,7 +25,7 @@ better understand the existing converters) then the best way to get up
 to speed is probably to read this document first.  This document
 explains the layout of data in a NILMTK HDF5 file. Then take a look at
 the REDD converter for NILMTK (in
-:file:`nilmtk/nilmtk/dataset_converters/redd`).
+``nilmtk/nilmtk/dataset_converters/redd``).
 
 NILMTK dataset converters output an HDF5 file which contains both the
 time series data from each meter as well as all relevant metadata.
