@@ -10,12 +10,18 @@ class Node(object):
     requirements = {}
     postconditions = {}
 
-    def __init__(self, upstream, generator=None):
+    def __init__(self, upstream=None, generator=None):
         """
         Parameters
         ----------
         upstream : an ElecMeter or MeterGroup or a Node subclass
+            Required methods:
+            - dry_run_metadata
+            - get_metadata
+            - process (not required if `generator` supplied)
         generator : Python generator. Optional
+            Used when `upstream` object is an ElecMeter or MeterGroup.
+            Provides source of data.
         """
         self.upstream = upstream
         self.generator = generator
@@ -26,7 +32,7 @@ class Node(object):
         pass # Overridden by each subclass that needs reset logic
 
     def process(self):
-        return self.generator
+        return self.generator # usually overridden by subclass
 
     def run(self):
         """Pulls data through the pipeline.  Useful if we just want to calculate 

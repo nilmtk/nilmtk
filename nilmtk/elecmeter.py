@@ -57,7 +57,6 @@ class ElecMeter(Hashable):
             assert isinstance(meter_id, ElecMeterID)
             ElecMeter.meters[self.identifier] = self
         self.appliances = []
-        self.loader_kwargs = {}
 
     @property
     def key(self):
@@ -103,7 +102,7 @@ class ElecMeter(Hashable):
         """
         device_model = self.metadata.get('device_model')
         if device_model:
-            return ElecMeter.meter_devices[device_model]
+            return deepcopy(ElecMeter.meter_devices[device_model])
         else:
             return {}
 
@@ -142,7 +141,7 @@ class ElecMeter(Hashable):
         label = ", ".join(appliance_names) 
         return label
 
-    def available_ac_types(self):
+    def available_power_ac_types(self):
         """Finds available alternating current types from power measurements.
 
         Returns
@@ -187,7 +186,7 @@ class ElecMeter(Hashable):
                 return True
         return False
 
-    def power_series(self, measurement_ac_type_prefs=None, **load_kwargs):
+    def power_series(self, **kwargs):
         """Get power Series.
         
         Parameters
@@ -197,7 +196,10 @@ class ElecMeter(Hashable):
             self.available_ac_types which is also in measurement_ac_type_prefs.
             If none of the measurements from measurement_ac_type_prefs are 
             available then will raise a warning and will select another ac type.
-
+        preprocessing : list of Node subclass instances
+        **kwargs :
+            Any other key word arguments are passed to self.store.load()
+        
         Returns
         -------
         generator of pd.Series of power measurements.
@@ -218,9 +220,28 @@ class ElecMeter(Hashable):
             then will attempt to use voltage data from this meter.
         nominal_voltage : float
         """
-        best_ac_type = select_best_ac_type(self.available_ac_types(),
-                                           measurement_ac_type_prefs)
-        return self.store.load(key=self.key, cols=[best_ac_type], **load_kwargs)
+        measurement_ac_type_prefs = kwargs.pop('measurement_ac_type_prefs', None)
+        preprocessing = kwargs.pop('preprocessing', [])
+
+        # Select power column:
+        if not kwargs.has_key('cols'):
+            best_ac_type = select_best_ac_type(self.available_power_ac_types(),
+                                               measurement_ac_type_prefs)
+            kwargs['cols'] = [('power', best_ac_type)]
+
+        # Get source node
+        generator = self.store.load(key=self.key, **kwargs)
+        last_node = Node(self, generator=generator)
+
+        # Connect together all preprocessing nodes
+        for node in preprocessing:
+            node.upstream = last_node
+            last_node = node
+            generator = last_node.process()
+
+        # Pull data through preprocessing pipeline
+        for chunk in generator:
+            yield chunk
 
     def voltage_series(self):
         """Returns a generator of pd.Series of voltage, if available."""
@@ -232,8 +253,9 @@ class ElecMeter(Hashable):
     def get_metadata(self):
         return self.metadata
 
-    def get_source_node(self):
-        generator = self.store.load(key=self.key, **self.loader_kwargs)
+    def get_source_node(self, **loader_kwargs):
+        generator = self.store.load(key=self.key, **loader_kwargs)
+        self.metadata['device'] = self.device
         return Node(self, generator=generator)
         
     def total_energy(self, **loader_kwargs):

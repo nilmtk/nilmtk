@@ -12,6 +12,10 @@ class Clip(Node):
     postconditions =  {'preprocessing_applied': {'clip': {}}}
     name = 'clip'
 
+    def reset(self):
+        self.lower = None
+        self.upper = None
+
     def process(self):
         self.check_requirements()
         metadata = self.upstream.get_metadata()
@@ -19,6 +23,8 @@ class Clip(Node):
         for chunk in self.upstream.process():
             for measurement in chunk:
                 lower, upper = _find_limits(measurement, measurements)
+                lower = lower if self.lower is None else self.lower
+                upper = upper if self.upper is None else self.upper
                 if lower is not None and upper is not None:
                     icol = index_of_column_name(chunk, measurement)
                     chunk.iloc[:,icol] = chunk.iloc[:,icol].clip(lower, upper)
