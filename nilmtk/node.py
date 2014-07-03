@@ -1,7 +1,92 @@
-import abc
+from copy import deepcopy
+from nilm_metadata import recursively_update_dict
+
+class Node(object):
+    """Abstract class defining interface for all Node subclasses,
+    where a 'node' is a module which runs pre-processing or statistics
+    (or, later, maybe NILM training or disaggregation).
+    """
+
+    requirements = {}
+    postconditions = {}
+
+    def __init__(self, upstream, generator=None):
+        """
+        Parameters
+        ----------
+        upstream : an ElecMeter or MeterGroup or a Node subclass
+        generator : Python generator. Optional
+        """
+        self.upstream = upstream
+        self.generator = generator
+        self.results = None
+        self.reset()
+
+    def reset(self):
+        pass # Overridden by each subclass that needs reset logic
+
+    def process(self):
+        return self.generator
+
+    def run(self):
+        """Pulls data through the pipeline.  Useful if we just want to calculate 
+        some stats."""
+        for _ in self.process():
+            pass
+
+    def check_requirements(self):
+        """Checks that `self.upstream.dry_run_metadata` satisfies `self.requirements`.
+
+        Raises
+        ------
+        UnsatistfiedRequirementsError
+        """
+        # If a subclass has complex rules for preconditions then
+        # override this method.
+        unsatisfied = find_unsatisfied_requirements(self.upstream.dry_run_metadata(),
+                                                    self.requirements)
+        if unsatisfied:
+            msg = str(self) + " not satisfied by:\n" + str(unsatisfied)
+            raise UnsatisfiedRequirementsError(msg)
+            
+    def dry_run_metadata(self):
+        """Does a 'dry run' so we can validate the full pipeline before
+        loading any data.
+
+        Returns
+        -------
+        dict : dry run metadata
+        """
+        state = deepcopy(self.__class__.postconditions)
+        recursively_update_dict(state, self.upstream.dry_run_metadata())
+        return state
+
+    def get_metadata(self):
+        if self.results:
+            metadata = deepcopy(self.upstream.get_metadata())
+            results_dict = self.results.to_dict()
+            recursively_update_dict(metadata, results_dict)
+        else:
+            # Don't bother to deepcopy upstream's metadata if 
+            # we aren't going to modify it.
+            metadata = self.upstream.get_metadata()
+        return metadata
+
+    def required_measurements(self, state):
+        """
+        Returns
+        -------
+        Set of measurements that need to be loaded from disk for this node.
+        """
+        return set()
+
+    def __repr__(self):
+        return self.__class__.__name__ + ' ' + self.name
+
 
 class UnsatisfiedRequirementsError(Exception):
     pass
+
 
 def find_unsatisfied_requirements(state, requirements):
     """
@@ -38,110 +123,3 @@ def find_unsatisfied_requirements(state, requirements):
     unsatisfied_requirements(state, requirements)
 
     return unsatisfied
-    
-
-class Node(object):
-    """Abstract class defining interface for all Node subclasses,
-    where a 'node' is a module which runs pre-processing or statistics
-    (or, later, maybe NILM training or disaggregation).
-    """
-
-    __metaclass__ = abc.ABCMeta
-
-    requirements = {}
-    postconditions = {}
-
-    def __init__(self):
-        self.reset()
-
-    def reset(self):
-        pass # to be overridden by subclasses
-
-    def update_state(self, state):
-        """Recursively updates `state` dict with `postconditions`.
-
-        This function is required because Python's `dict.update()` function
-        does not descend into dicts within dicts.
-
-        Parameters
-        ----------
-        state : dict
-
-        Returns
-        -------
-        state : dict
-        """
-        def _update_state(state, postconditions):
-            # Recursively update dict.
-            for key, value in postconditions.iteritems():
-                try:
-                    state_value = state[key]
-                except KeyError:
-                    state[key] = value
-                else:
-                    if isinstance(value, dict):
-                        assert isinstance(state_value, dict)
-                        _update_state(state_value, value)
-                    elif isinstance(value, list):
-                        assert isinstance(state_value, list)
-                        state_value.extend(value)
-                    else:
-                        state[key] = value
-            return state
-        return _update_state(state, self.postconditions)
-
-    def check_requirements(self, state):
-        """
-        Parameters
-        ----------
-        state : dict
-        
-        Raises
-        ------
-        UnsatistfiedPreconditionsError
-        
-        Description
-        -----------
-        
-        Requirements can be of the form:
-    
-        "node X needs (power.apparent or power.active) (but not
-        power.reactive) and voltage is useful but not essential"
-    
-        or
-    
-        "node Y needs everything available from disk (to save to a copy to
-        disk)"
-    
-        or
-    
-        "ComputeEnergy node needs good sections to be located" (if
-        none of the previous nodes provide this service then check
-        source.metadata to see if zeros have already been inserted; if the
-        haven't then raise an error to tell the user to add a
-        LocateGoodSectionsNode.)
-        """
-        # If a subclass has complex rules for preconditions then
-        # override this default method definition.
-        unsatisfied = find_unsatisfied_requirements(state, self.requirements)
-        if unsatisfied:
-            msg = str(self) + " not satisfied by:\n" + str(unsatisfied)
-            raise UnsatisfiedRequirementsError(msg)
-            
-    def required_measurements(self, state):
-        """
-        Returns
-        -------
-        Set of measurements that need to be loaded from disk for this node.
-        """
-        return set()
-
-    def __repr__(self):
-        return self.__class__.__name__ + ' ' + self.name
-
-    @abc.abstractmethod
-    def process(self, df, metadata):
-        # check_preconditions again??? (in case this node is not run in
-        # the context of a Pipeline?)
-        # do stuff to df
-        return df

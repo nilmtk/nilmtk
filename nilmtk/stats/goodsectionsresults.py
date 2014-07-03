@@ -1,6 +1,6 @@
-from results import Results
 import pandas as pd
 from datetime import timedelta
+from ..results import Results
 
 class GoodSectionsResults(Results):
     """

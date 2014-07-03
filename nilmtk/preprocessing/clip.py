@@ -1,7 +1,7 @@
 from __future__ import print_function, division
-from node import Node
 from warnings import warn
-from nilmtk.utils import index_of_column_name
+from ..node import Node
+from ..utils import index_of_column_name
 
 class Clip(Node):
 
@@ -12,15 +12,18 @@ class Clip(Node):
     postconditions =  {'preprocessing_applied': {'clip': {}}}
     name = 'clip'
 
-    def process(self, df, metadata):
+    def process(self):
+        self.check_requirements()
+        metadata = self.upstream.get_metadata()
         measurements = metadata['device']['measurements']
-        for measurement in df:
-            lower, upper = _find_limits(measurement, measurements)
-            if lower is not None and upper is not None:
-                icol = index_of_column_name(df, measurement)
-                df.iloc[:,icol] = df.iloc[:,icol].clip(lower, upper)
+        for chunk in self.upstream.process():
+            for measurement in chunk:
+                lower, upper = _find_limits(measurement, measurements)
+                if lower is not None and upper is not None:
+                    icol = index_of_column_name(chunk, measurement)
+                    chunk.iloc[:,icol] = chunk.iloc[:,icol].clip(lower, upper)
 
-        return df
+            yield chunk
 
 def _find_limits(measurement, measurements):
     """

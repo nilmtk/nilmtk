@@ -1,10 +1,10 @@
 from __future__ import print_function, division
-from node import Node
 import numpy as np
 from numpy import diff, concatenate
-from nilmtk import TimeFrame
-from nilmtk.utils import timedelta64_to_secs
-from goodsectionsresults import GoodSectionsResults
+from .goodsectionsresults import GoodSectionsResults
+from ..timeframe import TimeFrame
+from ..utils import timedelta64_to_secs
+from ..node import Node
 
 
 class GoodSections(Node):

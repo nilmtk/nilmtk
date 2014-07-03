@@ -1,6 +1,8 @@
 from __future__ import print_function, division
 import numpy as np
 import networkx as nx
+from copy import deepcopy
+
 
 def timedelta64_to_secs(timedelta):
     """Convert `timedelta` to seconds.
@@ -18,6 +20,7 @@ def timedelta64_to_secs(timedelta):
     else:
         return timedelta / np.timedelta64(1, 's')
 
+
 def tree_root(graph):
     """Returns the object that is the root of the tree.
 
@@ -32,9 +35,11 @@ def tree_root(graph):
     assert len(roots) == 1, 'Tree has no root!'
     return roots[0]
 
+
 def nodes_adjacent_to_root(graph):
     root = tree_root(graph)
     return graph.successors(root)
+
 
 def index_of_column_name(df, name):
     for i, col_name in enumerate(df.columns):

@@ -1,11 +1,11 @@
 from __future__ import print_function, division
-from node import Node
-from energyresults import TotalEnergyResults
 import numpy as np
-from nilmtk.utils import timedelta64_to_secs
-from nilmtk.consts import JOULES_PER_KWH
-from nilmtk.measurement import AC_TYPES
-from nilmtk import TimeFrame
+from .totalenergyresults import TotalEnergyResults
+from ..node import Node
+from ..utils import timedelta64_to_secs
+from ..consts import JOULES_PER_KWH
+from ..measurement import AC_TYPES
+from ..timeframe import TimeFrame
 
 
 class TotalEnergy(Node):
@@ -15,17 +15,20 @@ class TotalEnergy(Node):
     postconditions =  {'statistics': {'energy': {}}}
     name = 'energy'
 
-    def process(self, df, metadata):
+    def reset(self):
+        self.results = TotalEnergyResults()
+
+    def process(self):
         """
-        Preference: Energy(cumulative) > Energy > Power
+        Preference: Cumulative energy > Energy > Power
         """
+        self.check_requirements()
+        metadata = self.upstream.get_metadata()
         max_sample_period = metadata['device']['max_sample_period']
-        energy = _energy_for_chunk(df, max_sample_period)
-        energy_results = TotalEnergyResults()
-        energy_results.append(df.timeframe, energy)
-        df.results = getattr(df, 'results', {})
-        df.results[self.name] = energy_results
-        return df
+        for chunk in self.upstream.process():
+            energy = _energy_for_chunk(chunk, max_sample_period)
+            self.results.append(chunk.timeframe, energy)
+            yield chunk
 
     def required_measurements(self, state):
         """TotalEnergy needs all power and energy measurements."""

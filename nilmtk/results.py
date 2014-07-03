@@ -1,7 +1,7 @@
 import abc
 import pandas as pd
 import copy
-from ..timeframe import TimeFrame
+from .timeframe import TimeFrame
 
 class Results(object):
     """Metadata results from each node need to be assigned to a specific

@@ -1,9 +1,11 @@
 from __future__ import print_function, division
-from .pipeline import Pipeline, Clip, TotalEnergy, GoodSections
+from .preprocessing import Clip
+from .stats import TotalEnergy, GoodSections
 from .hashable import Hashable
 from .appliance import Appliance
 from .datastore import Key
 from .measurement import select_best_ac_type
+from .node import Node
 from warnings import warn
 from collections import namedtuple
 from copy import deepcopy
@@ -25,7 +27,7 @@ class ElecMeter(Hashable):
         key into nilmtk.DataStore to access data.
     
     metadata : dict.
-        See http://nilm-metadata.readthedocs.org/en/latest/dataset_metadata.html#elecmeter    
+        See http://nilm-metadata.readthedocs.org/en/latest/dataset_metadata.html#elecmeter
 
     STATIC ATTRIBUTES
     -----------------
@@ -55,6 +57,7 @@ class ElecMeter(Hashable):
             assert isinstance(meter_id, ElecMeterID)
             ElecMeter.meters[self.identifier] = self
         self.appliances = []
+        self.loader_kwargs = {}
 
     @property
     def key(self):
@@ -154,7 +157,7 @@ class ElecMeter(Hashable):
         string = super(ElecMeter, self).__repr__()
         # Now add list of appliances...
         string = string[:-1] # remove last bracket
-        string += ', appliances={}'.format(self.appliances)
+        string += '(appliances={}'.format(self.appliances)
         
         # METER ROOM
         room = self.metadata.get('room')
@@ -222,30 +225,43 @@ class ElecMeter(Hashable):
     def voltage_series(self):
         """Returns a generator of pd.Series of voltage, if available."""
         raise NotImplementedError
+
+    def dry_run_metadata(self):
+        return self.metadata
+
+    def get_metadata(self):
+        return self.metadata
+
+    def get_source_node(self):
+        generator = self.store.load(key=self.key, **self.loader_kwargs)
+        return Node(self, generator=generator)
         
-    def total_energy(self, **load_kwargs):
+    def total_energy(self, **loader_kwargs):
         """
         Returns
         -------
-        nilmtk.pipeline.EnergyResults object
+        nilmtk.stats.TotalEnergyResults object
         """
-        nodes = [Clip(), TotalEnergy()]
-        results = self._run_pipeline(nodes, **load_kwargs)
-        return results['energy']
+        source_node = self.get_source_node(**loader_kwargs)
+        clipped = Clip(source_node)
+        total_energy = TotalEnergy(clipped)
+        total_energy.run()
+        return total_energy.results
         
     def dropout_rate(self):
         """returns a DropoutRateResults object."""
         raise NotImplementedError
         
-    def good_sections(self):
+    def good_sections(self, **loader_kwargs):
         """
         Returns
         -------
         sections: list of nilmtk.TimeFrame objects
         """
-        nodes = [GoodSections()]
-        results = self._run_pipeline(nodes)
-        return results['good_sections']
+        source_node = self.get_source_node(**loader_kwargs)
+        good_sections = GoodSections(source_node)
+        good_sections.run()
+        return good_sections.results.combined
         
     def total_on_duration(self):
         """Return timedelta"""
@@ -273,10 +289,14 @@ class ElecMeter(Hashable):
         raise NotImplementedError
     
     def proportion_of_energy(self, mains):
-        # Mask out gaps from mains
-        good_mains_timeframes = mains.good_timeframes()
-        proportion_of_energy = (self.total_energy(timeframes=good_mains_timeframes) /
-                                mains.total_energy(timeframes=good_mains_timeframes))
+        """
+        Parameters
+        ----------
+        mains : nilmtk.ElecMeter or MeterGroup
+        """
+        mains_good_sects = mains.good_sections()
+        proportion_of_energy = (self.total_energy(timeframes=mains_good_sects) /
+                                mains.total_energy(timeframes=mains_good_sects))
         return proportion_of_energy 
 
     def contiguous_sections(self):
@@ -289,12 +309,3 @@ class ElecMeter(Hashable):
         cleaning steps have been executed and some summary results (e.g. the number of
         implausible values removed)"""
         raise NotImplementedError
-        
-    def _run_pipeline(self, nodes, **load_kwargs): 
-        if self.store is None:
-            msg = ("'meter.store' is not set!"
-                   " Cannot process data without a DataStore!")
-            raise RuntimeError(msg)
-        pipeline = Pipeline(nodes)
-        pipeline.run(meter=self, **load_kwargs)
-        return pipeline.results        

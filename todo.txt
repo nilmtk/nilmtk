@@ -1,14 +1,13 @@
 * modify nodes so they store an upstream node and pull data straight
-  from it.
+  from it.. I think I've finished totalenergy, totalenergyresults and clip
+* stats nodes need to keep a `results` attribute for combined results,
+* results classes need an 'as_dict()' method.  Done totalenergyresults
 * change tests
 * Add notes to TODO:
-  * put back post condition checking (link to
-    last commit where code exists).  Also link to
-    `chaining_generators` notebook.
   * load only required measurements
   * automatically decide size of chunk
-
-
-
-DONE
-* remove pipeline.py
+  * Do we still need Hashable?  Try making ElecMeter and Appliance
+    inherit from Object.
+  * stats.totalenergy._energy_for_chunk looks wasteful. Why not, for
+    each AC type, find cumulative energy > energy > power and then
+    only run _energy_for_power_series on one column per AC type.

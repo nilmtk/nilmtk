@@ -1,4 +1,4 @@
-from results import Results
+from ..results import Results
 from ..measurement import AC_TYPES
 
 class TotalEnergyResults(Results):
@@ -28,3 +28,6 @@ class TotalEnergyResults(Results):
         for i, row in self._data.iterrows():
             for ac_type in ac_types:
                 self._data[ac_type].loc[i] += other._data[ac_type].loc[i]
+
+    def to_dict(self):
+        return {'statistics': {'energy': self.combined.to_dict()}}

@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 import pandas as pd
-from nilmtk.timeframe import TimeFrame
+from .timeframe import TimeFrame
+from .node import Node
 
 MAX_MEM_ALLOWANCE_IN_BYTES = 1E9
 
@@ -346,7 +347,6 @@ class HDFDataStore(DataStore):
         """
         if key not in self._keys():
             raise KeyError(key + ' not in store')
-
 
 
 def join_key(*args):
