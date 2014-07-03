@@ -1,7 +1,9 @@
 from __future__ import print_function, division
 import pandas as pd
+from itertools import repeat
 from .timeframe import TimeFrame
 from .node import Node
+from time import time
 
 MAX_MEM_ALLOWANCE_IN_BYTES = 1E9
 
@@ -135,60 +137,56 @@ class HDFDataStore(DataStore):
         ------
         MemoryError if we try to load too much data.
         """
+        CHUNKSIZE = 1000000 # TODO: calculate this based on physical 
+        # memory installed and number of columns
+
         # Make sure key has a slash at the front but not at the end.
         if key[0] != '/':
             key = '/' + key
         if len(key) > 1 and key[-1] == '/':
             key = key[:-1]
 
-        self._check_key(key)
-        self._check_columns(key, cols)
         periods = [TimeFrame()] if periods is None else periods
-
-        nrows = self._nrows(key)
-        start_row = 0 # row to start search in table
         for period in periods:
             window_intersect = self.window.intersect(period)
             if window_intersect.empty:
-                data = pd.DataFrame()
+                generator = repeat(pd.DataFrame(), 1)
             else:
                 terms = window_intersect.query_terms('window_intersect')
-                coords = self.store.select_as_coordinates(
-                    key=key, where=terms, 
-                    start=None if start_row is 0 else start_row,
-                    stop=None if start_row is 0 else -1)
-                if len(coords) > 0:
-                    self._check_data_will_fit_in_memory(
-                        key=key, nrows=len(coords), cols=cols)
-                    data = self.store.select(key=key, where=coords, columns=cols)
-                    start_row = coords[-1]+1
-                else:
-                    data = pd.DataFrame()
-            if cols == ['index']:
-                data = data.index
+                generator = self.store.select(key=key, cols=cols, where=terms,
+                                              chunksize=CHUNKSIZE).__iter__()
 
-            data.timeframe = (window_intersect if window_intersect 
-                              else self._get_timeframe(key))
+            for data in generator:
+                if cols == ['index']:
+                    data = data.index
 
-            # Load 'look ahead'
-            if start_row < nrows:
-                try:
+                # Load look ahead
+                if len(data.index) > 0:
+                    if cols == ['index']:
+                        where = "index>data[-1]"
+                    else:
+                        where = "index>data.index[-1]"
+
                     look_ahead_coords = self.store.select_as_coordinates(
-                        key=key, where="index >= period.end", 
-                        start=start_row, 
-                        stop=start_row+n_look_ahead_rows)
-                except IndexError:
+                        key=key, where=where)
+                else:
                     look_ahead_coords = []
-            else:
-                look_ahead_coords = []
+                if len(look_ahead_coords) > 0:
+                    look_ahead_start = look_ahead_coords[0]
+                    look_ahead_iterator = self.store.select(
+                        key=key, chunksize=n_look_ahead_rows,
+                        cols=cols, start=look_ahead_start).__iter__()
+                    data.look_ahead = next(look_ahead_iterator)
+                else:
+                    data.look_ahead = pd.DataFrame()
 
-            if len(look_ahead_coords) > 0:
-                data.look_ahead = self.store.select(
-                    key=key, where=look_ahead_coords, columns=cols)
-            else:
-                data.look_ahead = pd.DataFrame()
+                # Set timeframe
+                data.timeframe = (window_intersect if window_intersect 
+                                  else self._get_timeframe(key))
+                if len(data.look_ahead) > 0:
+                    data.timeframe.end = data.index[-1]
 
-            yield data
+                yield data
 
     def load_metadata(self, key='/'):
         """
@@ -282,14 +280,15 @@ class HDFDataStore(DataStore):
                               ' too much memory.'
                               .format(mem_requirement / 1E6))
 
-    def _estimate_memory_requirement(self, key, nrows, cols=None):
+    def _estimate_memory_requirement(self, key, nrows, cols=None, paranoid=False):
         """Returns estimated mem requirement in bytes."""
         BYTES_PER_ELEMENT = 4
         BYTES_PER_TIMESTAMP = 8
-        self._check_key(key)
+        if paranoid:
+            self._check_key(key)
         if cols is None:
             cols = self._column_names(key)
-        else:
+        elif paranoid:
             self._check_columns(key, cols)
         ncols = len(cols)
         est_mem_usage_for_data = nrows * ncols * BYTES_PER_ELEMENT
@@ -305,7 +304,6 @@ class HDFDataStore(DataStore):
         -------
         nrows : int
         """
-        self._check_key(key)
         timeframe_intersect = self.window.intersect(timeframe)
         if timeframe_intersect.empty:
             nrows = 0
@@ -324,7 +322,6 @@ class HDFDataStore(DataStore):
         -------
         nilmtk.TimeFrame of entire table after intersecting with self.window.
         """
-        self._check_key(key)
         data_start_date = self.store.select(key, [0]).index[0]
         data_end_date = self.store.select(key, start=-1).index[0]
         timeframe = TimeFrame(data_start_date, data_end_date)
