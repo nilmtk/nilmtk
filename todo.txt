@@ -1,0 +1,14 @@
+* modify nodes so they store an upstream node and pull data straight
+  from it.
+* change tests
+* Add notes to TODO:
+  * put back post condition checking (link to
+    last commit where code exists).  Also link to
+    `chaining_generators` notebook.
+  * load only required measurements
+  * automatically decide size of chunk
+
+
+
+DONE
+* remove pipeline.py

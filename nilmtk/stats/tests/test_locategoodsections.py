@@ -1,9 +1,9 @@
 #!/usr/bin/python
 from __future__ import print_function, division
 import unittest
-from nilmtk.pipeline import Pipeline, EnergyNode, LocateGoodSectionsNode
+from nilmtk.pipeline import Pipeline, TotalEnergy, GoodSections
 from nilmtk.pipeline.locategoodsectionsnode import reframe_index
-from nilmtk.pipeline.locategoodsectionsresults import LocateGoodSectionsResults
+from nilmtk.pipeline.locategoodsectionsresults import GoodSectionsResults
 from nilmtk.pipeline.energynode import _energy_for_power_series
 from nilmtk import TimeFrame, ElecMeter, HDFDataStore
 from nilmtk.elecmeter import ElecMeterID
@@ -28,7 +28,7 @@ class TestLocateGaps(unittest.TestCase):
     def test_pipeline(self):
         meter = ElecMeter(store=self.datastore, metadata=self.meter_meta, 
                           meter_id=METER_ID)
-        nodes = [LocateGoodSectionsNode()]
+        nodes = [GoodSections()]
         pipeline = Pipeline(nodes)
         pipeline.run(meter)
 
@@ -97,7 +97,7 @@ class TestLocateGaps(unittest.TestCase):
         df.timeframe = TimeFrame(index[0], index[-1])
         df.look_ahead = pd.DataFrame()
 
-        locate = LocateGoodSectionsNode()
+        locate = GoodSections()
         locate.process(df, metadata)
         results = df.results['good_sections'].combined
         self.assertEqual(len(results), 4)
@@ -114,10 +114,10 @@ class TestLocateGaps(unittest.TestCase):
                       pd.Timestamp("2011-01-01 00:06:20")
         ]
         for split_point in [[4,6,9,17], [4,10,12,17]]:
-            locate = LocateGoodSectionsNode()
+            locate = GoodSections()
             df.results = {}
             prev_i = 0
-            aggregate_results = LocateGoodSectionsResults(MAX_SAMPLE_PERIOD)
+            aggregate_results = GoodSectionsResults(MAX_SAMPLE_PERIOD)
             for j,i in enumerate(split_point):
                 cropped_df = df.iloc[prev_i:i]
                 cropped_df.timeframe = TimeFrame(timestamps[j], timestamps[j+1])

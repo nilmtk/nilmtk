@@ -3,7 +3,7 @@ from node import Node
 from warnings import warn
 from nilmtk.utils import index_of_column_name
 
-class ClipNode(Node):
+class Clip(Node):
 
     # Not very well specified.  Really want to specify that 
     # we need 'lower_limit' and 'upper_limit' to be specified in

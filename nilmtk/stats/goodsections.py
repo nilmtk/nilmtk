@@ -1,13 +1,13 @@
 from __future__ import print_function, division
-from node import Node, UnsatisfiedRequirementsError
+from node import Node
 import numpy as np
 from numpy import diff, concatenate
 from nilmtk import TimeFrame
 from nilmtk.utils import timedelta64_to_secs
-from locategoodsectionsresults import LocateGoodSectionsResults
+from goodsectionsresults import GoodSectionsResults
 
 
-class LocateGoodSectionsNode(Node):
+class GoodSections(Node):
     """Locate sections of data where the sample period is <= max_sample_period.
 
     Attributes
@@ -105,54 +105,9 @@ class LocateGoodSectionsNode(Node):
         self.previous_chunk_ended_with_open_ended_good_section = (
             ends_with_open_ended_good_section)
         
-        good_section_results = LocateGoodSectionsResults(max_sample_period)
+        good_section_results = GoodSectionsResults(max_sample_period)
         good_section_results.append(df.timeframe, {'sections': [sections]})
         results = getattr(df, 'results', {})
         results[self.name] = good_section_results
         df.results = results
         return df
-
-
-# reframe_index is perhaps not needed any more.  Might be 
-# safe to remove it.  Leaving it here for now as it might
-# come in handy, and is well tested at the moment.
-def reframe_index(index, window_start=None, window_end=None):
-    """
-    Parameters
-    ----------
-    index : pd.DatetimeIndex
-
-    window_start, window_end : pd.Timestamp
-        The start and end of the window of interest. If this window
-        is larger than the duration of `data` then a single timestamp will be
-        inserted at `window_start` or `window_end` as necessary. If this window
-        is shorter than the duration of `data` then `data` will be cropped.
-
-    Returns
-    -------
-    index : pd.DatetimeIndex
-    """
-
-    tz = index.tzinfo
-    reset_tz = False
-
-    # Handle window...
-    if window_start is not None:
-        if window_start >= index[0]:
-            index = index[index >= window_start]
-        else:
-            index = index.insert(0, window_start)
-            reset_tz = True
-
-    if window_end is not None:
-        if window_end <= index[-1]:
-            index = index[index <= window_end]
-        else:
-            index = index.insert(len(index), window_end)
-            reset_tz = True
-
-    if reset_tz:
-        # index.insert breaks timezone.
-        index = index.tz_localize('UTC').tz_convert(tz)
-
-    return index

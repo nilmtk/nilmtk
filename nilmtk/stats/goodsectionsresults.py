@@ -2,7 +2,7 @@ from results import Results
 import pandas as pd
 from datetime import timedelta
 
-class LocateGoodSectionsResults(Results):
+class GoodSectionsResults(Results):
     """
     Attributes
     ----------
@@ -15,7 +15,7 @@ class LocateGoodSectionsResults(Results):
     
     def __init__(self, max_sample_period):
         self.max_sample_period_td = timedelta(seconds=max_sample_period)
-        super(LocateGoodSectionsResults, self).__init__()
+        super(GoodSectionsResults, self).__init__()
 
     def append(self, timeframe, new_results):
         """Append a single result.
@@ -25,7 +25,7 @@ class LocateGoodSectionsResults(Results):
         timeframe : nilmtk.TimeFrame
         new_results : {'sections': list of TimeFrame objects}
         """
-        super(LocateGoodSectionsResults, self).append(timeframe, new_results)
+        super(GoodSectionsResults, self).append(timeframe, new_results)
 
     @property
     def last_results(self):
@@ -64,4 +64,4 @@ class LocateGoodSectionsResults(Results):
 
     def unify(self, other):
         # TODO!
-        super(LocateGoodSectionsResults, self).unify(other)
+        super(GoodSectionsResults, self).unify(other)

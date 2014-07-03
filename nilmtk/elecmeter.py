@@ -1,5 +1,5 @@
 from __future__ import print_function, division
-from .pipeline import Pipeline, ClipNode, EnergyNode, LocateGoodSectionsNode
+from .pipeline import Pipeline, Clip, TotalEnergy, GoodSections
 from .hashable import Hashable
 from .appliance import Appliance
 from .datastore import Key
@@ -229,7 +229,7 @@ class ElecMeter(Hashable):
         -------
         nilmtk.pipeline.EnergyResults object
         """
-        nodes = [ClipNode(), EnergyNode()]
+        nodes = [Clip(), TotalEnergy()]
         results = self._run_pipeline(nodes, **load_kwargs)
         return results['energy']
         
@@ -243,7 +243,7 @@ class ElecMeter(Hashable):
         -------
         sections: list of nilmtk.TimeFrame objects
         """
-        nodes = [LocateGoodSectionsNode()]
+        nodes = [GoodSections()]
         results = self._run_pipeline(nodes)
         return results['good_sections']
         

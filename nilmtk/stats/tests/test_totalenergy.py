@@ -1,7 +1,7 @@
 #!/usr/bin/python
 from __future__ import print_function, division
 import unittest
-from nilmtk.pipeline import Pipeline, EnergyNode, ClipNode
+from nilmtk.pipeline import Pipeline, TotalEnergy, Clip
 from nilmtk.pipeline.energynode import _energy_for_power_series
 from nilmtk import TimeFrame, ElecMeter, HDFDataStore
 from nilmtk.elecmeter import ElecMeterID
@@ -45,7 +45,7 @@ class TestEnergy(unittest.TestCase):
         meter = ElecMeter(store=self.datastore, 
                           metadata=self.meter_meta, 
                           meter_id=METER_ID)
-        nodes = [ClipNode(), EnergyNode()]
+        nodes = [Clip(), TotalEnergy()]
         pipeline = Pipeline(nodes)
         pipeline.run(meter)
         energy = deepcopy(pipeline.results['energy'])

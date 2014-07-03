@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 from node import Node
-from energyresults import EnergyResults
+from energyresults import TotalEnergyResults
 import numpy as np
 from nilmtk.utils import timedelta64_to_secs
 from nilmtk.consts import JOULES_PER_KWH
@@ -8,7 +8,7 @@ from nilmtk.measurement import AC_TYPES
 from nilmtk import TimeFrame
 
 
-class EnergyNode(Node):
+class TotalEnergy(Node):
 
     requirements = {'device': {'max_sample_period': 'ANY VALUE'},
                     'preprocessing_applied': {'clip': 'ANY VALUE'}}
@@ -21,14 +21,14 @@ class EnergyNode(Node):
         """
         max_sample_period = metadata['device']['max_sample_period']
         energy = _energy_for_chunk(df, max_sample_period)
-        energy_results = EnergyResults()
+        energy_results = TotalEnergyResults()
         energy_results.append(df.timeframe, energy)
         df.results = getattr(df, 'results', {})
         df.results[self.name] = energy_results
         return df
 
     def required_measurements(self, state):
-        """EnergyNode needs all power and energy measurements."""
+        """TotalEnergy needs all power and energy measurements."""
         available_measurements = state['device']['measurements']
         return [(measurement['physical_quantity'], measurement['type']) 
                 for measurement in available_measurements 

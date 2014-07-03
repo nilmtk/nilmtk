@@ -1,13 +1,13 @@
 #!/usr/bin/python
 from __future__ import print_function, division
 import unittest
-from nilmtk.pipeline.energyresults import EnergyResults
+from nilmtk.pipeline.energyresults import TotalEnergyResults
 from nilmtk import TimeFrame
 
 class TestEnergyResults(unittest.TestCase):
 
     def test_append(self):
-        er = EnergyResults()
+        er = TotalEnergyResults()
         tf = TimeFrame('2012-01-01','2012-01-02')
         er.append(tf, {'apparent':40, 'reactive':30, 'active':20})
         self.assertEqual(er._data.index.size, 1)
@@ -15,7 +15,7 @@ class TestEnergyResults(unittest.TestCase):
         self.assertEqual(er._data['end'][tf.start], tf.end)
     
     def test_combined(self):
-        er = EnergyResults()
+        er = TotalEnergyResults()
         tf = TimeFrame('2012-01-01','2012-01-02')
         er.append(tf, {'apparent':40})
         tf2 = TimeFrame('2012-01-02','2012-01-03')

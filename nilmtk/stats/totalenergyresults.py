@@ -1,11 +1,7 @@
 from results import Results
-import pandas as pd
-import numpy as np
-import copy
-from ..timeframe import TimeFrame
 from ..measurement import AC_TYPES
 
-class EnergyResults(Results):
+class TotalEnergyResults(Results):
     """
     Attributes
     ----------
@@ -24,10 +20,10 @@ class EnergyResults(Results):
         if set(new_results.keys()) - set(AC_TYPES):
             raise KeyError('new_results must be a combination of ' +
                            str(AC_TYPES))
-        super(EnergyResults, self).append(timeframe, new_results)
+        super(TotalEnergyResults, self).append(timeframe, new_results)
 
     def unify(self, other):
-        super(EnergyResults, self).unify(other)
+        super(TotalEnergyResults, self).unify(other)
         ac_types = set(self._data.columns) - set(['end'])
         for i, row in self._data.iterrows():
             for ac_type in ac_types:
