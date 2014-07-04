@@ -16,13 +16,9 @@ class MeterGroup(object):
     Attributes
     ----------
     meters : list of ElecMeters
-    appliances : list of Appliance objects connected to this MeterGroup 
-        (and not to individual meters within this MeterGroup).  This is used,
-        for example, where multiple meters are used for a single Appliance.
     """
     def __init__(self, meters=None):
         self.meters = [] if meters is None else list(meters)
-        self.appliances = []
 
     def load(self, store, elec_meters, appliances, building_id):
         """
@@ -71,18 +67,15 @@ class MeterGroup(object):
                 meter.appliances.append(appliance)
             else:
                 # DualSupply or 3-phase appliance so need a meter group
-                try:
-                    metergroup = self[meter_ids]
-                except KeyError: # MeterGroup of these meters does not yet exist
-                    metergroup = MeterGroup()
-                    metergroup.meters = [self[meter_id] for meter_id in meter_ids]
-                    for meter in metergroup.meters:
-                        # We assume that any meters used for measuring
-                        # dual-supply or 3-phase appliances are not also used
-                        # for measuring single-supply appliances.
-                        self.meters.remove(meter)
-                    self.meters.append(metergroup)
-                metergroup.appliances.append(appliance)
+                metergroup = MeterGroup()
+                metergroup.meters = [self[meter_id] for meter_id in meter_ids]
+                for meter in metergroup.meters:
+                    # We assume that any meters used for measuring
+                    # dual-supply or 3-phase appliances are not also used
+                    # for measuring single-supply appliances.
+                    self.meters.remove(meter)
+                    meter.appliances.append(appliance)
+                self.meters.append(metergroup)
 
     def union(self, other):
         """
@@ -160,16 +153,10 @@ class MeterGroup(object):
             raise TypeError()
 
     def matches(self, key):
-        for appliance in self.appliances:
-            if appliance.matches(key):
+        for meter in self.meters:
+            if meter.matches(key):
                 return True
         return False
-        # try:
-        #     match = self[key]
-        # except (KeyError, TypeError):
-        #     return False
-        # else:
-        #     return (match is not None)
 
     def select(self, *args, **kwargs):
         """Select a group of meters.
