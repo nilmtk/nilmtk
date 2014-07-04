@@ -20,6 +20,7 @@ class DataSet(object):
 
     def __init__(self):
         self.buildings = OrderedDict()
+        self.metadata = {}
         
     def load(self, store):
         """
@@ -27,8 +28,8 @@ class DataSet(object):
         ----------
         store : nilmtk.DataStore
         """
+        self.metadata = store.load_metadata()
         self._init_buildings(store)
-        # TODO: load dataset metadata
         return self
         
     def save(self, destination):
@@ -40,5 +41,5 @@ class DataSet(object):
 
         for b_key in buildings:
             building = Building()
-            building.load(store, '/'+b_key)
+            building.load(store, '/'+b_key, self.metadata.get('name'))
             self.buildings[building.identifier.instance] = building

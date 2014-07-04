@@ -21,8 +21,10 @@ class Building(object):
         self.elec = MeterGroup()
         self.metadata = {}
     
-    def load(self, store, key):
+    def load(self, store, key, dataset_name):
         self.metadata = store.load_metadata(key)
+        if not self.metadata.has_key('dataset'):
+            self.metadata['dataset'] = dataset_name
         elec_meters = self.metadata.pop('elec_meters', {})
         appliances = self.metadata.pop('appliances', [])
         self.elec.load(store, elec_meters, appliances, self.identifier)
