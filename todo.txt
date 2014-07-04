@@ -1,5 +1,6 @@
-* stats nodes need to keep a `results` attribute for combined results
-* disaggregate!  (See ideas in "chaining_generators" notebook
+* nilm_metadata isn't taking set of lists
+* metergroup.select(control='manual') should look through list.
+* disaggregate!  (See ideas in "chaining_generators" notebook)
 * convert_redd needs to add 'data_location'
 * metergroup.mains needs to return a MeterGroup is there are >1 mains meter
 * Add notes to TODO:

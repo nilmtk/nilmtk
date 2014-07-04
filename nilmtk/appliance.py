@@ -41,7 +41,7 @@ class Appliance(Hashable):
         return str(tuple(self.identifier))
 
     def categories(self):
-        return _flattern(self.type.get('categories').values())
+        return _flatten(self.type.get('categories').values())
 
     def matches(self, key):
         """
@@ -57,23 +57,35 @@ class Appliance(Hashable):
         if not isinstance(key, dict):
             raise TypeError()
         for k, v in key.iteritems():
-            try:
+            if hasattr(self.identifier, k):
                 if getattr(self.identifier, k) != v:
                     return False
-            except AttributeError:
-                if self.metadata.has_key(k):
-                    if self.metadata[k] != v:
+
+            elif self.metadata.has_key(k):
+                if self.metadata[k] != v:
+                    return False
+
+            elif k == 'category':
+                if v not in self.categories():
+                    return False
+
+            elif self.type.has_key(k):
+                metadata_value = self.type[k]
+                if (isinstance(metadata_value, list) and 
+                    not isinstance(v, list)):
+                    # for example, 'control' is a list in metadata
+                    if v not in metadata_value:
                         return False
-                else:
-                    if k == 'category':
-                        if v not in self.categories():
-                            return False
-                    elif self.type.get(k) != v:
-                        return False
+                elif metadata_value != v:
+                    return False
+
+            else:
+                return False
+
         return True
     
 
-def _flattern(list2d):
+def _flatten(list2d):
     list1d = []
     for item in list2d:
         if isinstance(item, list):
