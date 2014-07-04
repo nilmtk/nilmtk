@@ -9,9 +9,9 @@ from .utils import tree_root, nodes_adjacent_to_root
 from .measurement import select_best_ac_type
 
 class MeterGroup(object):
-    """A group of ElecMeter objects.
+    """A group of ElecMeter objects. Can contain nested MeterGroup objects.
 
-    Implements many of the same methods as Meter.
+    Implements many of the same methods as ElecMeter.
     
     Attributes
     ----------
@@ -87,6 +87,17 @@ class MeterGroup(object):
         if not isinstance(other, MeterGroup):
             raise TypeError()
         return MeterGroup(set(self.meters).union(other.meters))
+
+    def dominant_appliance(self):
+        dominant_appliances = [meter.dominant_appliance()
+                               for meter in self.meters]
+        n_dominant_appliances = len(set(dominant_appliances))
+        if n_dominant_appliances == 0:
+            return
+        elif n_dominant_appliances == 1:
+            return dominant_appliances[0]
+        else:
+            raise RuntimeError("More than one dominant appliance in MeterGroup!")
 
     def __getitem__(self, key):
         """Get a single meter.
@@ -244,7 +255,7 @@ class MeterGroup(object):
                 wiring_graph.add_edge(meter.upstream_meter, meter)
         return wiring_graph
 
-    def power_series(self, measurement_ac_type_prefs=None, **load_kwargs):
+    def power_series(self, **kwargs):
         """Sum together all meters and return power Series.
 
         Parameters
@@ -270,8 +281,7 @@ class MeterGroup(object):
         # Get a list of generators
         generators = []
         for meter in self.meters:
-            generators.append(meter.power_series(measurement_ac_type_prefs,
-                                                 **load_kwargs))
+            generators.append(meter.power_series(**kwargs))
         # Now load each generator and yield the sum
         while True:
             try:

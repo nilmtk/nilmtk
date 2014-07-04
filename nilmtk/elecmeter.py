@@ -1,4 +1,7 @@
 from __future__ import print_function, division
+from warnings import warn
+from collections import namedtuple
+from copy import deepcopy
 from .preprocessing import Clip
 from .stats import TotalEnergy, GoodSections
 from .hashable import Hashable
@@ -6,9 +9,6 @@ from .appliance import Appliance
 from .datastore import Key
 from .measurement import select_best_ac_type
 from .node import Node
-from warnings import warn
-from collections import namedtuple
-from copy import deepcopy
 
 ElecMeterID = namedtuple('ElecMeterID', ['instance', 'building', 'dataset'])
 
