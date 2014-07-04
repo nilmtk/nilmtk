@@ -65,3 +65,9 @@ class GoodSectionsResults(Results):
     def unify(self, other):
         # TODO!
         super(GoodSectionsResults, self).unify(other)
+
+    def to_dict(self):
+        good_sections = self.combined
+        good_sections_list_of_dicts = [timeframe.to_dict() 
+                                       for timeframe in good_sections]
+        return {'statistics': {'good_sections': good_sections_list_of_dicts}}

@@ -189,3 +189,7 @@ class TimeFrame(object):
         return ((other.start == self.start) and 
                 (other.end == self.end) and
                 (other.empty == self.empty))
+
+    def to_dict(self):
+        return {'start': self.start.isoformat(), 
+                'end': self.end.isoformat()}

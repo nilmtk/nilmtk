@@ -5,6 +5,11 @@ from ..utils import index_of_column_name
 
 class Clip(Node):
 
+    """Ensures that no value is below a lower limit or above an upper limit.
+    If self.lower and self.upper are None then will use clip settings from
+    'device': {'measurements': {'upper_limit' and 'lower_limit'}}.
+    """
+
     # Not very well specified.  Really want to specify that 
     # we need 'lower_limit' and 'upper_limit' to be specified in
     # each measurement...

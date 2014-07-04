@@ -328,6 +328,9 @@ class MeterGroup(object):
         Note
         ----
         * we use 'meters_directly_downsteam_of_mains' instead of most distal meters
+        * think this was written when rushing to get disaggregation to
+          work with NILMTK v0.2.  Might not need this function once we teach
+          disaggregators to handle individual appliances, chunk by chunk.
         """
         submeters_dict = {}
         mains = self.mains()
@@ -448,11 +451,15 @@ class MeterGroup(object):
     def on_off_events(self, minimum_state_duration):
         raise NotImplementedError
     
-    def top_k(self, k=5):
-        """Return new MeterGroup?"""
-        self.itemised_energy().ix[:k]
+    def select_top_k(self, k=5):
+        """
+        Returns
+        -------
+        MeterGroup containing top k meters.
+        """
+        top_k = self.energy_per_meter().iloc[:k]
     
-    def itemised_energy(self):
+    def energy_per_meter(self):
         """Needs to do it per-meter???  Return sorted.
         'kitchen lights': 234.5
         ['hall lights, bedroom lights'] : 32.1 
@@ -462,14 +469,12 @@ class MeterGroup(object):
         # e.g. when we want to select top_k Meters.
         raise NotImplementedError
         
-    def proportion_above(self, threshold_proportion):
+    def select_meters_contributing_more_than(self, threshold_proportion):
         """Return new MeterGroup with all meters whose proportion of
-        energy usage is above threshold"""
+        energy usage is above threshold percentage."""
+        # see prepb.filter_contribution_less_than_x(building, x)
         raise NotImplementedError
         
-    def itemised_proportions(self):
-        """Proportion of energy per meter. Return sorted."""
-        raise NotImplementedError
     
     # SELECTION FUNCTIONS NOT IMPLEMENTED YET
 

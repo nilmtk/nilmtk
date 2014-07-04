@@ -23,7 +23,13 @@ class GoodSections(Node):
     def reset(self):
         self.previous_chunk_ended_with_open_ended_good_section = False
 
-    def process(self, df, metadata):
+    def process(self):
+        self.check_requirements()
+        metadata = self.upstream.get_metadata()
+        for chunk in self.upstream.process():
+            yield self._process_chunk(chunk, metadata)
+
+    def _process_chunk(self, df, metadata):
         """
         Parameters
         ----------
