@@ -156,7 +156,13 @@ class ElecMeter(Hashable):
         string = super(ElecMeter, self).__repr__()
         # Now add list of appliances...
         string = string[:-1] # remove last bracket
-        string += '(appliances={}'.format(self.appliances)
+
+        # Site meter
+        if self.metadata.get('site_meter'):
+            string += ', site_meter'
+
+        # Appliances
+        string += ', appliances={}'.format(self.appliances)
         
         # METER ROOM
         room = self.metadata.get('room')

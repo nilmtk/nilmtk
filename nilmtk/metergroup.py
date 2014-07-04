@@ -222,6 +222,13 @@ class MeterGroup(object):
         else:
             return False
 
+    def __repr__(self):
+        s = "{:s}(meters=\n".format(self.__class__.__name__)
+        for meter in self.meters:
+            s += "  " + str(meter).replace("\n", "\n  ") + "\n"
+        s += ")"
+        return s
+
     def wiring_graph(self):
         """Returns a networkx.DiGraph of connections between meters.
 
