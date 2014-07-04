@@ -1,9 +1,10 @@
 from __future__ import print_function, division
 import pandas as pd
 from itertools import repeat
+from time import time
+from copy import deepcopy
 from .timeframe import TimeFrame
 from .node import Node
-from time import time
 
 MAX_MEM_ALLOWANCE_IN_BYTES = 1E9
 
@@ -204,7 +205,7 @@ class HDFDataStore(DataStore):
         else:
             node = self.store.get_node(key)
 
-        metadata = node._v_attrs.metadata
+        metadata = deepcopy(node._v_attrs.metadata)
         return metadata
 
     def save_metadata(self, key, metadata):
