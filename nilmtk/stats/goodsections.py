@@ -26,6 +26,7 @@ class GoodSections(Node):
     def process(self):
         self.check_requirements()
         metadata = self.upstream.get_metadata()
+        self.results = GoodSectionsResults(metadata['device']['max_sample_period'])
         for chunk in self.upstream.process():
             yield self._process_chunk(chunk, metadata)
 
@@ -113,6 +114,7 @@ class GoodSections(Node):
         
         good_section_results = GoodSectionsResults(max_sample_period)
         good_section_results.append(df.timeframe, {'sections': [sections]})
+        self.results.append(df.timeframe, {'sections': [sections]})
         results = getattr(df, 'results', {})
         results[self.name] = good_section_results
         df.results = results

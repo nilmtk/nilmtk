@@ -1,8 +1,8 @@
 #!/usr/bin/python
 from __future__ import print_function, division
 import unittest
-from nilmtk.pipeline.energyresults import TotalEnergyResults
-from nilmtk import TimeFrame
+from ..totalenergyresults import TotalEnergyResults
+from ... import TimeFrame
 
 class TestEnergyResults(unittest.TestCase):
 

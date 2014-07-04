@@ -66,7 +66,7 @@ class TestMeasurement(unittest.TestCase):
         meter = ElecMeter(metadata={'device_model': 'test model'}, meter_id=meter_id)
         
         self.assertEqual(measure.select_best_ac_type(['reactive'], 
-                                                     meter.available_ac_types()),
+                                                     meter.available_power_ac_types()),
                          'reactive')
 
 if __name__ == '__main__':

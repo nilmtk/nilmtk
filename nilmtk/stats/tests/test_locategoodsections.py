@@ -1,18 +1,17 @@
 #!/usr/bin/python
 from __future__ import print_function, division
 import unittest
-from nilmtk.pipeline import Pipeline, TotalEnergy, GoodSections
-from nilmtk.pipeline.locategoodsectionsnode import reframe_index
-from nilmtk.pipeline.locategoodsectionsresults import GoodSectionsResults
-from nilmtk.pipeline.energynode import _energy_for_power_series
-from nilmtk import TimeFrame, ElecMeter, HDFDataStore
-from nilmtk.elecmeter import ElecMeterID
-from nilmtk.consts import JOULES_PER_KWH
-from nilmtk.tests.testingtools import data_dir
 from os.path import join
 import numpy as np
 import pandas as pd
 from datetime import timedelta
+from .. import TotalEnergy, GoodSections
+from ..goodsectionsresults import GoodSectionsResults
+from ..totalenergy import _energy_for_power_series
+from ... import TimeFrame, ElecMeter, HDFDataStore
+from ...elecmeter import ElecMeterID
+from ...consts import JOULES_PER_KWH
+from ...tests.testingtools import data_dir
 
 METER_ID = ElecMeterID(instance=1, building=1, dataset='REDD')
 
@@ -28,61 +27,11 @@ class TestLocateGaps(unittest.TestCase):
     def test_pipeline(self):
         meter = ElecMeter(store=self.datastore, metadata=self.meter_meta, 
                           meter_id=METER_ID)
-        nodes = [GoodSections()]
-        pipeline = Pipeline(nodes)
-        pipeline.run(meter)
+        source_node = meter.get_source_node()
+        good_sections = GoodSections(source_node)
+        good_sections.run()
 
-    def test_reframe_index(self):
-        # First test: don't specify a window
-        index = pd.date_range('2011-01-01', freq='S', end='2011-02-01')
-        reframed = reframe_index(index)
-        np.testing.assert_array_equal(index, reframed)
-        
-        # Second test: grow the window at the start
-        reframed = reframe_index(index, window_start=pd.Timestamp('2010-01-01'))
-        self.assertEqual(reframed[0], pd.Timestamp('2010-01-01'))
-        self.assertEqual(len(reframed), len(index)+1)
-        np.testing.assert_array_equal(index, reframed[1:])
-
-        # Third test: grow the window at the end
-        reframed = reframe_index(index, window_end=pd.Timestamp('2013-01-01'))
-        self.assertEqual(reframed[-1], pd.Timestamp('2013-01-01'))
-        self.assertEqual(len(reframed), len(index)+1)
-        np.testing.assert_array_equal(index, reframed[:-1])
-
-        # Grow the window at both ends
-        reframed = reframe_index(index, 
-                                 window_start=pd.Timestamp('2009-05-04'),
-                                 window_end=pd.Timestamp('2013-02-04'))
-        self.assertEqual(reframed[0], pd.Timestamp('2009-05-04'))
-        self.assertEqual(reframed[-1], pd.Timestamp('2013-02-04'))
-        self.assertEqual(len(reframed), len(index)+2)
-        np.testing.assert_array_equal(index, reframed[1:-1])
-
-        # Shrink window at start and grow it at end
-        start = pd.Timestamp('2011-01-03')
-        end = pd.Timestamp('2013-01-05')
-        reframed = reframe_index(index, window_start=start, window_end=end)
-        self.assertEqual(reframed[0], start)
-        self.assertEqual(reframed[-1], end)
-        self.assertEqual(len(reframed), len(pd.date_range(start, freq='S', 
-                                                          end='2011-02-01'))+1)
-
-        # Shrink the window at both ends (and test TZ)
-        TZ = 'Europe/London'
-        start = pd.Timestamp('2011-01-03', tz=TZ)
-        end = pd.Timestamp('2011-01-05', tz=TZ)
-        index = index.tz_localize(TZ)
-        reframed = reframe_index(index, window_start=start, window_end=end)
-        self.assertEqual(reframed[0], start)
-        self.assertEqual(reframed[-1], end)
-        self.assertEqual(len(reframed), len(pd.date_range(start, freq='S', end=end)))
-        start_i = np.where(index == start)[0][0]
-        end_i = np.where(index == end)[0][0]
-        np.testing.assert_array_equal(index[start_i:end_i+1], reframed)
-        self.assertEqual(reframed.tzinfo.zone, TZ)
-
-    def test_process(self):
+    def test_process_chunk(self):
         MAX_SAMPLE_PERIOD = 10
         metadata = {'device': {'max_sample_period': MAX_SAMPLE_PERIOD}}
         #       0  1  2  3    4  5     6     7
@@ -98,7 +47,8 @@ class TestLocateGaps(unittest.TestCase):
         df.look_ahead = pd.DataFrame()
 
         locate = GoodSections()
-        locate.process(df, metadata)
+        locate.results = GoodSectionsResults(MAX_SAMPLE_PERIOD)
+        locate._process_chunk(df, metadata)
         results = df.results['good_sections'].combined
         self.assertEqual(len(results), 4)
         self.assertEqual(results[0].timedelta.total_seconds(), 30)
@@ -115,6 +65,7 @@ class TestLocateGaps(unittest.TestCase):
         ]
         for split_point in [[4,6,9,17], [4,10,12,17]]:
             locate = GoodSections()
+            locate.results = GoodSectionsResults(MAX_SAMPLE_PERIOD)
             df.results = {}
             prev_i = 0
             aggregate_results = GoodSectionsResults(MAX_SAMPLE_PERIOD)
@@ -126,7 +77,7 @@ class TestLocateGaps(unittest.TestCase):
                 except IndexError:
                     cropped_df.look_ahead = pd.DataFrame()
                 prev_i = i
-                locate.process(cropped_df, metadata)
+                locate._process_chunk(cropped_df, metadata)
                 aggregate_results.update(cropped_df.results['good_sections'])
 
             results = aggregate_results.combined

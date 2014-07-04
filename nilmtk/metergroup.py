@@ -291,6 +291,7 @@ class MeterGroup(object):
             
     def mains(self):
         """Get the mains ElecMeter object."""
+        # TODO return MeterGroup is there are >1 mains meters
         graph = self.wiring_graph()
         mains = tree_root(graph)
         assert isinstance(mains, ElecMeter), type(mains)
@@ -386,7 +387,7 @@ class MeterGroup(object):
             energy = meter.total_energy(periods=good_mains_sections).combined
             ac_types = set(energy.keys())
             ac_type = select_best_ac_type(ac_types, 
-                                          mains.available_ac_types())
+                                          mains.available_power_ac_types())
             submetered_energy += energy[ac_type]
             if common_ac_types is None:
                 common_ac_types = ac_types

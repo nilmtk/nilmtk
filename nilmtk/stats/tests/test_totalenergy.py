@@ -1,12 +1,12 @@
 #!/usr/bin/python
 from __future__ import print_function, division
 import unittest
-from nilmtk.pipeline import Pipeline, TotalEnergy, Clip
-from nilmtk.pipeline.energynode import _energy_for_power_series
-from nilmtk import TimeFrame, ElecMeter, HDFDataStore
-from nilmtk.elecmeter import ElecMeterID
-from nilmtk.consts import JOULES_PER_KWH
-from nilmtk.tests.testingtools import data_dir
+from ..totalenergy import TotalEnergy, _energy_for_power_series
+from ...preprocessing import Clip
+from ... import TimeFrame, ElecMeter, HDFDataStore
+from ...elecmeter import ElecMeterID
+from ...consts import JOULES_PER_KWH
+from ...tests.testingtools import data_dir
 from os.path import join
 import numpy as np
 import pandas as pd
@@ -45,11 +45,12 @@ class TestEnergy(unittest.TestCase):
         meter = ElecMeter(store=self.datastore, 
                           metadata=self.meter_meta, 
                           meter_id=METER_ID)
-        nodes = [Clip(), TotalEnergy()]
-        pipeline = Pipeline(nodes)
-        pipeline.run(meter)
-        energy = deepcopy(pipeline.results['energy'])
-        check_energy_numbers(self, energy)
+        source_node = meter.get_source_node()
+        clipped = Clip(source_node)
+        energy = TotalEnergy(clipped)
+        energy.run()
+        energy_results = deepcopy(energy.results)
+        check_energy_numbers(self, energy_results)
 
 if __name__ == '__main__':
     unittest.main()

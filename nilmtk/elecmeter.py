@@ -254,6 +254,8 @@ class ElecMeter(Hashable):
         return self.metadata
 
     def get_source_node(self, **loader_kwargs):
+        if self.store is None:
+            raise RuntimeError("Cannot get source node if meter.store is None!")
         generator = self.store.load(key=self.key, **loader_kwargs)
         self.metadata['device'] = self.device
         return Node(self, generator=generator)
@@ -278,12 +280,12 @@ class ElecMeter(Hashable):
         """
         Returns
         -------
-        sections: list of nilmtk.TimeFrame objects
+        nilmtk.stats.GoodSectionsResults object
         """
         source_node = self.get_source_node(**loader_kwargs)
         good_sections = GoodSections(source_node)
         good_sections.run()
-        return good_sections.results.combined
+        return good_sections.results
         
     def total_on_duration(self):
         """Return timedelta"""
