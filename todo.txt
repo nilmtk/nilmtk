@@ -1,11 +1,3 @@
-* In each processing node add a function which takes vanilla data
-  frame and makes explicit metadata required. To allow more reuse of
-  code, formalise interface on stats and preprocessing nodes for
-  processing single DataFrame - done for good_secions
-
-* remove 'name' from nodes. And don't push results along with each chunk (in
-  chunk.results dict).
-
 * disaggregate!  (See ideas in "chaining_generators" notebook)
 * metergroup.mains needs to return a MeterGroup if there are >1 mains meters
 * Add notes to TODO:

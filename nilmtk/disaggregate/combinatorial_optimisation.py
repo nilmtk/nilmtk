@@ -1,3 +1,4 @@
+from __future__ import print_function, division
 #from nilmtk.utils import find_nearest_vectorized
 
 import pandas as pd
@@ -47,14 +48,14 @@ class CombinatorialOptimisation(object):
         centroids = {}
         # TODO: only use downstream meters
         # Preprocessing!
-        for i, meter in enumerate(metergroup.meters):
-            if hasattr(meter, 'metadata') and meter.metadata.get('site_meter'):
-                continue
+        for i, meter in enumerate(metergroup.submeters()):
             preprocessing = [] # TODO
             dominant_appliance = meter.dominant_appliance()
             if dominant_appliance is None:
                 raise RuntimeError('No dominant appliance for {}'.format(meter))
+
             for chunk in meter.power_series(preprocessing=preprocessing):
+
                 # Finding the points where power consumption is greater than 10
                 data = _transform_data(chunk)
 
@@ -164,7 +165,7 @@ class CombinatorialOptimisation(object):
 def _transform_data(df_appliance):
     '''Subsamples if needed and converts to scikit-learn understandable format'''
 
-    data_gt_10 = df_appliance[df_appliance > 10].values
+    data_gt_10 = df_appliance[df_appliance > 10].dropna().values
     length = data_gt_10.size
     if length < MIN_POINT_THRESHOLD:
         return np.zeros((MAX_POINT_THRESHOLD, 1))
@@ -175,8 +176,7 @@ def _transform_data(df_appliance):
             np.random.randint(0, len(data_gt_10), MAX_POINT_THRESHOLD)]
         return temp.reshape(MAX_POINT_THRESHOLD, 1)
     else:
-        temp = data_gt_10
-    return temp.reshape(length, 1)
+        return data_gt_10.reshape(length, 1)
 
 
 def _merge_clusters(appliance_centroids):
@@ -292,3 +292,15 @@ def _decode_co(length_sequence, centroids, appliance_list, states,
                 appliance][co_states[appliance][i]]
 
     return [co_states, co_power]
+
+
+def test_co():
+    from nilmtk import HDFDataStore, DataSet
+    datastore = HDFDataStore('/home/jack/workspace/python/nilmtk/notebooks/redd.h5')
+    dataset = DataSet()
+    dataset.load(datastore)
+    elec = dataset.buildings[1].elec
+    co = CombinatorialOptimisation()
+    model = co.train(elec)
+    print(model)
+

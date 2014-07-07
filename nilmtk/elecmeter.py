@@ -106,6 +106,9 @@ class ElecMeter(Hashable):
         else:
             return {}
 
+    def is_site_meter(self):
+        return self.metadata.get('site_meter', False)
+
     def dominant_appliance(self):
         """Tries to find the most dominant appliance on this meter,
         and then returns that appliance object.  Will return None

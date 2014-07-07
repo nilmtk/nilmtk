@@ -302,7 +302,7 @@ class MeterGroup(object):
             
     def mains(self):
         """Get the mains ElecMeter object."""
-        # TODO return MeterGroup is there are >1 mains meters
+        # TODO return MeterGroup if there are >1 mains meters
         graph = self.wiring_graph()
         mains = tree_root(graph)
         assert isinstance(mains, ElecMeter), type(mains)
@@ -312,6 +312,15 @@ class MeterGroup(object):
         meters = nodes_adjacent_to_root(self.wiring_graph())
         assert isinstance(meters, list)
         return meters
+
+    def submeters(self):
+        """Returns list of all meters except site_meters"""
+        return [meter for meter in self.meters
+                if not meter.is_site_meter()]
+
+    def is_site_meter(self):
+        """Returns True if any meters are site meters"""
+        return any([meter.is_site_meter() for meter in self.meters])
 
     def total_energy(self, **load_kwargs):
         """Sums together total energy for each meter and returns a
