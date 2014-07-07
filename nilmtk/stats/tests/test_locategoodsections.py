@@ -49,7 +49,7 @@ class TestLocateGaps(unittest.TestCase):
         locate = GoodSections()
         locate.results = GoodSectionsResults(MAX_SAMPLE_PERIOD)
         locate._process_chunk(df, metadata)
-        results = df.results['good_sections'].combined
+        results = locate.results.combined
         self.assertEqual(len(results), 4)
         self.assertEqual(results[0].timedelta.total_seconds(), 30)
         self.assertEqual(results[1].timedelta.total_seconds(), 10)
@@ -68,7 +68,6 @@ class TestLocateGaps(unittest.TestCase):
             locate.results = GoodSectionsResults(MAX_SAMPLE_PERIOD)
             df.results = {}
             prev_i = 0
-            aggregate_results = GoodSectionsResults(MAX_SAMPLE_PERIOD)
             for j,i in enumerate(split_point):
                 cropped_df = df.iloc[prev_i:i]
                 cropped_df.timeframe = TimeFrame(timestamps[j], timestamps[j+1])
@@ -78,9 +77,8 @@ class TestLocateGaps(unittest.TestCase):
                     cropped_df.look_ahead = pd.DataFrame()
                 prev_i = i
                 locate._process_chunk(cropped_df, metadata)
-                aggregate_results.update(cropped_df.results['good_sections'])
 
-            results = aggregate_results.combined
+            results = locate.results.combined
             self.assertEqual(len(results), 4)
             self.assertEqual(results[0].timedelta.total_seconds(), 30)
             self.assertEqual(results[1].timedelta.total_seconds(), 10)
