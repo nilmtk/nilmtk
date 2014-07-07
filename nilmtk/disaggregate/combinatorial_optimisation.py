@@ -9,6 +9,11 @@ from copy import deepcopy
 import json
 from ..appliance import ApplianceID
 
+# For some reason, importing sklearn causes PyTables to raise lots
+# of DepreciatedWarnings for Pandas code.
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning) 
+
 MAX_VALUES_TO_CONSIDER = 100
 MAX_POINT_THRESHOLD = 2000
 MIN_POINT_THRESHOLD = 20
