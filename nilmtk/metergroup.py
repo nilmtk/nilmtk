@@ -233,6 +233,13 @@ class MeterGroup(object):
         else:
             return False
 
+    @property
+    def appliances(self):
+        appliances = set()
+        for meter in self.meters:
+            appliances.update(meter.appliances)
+        return appliances
+
     def __repr__(self):
         s = "{:s}(meters=\n".format(self.__class__.__name__)
         for meter in self.meters:
