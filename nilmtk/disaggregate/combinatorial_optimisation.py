@@ -37,6 +37,10 @@ class CombinatorialOptimisation(object):
         Parameters
         ----------
         metergroup : a nilmtk.MeterGroup object
+
+        Notes
+        -----
+        * only uses first chunk for each meter (TODO: handle all chunks).
         """
 
         num_meters = len(metergroup.meters)
@@ -72,75 +76,69 @@ class CombinatorialOptimisation(object):
                 sorted_list = _merge_clusters(sorted_list)
 
                 centroids[dominant_appliance.identifier] = sorted_list
+                
+                break # TODO handle multiple chunks per appliance!!
+
 
         self.model = centroids
         return centroids
 
-    def disaggregate(self, mains):
-        '''Disaggregate the test data according to the model learnt previously
+    def disaggregate(self, mains, predictions):
+        '''Disaggregate mains according to the model learnt previously.
 
         Parameters
         ----------
+        mains : nilmtk.ElecMeter or nilmtk.MeterGroup
+        predictions : nilmtk.DataStore subclass
+            Physical store for holding appliance power predictions.
+        '''
+        multi_state_appliances = []
+        single_state_appliances = []
+        for appliance, model in self.model.iteritems():
+            n_states = len(model)
+            if n_states > 1:
+                multi_state_appliances.append(appliance)
+            else:
+                single_state_appliances.append(appliance)
 
-        test_mains : Pandas DataFrame
-            containing appliances as columns and their 1D power draw  as values
-            NB: All appliances must have the same index
-
-        Returns
-        -------
-
-        None
-         '''
-        test_mains = building.utility.electric.get_dataframe_of_mains(
-            measurement=disagg_features[0])
-        # Find put appliances which have more than one state. For others we do
+        # Find appliances which have more than one state. For others we do
         # not need to decode; they have only a single state. This can simplify
         # the amount of computations needed
-        appliance_list = [
-            appliance for appliance in self.model if len(self.model[appliance]) > 1]
-        list_of_appliances_centroids = [self.model[appliance]
-                                        for appliance in appliance_list]
-        states_combination = list(itertools.product
-                                  (*list_of_appliances_centroids))
+        multi_state_appl_centroids = [self.model[appliance]
+                                      for appliance in multi_state_appliances]
+        states_combination = list(itertools.product(*multi_state_appl_centroids))
         sum_combination = np.array(np.zeros(len(states_combination)))
         for i in range(0, len(states_combination)):
             sum_combination[i] = sum(states_combination[i])
 
-        # We get a memory error if there are too many samples in test_mains; so
-        # we divide them into chunks and do the processing on smaller chunks
-        # and later combine these chunks
-        nvalues = len(test_mains.index)
-        start = 0
-        states = np.array([])
-        residual_power = np.array([])
-        while start + min(nvalues, MAX_VALUES_TO_CONSIDER) - 1 < nvalues:
-            [states_temp, residual_power_temp] = find_nearest_vectorized(
-                sum_combination, test_mains.values[start:start + MAX_VALUES_TO_CONSIDER])
-            states = np.append(states, states_temp)
-            residual_power = np.append(residual_power, residual_power_temp)
-            start += MAX_VALUES_TO_CONSIDER
+        for chunk in mains.power_series():
+            # TODO preprocessing??
 
-        # If some values are still left
-        [states_temp, residual_power_temp] = find_nearest_vectorized(
-            sum_combination, test_mains.values[start:nvalues])
-        states = np.append(states, states_temp)
-        residual_power = np.append(residual_power, residual_power_temp)
+            # Multi-state appliances
+            states, residual_power = find_nearest_vectorized(
+                sum_combination, chunk)
+            predicted_states, predicted_power = _decode_co(
+                len(chunk), self.model, multi_state_appliances,
+                states, residual_power)
 
-        length_sequence = len(test_mains.index)
-        [predicted_states, predicted_power] = _decode_co(length_sequence,
-                                                        self.model, appliance_list, states, residual_power)
+            # Single state appliances
+            for appliance in single_state_appliances:
+                # I'm not sure I understand why the predictions are just zeros
+                # for single state appliances? - Jack
+                predicted_states[appliance] = np.zeros(n_samples, dtype=np.int)
+                predicted_power[appliance] = np.zeros(n_samples, dtype=np.int)
 
-        # Now predicting for appliances with a single state
-        single_state_appliance = [
-            appliance for appliance in self.model if appliance not in appliance_list]
-        for appliance in single_state_appliance:
-            predicted_states[appliance] = np.zeros(
-                length_sequence, dtype=np.int)
-            predicted_power[appliance] = np.zeros(
-                length_sequence, dtype=np.int)
-
-        self.predictions = pd.DataFrame(
-            predicted_power, index=test_mains.index)
+            predictions_for_chunk = pd.DataFrame(predicted_power, 
+                                                 index=chunk.index)
+            # TODO: save predicted_states
+            #   * before I make any more big changes, I need to get disaggregation working
+            #     and save the results to make sure my changes don't change
+            #     the estimates.
+            #   * need to store all metadata from training to re-use
+            #   * need to know meter instance and building
+            #   * make a `disaggregate_single_chunk` function.
+            #   * save metadata. Need to be careful about dual supply appliances.
+            #   * save predictions, including state.
 
     def export_model(self, filename):
         model_copy = {}

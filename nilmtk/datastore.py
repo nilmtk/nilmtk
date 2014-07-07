@@ -134,6 +134,9 @@ class HDFDataStore(DataStore):
 
                 yield data
 
+    def append(self, *args, **kwargs):
+        self.store.append(*args, **kwargs)
+
     def load_metadata(self, key='/'):
         """
         Parameters

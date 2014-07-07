@@ -1,7 +1,12 @@
-* disaggregate!  (See ideas in "chaining_generators" notebook)
+* do combinatorial_optimisation algorithm
+  * See TODO at bottom of 'disaggregate' function.
+  * needs to dump appliance estimates to disk as it goes
+  * use same hierarchy as power data.  Because we can still learn
+    models of meters with multiple appliances etc.
 * metergroup.mains needs to return a MeterGroup if there are >1 mains meters
 * Add notes to TODO:
   * Stats:
+    * ElecMeter.plot() and MeterGroup.plot() - how to select time? `load_kwargs`?
     * goodsectionsresults could do with a plotting function like
   plot_missing_samples_with_rectangles
     * check proportion_of_energy_submetered agrees with v0.1 for REDD
@@ -29,3 +34,9 @@
   * stats.totalenergy._energy_for_chunk looks wasteful. Why not, for
     each AC type, find cumulative energy > energy > power and then
     only run _energy_for_power_series on one column per AC type.
+* FHMM
+
+NEXT ITERATION
+* Disaggregation.disaggregate algorithms need to scale to
+  arbitrarily-large datasets instead of keeping one large DataFrame in
+  memory.  Maybe write to disk in chunks?
