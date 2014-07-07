@@ -13,7 +13,6 @@ class TotalEnergy(Node):
     requirements = {'device': {'max_sample_period': 'ANY VALUE'},
                     'preprocessing_applied': {'clip': 'ANY VALUE'}}
     postconditions =  {'statistics': {'energy': {}}}
-    name = 'energy'
 
     def reset(self):
         self.results = TotalEnergyResults()

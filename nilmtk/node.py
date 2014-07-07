@@ -86,9 +86,6 @@ class Node(object):
         """
         return set()
 
-    def __repr__(self):
-        return self.__class__.__name__ + ' ' + self.name
-
 
 class UnsatisfiedRequirementsError(Exception):
     pass

@@ -15,7 +15,6 @@ class Clip(Node):
     # each measurement...
     requirements = {'device': {'measurements': 'ANY VALUE'}}
     postconditions =  {'preprocessing_applied': {'clip': {}}}
-    name = 'clip'
 
     def reset(self):
         self.lower = None
