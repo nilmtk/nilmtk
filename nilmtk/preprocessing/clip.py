@@ -31,6 +31,8 @@ class Clip(Node):
                 lower = lower if self.lower is None else self.lower
                 upper = upper if self.upper is None else self.upper
                 if lower is not None and upper is not None:
+                    # We use `chunk.iloc[:,icol]` instead of iterating
+                    # through each column so we can to the clipping in place
                     icol = index_of_column_name(chunk, measurement)
                     chunk.iloc[:,icol] = chunk.iloc[:,icol].clip(lower, upper)
 

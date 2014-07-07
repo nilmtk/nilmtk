@@ -26,7 +26,7 @@ class TotalEnergy(Node):
         metadata = self.upstream.get_metadata()
         max_sample_period = metadata['device']['max_sample_period']
         for chunk in self.upstream.process():
-            energy = _energy_for_chunk(chunk, max_sample_period)
+            energy = get_total_energy(chunk, max_sample_period)
             self.results.append(chunk.timeframe, energy)
             yield chunk
 
@@ -39,12 +39,19 @@ class TotalEnergy(Node):
                 ['power', 'energy', 'cumulative energy']]
 
 
-def _energy_for_chunk(df, max_sample_period):
-    """
+def get_total_energy(df, max_sample_period):
+    """Calculate total energy for energy / power data in a dataframe.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+    max_sample_period : float or int
+
     Returns
     -------
     energy : dict
-        with a key for each AC type (reactive, apparent, active) in the data.
+        With a key for each AC type (reactive, apparent, active) in `df`.
+        Values are energy in kWh (or equivalent for reactive and apparent power).
     """
 
     energy = {}
@@ -69,6 +76,17 @@ def _energy_for_chunk(df, max_sample_period):
 
 
 def _energy_for_power_series(series, max_sample_period):
+    """
+    Parameters
+    ----------
+    series : pd.Series
+    max_sample_period : float or int
+
+    Returns
+    -------
+    energy : float
+        kWh
+    """
     series = series.dropna()
     timedelta = np.diff(series.index.values)
     timedelta_secs = timedelta64_to_secs(timedelta)
