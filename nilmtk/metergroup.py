@@ -248,18 +248,18 @@ class MeterGroup(object):
         return s
 
     def wiring_graph(self):
-        """Returns a networkx.DiGraph of connections between meters.
-
-        The root will be a Mains object.
-        """
+        """Returns a networkx.DiGraph of connections between meters."""
         wiring_graph = nx.DiGraph()
-        for meter in self.meters:
-            try:
-                upstream_meter = meter.upstream_meter
-            except ValueError:
-                pass # no upstream meter
-            else:
-                wiring_graph.add_edge(meter.upstream_meter, meter)
+        def _build_wiring_graph(meters):
+            for meter in meters:
+                if isinstance(meter, MeterGroup):
+                    metergroup = meter
+                    _build_wiring_graph(metergroup.meters)
+                else:
+                    upstream_meter = meter.upstream_meter()
+                    if upstream_meter is not None:
+                        wiring_graph.add_edge(upstream_meter, meter)
+        _build_wiring_graph(self.meters)
         return wiring_graph
 
     def power_series(self, **kwargs):
@@ -301,12 +301,19 @@ class MeterGroup(object):
         
             
     def mains(self):
-        """Get the mains ElecMeter object."""
-        # TODO return MeterGroup if there are >1 mains meters
-        graph = self.wiring_graph()
-        mains = tree_root(graph)
-        assert isinstance(mains, ElecMeter), type(mains)
-        return mains
+        """
+        Returns
+        -------
+        ElecMeter or MeterGroup or None
+        """
+        site_meters = [meter for meter in self.meters if meter.is_site_meter()]
+        n_site_meters = len(site_meters)
+        if n_site_meters == 0:
+            return
+        elif n_site_meters == 1:
+            return site_meters[0]
+        else:
+            return MeterGroup(meters=site_meters)
 
     def meters_directly_downstream_of_mains(self):
         meters = nodes_adjacent_to_root(self.wiring_graph())

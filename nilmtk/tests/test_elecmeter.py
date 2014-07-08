@@ -43,12 +43,11 @@ class TestElecMeter(WarningTestMixin, unittest.TestCase):
         
     def test_upstream_meter(self):
         meter1 = ElecMeter(metadata={'site_meter': True}, meter_id=METER_ID)
-        with self.assertRaises(ValueError):
-            meter1.upstream_meter
+        self.assertIsNone(meter1.upstream_meter())
         meter2 = ElecMeter(metadata={'submeter_of': 1}, meter_id=METER_ID2)
-        self.assertIs(meter2.upstream_meter, meter1)
+        self.assertIs(meter2.upstream_meter(), meter1)
         meter3 = ElecMeter(metadata={'submeter_of': 2}, meter_id=METER_ID3)
-        self.assertIs(meter3.upstream_meter, meter2)
+        self.assertIs(meter3.upstream_meter(), meter2)
 
 if __name__ == '__main__':
     unittest.main()

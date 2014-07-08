@@ -35,48 +35,71 @@ class ElecMeter(Hashable):
     meter_devices : dict, static class attribute
         See http://nilm-metadata.readthedocs.org/en/latest/dataset_metadata.html#meterdevice
 
-    meters : dict, static class attribute:
+    all_meters : dict, static class attribute:
         Required for resolving `upstream_of` to an ElecMeter object.
         Keys are ElecMeterID objects.
-        Values are ElecMeter objects.
+        Values are ElecMeter objects or, where ElecMeterID(instance=0), 
+        value is a MeterGroup object.
 
     """
 
     meter_devices = {}
-    meters = {}
+    all_meters = {}
 
     def __init__(self, store=None, metadata=None, meter_id=None):
         # Store and check parameters
+        self.appliances = []
         self.metadata = {} if metadata is None else metadata
         assert isinstance(self.metadata, dict)
         self.store = store
-        if self.store is not None:
-            assert not isinstance(self.store, dict)
         self.identifier = meter_id
+
+        # Insert self into ElecMeters.meters
         if self.identifier is not None:
-            assert isinstance(meter_id, ElecMeterID)
-            ElecMeter.meters[self.identifier] = self
-        self.appliances = []
+            assert isinstance(self.identifier, ElecMeterID)
+            ElecMeter.all_meters[self.identifier] = self
+            if self.is_site_meter():
+                # Add to self to mains meter group
+                from .metergroup import MeterGroup
+                mainsID = ElecMeterID(instance=0,
+                                      building=self.identifier.building,
+                                      dataset=self.identifier.dataset)
+                mains_group = ElecMeter.all_meters.setdefault(mainsID, 
+                                                              MeterGroup())
+                if self not in mains_group.meters:
+                    mains_group.meters.append(self)
 
     @property
     def key(self):
         return self.metadata['data_location']
 
-    @property
     def upstream_meter(self):
+        """
+        Returns
+        -------
+        ElecMeterID of upstream meter or None if is site meter.
+        """
+        if self.is_site_meter():
+            return
+
         submeter_of = self.metadata.get('submeter_of')
+
+        # Sanity checks
         if submeter_of is None:
             raise ValueError("This meter has no 'submeter_of' metadata attribute.")
-        if submeter_of <= 0:
-            raise ValueError("'submeter_of' must be >= 1.")
+        if submeter_of < 0:
+            raise ValueError("'submeter_of' must be >= 0.")
         upstream_meter_in_building = self.metadata.get('upstream_meter_in_building')
-        if upstream_meter_in_building is None:
-            upstream_meter_in_building = self.identifier.building
+        if (upstream_meter_in_building is not None and
+            upstream_meter_in_building != self.identifier.building):
+            raise NotImplementedError(
+                "'upstream_meter_in_building' not implemented yet.")
+
         id_of_upstream = ElecMeterID(instance=submeter_of, 
-                                            building=upstream_meter_in_building,
-                                            dataset=self.identifier.dataset)
-        upstream_meter =  ElecMeter.meters[id_of_upstream]
-        return upstream_meter
+                                     building=self.identifier.building,
+                                     dataset=self.identifier.dataset)
+
+        return ElecMeter.all_meters[id_of_upstream]
 
     @classmethod
     def load_meter_devices(cls, store):
