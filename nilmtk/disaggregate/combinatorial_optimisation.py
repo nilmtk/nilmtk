@@ -1,6 +1,4 @@
 from __future__ import print_function, division
-#from nilmtk.utils import find_nearest_vectorized
-
 import pandas as pd
 import itertools
 import numpy as np
@@ -9,6 +7,7 @@ from sklearn.cluster import KMeans
 from copy import deepcopy
 import json
 from ..appliance import ApplianceID
+from ..utils import find_nearest_vectorized
 
 # For some reason, importing sklearn causes PyTables to raise lots
 # of DepreciatedWarnings for Pandas code.
@@ -25,7 +24,14 @@ np.random.seed(SEED)
 
 
 class CombinatorialOptimisation(object):
-    """1 dimensional combinatorial optimisation NILM algorithm."""
+    """1 dimensional combinatorial optimisation NILM algorithm.
+
+    Attributes
+    ----------
+    model : dict
+        Each key is the ApplianceID for the dominant appliance.
+        Each value is a sorted list of power in different states.
+    """
 
     def __init__(self):
         self.model = {}
@@ -49,49 +55,49 @@ class CombinatorialOptimisation(object):
         else:
             max_num_clusters = 3
 
-        centroids = {}
-        # TODO: only use downstream meters
-        # Preprocessing!
+        # TODO: Preprocessing!
         for i, meter in enumerate(metergroup.submeters()):
-            preprocessing = [] # TODO
+
+            # Find dominant appliance for this meter
             dominant_appliance = meter.dominant_appliance()
             if dominant_appliance is None:
                 raise RuntimeError('No dominant appliance for {}'.format(meter))
 
+            # Load data and train model
+            preprocessing = [] # TODO
             for chunk in meter.power_series(preprocessing=preprocessing):
-
-                # Finding the points where power consumption is greater than 10
+                # Find where power consumption is greater than 10
                 data = _transform_data(chunk)
 
-                # Now for each meter we find the clusters
+                # Find clusters
                 cluster_centers = _apply_clustering(data, max_num_clusters)
                 flattened = cluster_centers.flatten()
                 flattened = np.append(flattened, 0)
-                sorted_list = np.sort(flattened)
-                sorted_list = sorted_list.astype(np.int)
-                sorted_list = list(set(sorted_list.tolist()))
-                sorted_list.sort()
-
-                # Merge clusters TODO
-                sorted_list = _merge_clusters(sorted_list)
-
-                centroids[dominant_appliance.identifier] = sorted_list
+                centroids = np.sort(flattened)
+                centroids = centroids.astype(np.int) # TODO: round
+                centroids = list(set(centroids.tolist())) # TODO: is np.unique() faster?
+                centroids.sort()
+                # TODO: Merge clusters
+                self.model[dominant_appliance.identifier] = centroids
                 
-                break # TODO handle multiple chunks per appliance!!
+                break # TODO handle multiple chunks per appliance
 
 
-        self.model = centroids
-        return centroids
-
-    def disaggregate(self, mains, predictions):
+    def disaggregate(self, mains, output_datastore, **load_kwargs):
         '''Disaggregate mains according to the model learnt previously.
 
         Parameters
         ----------
         mains : nilmtk.ElecMeter or nilmtk.MeterGroup
-        predictions : nilmtk.DataStore subclass
-            Physical store for holding appliance power predictions.
+        output_datastore : nilmtk.DataStore subclass
+            For storing appliance power predictions.
+        **load_kwargs : key word arguments
+            Passed to `mains.power_series(**kwargs)`
         '''
+        # Find appliances which have more than one state. For others we do
+        # not need to decode; they have only a single state. This can simplify
+        # the amount of computations needed
+
         multi_state_appliances = []
         single_state_appliances = []
         for appliance, model in self.model.iteritems():
@@ -101,9 +107,6 @@ class CombinatorialOptimisation(object):
             else:
                 single_state_appliances.append(appliance)
 
-        # Find appliances which have more than one state. For others we do
-        # not need to decode; they have only a single state. This can simplify
-        # the amount of computations needed
         multi_state_appl_centroids = [self.model[appliance]
                                       for appliance in multi_state_appliances]
         states_combination = list(itertools.product(*multi_state_appl_centroids))
@@ -111,14 +114,15 @@ class CombinatorialOptimisation(object):
         for i in range(0, len(states_combination)):
             sum_combination[i] = sum(states_combination[i])
 
-        for chunk in mains.power_series():
-            # TODO preprocessing??
+        # TODO preprocessing??
+        for chunk in mains.power_series(**load_kwargs):
+            n_samples = len(chunk)
 
             # Multi-state appliances
             states, residual_power = find_nearest_vectorized(
-                sum_combination, chunk)
+                sum_combination, chunk.values)
             predicted_states, predicted_power = _decode_co(
-                len(chunk), self.model, multi_state_appliances,
+                n_samples, self.model, multi_state_appliances,
                 states, residual_power)
 
             # Single state appliances
@@ -130,13 +134,18 @@ class CombinatorialOptimisation(object):
 
             predictions_for_chunk = pd.DataFrame(predicted_power, 
                                                  index=chunk.index)
+
+            break # TODO: remove!
+
+        return predictions_for_chunk
+
             # TODO: save predicted_states
+            #   * make a `disaggregate_single_chunk` function.
             #   * before I make any more big changes, I need to get disaggregation working
             #     and save the results to make sure my changes don't change
             #     the estimates.
             #   * need to store all metadata from training to re-use
             #   * need to know meter instance and building
-            #   * make a `disaggregate_single_chunk` function.
             #   * save metadata. Need to be careful about dual supply appliances.
             #   * save predictions, including state.
 
@@ -177,21 +186,18 @@ def _transform_data(df_appliance):
         return data_gt_10.reshape(length, 1)
 
 
-def _merge_clusters(appliance_centroids):
-    '''Merges clusters which are within a certain threshold in order to reduce the
-    complexity of the learnt model'''
-
-    # TODO: Implement
-    return appliance_centroids
-
-
 def _apply_clustering(X, max_num_clusters=3):
-    '''Applies clustering on reduced data, i.e. data where power is greater than threshold
+    '''Applies clustering on reduced data, 
+    i.e. data where power is greater than threshold.
+
+    Parameters
+    ----------
+    X : ndarray
+    max_num_clusters : int
 
     Returns
     -------
-    centroids:
-        list
+    centroids : list of numbers
         List of power in different states of an appliance
     '''
 
@@ -228,40 +234,34 @@ def _apply_clustering(X, max_num_clusters=3):
             else:
                 return np.array([0])
 
-    # TODO: REMOVE THIS LINE!!!HARDCODING IT FOR PAPER FOR CONSISTENT
-    # COMPARISON
-    return k_means_cluster_centers[1]
-    # return k_means_cluster_centers[num_clus]
+    return k_means_cluster_centers[num_clus]
 
 
-def _decode_co(length_sequence, centroids, appliance_list, states,
-              residual_power):
+def _decode_co(n_samples, model, appliance_list, states, residual_power):
     '''Decode a Combination Sequence and map K ^ N back to each of the K
     appliances
 
     Parameters
     ----------
+    n_samples : int
+        Length of the time series for which decoding needs to be done.
+    model : dict
+        In the form:  {appliance: [sorted list of power in different states]}
+    appliance_list : list
+        In the form: [appliance_i, ...]
+        Appliances to consider.  Each element should be a valid key for the 
+        `model` dict.
+    states : ndarray
+        Contains the state in overall combinations(K ^ N), i.e.
+        at each time instance in [0, n_samples] what is the state of overall
+        system[0, K ^ N - 1]
+    residual_power : ndarray
 
-    length_sequence:
-        int, shape
-    Length of the series for which decoding needs to be done
-
-    centroids:
-        dict, form:
-            {appliance: [sorted list of power
-                         in different states]}
-
-    appliance_list:
-        list, form:
-            [appliance_i..., ]
-
-    states:
-        nd.array, Contains the state in overall combinations(K ^ N), i.e.
-    at each time instance in [0, length_sequence] what is the state of overall
-    system[0, K ^ N - 1]
-
-    residual_power:
-        nd.array
+    Returns
+    -------
+    co_states, co_power : dict
+        The set of keys is `appliance_list`.
+        Values are 1D ndarrays of length `n_samples`.
     '''
 
     # TODO: Possible Cythonize/Vectorize in the future
@@ -269,36 +269,24 @@ def _decode_co(length_sequence, centroids, appliance_list, states,
     co_power = {}
     total_num_combinations = 1
     for appliance in appliance_list:
-        total_num_combinations *= len(centroids[appliance])
+        total_num_combinations *= len(model[appliance])
 
     print(total_num_combinations)
-    print(centroids)
-
-    for appliance in appliance_list:
-        co_states[appliance] = np.zeros(length_sequence, dtype=np.int)
-        co_power[appliance] = np.zeros(length_sequence)
-
-    for i in range(length_sequence):
-        factor = total_num_combinations
-        for appliance in appliance_list:
-            # assuming integer division (will cause errors in Python 3x)
-            factor = factor // len(centroids[appliance])
-
-            temp = int(states[i]) / factor
-            co_states[appliance][i] = temp % len(centroids[appliance])
-            co_power[appliance][i] = centroids[
-                appliance][co_states[appliance][i]]
-
-    return [co_states, co_power]
-
-
-def test_co():
-    from nilmtk import HDFDataStore, DataSet
-    datastore = HDFDataStore('/home/jack/workspace/python/nilmtk/notebooks/redd.h5')
-    dataset = DataSet()
-    dataset.load(datastore)
-    elec = dataset.buildings[1].elec
-    co = CombinatorialOptimisation()
-    model = co.train(elec)
     print(model)
 
+    for appliance in appliance_list:
+        co_states[appliance] = np.zeros(n_samples, dtype=np.int)
+        co_power[appliance] = np.zeros(n_samples)
+
+    for i in xrange(n_samples):
+        factor = total_num_combinations
+        for appliance in appliance_list:
+            centroids = model[appliance]
+            n_states = len(centroids)
+            factor /=  n_states
+            states_per_factor = int(round(states[i] / factor))
+            predicted_state = states_per_factor % n_states
+            co_states[appliance][i] = predicted_state
+            co_power[appliance][i] = centroids[predicted_state]
+
+    return co_states, co_power
