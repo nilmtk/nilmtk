@@ -1,13 +1,13 @@
 from __future__ import print_function, division
 import pandas as pd
-import itertools
+from itertools import product
 import numpy as np
 from sklearn import metrics
 from sklearn.cluster import KMeans
 from copy import deepcopy
 import json
 from ..appliance import ApplianceID
-from ..utils import find_nearest_vectorized
+from ..utils import find_nearest
 
 # For some reason, importing sklearn causes PyTables to raise lots
 # of DepreciatedWarnings for Pandas code.
@@ -109,28 +109,34 @@ class CombinatorialOptimisation(object):
 
         multi_state_appl_centroids = [self.model[appliance]
                                       for appliance in multi_state_appliances]
-        states_combination = list(itertools.product(*multi_state_appl_centroids))
-        sum_combination = np.array(np.zeros(len(states_combination)))
-        for i in range(0, len(states_combination)):
-            sum_combination[i] = sum(states_combination[i])
+        state_combinations = np.array(list(product(*multi_state_appl_centroids)))
+        # state_combinations is a 2D array
+        # each column is an appliance
+        # each row is a possible combination of power demand values e.g.
+        # (0, 0, 0, 0), (0, 0, 0, 100), (0, 0, 50, 0), (0, 0, 50, 100), ...
+
+        summed_power_of_each_combination = np.sum(state_combinations, axis=1)
+        # summed_power_of_each_combination is now an array where each 
+        # value is the total power demand for each combination of states.
 
         # TODO preprocessing??
         for chunk in mains.power_series(**load_kwargs):
             n_samples = len(chunk)
+            predicted_power = {}
 
             # Multi-state appliances
-            states, residual_power = find_nearest_vectorized(
-                sum_combination, chunk.values)
-            predicted_states, predicted_power = _decode_co(
-                n_samples, self.model, multi_state_appliances,
-                states, residual_power)
+            indices_of_state_combinations, residual_power = find_nearest(
+                summed_power_of_each_combination, chunk.values)
+
+            for i, appliance in enumerate(multi_state_appliances):
+                predicted_power[appliance] = state_combinations[
+                    indices_of_state_combinations, i].flatten()
 
             # Single state appliances
             for appliance in single_state_appliances:
-                # I'm not sure I understand why the predictions are just zeros
-                # for single state appliances? - Jack
-                predicted_states[appliance] = np.zeros(n_samples, dtype=np.int)
-                predicted_power[appliance] = np.zeros(n_samples, dtype=np.int)
+                appliance_power = self.model[appliance][0]
+                predicted_power[appliance] = (np.zeros(n_samples, dtype=np.int)
+                                              + appliance_power)
 
             predictions_for_chunk = pd.DataFrame(predicted_power, 
                                                  index=chunk.index)
@@ -140,10 +146,6 @@ class CombinatorialOptimisation(object):
         return predictions_for_chunk
 
             # TODO: save predicted_states
-            #   * make a `disaggregate_single_chunk` function.
-            #   * before I make any more big changes, I need to get disaggregation working
-            #     and save the results to make sure my changes don't change
-            #     the estimates.
             #   * need to store all metadata from training to re-use
             #   * need to know meter instance and building
             #   * save metadata. Need to be careful about dual supply appliances.
@@ -235,58 +237,3 @@ def _apply_clustering(X, max_num_clusters=3):
                 return np.array([0])
 
     return k_means_cluster_centers[num_clus]
-
-
-def _decode_co(n_samples, model, appliance_list, states, residual_power):
-    '''Decode a Combination Sequence and map K ^ N back to each of the K
-    appliances
-
-    Parameters
-    ----------
-    n_samples : int
-        Length of the time series for which decoding needs to be done.
-    model : dict
-        In the form:  {appliance: [sorted list of power in different states]}
-    appliance_list : list
-        In the form: [appliance_i, ...]
-        Appliances to consider.  Each element should be a valid key for the 
-        `model` dict.
-    states : ndarray
-        Contains the state in overall combinations(K ^ N), i.e.
-        at each time instance in [0, n_samples] what is the state of overall
-        system[0, K ^ N - 1]
-    residual_power : ndarray
-
-    Returns
-    -------
-    co_states, co_power : dict
-        The set of keys is `appliance_list`.
-        Values are 1D ndarrays of length `n_samples`.
-    '''
-
-    # TODO: Possible Cythonize/Vectorize in the future
-    co_states = {}
-    co_power = {}
-    total_num_combinations = 1
-    for appliance in appliance_list:
-        total_num_combinations *= len(model[appliance])
-
-    print(total_num_combinations)
-    print(model)
-
-    for appliance in appliance_list:
-        co_states[appliance] = np.zeros(n_samples, dtype=np.int)
-        co_power[appliance] = np.zeros(n_samples)
-
-    for i in xrange(n_samples):
-        factor = total_num_combinations
-        for appliance in appliance_list:
-            centroids = model[appliance]
-            n_states = len(centroids)
-            factor /=  n_states
-            states_per_factor = int(round(states[i] / factor))
-            predicted_state = states_per_factor % n_states
-            co_states[appliance][i] = predicted_state
-            co_power[appliance][i] = centroids[predicted_state]
-
-    return co_states, co_power
