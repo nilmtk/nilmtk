@@ -262,6 +262,18 @@ class MeterGroup(object):
         _build_wiring_graph(self.meters)
         return wiring_graph
 
+    def draw_wiring_graph(self):
+        graph = self.wiring_graph()
+        labels = {}
+        for meter in graph.nodes():
+            if isinstance(meter, ElecMeter):
+                labels[meter] = meter.identifier.instance
+            else:
+                metergroup = meter
+                meter_instances = [m.identifier.instance for m in metergroup.meters]
+                labels[meter] = meter_instances
+        nx.draw(graph, labels=labels)        
+
     def power_series(self, **kwargs):
         """Sum together all meters and return power Series.
 
