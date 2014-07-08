@@ -38,13 +38,15 @@ class DataStore(object):
 
 
 class HDFDataStore(DataStore):
-    def __init__(self, filename):
+    def __init__(self, filename, mode='r'):
         """
         Parameters
         ----------
         filename : string
+        mode : string
+            File open mode.  e.g. 'r' or 'w'
         """
-        self.store = pd.HDFStore(filename, 'r')
+        self.store = pd.HDFStore(filename, mode=mode)
         super(HDFDataStore, self).__init__()
 
     def load(self, key, cols=None, periods=None, n_look_ahead_rows=10,

@@ -247,6 +247,9 @@ class MeterGroup(object):
         s += ")"
         return s
 
+    def instance(self):
+        return tuple([meter.instance() for meter in self.meters])
+
     def wiring_graph(self):
         """Returns a networkx.DiGraph of connections between meters."""
         wiring_graph = nx.DiGraph()

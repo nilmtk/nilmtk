@@ -73,6 +73,12 @@ class ElecMeter(Hashable):
     def key(self):
         return self.metadata['data_location']
 
+    def instance(self):
+        if self.identifier is None:
+            return
+        else:
+            return self.identifier.instance
+
     def upstream_meter(self):
         """
         Returns

@@ -29,7 +29,8 @@ class CombinatorialOptimisation(object):
     Attributes
     ----------
     model : dict
-        Each key is the ApplianceID for the dominant appliance.
+        Each key is either the instance integer for an ElecMeter, 
+        or a tuple of instances for a MeterGroup.
         Each value is a sorted list of power in different states.
     """
 
@@ -58,11 +59,6 @@ class CombinatorialOptimisation(object):
         # TODO: Preprocessing!
         for i, meter in enumerate(metergroup.submeters()):
 
-            # Find dominant appliance for this meter
-            dominant_appliance = meter.dominant_appliance()
-            if dominant_appliance is None:
-                raise RuntimeError('No dominant appliance for {}'.format(meter))
-
             # Load data and train model
             preprocessing = [] # TODO
             for chunk in meter.power_series(preprocessing=preprocessing):
@@ -70,15 +66,13 @@ class CombinatorialOptimisation(object):
                 data = _transform_data(chunk)
 
                 # Find clusters
-                cluster_centers = _apply_clustering(data, max_num_clusters)
-                flattened = cluster_centers.flatten()
-                flattened = np.append(flattened, 0)
-                centroids = np.sort(flattened)
-                centroids = centroids.astype(np.int) # TODO: round
-                centroids = list(set(centroids.tolist())) # TODO: is np.unique() faster?
+                centroids = _apply_clustering(data, max_num_clusters)
+                centroids = np.append(centroids, 0) # add 'off' state
+                centroids = centroids.astype(np.int)
+                centroids = list(set(centroids.tolist()))
                 centroids.sort()
-                # TODO: Merge clusters
-                self.model[dominant_appliance.identifier] = centroids
+                # TODO: Merge similar clusters
+                self.model[meter.instance()] = centroids
                 
                 break # TODO handle multiple chunks per appliance
 
@@ -90,28 +84,15 @@ class CombinatorialOptimisation(object):
         ----------
         mains : nilmtk.ElecMeter or nilmtk.MeterGroup
         output_datastore : nilmtk.DataStore subclass
-            For storing appliance power predictions.
+            For storing chan power predictions.
         **load_kwargs : key word arguments
             Passed to `mains.power_series(**kwargs)`
         '''
-        # Find appliances which have more than one state. For others we do
-        # not need to decode; they have only a single state. This can simplify
-        # the amount of computations needed
 
-        multi_state_appliances = []
-        single_state_appliances = []
-        for appliance, model in self.model.iteritems():
-            n_states = len(model)
-            if n_states > 1:
-                multi_state_appliances.append(appliance)
-            else:
-                single_state_appliances.append(appliance)
-
-        multi_state_appl_centroids = [self.model[appliance]
-                                      for appliance in multi_state_appliances]
-        state_combinations = np.array(list(product(*multi_state_appl_centroids)))
+        centroids = self.model.values()
+        state_combinations = np.array(list(product(*centroids)))
         # state_combinations is a 2D array
-        # each column is an appliance
+        # each column is a chan
         # each row is a possible combination of power demand values e.g.
         # (0, 0, 0, 0), (0, 0, 0, 100), (0, 0, 50, 0), (0, 0, 50, 100), ...
 
@@ -121,35 +102,22 @@ class CombinatorialOptimisation(object):
 
         # TODO preprocessing??
         for chunk in mains.power_series(**load_kwargs):
-            n_samples = len(chunk)
-            predicted_power = {}
 
-            # Multi-state appliances
             indices_of_state_combinations, residual_power = find_nearest(
                 summed_power_of_each_combination, chunk.values)
 
-            for i, appliance in enumerate(multi_state_appliances):
-                predicted_power[appliance] = state_combinations[
+            for i, chan in enumerate(self.model.keys()):
+                predicted_power = state_combinations[
                     indices_of_state_combinations, i].flatten()
-
-            # Single state appliances
-            for appliance in single_state_appliances:
-                appliance_power = self.model[appliance][0]
-                predicted_power[appliance] = (np.zeros(n_samples, dtype=np.int)
-                                              + appliance_power)
-
-            predictions_for_chunk = pd.DataFrame(predicted_power, 
-                                                 index=chunk.index)
-
-            break # TODO: remove!
-
-        return predictions_for_chunk
-
+                if isinstance(chan, tuple):
+                    chan = '_'.join([str(element) for element in chan])
+                output_datastore.append('/building1/elec/meter{}'.format(chan),
+                                        pd.Series(predicted_power,
+                                                  index=chunk.index))
             # TODO: save predicted_states
             #   * need to store all metadata from training to re-use
             #   * need to know meter instance and building
             #   * save metadata. Need to be careful about dual supply appliances.
-            #   * save predictions, including state.
 
     def export_model(self, filename):
         model_copy = {}
@@ -236,4 +204,4 @@ def _apply_clustering(X, max_num_clusters=3):
             else:
                 return np.array([0])
 
-    return k_means_cluster_centers[num_clus]
+    return k_means_cluster_centers[num_clus].flatten()
