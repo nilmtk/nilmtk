@@ -47,7 +47,8 @@ class HDFDataStore(DataStore):
         self.store = pd.HDFStore(filename, 'r')
         super(HDFDataStore, self).__init__()
 
-    def load(self, key, cols=None, periods=None, n_look_ahead_rows=10):
+    def load(self, key, cols=None, periods=None, n_look_ahead_rows=10,
+             chunksize=1000000):
         """
         Parameters
         ----------
@@ -59,6 +60,7 @@ class HDFDataStore(DataStore):
             defines the time periods to load.  If `self.window` is enabled
             then each `period` will be intersected with `self.window`.
         n_look_ahead_rows : int, optional, defaults to 10
+        chunksize : int, optional
 
         Returns
         ------- 
@@ -83,7 +85,7 @@ class HDFDataStore(DataStore):
         ------
         MemoryError if we try to load too much data.
         """
-        CHUNKSIZE = 1000000 # TODO: calculate this based on physical 
+        # TODO: calculate chunksize default based on physical 
         # memory installed and number of columns
 
         # Make sure key has a slash at the front but not at the end.
@@ -100,7 +102,7 @@ class HDFDataStore(DataStore):
             else:
                 terms = window_intersect.query_terms('window_intersect')
                 generator = self.store.select(key=key, cols=cols, where=terms,
-                                              chunksize=CHUNKSIZE).__iter__()
+                                              chunksize=chunksize).__iter__()
 
             for data in generator:
                 if cols == ['index']:
