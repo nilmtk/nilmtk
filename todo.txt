@@ -1,42 +1,43 @@
-* do combinatorial_optimisation algorithm
-  * See TODO at bottom of 'disaggregate' function.
-  * needs to dump appliance estimates to disk as it goes
-  * use same hierarchy as power data.  Because we can still learn
-    models of meters with multiple appliances etc.
+* Metrics (see notes in chaining_generators notebook)
+  * load predictions file metadata.  This tells us which meters to
+    load and which to group from the ground truth data.  Create
+    MeterGroups for ground truth data.  Load meter by meter, 
+    chunk by chunk.  Only load periods from ground truth that we have
+    in the predictions.
+  * Should specify preprocessing done on training data in disag
+    output???  Do we need to apply same preprocessing to test data?
+    I guess so.
+  * add appliance metadata to disag output.
 
-* Metrics (see notes in chaining_generators notebook
+* Preprocessing: 
+  instead of drop missing mains and make common index:
+  * find good sections in mains.  Only load these sections for mains 
+    and appliances
+  * resample to get everything to align.  Start from the same start
+    point. This should give everything the same index (check this).
+  * fill appliance gaps
 
-* Add notes to TODO:
+* Stats:
+  * ElecMeter.plot() and MeterGroup.plot() - how to select time? `load_kwargs`?
+  * goodsectionsresults could do with a plotting function like
+plot_missing_samples_with_rectangles
+  * check proportion_of_energy_submetered agrees with v0.1 for REDD
+  * implement energy_per_meter
+  * implement dropout_rate stats node (and think about how
+dropout_rate_per_period would work... supposedly we tell the loader
+to load small chunks (e.g. 1 minute) and then we just need to teach
+dropout_rate_results to plot like plot_missing_samples_with_bitmap.
+  * implement on durations (make sure it can work with metrics)
+  * activity distribution
+  * building.describe() and dataset.describe()
 
-  * Preprocessing: 
-    instead of drop missing mains and make common index:
-    * find good sections in mains.  Only load these sections for mains 
-      and appliances
-    * resample to get everything to align.  Start from the same start
-      point. This should give everything the same index (check this).
-    * fill appliance gaps
-
-  * Stats:
-    * ElecMeter.plot() and MeterGroup.plot() - how to select time? `load_kwargs`?
-    * goodsectionsresults could do with a plotting function like
-  plot_missing_samples_with_rectangles
-    * check proportion_of_energy_submetered agrees with v0.1 for REDD
-    * implement energy_per_meter
-    * implement dropout_rate stats node (and think about how
-  dropout_rate_per_period would work... supposedly we tell the loader
-  to load small chunks (e.g. 1 minute) and then we just need to teach
-  dropout_rate_results to plot like plot_missing_samples_with_bitmap.
-    * implement on durations (make sure it can work with metrics)
-    * activity distribution
-    * building.describe() and dataset.describe()
-
-  * train_test_split (see nilmtk.cross_validation.train_test_split in v0.1)
-  * load only required measurements
-  * automatically decide size of chunk
-  * Do we still need Hashable?  Try making ElecMeter and Appliance
-    inherit from Object.
-  * stats.totalenergy._energy_for_chunk looks wasteful. Why not, for
-    each AC type, find cumulative energy > energy > power and then
-    only run _energy_for_power_series on one column per AC type.
-* FHMM
+* train_test_split (see nilmtk.cross_validation.train_test_split in v0.1)
+* load only required measurements
+* automatically decide size of chunk
+* Do we still need Hashable?  Try making ElecMeter and Appliance
+  inherit from Object.
+* stats.totalenergy._energy_for_chunk looks wasteful. Why not, for
+  each AC type, find cumulative energy > energy > power and then
+  only run _energy_for_power_series on one column per AC type.
+* FHMM (Nipun might do this)
 
