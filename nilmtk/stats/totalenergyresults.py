@@ -31,3 +31,10 @@ class TotalEnergyResults(Results):
 
     def to_dict(self):
         return {'statistics': {'energy': self.combined().to_dict()}}
+
+    def simple(self):
+        combined = self.combined()
+        if len(combined) == 1:
+            return combined[0]
+        else:
+            return combined

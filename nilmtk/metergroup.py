@@ -439,17 +439,32 @@ class MeterGroup(object):
         return any([meter.is_site_meter() for meter in self.meters])
 
     def total_energy(self, **load_kwargs):
-        """Sums together total energy for each meter and returns a
-        single EnergyResults object.
+        """Sums together total energy for each meter.
+
+        Parameters
+        ----------
+        full_results : bool, default=False
+        **loader_kwargs : key word arguments for DataStore.load()
+
+        Returns
+        -------
+        if `full_results` is True then return TotalEnergyResults object
+        else return either a single number of, if there are multiple
+        AC types, then return a pd.Series with a row for each AC type.
         """
+        full_results = load_kwargs.pop('full_results', False)
         total_energy = None
         for meter in self.meters:
-            meter_energy = meter.total_energy(**load_kwargs)
+            meter_energy = meter.total_energy(full_results=True, **load_kwargs)
             if total_energy is None:
                 total_energy = meter_energy
             else:
                 total_energy.unify(meter_energy)
-        return total_energy
+
+        if full_results: 
+            return total_energy
+        else:
+            return total_energy.simple()
 
     def dataframe_of_meters(self, rule='1T'):
         """
@@ -471,14 +486,14 @@ class MeterGroup(object):
         """
         submeters_dict = {}
         mains = self.mains()
-        mains_good_sections = mains.good_sections().combined()
-        mains_energy = mains.total_energy(periods=mains_good_sections).combined()
+        mains_good_sections = mains.good_sections()
+        mains_energy = mains.total_energy(periods=mains_good_sections)
         energy_ac_type = select_best_ac_type(mains_energy.keys())
         energy_threshold = mains_energy[energy_ac_type] * 0.05
 
         # TODO: should iterate through 'most distal' meters
         for meter in [self.mains()] + self.meters_directly_downstream_of_mains():
-            meter_energy = meter.total_energy(periods=mains_good_sections).combined()
+            meter_energy = meter.total_energy(periods=mains_good_sections)
             meter_energy_ac_type = select_best_ac_type(meter_energy.keys(),
                                                        mains_energy.keys())
             if meter_energy[meter_energy_ac_type] < energy_threshold:
@@ -515,12 +530,12 @@ class MeterGroup(object):
         float [0,1]
         """
         mains = self.mains()
-        good_mains_sections = mains.good_sections().combined()
+        good_mains_sections = mains.good_sections()
         print("number of good sections =", len(good_mains_sections))
         submetered_energy = 0.0
         common_ac_types = None
         for meter in self.meters_directly_downstream_of_mains():
-            energy = meter.total_energy(periods=good_mains_sections).combined()
+            energy = meter.total_energy(periods=good_mains_sections)
             ac_types = set(energy.keys())
             ac_type = select_best_ac_type(ac_types, 
                                           mains.available_power_ac_types())
@@ -529,7 +544,7 @@ class MeterGroup(object):
                 common_ac_types = ac_types
             else:
                 common_ac_types = common_ac_types.intersection(ac_types)
-        mains_energy = mains.total_energy().combined()
+        mains_energy = mains.total_energy()
         ac_type = select_best_ac_type(mains_energy.keys(), common_ac_types)
         return submetered_energy / mains_energy[ac_type]
     

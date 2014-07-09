@@ -16,7 +16,6 @@ from copy import deepcopy
 METER_ID = ElecMeterID(instance=1, building=1, dataset='REDD')
 
 def check_energy_numbers(testcase, energy):
-    energy = energy.combined()
     true_active_kwh =  0.0163888888889
     testcase.assertAlmostEqual(energy['active'], true_active_kwh)
     testcase.assertAlmostEqual(energy['reactive'], true_active_kwh*0.9)
@@ -50,7 +49,7 @@ class TestEnergy(unittest.TestCase):
         energy = TotalEnergy(clipped)
         energy.run()
         energy_results = deepcopy(energy.results)
-        check_energy_numbers(self, energy_results)
+        check_energy_numbers(self, energy_results.combined())
 
 if __name__ == '__main__':
     unittest.main()

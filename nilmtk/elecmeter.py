@@ -309,31 +309,61 @@ class ElecMeter(Hashable):
         
     def total_energy(self, **loader_kwargs):
         """
+        Parameters
+        ----------
+        full_results : bool, default=False
+        **loader_kwargs : key word arguments for DataStore.load()
+
         Returns
         -------
-        nilmtk.stats.TotalEnergyResults object
+        if `full_results` is True then return TotalEnergyResults object
+        else return either a single number of, if there are multiple
+        AC types, then return a pd.Series with a row for each AC type.
         """
+        full_results = loader_kwargs.pop('full_results', False)
         source_node = self.get_source_node(**loader_kwargs)
         clipped = Clip(source_node)
         total_energy = TotalEnergy(clipped)
         total_energy.run()
-        return total_energy.results
+        if full_results: 
+            return total_energy.results
+        else:
+            return total_energy.results.simple()
         
     def dropout_rate(self):
-        """returns a DropoutRateResults object."""
+        """
+        Parameters
+        ----------
+        full_results : bool, default=False
+        **loader_kwargs : key word arguments for DataStore.load()
+
+        Returns
+        -------
+        DropoutRateResults object.
+        """
         raise NotImplementedError
         
     def good_sections(self, **loader_kwargs):
         """
+        Parameters
+        ----------
+        full_results : bool, default=False
+        **loader_kwargs : key word arguments for DataStore.load()
+
         Returns
         -------
-        nilmtk.stats.GoodSectionsResults object
+        if `full_results` is True then return nilmtk.stats.GoodSectionsResults 
+        object otherwise return list of TimeFrame objects.
         """
+        full_results = loader_kwargs.pop('full_results', False)
         source_node = self.get_source_node(**loader_kwargs)
         good_sections = GoodSections(source_node)
         good_sections.run()
-        return good_sections.results
-        
+        if full_results:
+            return good_sections.results
+        else:
+            return good_sections.results.simple()
+
     def total_on_duration(self):
         """Return timedelta"""
         raise NotImplementedError

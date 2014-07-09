@@ -39,6 +39,10 @@ class Results(object):
         """
         return copy.deepcopy(self._data)
 
+    def simple(self):
+        """Returns the simplest representation of the results."""
+        return self.combined()
+
     def append(self, timeframe, new_results):
         """Append a single result.
 

@@ -58,7 +58,6 @@ class GoodSectionsResults(Results):
             sections.extend(row_sections)
 
         sections[-1].include_end = True
-
         return sections
 
     def unify(self, other):
