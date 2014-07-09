@@ -243,3 +243,11 @@ def list_of_timeframe_dicts(timeframes):
     list of dicts
     """
     return [timeframe.to_dict() for timeframe in timeframes]
+
+
+def timeframe_from_dict(d):
+    return TimeFrame(start=d['start'], end=d['end'])
+
+
+def list_of_timeframes_from_list_of_dicts(dicts):
+    return [timeframe_from_dict(d) for d in dicts]

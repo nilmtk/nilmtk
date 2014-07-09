@@ -1,10 +1,6 @@
-
-
 * Metrics
-  * add appliance metadata to disag output so the standard 
-    DataSet mechanism can load it.
-    * appliances
-    * good sections
+  * MeterGroup needs a way to retrieve a sub-MeterGroup using a tuple
+    of meter instances.
   * in metrics, pass in predictions MeterGroup and ground truth
     MeterGroup for building.
   * need a metrics prep function which takes both MeterGroups and 
@@ -17,6 +13,7 @@
   * Should specify preprocessing done on training data in disag
     output???  Do we need to apply same preprocessing to test data?
     I guess so.
+  * TODO in combinatorial_optimisation (mostly metadata IIRC)
 
 * Preprocessing: 
   instead of drop missing mains and make common index:

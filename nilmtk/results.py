@@ -4,13 +4,14 @@ import copy
 from .timeframe import TimeFrame
 
 class Results(object):
-    """Metadata results from each node need to be assigned to a specific
+    """Stats results from each node need to be assigned to a specific
     class so we know how to combine results from multiple chunks.  For
     example, Energy can be simply summed; while dropout rate should be
     averaged, and gaps need to be merged across chunk boundaries.  Results
     objects contain a DataFrame, the index of which is the start timestamp for
     which the results are valid; the first column ('end') is the end
-    timestamp for which the results are valid.  Other columns are accumaltors for the results.
+    timestamp for which the results are valid.  Other columns are accumulators 
+    for the results.
 
     Attributes
     ----------

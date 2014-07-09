@@ -51,6 +51,7 @@ class GoodSectionsResults(Results):
             if (end_date_of_prev_row is not None and
                 end_date_of_prev_row - self.max_sample_period_td <= index <= 
                 end_date_of_prev_row and row_sections[0].start is None):
+
                 assert sections[-1].end is None
                 sections[-1].end = row_sections[0].end
                 row_sections.pop(0)

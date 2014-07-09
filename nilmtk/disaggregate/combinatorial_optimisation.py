@@ -7,7 +7,7 @@ from datetime import datetime
 from ..appliance import ApplianceID
 from ..utils import find_nearest, container_to_string
 from ..feature_detectors import cluster
-from ..timeframe import merge_timeframes, list_of_timeframe_dicts
+from ..timeframe import merge_timeframes, list_of_timeframe_dicts, TimeFrame
 
 
 # Fix the seed for repeatability of experiments
@@ -86,7 +86,7 @@ class CombinatorialOptimisation(object):
         # value is the total power demand for each combination of states.
 
         # TODO preprocessing??
-        RESAMPLE_SECONDS = 60
+        RESAMPLE_SECONDS = 60 # TODO
         timeframes = []
         building_path = '/building{}'.format(mains.building())
         mains_data_location = ('{}/elec/meter{}'
@@ -113,7 +113,7 @@ class CombinatorialOptimisation(object):
 
             # Copy mains data to disag output
             output_datastore.append(mains_data_location, chunk)
-        
+
         ##################################
         # Add metadata to output_datastore
 
@@ -144,13 +144,18 @@ class CombinatorialOptimisation(object):
                 }]                
             }
         }
+
+        merged_timeframes = merge_timeframes(timeframes, gap=RESAMPLE_SECONDS)
+        total_timeframe = TimeFrame(merged_timeframes[0].start, 
+                                    merged_timeframes[-1].end)
+
         dataset_metadata = {'name': output_name, 'date': date_now, 
-                            'meter_devices': meter_devices}
+                            'meter_devices': meter_devices,
+                            'timeframe': total_timeframe.to_dict()}
         output_datastore.save_metadata('/', dataset_metadata)
 
         # Building metadata
-        merged_timeframes = merge_timeframes(timeframes)
-
+        
         # Mains meter:
         elec_meters = {
             mains.instance(): {
@@ -158,7 +163,10 @@ class CombinatorialOptimisation(object):
                 'site_meter': True, 
                 'data_location': mains_data_location,
                 'preprocessing_applied': {}, # TODO
-                'good_sections': list_of_timeframe_dicts(merged_timeframes)
+                'statistics': {
+                    'timeframe': total_timeframe.to_dict(),
+                    'good_sections': list_of_timeframe_dicts(merged_timeframes)
+                }
             }
         }
 
@@ -172,7 +180,10 @@ class CombinatorialOptimisation(object):
                                       .format(building_path,
                                               container_to_string(chan))),
                     'preprocessing_applied': {}, # TODO
-                    'good_sections': list_of_timeframe_dicts(merged_timeframes)
+                    'statistics': {
+                        'timeframe': total_timeframe.to_dict(),
+                        'good_sections': list_of_timeframe_dicts(merged_timeframes)
+                    }
                 }
             })
 

@@ -55,7 +55,7 @@ class HDFDataStore(DataStore):
         Parameters
         ----------
         key : string, the location of a table within the DataStore.
-        cols : list of Measurements or ['index'], optional
+        cols : list of Measurements, optional
             e.g. [('power', 'active'), ('power', 'reactive'), ('voltage')]
             if not provided then will return all columns from the table.
         periods : list of nilmtk.TimeFrame objects, optional
@@ -66,12 +66,8 @@ class HDFDataStore(DataStore):
 
         Returns
         ------- 
-        Returns a generator of DataFrame objects.  Each DataFrame is:
-
-        If `cols==['index']` then 
-            each DF is a pd.DatetimeIndex
-        else 
-            returns a pd.DataFrame with extra attributes:
+        Returns a generator of DataFrame objects.  Each DataFrame is has
+            extra attributes:
                 - timeframe : TimeFrame of period intersected with self.window
                 - look_ahead : pd.DataFrame:
                     with `n_look_ahead_rows` rows.  The first row will be for
@@ -107,18 +103,10 @@ class HDFDataStore(DataStore):
                                               chunksize=chunksize).__iter__()
 
             for data in generator:
-                if cols == ['index']:
-                    data = data.index
-
                 # Load look ahead
                 if len(data.index) > 0:
-                    if cols == ['index']:
-                        where = "index>data[-1]"
-                    else:
-                        where = "index>data.index[-1]"
-
                     look_ahead_coords = self.store.select_as_coordinates(
-                        key=key, where=where)
+                        key=key, where="index>data.index[-1]")
                 else:
                     look_ahead_coords = []
                 if len(look_ahead_coords) > 0:
@@ -131,10 +119,10 @@ class HDFDataStore(DataStore):
                     data.look_ahead = pd.DataFrame()
 
                 # Set timeframe
-                data.timeframe = (window_intersect if window_intersect 
-                                  else self._get_timeframe(key))
-                if len(data.look_ahead) > 0:
-                    data.timeframe.end = data.index[-1]
+                if len(data) > 0:
+                    data.timeframe = TimeFrame(data.index[0], data.index[-1])
+                else:
+                    data.timeframe = TimeFrame()
 
                 yield data
 
