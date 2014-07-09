@@ -87,13 +87,12 @@ def find_nearest(known_array, test_array):
     return indices, residuals
 
 
-def container_to_string(tup, sep='_'):
-    if isinstance(tup, str):
-        return tup
+def container_to_string(container, sep='_'):
+    if isinstance(container, str):
+        string = container
     else:
         try:
-            string = sep.join([str(element) for element in tup])
+            string = sep.join([str(element) for element in container])
         except TypeError:
-            string = str(tup)
-
+            string = str(container)
     return string
