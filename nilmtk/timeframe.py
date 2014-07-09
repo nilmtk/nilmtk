@@ -230,3 +230,16 @@ def merge_timeframes(timeframes, gap=0):
             merged.append(timeframe)
 
     return merged
+
+
+def list_of_timeframe_dicts(timeframes):
+    """
+    Parameters
+    ----------
+    timeframes : list of TimeFrame objects
+
+    Returns
+    -------
+    list of dicts
+    """
+    return [timeframe.to_dict() for timeframe in timeframes]

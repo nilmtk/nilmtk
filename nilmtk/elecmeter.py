@@ -79,6 +79,12 @@ class ElecMeter(Hashable):
         else:
             return self.identifier.instance
 
+    def building(self):
+        if self.identifier is None:
+            return
+        else:
+            return self.identifier.building
+
     def upstream_meter(self):
         """
         Returns

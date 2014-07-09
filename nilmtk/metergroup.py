@@ -250,6 +250,16 @@ class MeterGroup(object):
     def instance(self):
         return tuple([meter.instance() for meter in self.meters])
 
+    def building(self):
+        buildings = set([meter.building() for meter in self.meters])
+        n_buildings = len(buildings)
+        if n_buildings == 1:
+            return list(buildings)[0]
+        elif n_buildings == 0:
+            return
+        else:
+            return tuple(buildings)
+
     def wiring_graph(self):
         """Returns a networkx.DiGraph of connections between meters."""
         wiring_graph = nx.DiGraph()
@@ -290,15 +300,13 @@ class MeterGroup(object):
 
         Returns
         -------
-        generator of pd.Series of power measurements.        
-        """
+        generator of pd.Series of power measurements.
 
-        # TODO
-        # What happens if indicies don't match?  Automatically re-sample?  Or down-sample?
-        # Probably best to raise exception and make user pre-process???  How?
-        # lighting.resample('6S').power_series() ???? or
-        # lighting.preprocessing = [Resample('6S')]
-        # lighting.power_series()
+        Note
+        ----
+        If meters do not align then resample (by passing in 
+        `preprocessing=[Resample()]`) to get multiple meters to align.
+        """
 
         # Get a list of generators
         generators = []
@@ -310,11 +318,17 @@ class MeterGroup(object):
                 chunk = next(generators[0])
             except StopIteration:
                 break
+
+            timeframe = chunk.timeframe
             for generator in generators[1:]:
-                chunk += next(generator)
-            yield chunk.dropna()
-        
-            
+                another_chunk = next(generator)
+                timeframe = timeframe.intersect(another_chunk.timeframe)
+                chunk += another_chunk
+
+            chunk = chunk.dropna()
+            chunk.timeframe = timeframe
+            yield chunk
+
     def mains(self):
         """
         Returns

@@ -85,3 +85,15 @@ def find_nearest(known_array, test_array):
     indices = index_sorted[np.where(diff1 <= diff2, idx3, idx2)]
     residuals = test_array - known_array[indices]
     return indices, residuals
+
+
+def container_to_string(tup, sep='_'):
+    if isinstance(tup, str):
+        return tup
+    else:
+        try:
+            string = sep.join([str(element) for element in tup])
+        except TypeError:
+            string = str(tup)
+
+    return string

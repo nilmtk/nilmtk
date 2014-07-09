@@ -3,9 +3,12 @@ import pandas as pd
 from sklearn.utils.extmath import cartesian
 import numpy as np
 import json
+from datetime import datetime
 from ..appliance import ApplianceID
-from ..utils import find_nearest
+from ..utils import find_nearest, container_to_string
 from ..feature_detectors import cluster
+from ..timeframe import merge_timeframes, list_of_timeframe_dicts
+
 
 # Fix the seed for repeatability of experiments
 SEED = 42
@@ -57,11 +60,19 @@ class CombinatorialOptimisation(object):
         Parameters
         ----------
         mains : nilmtk.ElecMeter or nilmtk.MeterGroup
-        output_datastore : nilmtk.DataStore subclass
-            For storing chan power predictions.
+        output_datastore : instance of nilmtk.DataStore subclass
+            For storing power predictions from disaggregation algorithm.
+        output_name : string, optional
+            The `name` to use in the metadata for the `output_datastore`.
+            e.g. some sort of name for this experiment.  Defaults to 
+            "NILMTK_CO_<date>"
         **load_kwargs : key word arguments
             Passed to `mains.power_series(**kwargs)`
         '''
+
+        # Extract output_name from load_kwargs
+        date_now = datetime.now().isoformat().split('.')[0]
+        output_name = load_kwargs.pop('output_name', 'NILMTK_CO_' + date_now)
 
         centroids = self.model.values()
         state_combinations = cartesian(centroids)
@@ -75,23 +86,101 @@ class CombinatorialOptimisation(object):
         # value is the total power demand for each combination of states.
 
         # TODO preprocessing??
+        RESAMPLE_SECONDS = 60
+        timeframes = []
+        mains_data_location = ('/building{}/elec/meter{}'
+                               .format(mains.building(), 
+                                       container_to_string(mains.instance())))
         for chunk in mains.power_series(**load_kwargs):
 
+            # Start disaggregation
             indices_of_state_combinations, residual_power = find_nearest(
                 summed_power_of_each_combination, chunk.values)
 
             for i, chan in enumerate(self.model.keys()):
                 predicted_power = state_combinations[
                     indices_of_state_combinations, i].flatten()
-                if isinstance(chan, tuple):
-                    chan = '_'.join([str(element) for element in chan])
-                output_datastore.append('/building1/elec/meter{}'.format(chan),
-                                        pd.Series(predicted_power,
-                                                  index=chunk.index))
-            # TODO: save predicted_states
-            #   * need to store all metadata from training to re-use
-            #   * need to know meter instance and building
-            #   * save metadata. Need to be careful about dual supply appliances.
+                chan = container_to_string(chan)
+                output_datastore.append('/building{}/elec/meter{}'
+                                        .format(mains.building(), chan),
+                                        pd.DataFrame(predicted_power,
+                                                     index=chunk.index,
+                                                     columns=chunk.columns))
+            # Record metadata
+            timeframes.append(chunk.timeframe)
+            measurement = chunk.columns[0]
+
+            # Copy mains data to disag output
+            output_datastore.append(mains_data_location, chunk)
+        
+        ##################################
+        # Add metadata to output_datastore
+
+        # TODO: `preprocessing_applied` for all meters
+        # TODO: appliance metadata
+        # TODO: split this metadata code into a separate function
+
+        # DataSet and MeterDevice metadata:
+        meter_devices = {
+            'CO': {
+                'model': 'CO',
+                'sample_period': RESAMPLE_SECONDS,
+                'max_sample_period': RESAMPLE_SECONDS,
+                'measurements': [{
+                    'physical_quantity': measurement[0],
+                    'type': measurement[1] 
+                }]
+            },
+            'mains': {
+                'model': 'mains',
+                'sample_period': RESAMPLE_SECONDS,
+                'max_sample_period': RESAMPLE_SECONDS,
+                'measurements': [{
+                    'physical_quantity': measurement[0],
+                    'type': measurement[1] 
+                }]                
+            }
+        }
+        dataset_metadata = {'name': output_name, 'date': date_now, 
+                            'meter_devices': meter_devices}
+        output_datastore.save_metadata('/', dataset_metadata)
+
+        # Building metadata
+        merged_timeframes = merge_timeframes(timeframes)
+
+        # Mains meter:
+        elec_meters = {
+            mains.instance(): {
+                'device_model': 'mains', 
+                'site_meter': True, 
+                'data_location': mains_data_location,
+                'preprocessing_applied': {}, # TODO
+                'good_sections': list_of_timeframe_dicts(merged_timeframes)
+            }
+        }
+
+        # Submeters:
+        for chan in self.model.keys():
+            elec_meters.update({
+                chan: {
+                    'device_model': 'CO',
+                    'submeter_of': mains.instance(),
+                    'data_location': ('/building{}/elec/meter{}'
+                                      .format(mains.building(), 
+                                              container_to_string(chan))),
+                    'preprocessing_applied': {}, # TODO
+                    'good_sections': list_of_timeframe_dicts(merged_timeframes)
+                }
+            })
+
+        # Appliances:
+        appliances = [] # TODO
+
+        building_metadata = {
+            'instance': mains.building(),
+            'elec_meters': elec_meters,
+            'appliances': appliances
+        }
 
     def export_model(self, filename):
         model_copy = {}
