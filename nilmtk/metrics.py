@@ -1,7 +1,12 @@
+from __future__ import print_function, division
+import numpy as np
+import pandas as pd
+from sklearn.metrics import f1_score
+
 '''Metrics to compare disaggregation performance of various algorithms
 
 Notation
------------
+--------
 
 Below is the notation used to mathematically define each metric. 
 
@@ -20,19 +25,9 @@ Below is the notation used to mathematically define each metric.
 :math:`x^{(n)}_t` - ground truth state of appliance :math:`n` in time slice :math:`t`.
 
 :math:`\\hat{x}^{(n)}_t` - estimated state of appliance :math:`n` in time slice :math:`t`.
-
-Functions
------------
-
 '''
 
-
-import numpy as np
-import pandas as pd
-from sklearn.metrics import f1_score
-
-
-def error_energy(predicted_power, df_appliances_ground_truth):
+def error_in_assigned_energy(predicted_power, df_appliances_ground_truth):
     '''Compute error in assigned energy
 
     # TODO: Give a vanilla example
@@ -41,7 +36,7 @@ def error_energy(predicted_power, df_appliances_ground_truth):
         error^{(n)} = 
         \\left | \\sum_t y^{(n)}_t - \\sum_t \\hat{y}^{(n)}_t \\right |
 
-    Attributes
+    Parameters
     ----------
 
     predicted_power: Pandas DataFrame of type {appliance :
@@ -76,7 +71,7 @@ def fraction_energy_assigned_correctly(predicted_power, df_appliances_ground_tru
         \\frac{\\sum_n \\hat{y}}{\\sum_{n,t} \\hat{y}} 
         \\right )
 
-    Attributes
+    Parameters
     ----------
 
     predicted_power: Pandas DataFrame of type {appliance :
@@ -122,7 +117,7 @@ def mean_normalized_error_power(predicted_power, df_appliances_ground_truth):
         { \\sum_t {\\left | y_t^{(n)} - \\hat{y}_t^{(n)} \\right |} }
         { \\sum_t y_t^{(n)} }
 
-    Attributes
+    Parameters
     ----------
 
     predicted_power: Pandas DataFrame of type {appliance :
@@ -157,7 +152,7 @@ def rms_error_power(predicted_power, df_appliances_ground_truth):
     .. math::
             error^{(n)} = \\sqrt{ \\frac{1}{T} \\sum_t{ \\left ( y_t - \\hat{y}_t \\right )^2 } }
 
-    Attributes
+    Parameters
     ----------
 
     predicted_power: Pandas DataFrame of type {appliance :
@@ -185,7 +180,7 @@ def powers_to_states(powers):
     
     # TODO: Give a vanilla example
 
-    Attributes
+    Parameters
     ----------
 
     powers: Pandas DataFrame of type {appliance :
@@ -210,7 +205,7 @@ def confusion_matrices(predicted_states, ground_truth_states):
 
     # TODO: Give a vanilla example
 
-    Attributes
+    Parameters
     ----------
 
     predicted_state: Pandas DataFrame of type {appliance :
@@ -259,7 +254,7 @@ def tp_fp_fn_tn(predicted_states, ground_truth_states):
         \\sum_{t}
         and \\left ( x^{(n)}_t = off, \\hat{x}^{(n)}_t = off \\right )
 
-    Attributes
+    Parameters
     ----------
 
     predicted_state: Pandas DataFrame of type {appliance :
@@ -299,7 +294,7 @@ def tpr_fpr(predicted_states, ground_truth_states):
         
         FPR^{(n)} = \\frac{FP}{\\left ( FP + TN \\right )}
 
-    Attributes
+    Parameters
     ----------
 
     predicted_state: Pandas DataFrame of type {appliance :
@@ -331,7 +326,7 @@ def precision_recall(predicted_states, ground_truth_states):
         
         Recall^{(n)} = \\frac{TP}{\\left ( TP + FN \\right )}
 
-    Attributes
+    Parameters
     ----------
 
     predicted_state: Pandas DataFrame of type {appliance :
@@ -363,7 +358,7 @@ def f_score(predicted_power, ground_truth_power):
             {2 * Precision * Recall}
             {Precision + Recall}
 
-    Attributes
+    Parameters
     ----------
 
     predicted_state: Pandas DataFrame of type {appliance :
@@ -402,7 +397,7 @@ def hamming_loss(predicted_state, ground_truth_state):
         \\frac{1}{N} \\sum_{n}
         xor \\left ( x^{(n)}_t, \\hat{x}^{(n)}_t \\right )
 
-    Attributes
+    Parameters
     ----------
 
     predicted_state: Pandas DataFrame of type {appliance :

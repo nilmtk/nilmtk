@@ -1,5 +1,9 @@
-* Metrics (see notes in chaining_generators notebook)
-  * load predictions file metadata.  This tells us which meters to
+* Metrics
+  * add appliance metadata to disag output so the standard 
+    DataSet mechanism can load it.
+  * in metrics, pass in predictions MeterGroup and ground truth meter
+    group for building.
+  * This tells us which meters to
     load and which to group from the ground truth data.  Create
     MeterGroups for ground truth data.  Load meter by meter, 
     chunk by chunk.  Only load periods from ground truth that we have
@@ -7,7 +11,6 @@
   * Should specify preprocessing done on training data in disag
     output???  Do we need to apply same preprocessing to test data?
     I guess so.
-  * add appliance metadata to disag output.
 
 * Preprocessing: 
   instead of drop missing mains and make common index:

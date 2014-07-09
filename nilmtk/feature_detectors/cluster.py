@@ -64,7 +64,8 @@ def _transform_data(data):
     if n_samples < MIN_NUMBER_OF_SAMPLES:
         return np.zeros((MAX_NUMBER_OF_SAMPLES, 1))
     elif n_samples > MAX_NUMBER_OF_SAMPLES:
-        # Randomly subsample (why not smoothly downsample? - Jack)
+        # Randomly subsample (we don't want to smoothly downsample
+        # because that is likely to change the values)
         random_indices = np.random.randint(0, n_samples, MAX_NUMBER_OF_SAMPLES)
         resampled = data_above_thresh[random_indices]
         return resampled.reshape(MAX_NUMBER_OF_SAMPLES, 1)
