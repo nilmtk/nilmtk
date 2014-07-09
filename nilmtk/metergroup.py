@@ -102,7 +102,7 @@ class MeterGroup(object):
     def __getitem__(self, key):
         """Get a single meter.
         
-        Three formats for `key` are accepted:
+        These formats for `key` are accepted:
         * [1] - retrieves meter instance 1, raises Exception if there are 
                 more than one meter with this instance, raises KeyError
                 if none are found.
@@ -115,7 +115,7 @@ class MeterGroup(object):
 
         Returns
         -------
-        Meter
+        ElecMeter
         """
         if isinstance(key, str):
             # default to get first meter
@@ -184,7 +184,7 @@ class MeterGroup(object):
         -------
         new MeterGroup of selected meters.
 
-        Plans for the future (not implemented yet!)
+        Ideas for the future (not implemented yet!)
         -------------------------------------------
 
         * select(category=['ict', 'lighting'])
@@ -226,7 +226,33 @@ class MeterGroup(object):
                 selected_meters.append(meter)
 
         return MeterGroup(selected_meters)
-                
+
+    @classmethod
+    def from_all_meters_in_dataset(cls, meter_ids):
+        """
+        Parameters
+        ----------
+        meter_ids : list or tuple
+            Each element is an ElecMeterID or 
+            a tuple of ElecMeterIDs (to make a nested MeterGroup)
+
+        Returns
+        -------
+        MeterGroup
+        """
+        assert isinstance(meter_ids, (tuple, list))
+        meter_ids = list(set(meter_ids)) # make unique
+        meters = []
+        for meter_id in meter_ids:
+            if isinstance(meter_id, ElecMeterID):
+                meters.append(ElecMeter.all_meters[meter_id])
+            elif isinstance(meter_id, tuple):
+                metergroup = MeterGroup.from_all_meters_in_dataset(meter_id)
+                meters.append(metergroup)
+            else:
+                raise TypeError()
+        return MeterGroup(meters)
+
     def __eq__(self, other):
         if isinstance(other, MeterGroup):
             return other.meters == self.meters

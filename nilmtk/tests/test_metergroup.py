@@ -89,6 +89,21 @@ class TestMeterGroup(unittest.TestCase):
         self.assertIsInstance(mg['washer dryer'], MeterGroup)
         self.assertIsInstance(mg['fridge'], ElecMeter)
 
+    def test_from_all_meters_in_dataset(self):
+        meters = []
+        for i in range(1,6):
+            meters.append(ElecMeter(meter_id=ElecMeterID(i, 1, None)))
+            
+        mg = MeterGroup.from_all_meters_in_dataset([
+            ElecMeterID(1,1,None),
+            (ElecMeterID(2,1,None), 
+             (ElecMeterID(3,1,None), ElecMeterID(4,1,None), ElecMeterID(5,1,None)))
+        ])
+
+        self.assertIs(mg.meters[0], meters[0])
+        self.assertIs(mg.meters[1].meters[0], meters[1])
+        self.assertEqual(len(mg.meters[1].meters[1].meters), 3)
+        self.assertEqual(len(mg.meters), 2)
 
 if __name__ == '__main__':
     unittest.main()

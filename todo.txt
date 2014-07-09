@@ -1,6 +1,4 @@
 * Metrics
-  * MeterGroup needs a way to retrieve a sub-MeterGroup using a tuple
-    of meter instances.
   * in metrics, pass in predictions MeterGroup and ground truth
     MeterGroup for building.
   * need a metrics prep function which takes both MeterGroups and 
