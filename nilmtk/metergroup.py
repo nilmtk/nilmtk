@@ -471,14 +471,14 @@ class MeterGroup(object):
         """
         submeters_dict = {}
         mains = self.mains()
-        mains_good_sections = mains.good_sections().combined
-        mains_energy = mains.total_energy(periods=mains_good_sections).combined
+        mains_good_sections = mains.good_sections().combined()
+        mains_energy = mains.total_energy(periods=mains_good_sections).combined()
         energy_ac_type = select_best_ac_type(mains_energy.keys())
         energy_threshold = mains_energy[energy_ac_type] * 0.05
 
         # TODO: should iterate through 'most distal' meters
         for meter in [self.mains()] + self.meters_directly_downstream_of_mains():
-            meter_energy = meter.total_energy(periods=mains_good_sections).combined
+            meter_energy = meter.total_energy(periods=mains_good_sections).combined()
             meter_energy_ac_type = select_best_ac_type(meter_energy.keys(),
                                                        mains_energy.keys())
             if meter_energy[meter_energy_ac_type] < energy_threshold:
@@ -515,12 +515,12 @@ class MeterGroup(object):
         float [0,1]
         """
         mains = self.mains()
-        good_mains_sections = mains.good_sections().combined
+        good_mains_sections = mains.good_sections().combined()
         print("number of good sections =", len(good_mains_sections))
         submetered_energy = 0.0
         common_ac_types = None
         for meter in self.meters_directly_downstream_of_mains():
-            energy = meter.total_energy(periods=good_mains_sections).combined
+            energy = meter.total_energy(periods=good_mains_sections).combined()
             ac_types = set(energy.keys())
             ac_type = select_best_ac_type(ac_types, 
                                           mains.available_power_ac_types())
@@ -529,7 +529,7 @@ class MeterGroup(object):
                 common_ac_types = ac_types
             else:
                 common_ac_types = common_ac_types.intersection(ac_types)
-        mains_energy = mains.total_energy().combined
+        mains_energy = mains.total_energy().combined()
         ac_type = select_best_ac_type(mains_energy.keys(), common_ac_types)
         return submetered_energy / mains_energy[ac_type]
     

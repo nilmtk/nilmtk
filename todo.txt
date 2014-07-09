@@ -1,3 +1,7 @@
+* ElecMeter.stats(full_results=False)... and add method to each stats
+  class to return simply results where possible.
+
+
 * Metrics
   * in metrics, pass in predictions MeterGroup and ground truth
     MeterGroup for building.

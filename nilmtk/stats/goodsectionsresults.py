@@ -27,11 +27,9 @@ class GoodSectionsResults(Results):
         """
         super(GoodSectionsResults, self).append(timeframe, new_results)
 
-    @property
     def last_results(self):
         return self._data['sections'][-1]
 
-    @property
     def combined(self):
         """Merges together any good sections which span multiple segments,
         as long as those segments are adjacent 
@@ -68,7 +66,7 @@ class GoodSectionsResults(Results):
         super(GoodSectionsResults, self).unify(other)
 
     def to_dict(self):
-        good_sections = self.combined
+        good_sections = self.combined()
         good_sections_list_of_dicts = [timeframe.to_dict() 
                                        for timeframe in good_sections]
         return {'statistics': {'good_sections': good_sections_list_of_dicts}}

@@ -20,9 +20,9 @@ class TestEnergyResults(unittest.TestCase):
         er.append(tf, {'apparent':40})
         tf2 = TimeFrame('2012-01-02','2012-01-03')
         er.append(tf2, {'apparent':40, 'reactive':50, 'active':30})
-        self.assertEqual(er.combined['apparent'], 80)
-        self.assertEqual(er.combined['reactive'], 50)
-        self.assertEqual(er.combined['active'], 30)
+        self.assertEqual(er.combined()['apparent'], 80)
+        self.assertEqual(er.combined()['reactive'], 50)
+        self.assertEqual(er.combined()['active'], 30)
 
         # Try a junk measurement name
         tf3 = TimeFrame('2012-01-03','2012-01-04')

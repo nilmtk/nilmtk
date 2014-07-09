@@ -56,9 +56,9 @@ def error_in_assigned_energy(predictions, ground_truth):
     for meter in predictions.meters:
         ground_truth_meter_identifier = meter.identifier._replace(dataset=ground_truth.dataset())
         ground_truth_meter = ground_truth[ground_truth_meter_identifier]
-        sections = meter.good_sections().combined
-        ground_truth_energy = ground_truth_meter.total_energy(periods=sections).combined.values[0]
-        predicted_energy = meter.total_energy(periods=sections).combined.values[0]
+        sections = meter.good_sections().combined()
+        ground_truth_energy = ground_truth_meter.total_energy(periods=sections).combined().values[0]
+        predicted_energy = meter.total_energy(periods=sections).combined().values[0]
         errors[meter.instance()] = np.abs(predicted_energy - ground_truth_energy)
     return errors
 

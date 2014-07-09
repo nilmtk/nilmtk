@@ -24,7 +24,6 @@ class Results(object):
     def __init__(self):
         self._data = pd.DataFrame(columns=['end'])
 
-    @property
     def combined(self):
         """Return all results from each chunk combined.  Either return single
         float for all periods or a dict where necessary, e.g. if
@@ -34,7 +33,6 @@ class Results(object):
         """
         return self._data[self._columns_with_end_removed()].sum()
 
-    @property
     def per_period(self):
         """return a DataFrame.  Index is period start.  
         Columns are: end and <stat name>
