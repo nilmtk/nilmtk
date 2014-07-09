@@ -5,7 +5,7 @@ from warnings import warn
 from .elecmeter import ElecMeter, ElecMeterID
 from .appliance import Appliance
 from .datastore import join_key
-from .utils import tree_root, nodes_adjacent_to_root
+from .utils import tree_root, nodes_adjacent_to_root, simplest_type_for
 from .measurement import select_best_ac_type
 
 class MeterGroup(object):
@@ -99,23 +99,28 @@ class MeterGroup(object):
         else:
             raise RuntimeError("More than one dominant appliance in MeterGroup!")
 
+    def nested_metergroups(self):
+        return [m for m in self.meters if isinstance(m, MeterGroup)]
+
     def __getitem__(self, key):
         """Get a single meter.
         
         These formats for `key` are accepted:
         * [1] - retrieves meter instance 1, raises Exception if there are 
                 more than one meter with this instance, raises KeyError
-                if none are found.
+                if none are found.  If meter instance 1 is in a nested MeterGroup
+                then retrieve the ElecMeter, not the MeterGroup.
         * [ElecMeterID(1, 1, 'REDD')] - retrieves meter with specified meter ID
         * [[ElecMeterID(1, 1, 'REDD')], [ElecMeterID(2, 1, 'REDD')]] - retrieves
           MeterGroup containing meter instances 1 and 2.
+        * [ElecMeterID((1,2), 1, 'REDD')] - retrieve MeterGroup with meters 1 & 2
         * ['toaster']    - retrieves meter or group upstream of toaster instance 1
         * ['toaster', 2] - retrieves meter or group upstream of toaster instance 2
         * [{'dataset': 'redd', 'building': 3, 'type': 'toaster', 'instance': 2}]
 
         Returns
         -------
-        ElecMeter
+        ElecMeter or MeterGroup
         """
         if isinstance(key, str):
             # default to get first meter
@@ -124,6 +129,14 @@ class MeterGroup(object):
             for meter in self.meters:
                 if meter.identifier == key:
                     return meter
+            if isinstance(key.instance, tuple):
+                # find meter group from a key of the form
+                # ElecMeterID(instance=(1,2), building=1, dataset='REDD')
+                for group in self.nested_metergroups():
+                    if (set(group.instance()) == set(key.instance) and
+                        group.building() == key.building and
+                        group.dataset() == key.dataset):
+                        return group
             raise KeyError(key)
         elif isinstance(key, list): # find MeterGroup from list of ElecMeterIDs
             if not all([isinstance(item, tuple) for item in key]):
@@ -149,9 +162,14 @@ class MeterGroup(object):
         elif isinstance(key, int) and not isinstance(key, bool):
             meters_found = []
             for meter in self.meters:
-                if (meter.identifier is not None and 
-                    meter.identifier.instance == key):
-                    meters_found.append(meter)
+                if isinstance(meter.instance(), int):
+                    if meter.instance() == key:
+                        meters_found.append(meter)
+                elif isinstance(meter.instance(), (tuple, list)):
+                    if key in meter.instance():
+                        print("Meter", key, "is in a nested meter group."
+                              " Retrieving just the ElecMeter.")
+                        meters_found.append(meter[key])
             n_meters_found = len(meters_found)
             if n_meters_found > 1:
                 raise Exception('{} meters found with instance == {}'
@@ -315,13 +333,12 @@ class MeterGroup(object):
     def building(self):
         """Returns building instance integer(s)."""
         buildings = set([meter.building() for meter in self.meters])
-        n_buildings = len(buildings)
-        if n_buildings == 1:
-            return list(buildings)[0]
-        elif n_buildings == 0:
-            return
-        else:
-            return tuple(buildings)
+        return simplest_type_for(buildings)
+
+    def dataset(self):
+        """Returns dataset string(s)."""
+        datasets = set([meter.dataset() for meter in self.meters])
+        return simplest_type_for(datasets)
 
     def wiring_graph(self):
         """Returns a networkx.DiGraph of connections between meters."""

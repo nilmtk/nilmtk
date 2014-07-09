@@ -3,6 +3,12 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import f1_score
 
+# For some reason, importing sklearn causes PyTables to raise lots
+# of DepreciatedWarnings for Pandas code.
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+
+
 '''Metrics to compare disaggregation performance of various algorithms
 
 Notation
@@ -48,10 +54,11 @@ def error_in_assigned_energy(predictions, ground_truth):
     """
     errors = {}
     for meter in predictions.meters:
-        ground_truth_meter = ground_truth[meter.instance()]
-        sections = meter.good_sections()
-        ground_truth_energy = ground_truth_meter.total_energy(timeframes=sections)
-        predicted_energy = meter.total_energy(timeframes=sections)
+        ground_truth_meter_identifier = meter.identifier._replace(dataset=ground_truth.dataset())
+        ground_truth_meter = ground_truth[ground_truth_meter_identifier]
+        sections = meter.good_sections().combined
+        ground_truth_energy = ground_truth_meter.total_energy(periods=sections).combined.values[0]
+        predicted_energy = meter.total_energy(periods=sections).combined.values[0]
         errors[meter.instance()] = np.abs(predicted_energy - ground_truth_energy)
     return errors
 

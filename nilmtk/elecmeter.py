@@ -74,16 +74,19 @@ class ElecMeter(Hashable):
         return self.metadata['data_location']
 
     def instance(self):
-        if self.identifier is None:
-            return
-        else:
-            return self.identifier.instance
+        return self._identifier_attr('instance')
 
     def building(self):
+        return self._identifier_attr('building')
+
+    def dataset(self):
+        return self._identifier_attr('dataset')
+
+    def _identifier_attr(self, attr):
         if self.identifier is None:
             return
         else:
-            return self.identifier.building
+            return getattr(self.identifier, attr)
 
     def upstream_meter(self):
         """

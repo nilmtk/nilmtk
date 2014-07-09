@@ -96,3 +96,13 @@ def container_to_string(container, sep='_'):
         except TypeError:
             string = str(container)
     return string
+
+
+def simplest_type_for(values):
+    n_values = len(values)
+    if n_values == 1:
+        return list(values)[0]
+    elif n_values == 0:
+        return
+    else:
+        return tuple(values)
