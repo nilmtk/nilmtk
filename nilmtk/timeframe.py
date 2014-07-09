@@ -28,6 +28,12 @@ class TimeFrame(object):
         self.end = end
         self.include_end = False
 
+    def clear(self):
+        self.enabled = True
+        self._start = None
+        self._end = None
+        self._empty = False
+
     @property
     def start(self):
         if self.enabled:
@@ -71,9 +77,17 @@ class TimeFrame(object):
         ----------
         gap : float or int
             Number of seconds gap allowed.
+
+        Notes
+        -----
+        Does not yet handle case where self or other is open-ended.
         """        
         assert gap >= 0
         gap_td = timedelta(seconds=gap)
+        
+        if self.empty or other.empty:
+            return False
+
         return (other.start - gap_td <= self.end <= other.start or
                 self.start - gap_td <= other.end <= self.start)
 
@@ -147,12 +161,6 @@ class TimeFrame(object):
             terms.append("index<" + ("=" if self.include_end else "")
                          + variable_name + ".end")
         return None if terms == [] else terms
-
-    def clear(self):
-        self.enabled = True
-        self._start = None
-        self._end = None
-        self._empty = False
 
     def slice(self, frame):
         """Slices `frame` using self.start and self.end.
