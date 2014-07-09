@@ -1,11 +1,17 @@
+
+
 * Metrics
   * add appliance metadata to disag output so the standard 
     DataSet mechanism can load it.
-  * in metrics, pass in predictions MeterGroup and ground truth meter
-    group for building.
-  * This tells us which meters to
-    load and which to group from the ground truth data.  Create
-    MeterGroups for ground truth data.  Load meter by meter, 
+    * appliances
+    * good sections
+  * in metrics, pass in predictions MeterGroup and ground truth
+    MeterGroup for building.
+  * need a metrics prep function which takes both MeterGroups and 
+    constructs a new MeterGroup from ground truth data: only use
+    meters from predictions, and assemble appropriate MeterGroups 
+    for split-phase appliances.
+  * Load meter by meter, 
     chunk by chunk.  Only load periods from ground truth that we have
     in the predictions.
   * Should specify preprocessing done on training data in disag

@@ -27,10 +27,9 @@ Below is the notation used to mathematically define each metric.
 :math:`\\hat{x}^{(n)}_t` - estimated state of appliance :math:`n` in time slice :math:`t`.
 '''
 
-def error_in_assigned_energy(predicted_power, df_appliances_ground_truth):
-    '''Compute error in assigned energy
 
-    # TODO: Give a vanilla example
+def error_in_assigned_energy(predictions, ground_truth):
+    """Compute error in assigned energy.
     
     .. math::
         error^{(n)} = 
@@ -38,25 +37,26 @@ def error_in_assigned_energy(predicted_power, df_appliances_ground_truth):
 
     Parameters
     ----------
-
-    predicted_power: Pandas DataFrame of type {appliance :
-         [array of predictd power]}
-
-    df_appliances_ground_truth: Pandas DataFrame of type {appliance :
-        [array of ground truth power]}
+    predictions, ground_truth : nilmtk.MeterGroup
 
     Returns
     -------
-    error: dict of type {appliance : error in assigned energy}
-    '''
-    error = {}
+    errors : dict
+        Each key is an meter instance int (or tuple for MeterGroups).
+        Each value is the absolute error in assigned energy for that appliance,
+            in kWh.
+    """
+    errors = {}
+    for meter in predictions.meters:
+        ground_truth_meter = ground_truth[meter.instance()]
+        sections = meter.good_sections()
+        ground_truth_energy = ground_truth_meter.total_energy(timeframes=sections)
+        predicted_energy = meter.total_energy(timeframes=sections)
+        errors[meter.instance()] = np.abs(predicted_energy - ground_truth_energy)
+    return errors
 
-    for appliance in predicted_power:
-        ground_truth_energy = np.sum(
-            df_appliances_ground_truth[appliance].values)
-        predicted_energy = np.sum(predicted_power[appliance].values)
-        error[appliance] = np.abs(predicted_energy - ground_truth_energy)
-    return error
+
+########## FUNCTIONS BELOW THIS LINE HAVE NOT YET CONVERTED TO NILMTK v0.2 #####
 
 
 def fraction_energy_assigned_correctly(predicted_power, df_appliances_ground_truth):
