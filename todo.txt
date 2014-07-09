@@ -3,6 +3,7 @@
     output???  Do we need to apply same preprocessing to test data?
     I guess so.
   * TODO in combinatorial_optimisation (mostly metadata IIRC)
+  * TODO in mean_normalized_error_power
 
 * Preprocessing: 
   instead of drop missing mains and make common index:

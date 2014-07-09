@@ -48,8 +48,8 @@ def error_in_assigned_energy(predictions, ground_truth):
 
     Returns
     -------
-    errors : dict
-        Each key is an meter instance int (or tuple for MeterGroups).
+    errors : pd.Series
+        Each index is an meter instance int (or tuple for MeterGroups).
         Each value is the absolute error in assigned energy for that appliance,
             in kWh.
     """
@@ -63,7 +63,7 @@ def error_in_assigned_energy(predictions, ground_truth):
         ground_truth_energy = ground_truth_meter.total_energy(periods=sections)
         predicted_energy = meter.total_energy(periods=sections)
         errors[meter.instance()] = np.abs(predicted_energy - ground_truth_energy)
-    return errors
+    return pd.Series(errors)
 
 
 def fraction_energy_assigned_correctly(predictions, ground_truth):
@@ -104,12 +104,8 @@ def fraction_energy_assigned_correctly(predictions, ground_truth):
     return sum(fractions)
 
 
-########## FUNCTIONS BELOW THIS LINE HAVE NOT YET CONVERTED TO NILMTK v0.2 #####
-
-def mean_normalized_error_power(predicted_power, df_appliances_ground_truth):
+def mean_normalized_error_power(predictions, ground_truth):
     '''Compute mean normalized error in assigned power
-
-    # TODO: Give a vanilla example
         
     .. math::
         error^{(n)} = 
@@ -119,30 +115,52 @@ def mean_normalized_error_power(predicted_power, df_appliances_ground_truth):
 
     Parameters
     ----------
-
-    predicted_power: Pandas DataFrame of type {appliance :
-         [array of predicted power]}
-
-    df_appliances_ground_truth: Pandas DataFrame of type {appliance :
-        [array of ground truth power]}
+    predictions, ground_truth : nilmtk.MeterGroup
 
     Returns
     -------
-    mne: dict of type {appliance : MNE error}
+    pd.Series
+        Each index is an meter instance int (or tuple for MeterGroups).
+        Each value is the MNE for that appliance.
     '''
 
+    # TODO: need to resample to keep things in step
     mne = {}
-    numerator = {}
-    denominator = {}
+    for meter in predictions.submeters():
+        ground_truth_meter_identifier = meter.identifier._replace(
+            dataset=ground_truth.dataset())
+        ground_truth_meter = ground_truth[ground_truth_meter_identifier]
+        sections = meter.good_sections()
+        sample_period = meter.sample_period()
+        period_alias = '{:d}S'.format(sample_period)
 
-    for appliance in predicted_power:
-        numerator[appliance] = np.sum(np.abs(predicted_power[appliance] -
-                                             df_appliances_ground_truth[appliance].values))
-        denominator[appliance] = np.sum(
-            df_appliances_ground_truth[appliance].values)
-        mne[appliance] = numerator[appliance] * 1.0 / denominator[appliance]
-    return mne
+        # TODO: preprocessing=[Resample(sample_period)])
+        pred_generator = meter.power_series(periods=sections)
+        total_diff = 0
+        sum_of_ground_truth_power = 0
+        while True:
+            try:
+                pred_chunk = next(pred_generator)
+            except StopIteration:
+                break
+            else:
+                truth_generator = ground_truth_meter.power_series(
+                    periods=[pred_chunk.timeframe], chunksize=1E9)
+                truth_chunk = next(truth_generator)
+                
+                # TODO: do this resampling in the pipeline?
+                truth_chunk = truth_chunk.resample(period_alias)
+                pred_chunk = pred_chunk.resample(period_alias)
 
+                diff = (pred_chunk.icol(0) - truth_chunk.icol(0)).dropna() 
+                total_diff += sum(abs(diff))
+                sum_of_ground_truth_power += truth_chunk.icol(0).dropna().sum()
+
+        mne[meter.instance()] = total_diff / sum_of_ground_truth_power
+
+    return pd.Series(mne)
+
+########## FUNCTIONS BELOW THIS LINE HAVE NOT YET CONVERTED TO NILMTK v0.2 #####
 
 def rms_error_power(predicted_power, df_appliances_ground_truth):
     '''Compute RMS error in assigned power

@@ -144,6 +144,11 @@ class ElecMeter(Hashable):
         else:
             return {}
 
+    def sample_period(self):
+        device = self.device
+        if device:
+            return device['sample_period']
+
     def is_site_meter(self):
         return self.metadata.get('site_meter', False)
 

@@ -341,6 +341,10 @@ class MeterGroup(object):
         datasets = set([meter.dataset() for meter in self.meters])
         return simplest_type_for(datasets)
 
+    def sample_period(self):
+        """Returns max of all meter sample periods."""
+        return max([meter.sample_period() for meter in self.meters])
+
     def wiring_graph(self):
         """Returns a networkx.DiGraph of connections between meters."""
         wiring_graph = nx.DiGraph()
