@@ -2,7 +2,7 @@
 from __future__ import print_function, division
 import unittest
 import pandas as pd
-from nilmtk.timeframe import TimeFrame
+from nilmtk.timeframe import TimeFrame, merge_timeframes
 
 class TestTimeFrame(unittest.TestCase):
     def test_date_setting(self):
@@ -126,6 +126,16 @@ class TestTimeFrame(unittest.TestCase):
         test_u("2011-01-01 00:00:00", "2011-01-15 00:00:00", 
                "2011-02-01 00:00:00", "2011-03-01 00:00:00")
 
+    def test_merge_timeframes(self):
+        tfs = [TimeFrame("2010-01-01", "2011-01-01"), 
+               TimeFrame("2011-01-01", "2011-06-01"), 
+               TimeFrame("2012-01-01", "2013-01-01")]
+
+        merged = merge_timeframes(tfs)
+        correct_answer = [TimeFrame("2010-01-01", "2011-06-01"),
+                          TimeFrame("2012-01-01", "2013-01-01")]
+        self.assertEqual(merged, correct_answer)
+        
         
 if __name__ == '__main__':
     unittest.main()

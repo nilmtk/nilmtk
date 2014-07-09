@@ -182,7 +182,7 @@ class TimeFrame(object):
             return (self.start is not None) or (self.end is not None)
 
     def __repr__(self):
-        return ("TimeFrame(start={}, end={}, empty={})"
+        return ("TimeFrame(start='{}', end='{}', empty={})"
                 .format(self.start, self.end, self.empty))
 
     def __eq__(self, other):
@@ -193,3 +193,32 @@ class TimeFrame(object):
     def to_dict(self):
         return {'start': self.start.isoformat(), 
                 'end': self.end.isoformat()}
+
+
+def merge_timeframes(timeframes, gap=0):
+    """
+    Parameters
+    ----------
+    timeframes : list of TimeFrame objects (must be sorted)
+
+    Returns
+    -------
+    merged : list of TimeFrame objects 
+        Where adjacent timeframes have been merged.
+    """
+    assert isinstance(timeframes, list)
+    assert all([isinstance(timeframe, TimeFrame) for timeframe in timeframes])
+    n_timeframes = len(timeframes)
+    if n_timeframes == 0:
+        return []
+    elif n_timeframes == 1:
+        return timeframes
+
+    merged = [timeframes[0]]
+    for timeframe in timeframes[1:]:
+        if timeframe.adjacent(merged[-1], gap):
+            merged[-1] = timeframe.union(merged[-1])
+        else:
+            merged.append(timeframe)
+
+    return merged
