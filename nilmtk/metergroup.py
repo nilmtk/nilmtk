@@ -253,6 +253,36 @@ class MeterGroup(object):
                 raise TypeError()
         return MeterGroup(meters)
 
+    @classmethod
+    def from_other_metergroup(cls, other, dataset):
+        """Assemble a new meter group using the same meter IDs and nested 
+        MeterGroups as `other`.  This is useful for preparing a ground truth
+        metergroup from a meter group of NILM predictions.
+
+        Parameters
+        ----------
+        other : MeterGroup
+        dataset : string
+            The `name` of the dataset for the ground truth.  e.g. 'REDD'
+
+        Returns
+        -------
+        MeterGroup
+        """
+        other_identifiers = other.identifier
+        new_identifiers = []
+        for other_id in other_identifiers:
+            new_id = other_id._replace(dataset=dataset)
+            if isinstance(new_id.instance, tuple):
+                nested = []
+                for instance in new_id.instance:
+                    new_nested_id = new_id._replace(instance=instance)
+                    nested.append(new_nested_id)
+                new_identifiers.append(tuple(nested))
+            else:
+                new_identifiers.append(new_id)
+        return MeterGroup.from_all_meters_in_dataset(new_identifiers)
+
     def __eq__(self, other):
         if isinstance(other, MeterGroup):
             return other.meters == self.meters
@@ -273,10 +303,17 @@ class MeterGroup(object):
         s += ")"
         return s
 
+    @property
+    def identifier(self):
+        """Returns tuple of ElecMeterIDs or nested tuples of ElecMeterIDs"""
+        return tuple([meter.identifier for meter in self.meters])
+
     def instance(self):
+        """Returns tuple of integers where each int is a meter instance."""
         return tuple([meter.instance() for meter in self.meters])
 
     def building(self):
+        """Returns building instance integer(s)."""
         buildings = set([meter.building() for meter in self.meters])
         n_buildings = len(buildings)
         if n_buildings == 1:

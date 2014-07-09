@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 from collections import OrderedDict
-from nilmtk.building import Building
-from nilmtk.datastore import join_key
+from .building import Building
+from .datastore import join_key, HDFDataStore
 
 class DataSet(object):
     """
@@ -18,9 +18,17 @@ class DataSet(object):
         See http://nilm-metadata.readthedocs.org/en/latest/dataset_metadata.html#dataset
     """
 
-    def __init__(self):
+    def __init__(self, filename=None):
+        """
+        Parameters
+        ----------
+        filename : str
+            HDF5 file
+        """
         self.buildings = OrderedDict()
         self.metadata = {}
+        if filename is not None:
+            self.load(HDFDataStore(filename))
         
     def load(self, store):
         """
