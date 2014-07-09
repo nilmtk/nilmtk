@@ -88,8 +88,9 @@ class CombinatorialOptimisation(object):
         # TODO preprocessing??
         RESAMPLE_SECONDS = 60
         timeframes = []
-        mains_data_location = ('/building{}/elec/meter{}'
-                               .format(mains.building(), 
+        building_path = '/building{}'.format(mains.building())
+        mains_data_location = ('{}/elec/meter{}'
+                               .format(building_path, 
                                        container_to_string(mains.instance())))
         for chunk in mains.power_series(**load_kwargs):
 
@@ -100,9 +101,9 @@ class CombinatorialOptimisation(object):
             for i, chan in enumerate(self.model.keys()):
                 predicted_power = state_combinations[
                     indices_of_state_combinations, i].flatten()
-                chan = container_to_string(chan)
-                output_datastore.append('/building{}/elec/meter{}'
-                                        .format(mains.building(), chan),
+                chan_str = container_to_string(chan)
+                output_datastore.append('{}/elec/meter{}'
+                                        .format(building_path, chan_str),
                                         pd.DataFrame(predicted_power,
                                                      index=chunk.index,
                                                      columns=chunk.columns))
@@ -119,6 +120,8 @@ class CombinatorialOptimisation(object):
         # TODO: `preprocessing_applied` for all meters
         # TODO: appliance metadata
         # TODO: split this metadata code into a separate function
+        # TODO: submeter measurement should probably be the mains
+        #       measurement we used to train on, not the mains measurement.
 
         # DataSet and MeterDevice metadata:
         meter_devices = {
@@ -165,8 +168,8 @@ class CombinatorialOptimisation(object):
                 chan: {
                     'device_model': 'CO',
                     'submeter_of': mains.instance(),
-                    'data_location': ('/building{}/elec/meter{}'
-                                      .format(mains.building(), 
+                    'data_location': ('{}/elec/meter{}'
+                                      .format(building_path,
                                               container_to_string(chan))),
                     'preprocessing_applied': {}, # TODO
                     'good_sections': list_of_timeframe_dicts(merged_timeframes)
@@ -181,6 +184,7 @@ class CombinatorialOptimisation(object):
             'elec_meters': elec_meters,
             'appliances': appliances
         }
+        output_datastore.save_metadata(building_path, building_metadata)
 
     def export_model(self, filename):
         model_copy = {}
