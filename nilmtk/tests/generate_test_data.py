@@ -7,6 +7,7 @@ import itertools
 import numpy as np
 from nilmtk.consts import JOULES_PER_KWH
 from nilmtk.measurement import measurement_columns, AC_TYPES
+from nilmtk.utils import flatten_2d_list
 
 MAX_SAMPLE_PERIOD = 15
 
@@ -59,7 +60,6 @@ def create_random_df_hierarchical_column_index():
 
     meters = ['meter{:d}'.format(i) for i in range(1,N_METERS+1)]
     meters = [[m]*N_MEASUREMENTS_PER_METER for m in meters]
-    flatten_2d_list = lambda lst: list(itertools.chain(*lst))
     meters = flatten_2d_list(meters)
     level2 = ['power', 'power', 'voltage'][:N_MEASUREMENTS_PER_METER] * N_METERS
     level3 = ['active', 'reactive', ''][:N_MEASUREMENTS_PER_METER] * N_METERS

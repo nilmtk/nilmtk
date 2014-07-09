@@ -1,17 +1,4 @@
-* ElecMeter.stats(full_results=False)... and add method to each stats
-  class to return simply results where possible.
-
-
 * Metrics
-  * in metrics, pass in predictions MeterGroup and ground truth
-    MeterGroup for building.
-  * need a metrics prep function which takes both MeterGroups and 
-    constructs a new MeterGroup from ground truth data: only use
-    meters from predictions, and assemble appropriate MeterGroups 
-    for split-phase appliances.
-  * Load meter by meter, 
-    chunk by chunk.  Only load periods from ground truth that we have
-    in the predictions.
   * Should specify preprocessing done on training data in disag
     output???  Do we need to apply same preprocessing to test data?
     I guess so.

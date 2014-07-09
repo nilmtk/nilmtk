@@ -5,8 +5,9 @@ from warnings import warn
 from .elecmeter import ElecMeter, ElecMeterID
 from .appliance import Appliance
 from .datastore import join_key
-from .utils import tree_root, nodes_adjacent_to_root, simplest_type_for
-from .measurement import select_best_ac_type
+from .utils import (tree_root, nodes_adjacent_to_root, simplest_type_for,
+                    flatten_2d_list)
+from .measurement import select_best_ac_type, AC_TYPES
 
 class MeterGroup(object):
     """A group of ElecMeter objects. Can contain nested MeterGroup objects.
@@ -548,7 +549,33 @@ class MeterGroup(object):
         ac_type = select_best_ac_type(mains_energy.keys(), common_ac_types)
         return submetered_energy / mains_energy[ac_type]
     
+    def available_power_ac_types(self):
+        """Returns set of all AC types recorded by all meters"""
+        all_ac_types = [meter.available_power_ac_types() for meter in self.meters]
+        return set(flatten_2d_list(all_ac_types))
 
+    def energy_per_meter(self, **load_kwargs):
+        """Returns pd.DataFrame where columns is meter.instance and 
+        each value is total energy.  Index is AC types.
+
+        Does not care about wiring hierarchy.  Does not attempt to ensure all 
+        channels share the same time periods.
+        """ 
+        energy_per_meter = pd.DataFrame(columns=self.instance(), index=AC_TYPES)
+        for meter in self.meters:
+            meter_energy = meter.total_energy(full_results=True, **load_kwargs)
+            energy_per_meter[meter.instance()] = meter_energy.combined()
+        return energy_per_meter.dropna(how='all')
+
+    def fraction_per_meter(self, **load_kwargs):
+        """Fraction of energy per meter.
+
+        Return pd.Series.  Index is meter.instance.  
+        Each value is a float in the range [0,1].
+        """
+        energy_per_meter = self.energy_per_meter(**load_kwargs).max()
+        total_energy = energy_per_meter.sum()
+        return energy_per_meter / total_energy
 
     ################## NOT IMPLEMENTED FUNCTIONS ###################
     def init_new_dataset(self):
@@ -610,17 +637,7 @@ class MeterGroup(object):
         MeterGroup containing top k meters.
         """
         top_k = self.energy_per_meter().iloc[:k]
-    
-    def energy_per_meter(self):
-        """Needs to do it per-meter???  Return sorted.
-        'kitchen lights': 234.5
-        ['hall lights, bedroom lights'] : 32.1 
-        need to subtract kitchen lights energy from lighting circuit!
-        """ 
-        # keys could be actual Appliance / MeterGroup objects?
-        # e.g. when we want to select top_k Meters.
-        raise NotImplementedError
-        
+            
     def select_meters_contributing_more_than(self, threshold_proportion):
         """Return new MeterGroup with all meters whose proportion of
         energy usage is above threshold percentage."""

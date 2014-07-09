@@ -2,6 +2,7 @@ from __future__ import print_function, division
 import numpy as np
 import pandas as pd
 from sklearn.metrics import f1_score
+from .metergroup import MeterGroup
 
 # For some reason, importing sklearn causes PyTables to raise lots
 # of DepreciatedWarnings for Pandas code.
@@ -53,23 +54,20 @@ def error_in_assigned_energy(predictions, ground_truth):
             in kWh.
     """
     errors = {}
-    for meter in predictions.meters:
-        ground_truth_meter_identifier = meter.identifier._replace(dataset=ground_truth.dataset())
+    for meter in predictions.submeters():
+        ground_truth_meter_identifier = meter.identifier._replace(
+            dataset=ground_truth.dataset())
         ground_truth_meter = ground_truth[ground_truth_meter_identifier]
         sections = meter.good_sections()
+
         ground_truth_energy = ground_truth_meter.total_energy(periods=sections)
         predicted_energy = meter.total_energy(periods=sections)
         errors[meter.instance()] = np.abs(predicted_energy - ground_truth_energy)
     return errors
 
 
-########## FUNCTIONS BELOW THIS LINE HAVE NOT YET CONVERTED TO NILMTK v0.2 #####
-
-
-def fraction_energy_assigned_correctly(predicted_power, df_appliances_ground_truth):
+def fraction_energy_assigned_correctly(predictions, ground_truth):
     '''Compute fraction of energy assigned correctly
-
-    # TODO: Give a vanilla example
     
     .. math::
         fraction = 
@@ -78,40 +76,35 @@ def fraction_energy_assigned_correctly(predicted_power, df_appliances_ground_tru
         \\frac{\\sum_n \\hat{y}}{\\sum_{n,t} \\hat{y}} 
         \\right )
 
+    Ignores distinction between different AC types, instead if there are 
+    multiple AC types for each meter then we just take the max value across
+    the AC types.
+
     Parameters
     ----------
-
-    predicted_power: Pandas DataFrame of type {appliance :
-         [array of predictd power]}
-
-    df_appliances_ground_truth: Pandas DataFrame of type {appliance :
-        [array of ground truth power]}
+    predictions, ground_truth : nilmtk.MeterGroup
 
     Returns
     -------
-    re: float representing Fraction of Energy Correctly Assigned
+    float in the range [0,1] representing Fraction of Energy Correctly Assigned
     '''
 
-    fraction = np.array([])
-    total_energy_predicted = np.sum(predicted_power.values)
+    predictions_submeters = MeterGroup(meters=predictions.submeters())
+    ground_truth_submeters = MeterGroup(meters=ground_truth.submeters())
 
-    for appliance in predicted_power:
+    fraction_per_meter_predictions = predictions_submeters.fraction_per_meter()
+    fraction_per_meter_ground_truth = ground_truth_submeters.fraction_per_meter()
 
-        appliance_energy_predicted = np.sum(predicted_power[appliance].values)
+    fractions = []
+    for meter_instance in predictions_submeters.instance():
+        fraction = min(fraction_per_meter_predictions[meter_instance],
+                       fraction_per_meter_ground_truth[meter_instance])
+        fractions.append(fraction)
 
-        appliance_energy_ground_truth = np.sum(
-            df_appliances_ground_truth[appliance].values)
-        total_energy_ground_truth = np.sum(df_appliances_ground_truth.values)
+    return sum(fractions)
 
-        fraction = np.append(
-            fraction, np.min(
-                [appliance_energy_predicted / total_energy_predicted,
-                 appliance_energy_ground_truth /
-                 total_energy_ground_truth
-                 ]))
 
-    return np.sum(fraction)
-
+########## FUNCTIONS BELOW THIS LINE HAVE NOT YET CONVERTED TO NILMTK v0.2 #####
 
 def mean_normalized_error_power(predicted_power, df_appliances_ground_truth):
     '''Compute mean normalized error in assigned power

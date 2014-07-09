@@ -2,7 +2,7 @@ from __future__ import print_function, division
 import numpy as np
 import networkx as nx
 from copy import deepcopy
-
+import itertools
 
 def timedelta64_to_secs(timedelta):
     """Convert `timedelta` to seconds.
@@ -106,3 +106,7 @@ def simplest_type_for(values):
         return
     else:
         return tuple(values)
+
+
+def flatten_2d_list(lst):
+    return list(itertools.chain(*lst))
