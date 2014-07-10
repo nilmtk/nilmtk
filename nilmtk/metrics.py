@@ -47,7 +47,7 @@ def error_in_assigned_energy(predictions, ground_truth):
     errors : pd.Series
         Each index is an meter instance int (or tuple for MeterGroups).
         Each value is the absolute error in assigned energy for that appliance,
-            in kWh.
+        in kWh.
     """
     errors = {}
     for meter in predictions.submeters():
@@ -58,7 +58,7 @@ def error_in_assigned_energy(predictions, ground_truth):
 
         ground_truth_energy = ground_truth_meter.total_energy(periods=sections)
         predicted_energy = meter.total_energy(periods=sections)
-        errors[meter.instance()] = np.abs(predicted_energy - ground_truth_energy)
+        errors[meter.instance()] = np.abs(ground_truth_energy - predicted_energy)
     return pd.Series(errors)
 
 
@@ -82,7 +82,8 @@ def fraction_energy_assigned_correctly(predictions, ground_truth):
 
     Returns
     -------
-    float in the range [0,1] representing Fraction of Energy Correctly Assigned
+    fraction : float in the range [0,1]
+        Fraction of Energy Correctly Assigned.
     '''
 
     predictions_submeters = MeterGroup(meters=predictions.submeters())
@@ -91,13 +92,12 @@ def fraction_energy_assigned_correctly(predictions, ground_truth):
     fraction_per_meter_predictions = predictions_submeters.fraction_per_meter()
     fraction_per_meter_ground_truth = ground_truth_submeters.fraction_per_meter()
 
-    fractions = []
+    fraction = 0
     for meter_instance in predictions_submeters.instance():
-        fraction = min(fraction_per_meter_predictions[meter_instance],
-                       fraction_per_meter_ground_truth[meter_instance])
-        fractions.append(fraction)
+        fraction += min(fraction_per_meter_ground_truth[meter_instance],
+                        fraction_per_meter_predictions[meter_instance])
 
-    return sum(fractions)
+    return fraction
 
 
 def mean_normalized_error_power(predictions, ground_truth):
@@ -115,7 +115,7 @@ def mean_normalized_error_power(predictions, ground_truth):
 
     Returns
     -------
-    pd.Series
+    mne : pd.Series
         Each index is an meter instance int (or tuple for MeterGroups).
         Each value is the MNE for that appliance.
     '''
@@ -132,8 +132,8 @@ def mean_normalized_error_power(predictions, ground_truth):
 
         # TODO: preprocessing=[Resample(sample_period)])
         pred_generator = meter.power_series(periods=sections)
-        total_diff = 0
-        sum_of_ground_truth_power = 0
+        total_abs_diff = 0.0
+        sum_of_ground_truth_power = 0.0
         while True:
             try:
                 pred_chunk = next(pred_generator)
@@ -149,19 +149,18 @@ def mean_normalized_error_power(predictions, ground_truth):
                 pred_chunk = pred_chunk.resample(period_alias)
 
                 diff = (pred_chunk.icol(0) - truth_chunk.icol(0)).dropna() 
-                total_diff += sum(abs(diff))
+                total_abs_diff += sum(abs(diff))
                 sum_of_ground_truth_power += truth_chunk.icol(0).dropna().sum()
 
-        mne[meter.instance()] = total_diff / sum_of_ground_truth_power
+        mne[meter.instance()] = total_abs_diff / sum_of_ground_truth_power
 
     return pd.Series(mne)
 
 ########## FUNCTIONS BELOW THIS LINE HAVE NOT YET CONVERTED TO NILMTK v0.2 #####
 
+"""
 def rms_error_power(predicted_power, df_appliances_ground_truth):
     '''Compute RMS error in assigned power
-    
-    # TODO: Give a vanilla example
     
     .. math::
             error^{(n)} = \\sqrt{ \\frac{1}{T} \\sum_t{ \\left ( y_t - \\hat{y}_t \\right )^2 } }
@@ -191,8 +190,6 @@ def rms_error_power(predicted_power, df_appliances_ground_truth):
 
 def powers_to_states(powers):
     '''Converts power demands into binary states
-    
-    # TODO: Give a vanilla example
 
     Parameters
     ----------
@@ -216,8 +213,6 @@ def powers_to_states(powers):
 
 def confusion_matrices(predicted_states, ground_truth_states):
     '''Compute confusion matrix between appliance states for each appliance
-
-    # TODO: Give a vanilla example
 
     Parameters
     ----------
@@ -248,8 +243,6 @@ def confusion_matrices(predicted_states, ground_truth_states):
 
 def tp_fp_fn_tn(predicted_states, ground_truth_states):
     '''Compute counts of True Positives, False Positives, False Negatives, True Negatives
-
-    # TODO: Give a vanilla example
     
     .. math::
         TP^{(n)} = 
@@ -300,8 +293,6 @@ def tp_fp_fn_tn(predicted_states, ground_truth_states):
 
 def tpr_fpr(predicted_states, ground_truth_states):
     '''Compute True Positive Rate and False Negative Rate
-
-    # TODO: Give a vanilla example
     
     .. math::
         TPR^{(n)} = \\frac{TP}{\\left ( TP + FN \\right )}
@@ -332,8 +323,6 @@ def tpr_fpr(predicted_states, ground_truth_states):
 
 def precision_recall(predicted_states, ground_truth_states):
     '''Compute Precision and Recall
-
-    # TODO: Give a vanilla example
     
     .. math::
         Precision^{(n)} = \\frac{TP}{\\left ( TP + FP \\right )}
@@ -364,8 +353,6 @@ def precision_recall(predicted_states, ground_truth_states):
 
 def f_score(predicted_power, ground_truth_power):
     '''Compute F1 score
-
-    # TODO: Give a vanilla example
     
     .. math::
         F_score^{(n)} = \\frac
@@ -403,8 +390,6 @@ def f_score(predicted_power, ground_truth_power):
 
 def hamming_loss(predicted_state, ground_truth_state):
     '''Compute Hamming loss
-
-    # TODO: Give a vanilla example
     
     .. math::
         HammingLoss = 
@@ -432,3 +417,4 @@ def hamming_loss(predicted_state, ground_truth_state):
                   axis=1) / num_appliances
 
     return np.mean(xors)
+"""
