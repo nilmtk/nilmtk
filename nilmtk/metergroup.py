@@ -471,6 +471,16 @@ class MeterGroup(Electric):
         else:
             return total_energy.simple()
 
+    def good_sections(self, **kwargs):
+        """Returns good sections for just the first meter.
+
+        TODO: combine good sections from every meter.
+        """
+        if self.meters:
+            return self.meters[0].good_sections(**kwargs)
+        else:
+            return []
+
     def dataframe_of_meters(self, rule='1T'):
         """
         Returns

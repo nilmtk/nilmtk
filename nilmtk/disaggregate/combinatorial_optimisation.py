@@ -7,7 +7,7 @@ from ..appliance import ApplianceID
 from ..utils import find_nearest, container_to_string
 from ..feature_detectors import cluster
 from ..timeframe import merge_timeframes, list_of_timeframe_dicts, TimeFrame
-
+from ..preprocessing import Apply, Clip
 
 # Fix the seed for repeatability of experiments
 SEED = 42
@@ -46,10 +46,8 @@ class CombinatorialOptimisation(object):
         else:
             max_num_clusters = 3
 
-        # TODO: Preprocessing!
-        preprocessing = [] # TODO
         for i, meter in enumerate(metergroup.submeters()):
-            for chunk in meter.power_series(preprocessing=preprocessing):
+            for chunk in meter.power_series(preprocessing=[Clip()]):
                 self.model[meter.instance()] = cluster(chunk, max_num_clusters)
                 break # TODO handle multiple chunks per appliance
 
@@ -65,16 +63,26 @@ class CombinatorialOptimisation(object):
             The `name` to use in the metadata for the `output_datastore`.
             e.g. some sort of name for this experiment.  Defaults to 
             "NILMTK_CO_<date>"
+        resample_seconds : number, optional
+            The desired sample period in seconds.
         **load_kwargs : key word arguments
             Passed to `mains.power_series(**kwargs)`
         '''
+        MIN_CHUNK_LENGTH = 100
+
         # If we import sklearn at the top of the file then it makes autodoc fail
         from sklearn.utils.extmath import cartesian
 
-        # Extract output_name from load_kwargs
+        # sklearn produces lots of DepreciationWarnings with PyTables
+        import warnings
+        warnings.filterwarnings("ignore", category=DeprecationWarning) 
+
+        # Extract optional parameters from load_kwargs
         date_now = datetime.now().isoformat().split('.')[0]
         output_name = load_kwargs.pop('output_name', 'NILMTK_CO_' + date_now)
+        resample_seconds = load_kwargs.pop('resample_seconds', 60)
 
+        # Get centroids
         centroids = self.model.values()
         state_combinations = cartesian(centroids)
         # state_combinations is a 2D array
@@ -86,14 +94,27 @@ class CombinatorialOptimisation(object):
         # summed_power_of_each_combination is now an array where each 
         # value is the total power demand for each combination of states.
 
-        # TODO preprocessing??
-        RESAMPLE_SECONDS = 60 # TODO
+        load_kwargs['periods'] = load_kwargs.pop('periods', 
+                                                 mains.good_sections())
+        resample_rule = '{:d}S'.format(resample_seconds)
         timeframes = []
         building_path = '/building{}'.format(mains.building())
         mains_data_location = ('{}/elec/meter{}'
                                .format(building_path, 
                                        container_to_string(mains.instance())))
+
         for chunk in mains.power_series(**load_kwargs):
+
+            if len(chunk) < MIN_CHUNK_LENGTH:
+                continue
+
+            # Record metadata
+            timeframes.append(chunk.timeframe)
+            measurement = chunk.name
+
+            chunk = chunk.resample(rule=resample_rule)
+            if len(chunk) < MIN_CHUNK_LENGTH:
+                continue
 
             # Start disaggregation
             indices_of_state_combinations, residual_power = find_nearest(
@@ -103,17 +124,16 @@ class CombinatorialOptimisation(object):
                 predicted_power = state_combinations[
                     indices_of_state_combinations, i].flatten()
                 chan_str = container_to_string(chan)
+                cols = pd.MultiIndex.from_tuples([chunk.name])
                 output_datastore.append('{}/elec/meter{}'
                                         .format(building_path, chan_str),
                                         pd.DataFrame(predicted_power,
                                                      index=chunk.index,
-                                                     columns=chunk.columns))
-            # Record metadata
-            timeframes.append(chunk.timeframe)
-            measurement = chunk.columns[0]
+                                                     columns=cols))
 
             # Copy mains data to disag output
-            output_datastore.append(mains_data_location, chunk)
+            output_datastore.append(key=mains_data_location, 
+                                    value=pd.DataFrame(chunk, columns=cols))
 
         ##################################
         # Add metadata to output_datastore
@@ -128,8 +148,8 @@ class CombinatorialOptimisation(object):
         meter_devices = {
             'CO': {
                 'model': 'CO',
-                'sample_period': RESAMPLE_SECONDS,
-                'max_sample_period': RESAMPLE_SECONDS,
+                'sample_period': resample_seconds,
+                'max_sample_period': resample_seconds,
                 'measurements': [{
                     'physical_quantity': measurement[0],
                     'type': measurement[1] 
@@ -137,8 +157,8 @@ class CombinatorialOptimisation(object):
             },
             'mains': {
                 'model': 'mains',
-                'sample_period': RESAMPLE_SECONDS,
-                'max_sample_period': RESAMPLE_SECONDS,
+                'sample_period': resample_seconds,
+                'max_sample_period': resample_seconds,
                 'measurements': [{
                     'physical_quantity': measurement[0],
                     'type': measurement[1] 
@@ -146,7 +166,7 @@ class CombinatorialOptimisation(object):
             }
         }
 
-        merged_timeframes = merge_timeframes(timeframes, gap=RESAMPLE_SECONDS)
+        merged_timeframes = merge_timeframes(timeframes, gap=resample_seconds)
         total_timeframe = TimeFrame(merged_timeframes[0].start, 
                                     merged_timeframes[-1].end)
 

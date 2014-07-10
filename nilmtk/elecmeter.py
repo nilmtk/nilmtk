@@ -283,8 +283,8 @@ class ElecMeter(Hashable, Electric):
             kwargs['cols'] = [('power', best_ac_type)]
 
         # Get source node
-        generator = self.store.load(key=self.key, **kwargs)
-        last_node = Node(self, generator=generator)
+        last_node = self.get_source_node(**kwargs)
+        generator = last_node.generator
 
         # Connect together all preprocessing nodes
         for node in preprocessing:

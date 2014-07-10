@@ -3,15 +3,11 @@
     output???  Do we need to apply same preprocessing to test data?
     I guess so.
   * TODO in combinatorial_optimisation (mostly metadata IIRC)
-  * TODO in mean_normalized_error_power
 
 * Preprocessing: 
   instead of drop missing mains and make common index:
-  * find good sections in mains.  Only load these sections for mains 
-    and appliances
-  * resample to get everything to align.  Start from the same start
-    point. This should give everything the same index (check this).
-  * fill appliance gaps
+  * fill appliance gaps before doing metrics
+
 
 * Stats:
   * ElecMeter.plot() and MeterGroup.plot() - how to select time? `load_kwargs`?

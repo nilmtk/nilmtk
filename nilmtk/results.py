@@ -59,7 +59,8 @@ class Results(object):
             tf = TimeFrame(index, series['end'])
             intersect = tf.intersect(timeframe)
             if not intersect.empty:
-                raise ValueError("Periods overlap" + str(intersect))
+                raise ValueError("Periods overlap: " + str(tf) + 
+                                 " " + str(timeframe))
 
         row = pd.DataFrame(index=[timeframe.start],
                            columns=['end'] + new_results.keys())
