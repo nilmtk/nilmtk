@@ -102,14 +102,11 @@ class TestHDFDataStore(unittest.TestCase):
         chunks = self.datastore.load(key=self.keys[0], periods=timeframes)
         i = 0
         for chunk in chunks:
-            if i == 0:
-                self.assertTrue(chunk.empty)
-            else:
-                self.assertEqual(chunk.index[0], pd.Timestamp('2012-01-01 00:10:02'))
-                self.assertEqual(chunk.index[-1], pd.Timestamp('2012-01-01 00:10:04'))
-                self.assertEqual(len(chunk), 3)
+            self.assertEqual(chunk.index[0], pd.Timestamp('2012-01-01 00:10:02'))
+            self.assertEqual(chunk.index[-1], pd.Timestamp('2012-01-01 00:10:04'))
+            self.assertEqual(len(chunk), 3)
             i += 1
-        self.assertEqual(i, 2)
+        self.assertEqual(i, 1)
 
 
     #--------- helper functions ---------------------#
