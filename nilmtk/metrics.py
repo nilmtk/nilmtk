@@ -28,6 +28,7 @@ Functions
 from __future__ import print_function, division
 import numpy as np
 import pandas as pd
+import math
 from .metergroup import MeterGroup, iterate_through_submeters_of_two_metergroups
 from .elecmeter import diff_between_two_meters
 
@@ -50,9 +51,9 @@ def error_in_assigned_energy(predictions, ground_truth):
         in kWh.
     """
     errors = {}
-    both_meters = iterate_through_submeters_of_two_metergroups(predictions, 
-                                                               ground_truth)
-    for pred_meter, ground_truth_meter in both_meters:
+    both_sets_of_meters = iterate_through_submeters_of_two_metergroups(
+        predictions, ground_truth)
+    for pred_meter, ground_truth_meter in both_sets_of_meters:
         sections = pred_meter.good_sections()
         ground_truth_energy = ground_truth_meter.total_energy(periods=sections)
         predicted_energy = pred_meter.total_energy(periods=sections)
@@ -94,7 +95,6 @@ def fraction_energy_assigned_correctly(predictions, ground_truth):
     for meter_instance in predictions_submeters.instance():
         fraction += min(fraction_per_meter_ground_truth[meter_instance],
                         fraction_per_meter_predictions[meter_instance])
-
     return fraction
 
 
@@ -119,9 +119,9 @@ def mean_normalized_error_power(predictions, ground_truth):
     '''
 
     mne = {}
-    both_meters = iterate_through_submeters_of_two_metergroups(predictions, 
-                                                               ground_truth)
-    for pred_meter, ground_truth_meter in both_meters:
+    both_sets_of_meters = iterate_through_submeters_of_two_metergroups(
+        predictions, ground_truth)
+    for pred_meter, ground_truth_meter in both_sets_of_meters:
         total_abs_diff = 0.0
         sum_of_ground_truth_power = 0.0
         diff_generator = diff_between_two_meters(pred_meter, ground_truth_meter)
@@ -151,13 +151,21 @@ def rms_error_power(predictions, ground_truth):
         Each value is the RMS error in predicted power for that appliance.
     '''
 
-    re = {}
+    error = {}
 
-    for appliance in predicted_power:
-        re[appliance] = np.std(predicted_power[appliance] -
-                               df_appliances_ground_truth[appliance].values)
+    both_sets_of_meters = iterate_through_submeters_of_two_metergroups(
+        predictions, ground_truth)
+    for pred_meter, ground_truth_meter in both_sets_of_meters:
+        sum_of_squared_diff = 0.0
+        n_samples = 0
+        diff_generator = diff_between_two_meters(pred_meter, ground_truth_meter)
+        for diff, _ in diff_generator:
+            sum_of_squared_diff += (diff ** 2).sum()
+            n_samples += len(diff)
 
-    return re
+        error[pred_meter.instance()] = math.sqrt(sum_of_squared_diff / n_samples)
+
+    return pd.Series(error)
 
 ########## FUNCTIONS BELOW THIS LINE HAVE NOT YET CONVERTED TO NILMTK v0.2 #####
 
