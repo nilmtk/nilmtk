@@ -8,9 +8,9 @@ from .datastore import join_key
 from .utils import (tree_root, nodes_adjacent_to_root, simplest_type_for,
                     flatten_2d_list)
 from .measurement import select_best_ac_type, AC_TYPES
-from .elecmeterandmetergroup import ElecMeterAndMeterGroup
+from .electric import Electric
 
-class MeterGroup(ElecMeterAndMeterGroup):
+class MeterGroup(Electric):
     """A group of ElecMeter objects. Can contain nested MeterGroup objects.
 
     Implements many of the same methods as ElecMeter.

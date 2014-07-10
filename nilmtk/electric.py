@@ -1,4 +1,6 @@
-class ElecMeterAndMeterGroup(object):
+import pandas as pd
+
+class Electric(object):
     """Common implementations of methods shared by ElecMeter and MeterGroup.
     """
 
@@ -32,3 +34,30 @@ class ElecMeterAndMeterGroup(object):
         return min(
             [appl.metadata.get('on_power_threshold', DEFAULT_ON_POWER_THRESHOLD)
              for appl in self.appliances])
+
+
+def align_two_meters(master, slave, func='power_series'):
+    """Returns a generator of 2-column pd.DataFrames.  The first column is from
+    `master`, the second from `slave`.
+
+    Takes the sample rate and good_periods of `master` and applies to `slave`.
+
+    Parameters
+    ----------
+    master, slave : ElecMeter or MeterGroup instances
+    """
+    sample_period = master.sample_period()
+    period_alias = '{:d}S'.format(sample_period)
+    sections = master.good_sections()
+    master_generator = getattr(master, func)(periods=sections)
+    for master_chunk in master_generator:
+        slave_generator = getattr(slave, func)(periods=[master_chunk.timeframe],
+                                               chunksize=1E9)
+        slave_chunk = next(slave_generator)
+
+        # TODO: do this resampling in the pipeline?
+        slave_chunk = slave_chunk.resample(period_alias)
+        master_chunk = master_chunk.resample(period_alias)
+
+        yield pd.DataFrame({'master': master_chunk, 'slave': slave_chunk})
+

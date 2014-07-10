@@ -30,7 +30,7 @@ import numpy as np
 import pandas as pd
 import math
 from .metergroup import MeterGroup, iterate_through_submeters_of_two_metergroups
-from .elecmeter import diff_between_two_meters
+from .electric import align_two_meters
 
 def error_in_assigned_energy(predictions, ground_truth):
     """Compute error in assigned energy.
@@ -124,10 +124,10 @@ def mean_normalized_error_power(predictions, ground_truth):
     for pred_meter, ground_truth_meter in both_sets_of_meters:
         total_abs_diff = 0.0
         sum_of_ground_truth_power = 0.0
-        diff_generator = diff_between_two_meters(pred_meter, ground_truth_meter)
-        for diff, sum_gnd_truth_power_for_chunk in diff_generator:
+        for aligned_meters in align_two_meters(pred_meter, ground_truth_meter):
+            diff = (aligned_meters.icol(0) - aligned_meters.icol(1)).dropna()
             total_abs_diff += sum(abs(diff))
-            sum_of_ground_truth_power += sum_gnd_truth_power_for_chunk
+            sum_of_ground_truth_power += aligned_meters.icol(1).sum()
 
         mne[pred_meter.instance()] = total_abs_diff / sum_of_ground_truth_power
 
@@ -158,8 +158,8 @@ def rms_error_power(predictions, ground_truth):
     for pred_meter, ground_truth_meter in both_sets_of_meters:
         sum_of_squared_diff = 0.0
         n_samples = 0
-        diff_generator = diff_between_two_meters(pred_meter, ground_truth_meter)
-        for diff, _ in diff_generator:
+        for aligned_meters in align_two_meters(pred_meter, ground_truth_meter):
+            diff = (aligned_meters.icol(0) - aligned_meters.icol(1)).dropna()
             sum_of_squared_diff += (diff ** 2).sum()
             n_samples += len(diff)
 
@@ -167,30 +167,46 @@ def rms_error_power(predictions, ground_truth):
 
     return pd.Series(error)
 
-########## FUNCTIONS BELOW THIS LINE HAVE NOT YET CONVERTED TO NILMTK v0.2 #####
 
-
-def powers_to_states(powers):
-    '''Converts power demands into binary states
+def f_score(predictions, ground_truth):
+    '''Compute F1 scores.
+    
+    .. math::
+        F_{score}^{(n)} = \\frac
+            {2 * Precision * Recall}
+            {Precision + Recall}
 
     Parameters
     ----------
-
-    powers: Pandas DataFrame of type {appliance :
-         [array of power]}
+    predictions, ground_truth : nilmtk.MeterGroup
 
     Returns
     -------
-    states: Pandas DataFrame of type {appliance :
-         [array of states]}
+    f1_scores : pd.Series
+        Each index is an meter instance int (or tuple for MeterGroups).
+        Each value is the F1 score for that appliance.
+
     '''
+    from sklearn.metrics import f1_score
 
-    on_power_threshold = 50
+    threshold = 30
+    predicted_states = (predicted_power > threshold).astype(int)
+    ground_truth_states = (ground_truth_power > threshold).astype(int)
+    f1_scores = {}
 
-    states = pd.DataFrame(np.zeros(power.shape))
-    states[power > on_power_threshold] = 1
+    both_sets_of_meters = iterate_through_submeters_of_two_metergroups(
+        predictions, ground_truth)
+    # for pred_meter, ground_truth_meter in both_sets_of_meters:
+    #     f1_scores[pred_meter.instance()] = pass
 
-    return states
+    for appliance in predicted_states.columns:
+        f1_scores[appliance] = f1_score(
+            ground_truth_states[[appliance]], predicted_states[[appliance]])
+    return pd.Series(f1_scores)
+
+
+########## FUNCTIONS BELOW THIS LINE HAVE NOT YET CONVERTED TO NILMTK v0.2 #####
+
 
 """
 def confusion_matrices(predicted_states, ground_truth_states):
@@ -333,41 +349,6 @@ def precision_recall(predicted_states, ground_truth_states):
     return np.array([prec, rec])
 
 
-def f_score(predicted_power, ground_truth_power):
-    '''Compute F1 score
-    
-    .. math::
-        F_score^{(n)} = \\frac
-            {2 * Precision * Recall}
-            {Precision + Recall}
-
-    Parameters
-    ----------
-
-    predicted_state: Pandas DataFrame of type {appliance :
-         [array of predicted states]}
-
-    ground_truth_state: Pandas DataFrame of type {appliance :
-        [array of ground truth states]}
-
-    Returns
-    -------
-    numpy array where columns represent appliances and rows represent F score
-    '''
-    from sklearn.metrics import f1_score
-    threshold = 30
-    predicted_states = (predicted_power > threshold).astype(int)
-    ground_truth_states = (ground_truth_power > threshold).astype(int)
-    f_score_out = {}
-    for appliance in predicted_states.columns:
-        f_score_out[appliance] = f1_score(
-            ground_truth_states[[appliance]], predicted_states[[appliance]])
-    return f_score_out
-
-    #prec_rec = precision_recall(predicted_states, ground_truth_states)
-    # return (2 * prec_rec[0, :] * prec_rec[1,:]) / (prec_rec[0,:] +
-    # prec_rec[1,:])
-    # return f1_score(ground_truth_states, predicted_states)
 
 
 def hamming_loss(predicted_state, ground_truth_state):
