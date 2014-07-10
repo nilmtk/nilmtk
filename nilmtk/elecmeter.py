@@ -415,3 +415,38 @@ class ElecMeter(Hashable):
         cleaning steps have been executed and some summary results (e.g. the number of
         implausible values removed)"""
         raise NotImplementedError
+
+
+def diff_between_two_meters(master, slave):
+    """Returns a generator of pd.Series of 
+    master.power_series() - slave.power_series()
+
+    Takes the sample rate and good_periods of `master` and applies to `slave.
+
+    Parameters
+    ----------
+    master, slave : ElecMeter or MeterGroup instances
+
+    Returns
+    -------
+    generator of 2-tuple: (diff, sum_of_slave_power).  diff is a pd.Series and 
+    sum_of_slave_power is a float.
+    """
+    sample_period = master.sample_period()
+    period_alias = '{:d}S'.format(sample_period)
+
+    # TODO: preprocessing=[Resample(sample_period)])
+    sections = master.good_sections()
+    master_generator = master.power_series(periods=sections)
+    for master_chunk in master_generator:
+        slave_generator = slave.power_series(periods=[master_chunk.timeframe], 
+                                             chunksize=1E9)
+        slave_chunk = next(slave_generator)
+
+        # TODO: do this resampling in the pipeline?
+        slave_chunk = slave_chunk.resample(period_alias)
+        master_chunk = master_chunk.resample(period_alias)
+
+        diff = (master_chunk.icol(0) - slave_chunk.icol(0)).dropna()
+        sum_of_slave_power = slave_chunk.icol(0).dropna().sum()
+        yield diff, sum_of_slave_power

@@ -29,7 +29,7 @@ from __future__ import print_function, division
 import numpy as np
 import pandas as pd
 from .metergroup import MeterGroup
-
+from .elecmeter import diff_between_two_meters
 
 def error_in_assigned_energy(predictions, ground_truth):
     """Compute error in assigned energy.
@@ -126,40 +126,20 @@ def mean_normalized_error_power(predictions, ground_truth):
         ground_truth_meter_identifier = meter.identifier._replace(
             dataset=ground_truth.dataset())
         ground_truth_meter = ground_truth[ground_truth_meter_identifier]
-        sections = meter.good_sections()
-        sample_period = meter.sample_period()
-        period_alias = '{:d}S'.format(sample_period)
 
-        # TODO: preprocessing=[Resample(sample_period)])
-        pred_generator = meter.power_series(periods=sections)
         total_abs_diff = 0.0
         sum_of_ground_truth_power = 0.0
-        while True:
-            try:
-                pred_chunk = next(pred_generator)
-            except StopIteration:
-                break
-            else:
-                truth_generator = ground_truth_meter.power_series(
-                    periods=[pred_chunk.timeframe], chunksize=1E9)
-                truth_chunk = next(truth_generator)
-                
-                # TODO: do this resampling in the pipeline?
-                truth_chunk = truth_chunk.resample(period_alias)
-                pred_chunk = pred_chunk.resample(period_alias)
-
-                diff = (pred_chunk.icol(0) - truth_chunk.icol(0)).dropna() 
-                total_abs_diff += sum(abs(diff))
-                sum_of_ground_truth_power += truth_chunk.icol(0).dropna().sum()
+        diff_generator = diff_between_two_meters(meter, ground_truth_meter)
+        for (diff, sum_gnd_truth_power_for_chunk) in diff_generator:
+            total_abs_diff += sum(abs(diff))
+            sum_of_ground_truth_power += sum_gnd_truth_power_for_chunk
 
         mne[meter.instance()] = total_abs_diff / sum_of_ground_truth_power
 
     return pd.Series(mne)
 
-########## FUNCTIONS BELOW THIS LINE HAVE NOT YET CONVERTED TO NILMTK v0.2 #####
 
-"""
-def rms_error_power(predicted_power, df_appliances_ground_truth):
+def rms_error_power(predictions, ground_truth):
     '''Compute RMS error in assigned power
     
     .. math::
@@ -167,16 +147,13 @@ def rms_error_power(predicted_power, df_appliances_ground_truth):
 
     Parameters
     ----------
-
-    predicted_power: Pandas DataFrame of type {appliance :
-         [array of predicted power]}
-
-    df_appliances_ground_truth: Pandas DataFrame of type {appliance :
-        [array of ground truth power]}
+    predictions, ground_truth : nilmtk.MeterGroup
 
     Returns
     -------
-    re: dict of type {appliance : RMS error in predicted power}
+    error : pd.Series
+        Each index is an meter instance int (or tuple for MeterGroups).
+        Each value is the RMS error in predicted power for that appliance.
     '''
 
     re = {}
@@ -187,7 +164,9 @@ def rms_error_power(predicted_power, df_appliances_ground_truth):
 
     return re
 
+########## FUNCTIONS BELOW THIS LINE HAVE NOT YET CONVERTED TO NILMTK v0.2 #####
 
+"""
 def powers_to_states(powers):
     '''Converts power demands into binary states
 
