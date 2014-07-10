@@ -53,6 +53,20 @@ class GoodSectionsResults(Results):
                 assert sections[-1].end is None
                 sections[-1].end = row_sections[0].end
                 row_sections.pop(0)
+
+            # If the previous chunk of code decided that two
+            # row_sections[0] and sections[-1] were not in adjacent chunks
+            # then check if the are both open-ended and close them...
+            if sections and sections[-1].end is None:
+                try:
+                    sections[-1].end = end_date_of_prev_row
+                except ValueError: # end_date_of_prev_row before sections[-1].start
+                    pass
+            if row_sections and row_sections[0].start is None:
+                try:
+                    row_sections[0].start = index
+                except ValueError:
+                    pass
                 
             end_date_of_prev_row = row['end']
             sections.extend(row_sections)
