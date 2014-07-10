@@ -1,15 +1,15 @@
+* Preprocessing: 
+  instead of drop missing mains and make common index:
+  * fill appliance gaps before doing metrics
+
 * Metrics
   * Should specify preprocessing done on training data in disag
     output???  Do we need to apply same preprocessing to test data?
     I guess so.
   * TODO in combinatorial_optimisation (mostly metadata IIRC)
 
-* Preprocessing: 
-  instead of drop missing mains and make common index:
-  * fill appliance gaps before doing metrics
-
-
 * Stats:
+  * Focus on stats for Scientific Data paper
   * ElecMeter.plot() and MeterGroup.plot() - how to select time? `load_kwargs`?
   * goodsectionsresults could do with a plotting function like
 plot_missing_samples_with_rectangles
