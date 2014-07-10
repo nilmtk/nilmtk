@@ -63,9 +63,11 @@ Thanks to the wonderful tutorial here_.
 .. _here: https://github.com/daler/sphinxdoc-test
 
 
+sphinx-apidoc
+=============
 
+We use `sphinx-apidoc <http://sphinx-doc.org/man/sphinx-apidoc.html>`_
+to automatically generate out API pages from the code.  Run this code
+from the root nilmtk directory to regenerate the docs::
 
-
-
-
-
+    sphinx-apidoc -f -o docs nilmtk

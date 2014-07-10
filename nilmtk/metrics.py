@@ -1,14 +1,3 @@
-from __future__ import print_function, division
-import numpy as np
-import pandas as pd
-from .metergroup import MeterGroup
-
-# For some reason, importing sklearn causes PyTables to raise lots
-# of DepreciatedWarnings for Pandas code.
-import warnings
-warnings.filterwarnings("ignore", category=DeprecationWarning)
-
-
 '''Metrics to compare disaggregation performance of various algorithms
 
 Notation
@@ -31,7 +20,15 @@ Below is the notation used to mathematically define each metric.
 :math:`x^{(n)}_t` - ground truth state of appliance :math:`n` in time slice :math:`t`.
 
 :math:`\\hat{x}^{(n)}_t` - estimated state of appliance :math:`n` in time slice :math:`t`.
+
+Functions
+---------
 '''
+
+from __future__ import print_function, division
+import numpy as np
+import pandas as pd
+from .metergroup import MeterGroup
 
 
 def error_in_assigned_energy(predictions, ground_truth):
