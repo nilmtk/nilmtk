@@ -120,7 +120,8 @@ class HDFDataStore(DataStore):
                 else:
                     data.timeframe = TimeFrame()
 
-                yield data
+                if len(data) > 2:
+                    yield data
 
     def append(self, *args, **kwargs):
         self.store.append(*args, **kwargs)
