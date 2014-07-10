@@ -2,11 +2,11 @@
 data.
 
 All metrics functions have the same interface.  Each function takes
-`predictions` and `ground_truth` parameters.  Both of which are 
+`predictions` and `ground_truth` parameters.  Both of which are
 nilmtk.MeterGroup objects.  Each function returns one of two types:
 either a pd.Series or a single float.  Most functions return a
-pd.Series where the index is a meter instance int (or tuple for
-MeterGroups).
+pd.Series where each index element is a meter instance int or a tuple
+of ints for MeterGroups.
 
 Notation
 --------
