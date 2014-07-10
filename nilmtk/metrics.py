@@ -1,4 +1,12 @@
-'''Metrics to compare disaggregation performance of various algorithms
+'''Metrics to compare disaggregation performance against ground truth
+data.
+
+All metrics functions have the same interface.  Each function takes
+`predictions` and `ground_truth` parameters.  Both of which are 
+nilmtk.MeterGroup objects.  Each function returns one of two types:
+either a pd.Series or a single float.  Most functions return a
+pd.Series where the index is a meter instance int (or tuple for
+MeterGroups).
 
 Notation
 --------
@@ -23,6 +31,7 @@ Below is the notation used to mathematically define each metric.
 
 Functions
 ---------
+
 '''
 
 from __future__ import print_function, division
@@ -225,7 +234,7 @@ def f1_score(predictions, ground_truth):
     return pd.Series(f1_scores)
 
 
-########## FUNCTIONS BELOW THIS LINE HAVE NOT YET CONVERTED TO NILMTK v0.2 #####
+##### FUNCTIONS BELOW THIS LINE HAVE NOT YET BEEN CONVERTED TO NILMTK v0.2 #####
 
 
 """
@@ -367,8 +376,6 @@ def precision_recall(predicted_states, ground_truth_states):
     rec = tfpn[0, :] / (tfpn[0, :] + tfpn[2, :])
 
     return np.array([prec, rec])
-
-
 
 
 def hamming_loss(predicted_state, ground_truth_state):
