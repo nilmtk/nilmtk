@@ -1,27 +1,26 @@
 * Preprocessing: 
-  instead of drop missing mains and make common index:
   * fill appliance gaps before doing metrics
+
+* Stats:
+  * Focus on stats for Scientific Data paper
+  * ElecMeter.plot() and MeterGroup.plot() - how to select time? `load_kwargs`?
+  * goodsectionsresults could do with a plotting function like
+    plot_missing_samples_with_rectangles
+  * check proportion_of_energy_submetered agrees with v0.1 for REDD
+  * implement energy_per_meter
+  * implement dropout_rate stats node (and think about how
+    dropout_rate_per_period would work... supposedly we tell the loader
+    to load small chunks (e.g. 1 minute) and then we just need to teach
+    dropout_rate_results to plot like plot_missing_samples_with_bitmap.
+  * implement on durations (make sure it can work with metrics)
+  * activity distribution
+  * building.describe() and dataset.describe()
 
 * Metrics
   * Should specify preprocessing done on training data in disag
     output???  Do we need to apply same preprocessing to test data?
     I guess so.
   * TODO in combinatorial_optimisation (mostly metadata IIRC)
-
-* Stats:
-  * Focus on stats for Scientific Data paper
-  * ElecMeter.plot() and MeterGroup.plot() - how to select time? `load_kwargs`?
-  * goodsectionsresults could do with a plotting function like
-plot_missing_samples_with_rectangles
-  * check proportion_of_energy_submetered agrees with v0.1 for REDD
-  * implement energy_per_meter
-  * implement dropout_rate stats node (and think about how
-dropout_rate_per_period would work... supposedly we tell the loader
-to load small chunks (e.g. 1 minute) and then we just need to teach
-dropout_rate_results to plot like plot_missing_samples_with_bitmap.
-  * implement on durations (make sure it can work with metrics)
-  * activity distribution
-  * building.describe() and dataset.describe()
 
 * train_test_split (see nilmtk.cross_validation.train_test_split in v0.1)
 * load only required measurements
