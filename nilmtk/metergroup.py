@@ -8,8 +8,9 @@ from .datastore import join_key
 from .utils import (tree_root, nodes_adjacent_to_root, simplest_type_for,
                     flatten_2d_list)
 from .measurement import select_best_ac_type, AC_TYPES
+from .elecmeterandmetergroup import ElecMeterAndMeterGroup
 
-class MeterGroup(object):
+class MeterGroup(ElecMeterAndMeterGroup):
     """A group of ElecMeter objects. Can contain nested MeterGroup objects.
 
     Implements many of the same methods as ElecMeter.
@@ -410,7 +411,7 @@ class MeterGroup(object):
                 timeframe = timeframe.intersect(another_chunk.timeframe)
                 chunk += another_chunk
 
-            chunk = chunk.dropna()
+            chunk = chunk.dropna().icol(0)
             chunk.timeframe = timeframe
             yield chunk
 
@@ -622,11 +623,7 @@ class MeterGroup(object):
     
     def activity_distribution(self, bin_size, timespan):
         raise NotImplementedError
-    
-    def when_on(self, on_power_threshold):
-        """Return Series of bools"""
-        raise NotImplementedError
-    
+        
     def cross_correlation(self):
         """Correlation between items."""
         raise NotImplementedError

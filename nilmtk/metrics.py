@@ -169,7 +169,7 @@ def rms_error_power(predictions, ground_truth):
 
 ########## FUNCTIONS BELOW THIS LINE HAVE NOT YET CONVERTED TO NILMTK v0.2 #####
 
-"""
+
 def powers_to_states(powers):
     '''Converts power demands into binary states
 
@@ -192,7 +192,7 @@ def powers_to_states(powers):
 
     return states
 
-
+"""
 def confusion_matrices(predicted_states, ground_truth_states):
     '''Compute confusion matrix between appliance states for each appliance
 

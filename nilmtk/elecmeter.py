@@ -9,10 +9,11 @@ from .appliance import Appliance
 from .datastore import Key
 from .measurement import select_best_ac_type
 from .node import Node
+from .elecmeterandmetergroup import ElecMeterAndMeterGroup
 
 ElecMeterID = namedtuple('ElecMeterID', ['instance', 'building', 'dataset'])
 
-class ElecMeter(Hashable):
+class ElecMeter(Hashable, ElecMeterAndMeterGroup):
     """Represents a physical electricity meter.
     
     Attributes
@@ -293,7 +294,7 @@ class ElecMeter(Hashable):
 
         # Pull data through preprocessing pipeline
         for chunk in generator:
-            yield chunk
+            yield chunk.icol(0).dropna()
 
     def voltage_series(self):
         """Returns a generator of pd.Series of voltage, if available."""
@@ -379,10 +380,6 @@ class ElecMeter(Hashable):
     def activity_distribution(self, bin_size, timespan):
         raise NotImplementedError
     
-    def when_on(self):
-        """Return Series of bools"""
-        raise NotImplementedError    
-
     def on_off_events(self):
         # use self.metadata.minimum_[off|on]_duration
         raise NotImplementedError
@@ -447,6 +444,6 @@ def diff_between_two_meters(master, slave):
         slave_chunk = slave_chunk.resample(period_alias)
         master_chunk = master_chunk.resample(period_alias)
 
-        diff = (master_chunk.icol(0) - slave_chunk.icol(0)).dropna()
-        sum_of_slave_power = slave_chunk.icol(0).dropna().sum()
+        diff = (master_chunk - slave_chunk).dropna()
+        sum_of_slave_power = slave_chunk.sum()
         yield diff, sum_of_slave_power
