@@ -1,4 +1,5 @@
 import pandas as pd
+from .timeframe import TimeFrame
 
 class Electric(object):
     """Common implementations of methods shared by ElecMeter and MeterGroup.
@@ -31,9 +32,13 @@ class Electric(object):
         immediately downstream of this meter.  If any appliance 
         does not have an `on_power_threshold` then default to 10 watts."""
         DEFAULT_ON_POWER_THRESHOLD = 10
-        return min(
-            [appl.metadata.get('on_power_threshold', DEFAULT_ON_POWER_THRESHOLD)
-             for appl in self.appliances])
+        on_power_thresholds = [
+            appl.metadata.get('on_power_threshold', DEFAULT_ON_POWER_THRESHOLD)
+            for appl in self.appliances]
+        if on_power_thresholds:
+            return min(on_power_thresholds)
+        else:
+            return DEFAULT_ON_POWER_THRESHOLD
 
 
 def align_two_meters(master, slave, func='power_series'):
@@ -51,7 +56,11 @@ def align_two_meters(master, slave, func='power_series'):
     sections = master.good_sections()
     master_generator = getattr(master, func)(periods=sections)
     for master_chunk in master_generator:
-        slave_generator = getattr(slave, func)(periods=[master_chunk.timeframe],
+        if len(master_chunk) < 2:
+            return
+        chunk_timeframe = TimeFrame(master_chunk.index[0],
+                                    master_chunk.index[-1])
+        slave_generator = getattr(slave, func)(periods=[chunk_timeframe],
                                                chunksize=1E9)
         slave_chunk = next(slave_generator)
 

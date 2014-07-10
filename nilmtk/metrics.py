@@ -124,10 +124,11 @@ def mean_normalized_error_power(predictions, ground_truth):
     for pred_meter, ground_truth_meter in both_sets_of_meters:
         total_abs_diff = 0.0
         sum_of_ground_truth_power = 0.0
-        for aligned_meters in align_two_meters(pred_meter, ground_truth_meter):
-            diff = (aligned_meters.icol(0) - aligned_meters.icol(1)).dropna()
-            total_abs_diff += sum(abs(diff))
-            sum_of_ground_truth_power += aligned_meters.icol(1).sum()
+        for aligned_meters_chunk in align_two_meters(pred_meter, 
+                                                     ground_truth_meter):
+            diff = aligned_meters_chunk.icol(0) - aligned_meters_chunk.icol(1)
+            total_abs_diff += sum(abs(diff.dropna()))
+            sum_of_ground_truth_power += aligned_meters_chunk.icol(1).sum()
 
         mne[pred_meter.instance()] = total_abs_diff / sum_of_ground_truth_power
 
@@ -158,8 +159,10 @@ def rms_error_power(predictions, ground_truth):
     for pred_meter, ground_truth_meter in both_sets_of_meters:
         sum_of_squared_diff = 0.0
         n_samples = 0
-        for aligned_meters in align_two_meters(pred_meter, ground_truth_meter):
-            diff = (aligned_meters.icol(0) - aligned_meters.icol(1)).dropna()
+        for aligned_meters_chunk in align_two_meters(pred_meter, 
+                                                     ground_truth_meter):
+            diff = aligned_meters_chunk.icol(0) - aligned_meters_chunk.icol(1)
+            diff.dropna(inplace=True)
             sum_of_squared_diff += (diff ** 2).sum()
             n_samples += len(diff)
 
@@ -168,7 +171,7 @@ def rms_error_power(predictions, ground_truth):
     return pd.Series(error)
 
 
-def f_score(predictions, ground_truth):
+def f1_score(predictions, ground_truth):
     '''Compute F1 scores.
     
     .. math::
@@ -184,24 +187,41 @@ def f_score(predictions, ground_truth):
     -------
     f1_scores : pd.Series
         Each index is an meter instance int (or tuple for MeterGroups).
-        Each value is the F1 score for that appliance.
-
+        Each value is the F1 score for that appliance.  If there are multiple
+        chunks then the value is the weighted mean of the F1 score for 
+        each chunk.
     '''
-    from sklearn.metrics import f1_score
+    # If we import sklearn at top of file then sphinx breaks.
+    from sklearn.metrics import f1_score as sklearn_f1_score
 
-    threshold = 30
-    predicted_states = (predicted_power > threshold).astype(int)
-    ground_truth_states = (ground_truth_power > threshold).astype(int)
+    # sklearn produces lots of DepreciationWarnings with PyTables
+    import warnings
+    warnings.filterwarnings("ignore", category=DeprecationWarning) 
+
     f1_scores = {}
-
     both_sets_of_meters = iterate_through_submeters_of_two_metergroups(
         predictions, ground_truth)
-    # for pred_meter, ground_truth_meter in both_sets_of_meters:
-    #     f1_scores[pred_meter.instance()] = pass
+    for pred_meter, ground_truth_meter in both_sets_of_meters:
+        scores_for_meter = pd.DataFrame(columns=['score', 'n_samples'])
+        for aligned_states_chunk in align_two_meters(pred_meter, 
+                                                     ground_truth_meter,
+                                                     'when_on'):
+            aligned_states_chunk.dropna(inplace=True)
+            aligned_states_chunk = aligned_states_chunk.astype(int)
+            score = sklearn_f1_score(aligned_states_chunk.icol(0),
+                                     aligned_states_chunk.icol(1))
+            scores_for_meter = scores_for_meter.append(
+                {'score': score, 'n_samples': len(aligned_states_chunk)},
+                ignore_index=True)
 
-    for appliance in predicted_states.columns:
-        f1_scores[appliance] = f1_score(
-            ground_truth_states[[appliance]], predicted_states[[appliance]])
+        # Calculate weighted mean
+        tot_samples = scores_for_meter['n_samples'].sum()
+        scores_for_meter['proportion'] = (scores_for_meter['n_samples'] / 
+                                          tot_samples)
+        avg_score = (scores_for_meter['score'] * 
+                     scores_for_meter['proportion']).sum()
+        f1_scores[pred_meter.instance()] = avg_score
+
     return pd.Series(f1_scores)
 
 
