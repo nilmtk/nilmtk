@@ -661,3 +661,22 @@ class MeterGroup(object):
           {'cold': MeterGroup, 'hot': MeterGroup}
         """
         raise NotImplementedError
+
+
+def iterate_through_submeters_of_two_metergroups(master, slave):
+    """
+    Parameters
+    ---------
+    master, slave : MeterGroup
+
+    Returns
+    -------
+    list of 2-tuples of the form (`master_meter`, `slave_meter`)
+    """
+    zipped = []
+    for master_meter in master.submeters():
+        slave_identifier = master_meter.identifier._replace(
+            dataset=slave.dataset())
+        slave_meter = slave[slave_identifier]
+        zipped.append((master_meter, slave_meter))
+    return zipped

@@ -28,7 +28,7 @@ Functions
 from __future__ import print_function, division
 import numpy as np
 import pandas as pd
-from .metergroup import MeterGroup
+from .metergroup import MeterGroup, iterate_through_submeters_of_two_metergroups
 from .elecmeter import diff_between_two_meters
 
 def error_in_assigned_energy(predictions, ground_truth):
@@ -50,15 +50,13 @@ def error_in_assigned_energy(predictions, ground_truth):
         in kWh.
     """
     errors = {}
-    for meter in predictions.submeters():
-        ground_truth_meter_identifier = meter.identifier._replace(
-            dataset=ground_truth.dataset())
-        ground_truth_meter = ground_truth[ground_truth_meter_identifier]
-        sections = meter.good_sections()
-
+    both_meters = iterate_through_submeters_of_two_metergroups(predictions, 
+                                                               ground_truth)
+    for pred_meter, ground_truth_meter in both_meters:
+        sections = pred_meter.good_sections()
         ground_truth_energy = ground_truth_meter.total_energy(periods=sections)
-        predicted_energy = meter.total_energy(periods=sections)
-        errors[meter.instance()] = np.abs(ground_truth_energy - predicted_energy)
+        predicted_energy = pred_meter.total_energy(periods=sections)
+        errors[pred_meter.instance()] = np.abs(ground_truth_energy - predicted_energy)
     return pd.Series(errors)
 
 
@@ -120,21 +118,18 @@ def mean_normalized_error_power(predictions, ground_truth):
         Each value is the MNE for that appliance.
     '''
 
-    # TODO: need to resample to keep things in step
     mne = {}
-    for meter in predictions.submeters():
-        ground_truth_meter_identifier = meter.identifier._replace(
-            dataset=ground_truth.dataset())
-        ground_truth_meter = ground_truth[ground_truth_meter_identifier]
-
+    both_meters = iterate_through_submeters_of_two_metergroups(predictions, 
+                                                               ground_truth)
+    for pred_meter, ground_truth_meter in both_meters:
         total_abs_diff = 0.0
         sum_of_ground_truth_power = 0.0
-        diff_generator = diff_between_two_meters(meter, ground_truth_meter)
-        for (diff, sum_gnd_truth_power_for_chunk) in diff_generator:
+        diff_generator = diff_between_two_meters(pred_meter, ground_truth_meter)
+        for diff, sum_gnd_truth_power_for_chunk in diff_generator:
             total_abs_diff += sum(abs(diff))
             sum_of_ground_truth_power += sum_gnd_truth_power_for_chunk
 
-        mne[meter.instance()] = total_abs_diff / sum_of_ground_truth_power
+        mne[pred_meter.instance()] = total_abs_diff / sum_of_ground_truth_power
 
     return pd.Series(mne)
 

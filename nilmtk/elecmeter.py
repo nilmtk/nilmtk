@@ -429,8 +429,8 @@ def diff_between_two_meters(master, slave):
 
     Returns
     -------
-    generator of 2-tuple: (diff, sum_of_slave_power).  diff is a pd.Series and 
-    sum_of_slave_power is a float.
+    generator of 2-tuple: (`diff`, `sum_of_slave_power`).  `diff` is a pd.Series and 
+    `sum_of_slave_power` is a float.
     """
     sample_period = master.sample_period()
     period_alias = '{:d}S'.format(sample_period)
