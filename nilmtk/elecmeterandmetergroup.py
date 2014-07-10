@@ -5,10 +5,11 @@ class ElecMeterAndMeterGroup(object):
     def when_on(self, **load_kwargs):
         """Are the connected appliances appliance is on (True) or off (False)?
 
-        Uses `self.min_on_power_threshold()`.
+        Uses `self.min_on_power_threshold()` if `on_power_threshold` not provided.
 
         Parameters
         ----------
+        on_power_threshold : number, optional
         **load_kwargs : key word arguments
             Passed to self.power_series()
 
@@ -18,7 +19,8 @@ class ElecMeterAndMeterGroup(object):
             index is the same as for chunk returned by `self.power_series()`
             values are booleans
         """
-        on_power_threshold = self.min_on_power_threshold()
+        on_power_threshold = load_kwargs.pop('on_power_threshold', 
+                                             self.min_on_power_threshold())
         for chunk in self.power_series(**load_kwargs):
             yield chunk > on_power_threshold
         

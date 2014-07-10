@@ -411,7 +411,6 @@ class MeterGroup(ElecMeterAndMeterGroup):
                 timeframe = timeframe.intersect(another_chunk.timeframe)
                 chunk += another_chunk
 
-            chunk = chunk.dropna().icol(0)
             chunk.timeframe = timeframe
             yield chunk
 

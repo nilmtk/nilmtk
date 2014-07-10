@@ -294,7 +294,10 @@ class ElecMeter(Hashable, ElecMeterAndMeterGroup):
 
         # Pull data through preprocessing pipeline
         for chunk in generator:
-            yield chunk.icol(0).dropna()
+            series = chunk.icol(0).dropna()
+            series.timeframe = getattr(chunk, 'timeframe', None)
+            series.look_ahead = getattr(chunk, 'look_ahead', None)
+            yield series
 
     def voltage_series(self):
         """Returns a generator of pd.Series of voltage, if available."""
