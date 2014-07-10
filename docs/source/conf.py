@@ -11,7 +11,7 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sphinx_bootstrap_theme
+# import sphinx_bootstrap_theme
 
 import sys
 import os
@@ -20,78 +20,9 @@ import os
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-'''
-sys.path.insert(0, os.path.abspath('.'))
-sys.path.insert(0, os.path.abspath('../../nilmtk/'))
-sys.path.insert(0, os.path.abspath('../../nilmtk/nilmtk/'))
-sys.path.insert(0, os.path.abspath('../../nilmtk/nilmtk'))
-sys.path.insert(0, os.path.abspath('../../nilmtk/nilmtk/sensors/'))
-sys.path.insert(0, '/usr/local/lib/python2.7/dist-packages/')
-'''
 
 sphinxext_path = os.path.abspath(os.path.join('..', 'sphinxext'))
 sys.path.insert(0, sphinxext_path)
-# print sys.path
-
-
-class Mock(object):
-
-    __all__ = []
-
-    def __init__(self, *args, **kwargs):
-        pass
-
-    def __call__(self, *args, **kwargs):
-        return Mock()
-
-    @classmethod
-    def __getattr__(cls, name):
-        if name in ('__file__', '__path__'):
-            return '/dev/null'
-        elif name[0] == name[0].upper():
-            return type(name, (), {})
-        else:
-            return Mock()
-
-
-def all_from(folder='', abspath=None):
-    """add all dirs under `folder` to sys.path if any .py files are found.
-    Use an abspath if you'd rather do it that way.
-
-    Uses the current working directory as the location of using.py.
-    Keep in mind that os.walk goes *all the way* down the directory tree.
-    With that, try not to use this on something too close to '/'
-
-    """
-    add = set(sys.path)
-    if abspath is None:
-        cwd = os.path.abspath(os.path.curdir)
-        abspath = os.path.join(cwd, folder)
-        abspath = os.path.abspath(abspath)
-    for root, dirs, files in os.walk(abspath):
-        for f in files:
-            if f.endswith('.py'):
-                add.add(root)
-                break
-    for i in add:
-        if i not in sys.path:
-            sys.path.append(i)
-            print "adding", i
-            print "/n"
-
-all_from(os.path.join('..', '..', '..', 'nilmtk'))
-all_from(os.path.join('..', '..', 'nilmtk'))
-all_from(os.path.join('..', '..'))
-
-import nilmtk
-
-
-'''MOCK_MODULES = ['numpy', 'scipy', 'matplotlib', 'scipy.stats'
-                'matplotlib.pyplot', 'scipy.interpolate', 'pandas']
-for mod_name in MOCK_MODULES:
-    sys.modules[mod_name] = Mock()
-'''
-
 
 # -- General configuration -----------------------------------------------
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -107,10 +38,16 @@ extensions = [
     'sphinx.ext.todo',
     'sphinx.ext.viewcode',
     'numpydoc',
-    'inheritance_diagram'
+    'inheritance_diagram',
+    'sphinx.ext.autosummary'
 ]
 #    'matplotlib.sphinxext.plot_directive']
 #    'matplotlib.sphinxext.ipython_directive']
+
+autodoc_default_flags = ['members', 'undoc-members', 'inherited-members', 
+                         'show-inheritance']
+
+autosummary_generate = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['ntemplates']
@@ -176,9 +113,9 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-#html_theme = 'default'
-html_theme = 'bootstrap'
-html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
+html_theme = 'default'
+#html_theme = 'bootstrap'
+#html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the

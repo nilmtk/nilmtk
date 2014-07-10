@@ -66,8 +66,8 @@ class HDFDataStore(DataStore):
 
         Returns
         ------- 
-        Returns a generator of DataFrame objects.  Each DataFrame is has
-            extra attributes:
+        generator of DataFrame objects
+            Each DataFrame is has extra attributes:
                 - timeframe : TimeFrame of period intersected with self.window
                 - look_ahead : pd.DataFrame:
                     with `n_look_ahead_rows` rows.  The first row will be for
@@ -78,10 +78,6 @@ class HDFDataStore(DataStore):
             Returns an empty DataFrame if no data is available for the
             specified period (or if the period.intersect(self.window)
             is empty).
-
-        Raises
-        ------
-        MemoryError if we try to load too much data.
         """
         # TODO: calculate chunksize default based on physical 
         # memory installed and number of columns

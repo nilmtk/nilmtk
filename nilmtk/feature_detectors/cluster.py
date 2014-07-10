@@ -1,13 +1,5 @@
 from __future__ import print_function, division
-from sklearn.cluster import KMeans
-from sklearn import metrics
 import numpy as np
-
-
-# For some reason, importing sklearn causes PyTables to raise lots
-# of DepreciatedWarnings for Pandas code.
-import warnings
-warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
 # Fix the seed for repeatability of experiments
@@ -85,6 +77,9 @@ def _apply_clustering(X, max_num_clusters):
     centroids : list of numbers
         List of power in different states of an appliance
     '''
+    # If we import sklearn at the top of the file then it makes autodoc fail
+    from sklearn.cluster import KMeans
+    from sklearn import metrics
 
     # Finds whether 2 or 3 gives better Silhouellete coefficient
     # Whichever is higher serves as the number of clusters for that

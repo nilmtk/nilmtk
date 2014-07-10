@@ -1,7 +1,6 @@
 from __future__ import print_function, division
 import numpy as np
 import pandas as pd
-from sklearn.metrics import f1_score
 from .metergroup import MeterGroup
 
 # For some reason, importing sklearn causes PyTables to raise lots
@@ -389,6 +388,7 @@ def f_score(predicted_power, ground_truth_power):
     -------
     numpy array where columns represent appliances and rows represent F score
     '''
+    from sklearn.metrics import f1_score
     threshold = 30
     predicted_states = (predicted_power > threshold).astype(int)
     ground_truth_states = (ground_truth_power > threshold).astype(int)

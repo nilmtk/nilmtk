@@ -1,6 +1,5 @@
 from __future__ import print_function, division
 import pandas as pd
-from sklearn.utils.extmath import cartesian
 import numpy as np
 import json
 from datetime import datetime
@@ -69,6 +68,8 @@ class CombinatorialOptimisation(object):
         **load_kwargs : key word arguments
             Passed to `mains.power_series(**kwargs)`
         '''
+        # If we import sklearn at the top of the file then it makes autodoc fail
+        from sklearn.utils.extmath import cartesian
 
         # Extract output_name from load_kwargs
         date_now = datetime.now().isoformat().split('.')[0]
