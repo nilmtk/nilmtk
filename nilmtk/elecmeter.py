@@ -10,6 +10,7 @@ from .datastore import Key
 from .measurement import select_best_ac_type
 from .node import Node
 from .electric import Electric
+import nilmtk
 
 ElecMeterID = namedtuple('ElecMeterID', ['instance', 'building', 'dataset'])
 
@@ -35,17 +36,9 @@ class ElecMeter(Hashable, Electric):
 
     meter_devices : dict, static class attribute
         See http://nilm-metadata.readthedocs.org/en/latest/dataset_metadata.html#meterdevice
-
-    all_meters : dict, static class attribute:
-        Required for resolving `upstream_of` to an ElecMeter object.
-        Keys are ElecMeterID objects.
-        Values are ElecMeter objects or, where ElecMeterID(instance=0), 
-        value is a MeterGroup object.
-
     """
 
     meter_devices = {}
-    all_meters = {}
 
     def __init__(self, store=None, metadata=None, meter_id=None):
         # Store and check parameters
@@ -55,20 +48,11 @@ class ElecMeter(Hashable, Electric):
         self.store = store
         self.identifier = meter_id
 
-        # Insert self into ElecMeters.meters
+        # Insert self into nilmtk.global_meter_group
         if self.identifier is not None:
             assert isinstance(self.identifier, ElecMeterID)
-            ElecMeter.all_meters[self.identifier] = self
-            if self.is_site_meter():
-                # Add to self to mains meter group
-                from .metergroup import MeterGroup
-                mainsID = ElecMeterID(instance=0,
-                                      building=self.identifier.building,
-                                      dataset=self.identifier.dataset)
-                mains_group = ElecMeter.all_meters.setdefault(mainsID, 
-                                                              MeterGroup())
-                if self not in mains_group.meters:
-                    mains_group.meters.append(self)
+            if self not in nilmtk.global_meter_group.meters:
+                nilmtk.global_meter_group.meters.append(self)
 
     @property
     def key(self):
@@ -115,7 +99,7 @@ class ElecMeter(Hashable, Electric):
                                      building=self.identifier.building,
                                      dataset=self.identifier.dataset)
 
-        return ElecMeter.all_meters[id_of_upstream]
+        return nilmtk.global_meter_group[id_of_upstream]
 
     @classmethod
     def load_meter_devices(cls, store):
@@ -231,13 +215,38 @@ class ElecMeter(Hashable, Electric):
 
         Returns
         -------
-        True if all key:value pairs in `key` match any appliance
-        in `self.appliances`.
+        Bool
         """
-        for appliance in self.appliances:
-            if appliance.matches(key):
-                return True
-        return False
+
+        if not key:
+            return True
+
+        if not isinstance(key, dict):
+            raise TypeError()
+
+        match = True
+        for k, v in key.iteritems():
+            if hasattr(self.identifier, k):
+                if getattr(self.identifier, k) != v:
+                    match = False
+
+            elif self.metadata.has_key(k):
+                if self.metadata[k] != v:
+                    match = False
+
+            elif self.device.has_key(k):
+                metadata_value = self.device[k]
+                if (isinstance(metadata_value, list) and 
+                    not isinstance(v, list)):
+                    if v not in metadata_value:
+                        match = False
+                elif metadata_value != v:
+                    match = False
+
+            else:
+                raise KeyError("'{}' not a valid key.".format(k))
+
+        return match
 
     def power_series(self, **kwargs):
         """Get power Series.

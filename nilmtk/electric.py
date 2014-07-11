@@ -4,7 +4,7 @@ from .timeframe import TimeFrame
 class Electric(object):
     """Common implementations of methods shared by ElecMeter and MeterGroup.
     """
-
+    
     def when_on(self, **load_kwargs):
         """Are the connected appliances appliance is on (True) or off (False)?
 
@@ -39,6 +39,22 @@ class Electric(object):
             return min(on_power_thresholds)
         else:
             return DEFAULT_ON_POWER_THRESHOLD
+
+    def matches_appliances(self, key):
+        """
+        Parameters
+        ----------
+        key : dict
+
+        Returns
+        -------
+        True if all key:value pairs in `key` match any appliance
+        in `self.appliances`.
+        """
+        for appliance in self.appliances:
+            if appliance.matches(key):
+                return True
+        return False
 
 
 def align_two_meters(master, slave, func='power_series'):

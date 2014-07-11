@@ -1,3 +1,22 @@
+Instead of having a static list of all meters in ElecMeter, maybe have
+a static MeterGroup? Or, if that's not possible, have a static method
+in MeterGroup which returns a MeterGroup with every meter. The end
+goal is to not require a select_from_all_meters method but instead use
+the static MeterGroup.
+
+This then raises the question of what Buildings are for given that we
+can just do MeterGroup.select(building=X). Maybe Buildings are just
+convenient places for Storing a meter group for that building.
+
+* MeterGroup.__getitem__ needs to return mains meter group if
+  instance==0
+* MeterGroup.select needs to cope with list where each element is an
+  ElecMeterID or a tuple of ElecMeterIDs (for a nested MeterGroup)
+* Find where MeterGroup.from_all_meters_in_dataset is called from and
+  change it to global_meter_group.select()
+
+
+
 * Preprocessing: 
   * fill appliance gaps before doing metrics
 
@@ -17,10 +36,40 @@
   * building.describe() and dataset.describe()
 
 * Metrics
-  * Should specify preprocessing done on training data in disag
-    output???  Do we need to apply same preprocessing to test data?
-    I guess so.
   * TODO in combinatorial_optimisation (mostly metadata IIRC)
+
+Docs
+* New features (see email I sent to nipun and oli)
+* Convert dataset (point to how to write your own dataset converter)
+* Using MeterGroup to select meters.
+* re-run sphinx-apidoc
+
+Blog
+* Background to NILMTK v0.2 (going on holiday)
+* Future: high freq, metrics, better algos, Hart's stuff, more tests,
+more importers, WikiEnergy importer...
+
+Release
+* change nilmtk.github.io.  Remove "Import 6 public data sets" and
+change image. Remove FHMM
+* Master's docs:
+  * Modify master's docs/Makefile so it sends HTML to nilmtk/v0.1.x/
+  * Add Metrics
+  * Copy over 'contributing' to v0.2 branch
+* Tag master with v0.1.1
+* Merge develop into master
+* Tag with v0.2
+* Delete develop
+* Go through issue queue and close irrelevant issues
+* Tweet and mention on mailing list.  Also email:
+  * Simon (he could use NILMTK?)
+  * Zico
+  * Mark Taylor
+  * SmartB
+  * Navetas
+  * Update recent issues where I said 'wait for NILMTK v0.2'
+
+Add to todo on wiki:
 
 * train_test_split (see nilmtk.cross_validation.train_test_split in v0.1)
 * load only required measurements

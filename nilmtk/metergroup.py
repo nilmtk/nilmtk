@@ -9,6 +9,7 @@ from .utils import (tree_root, nodes_adjacent_to_root, simplest_type_for,
                     flatten_2d_list)
 from .measurement import select_best_ac_type, AC_TYPES
 from .electric import Electric
+import nilmtk
 
 class MeterGroup(Electric):
     """A group of ElecMeter objects. Can contain nested MeterGroup objects.
@@ -108,17 +109,22 @@ class MeterGroup(Electric):
         """Get a single meter.
         
         These formats for `key` are accepted:
-        * [1] - retrieves meter instance 1, raises Exception if there are 
+        * `1` - retrieves meter instance 1, raises Exception if there are 
                 more than one meter with this instance, raises KeyError
                 if none are found.  If meter instance 1 is in a nested MeterGroup
                 then retrieve the ElecMeter, not the MeterGroup.
-        * [ElecMeterID(1, 1, 'REDD')] - retrieves meter with specified meter ID
-        * [[ElecMeterID(1, 1, 'REDD')], [ElecMeterID(2, 1, 'REDD')]] - retrieves
-          MeterGroup containing meter instances 1 and 2.
-        * [ElecMeterID((1,2), 1, 'REDD')] - retrieve MeterGroup with meters 1 & 2
-        * ['toaster']    - retrieves meter or group upstream of toaster instance 1
-        * ['toaster', 2] - retrieves meter or group upstream of toaster instance 2
-        * [{'dataset': 'redd', 'building': 3, 'type': 'toaster', 'instance': 2}]
+        * `ElecMeterID(1, 1, 'REDD')` - retrieves meter with specified meter ID
+        * `[ElecMeterID(1, 1, 'REDD')], [ElecMeterID(2, 1, 'REDD')]` - retrieves
+          existing nested MeterGroup containing exactly meter instances 1 and 2.
+        * `ElecMeterID(0, 1, 'REDD')` - instance `0` means `mains`. This returns
+           a new MeterGroup of all site_meters in building 1 in REDD.
+        * `ElecMeterID(1, 1, 'REDD')` - retrieves meter with specified meter ID
+        * `ElecMeterID((1,2), 1, 'REDD')` - retrieve existing MeterGroup 
+           which contains exactly meters 1 & 2.
+        * `'toaster'`    - retrieves meter or group upstream of toaster instance 1
+        * `'toaster', 2` - retrieves meter or group upstream of toaster instance 2
+        * `{'dataset': 'redd', 'building': 3, 'type': 'toaster', 'instance': 2}`
+          - specify an appliance
 
         Returns
         -------
@@ -128,9 +134,6 @@ class MeterGroup(Electric):
             # default to get first meter
             return self[(key, 1)]
         elif isinstance(key, ElecMeterID):
-            for meter in self.meters:
-                if meter.identifier == key:
-                    return meter
             if isinstance(key.instance, tuple):
                 # find meter group from a key of the form
                 # ElecMeterID(instance=(1,2), building=1, dataset='REDD')
@@ -139,17 +142,25 @@ class MeterGroup(Electric):
                         group.building() == key.building and
                         group.dataset() == key.dataset):
                         return group
+            elif key.instance == 0:
+                metergroup_of_building = nilmtk.global_meter_group.select(
+                    building=key.building, dataset=key.dataset)
+                return metergroup_of_building.mains()
+            else:
+                for meter in self.meters:
+                    if meter.identifier == key:
+                        return meter
             raise KeyError(key)
         elif isinstance(key, list): # find MeterGroup from list of ElecMeterIDs
             if not all([isinstance(item, tuple) for item in key]):
                 raise TypeError("requires a list of ElecMeterID objects.")
             for meter in self.meters: # TODO: write unit tests for this
+                # list of ElecMeterIDs.  Return existing MeterGroup
                 if isinstance(meter, MeterGroup):
                     metergroup = meter
-                    meter_ids = set([m.identifier for m in metergroup.meters
-                                     if isinstance(m, ElecMeter)])
+                    meter_ids = set(metergroup.identifier)
                     if meter_ids == set(key):
-                        return meter
+                        return metergroup
             raise KeyError(key)
         elif isinstance(key, tuple):
             if len(key) == 2:
@@ -189,13 +200,11 @@ class MeterGroup(Electric):
                 return True
         return False
 
-    def select(self, *args, **kwargs):
-        """Select a group of meters.
+    def select(self, **kwargs):
+        """Select a group of meters based on meter metadata.
 
         e.g. 
-        * select(category='lighting')
-        * select(type='fridge')
-        * select(building=1, category='lighting')
+        * select(building=1, sample_period=6)
         * select(room='bathroom')
 
         If multiple criteria are supplied then these are ANDed together.
@@ -241,11 +250,40 @@ class MeterGroup(Electric):
           * https://github.com/pydata/pandas/blob/master/pandas/computation/eval.py#L119
         """
         selected_meters = []
+        exception_raised_every_time = True
+        exception = None
+        func = kwargs.pop('func', 'matches')
         for meter in self.meters:
-            if meter.matches(kwargs):
-                selected_meters.append(meter)
+            try:
+                match = getattr(meter, func)(kwargs)
+            except KeyError as e:
+                exception = e
+            else:
+                exception_raised_every_time = False
+                if match:
+                    selected_meters.append(meter)
+
+        if exception_raised_every_time and exception is not None:
+            raise exception
 
         return MeterGroup(selected_meters)
+
+    def select_using_appliances(self, **kwargs):
+        """Select a group of meters based on appliance metadata.
+
+        e.g. 
+        * select(category='lighting')
+        * select(type='fridge')
+        * select(building=1, category='lighting')
+        * select(room='bathroom')
+
+        If multiple criteria are supplied then these are ANDed together.
+
+        Returns
+        -------
+        new MeterGroup of selected meters.
+        """
+        return self.select(func='matches_appliances', **kwargs)
 
     @classmethod
     def from_all_meters_in_dataset(cls, meter_ids):

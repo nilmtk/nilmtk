@@ -70,21 +70,27 @@ class Appliance(Hashable):
         Bool
             True if all key:value pairs in `key` match `appliance.metadata`
             or `Appliance.appliance_types[appliance.metadata['type']]`.
+            Returns True if key is empty dict.
         """
+        if not key:
+            return True
+
         if not isinstance(key, dict):
             raise TypeError()
+
+        match = True
         for k, v in key.iteritems():
             if hasattr(self.identifier, k):
                 if getattr(self.identifier, k) != v:
-                    return False
+                    match = False
 
             elif self.metadata.has_key(k):
                 if self.metadata[k] != v:
-                    return False
+                    match = False
 
-            elif k == 'category':
+            if k == 'category':
                 if v not in self.categories():
-                    return False
+                    match = False
 
             elif self.type.has_key(k):
                 metadata_value = self.type[k]
@@ -92,11 +98,11 @@ class Appliance(Hashable):
                     not isinstance(v, list)):
                     # for example, 'control' is a list in metadata
                     if v not in metadata_value:
-                        return False
+                        match = False
                 elif metadata_value != v:
-                    return False
+                    match = False
 
             else:
-                return False
+                raise KeyError("'{}' not a valid key.".format(k))
 
-        return True
+        return match
