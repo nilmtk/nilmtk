@@ -25,6 +25,9 @@ Docs
     - load only good sections
     - then use Apply with pd.ffill
     - done!
+  * nodes
+  * the need for separate results classes
+
 * Using MeterGroup to select meters.
 * Pipeline nodes have get_X functions for operating on a vanilla
   dataframe (using NILMTK column names).

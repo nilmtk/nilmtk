@@ -1,4 +1,6 @@
 from ..results import Results
+from ..consts import SECS_PER_DAY
+import matplotlib.pyplot as plt
 
 class DropoutRateResults(Results):
     """
@@ -29,3 +31,16 @@ class DropoutRateResults(Results):
 
     def to_dict(self):
         return {'statistics': {'dropout_rate': self.combined()}}
+
+    def plot(self, ax=None):
+        if ax is None:
+            ax = plt.gca()
+        ax.xaxis.axis_date()
+        for index, row in self._data.iterrows():
+            length = (row['end'] - index).total_seconds() / SECS_PER_DAY
+            rect = plt.Rectangle((index, 0), # bottom left corner
+                                 length, # length
+                                 row['dropout_rate'], # width
+                                 color='b') 
+            ax.add_patch(rect)            
+        ax.autoscale_view()
