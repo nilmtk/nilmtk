@@ -36,14 +36,14 @@ class TestHDFDataStore(unittest.TestCase):
     def test_timeframe(self):
         self.datastore.window.clear()
         for key in self.keys:
-            self.assertEqual(self.datastore._get_timeframe(key), self.TIMEFRAME)
+            self.assertEqual(self.datastore.get_timeframe(key), self.TIMEFRAME)
 
         self._apply_mask()
         for key in self.keys:
             self.datastore.window.enabled = False
-            self.assertEqual(self.datastore._get_timeframe(key), self.TIMEFRAME)
+            self.assertEqual(self.datastore.get_timeframe(key), self.TIMEFRAME)
             self.datastore.window.enabled = True
-            self.assertEqual(self.datastore._get_timeframe(key), self.datastore.window)
+            self.assertEqual(self.datastore.get_timeframe(key), self.datastore.window)
 
     def test_n_rows(self):
         self._apply_mask()

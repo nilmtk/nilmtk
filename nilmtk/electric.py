@@ -56,6 +56,16 @@ class Electric(object):
                 return True
         return False
 
+    def power_series_all_data(self, **kwargs):
+        chunks = []        
+        for series in self.power_series(**kwargs):
+            chunks.append(series)
+        return pd.concat(chunks)
+
+    def plot(self, **loader_kwargs):
+        all_data = self.power_series_all_data(**loader_kwargs)
+        all_data.plot()
+
 
 def align_two_meters(master, slave, func='power_series'):
     """Returns a generator of 2-column pd.DataFrames.  The first column is from

@@ -1,12 +1,5 @@
 * Stats:
-  * function to load in chunks of regular length (e.g. daily)
-  * ElecMeter.plot() and MeterGroup.plot() - how to select time? `load_kwargs`?
   * check proportion_of_energy_submetered agrees with v0.1 for REDD
-
-  * Focus on stats for Scientific Data paper
-  * implement on durations (make sure it can work with metrics)
-  * activity distribution
-  * building.describe() and dataset.describe()
 
 * Metrics
   * TODO in combinatorial_optimisation (mostly metadata IIRC)
@@ -14,6 +7,10 @@
 Docs
 * New features (see email I sent to nipun and oli)
 * Convert dataset (point to how to write your own dataset converter)
+* DataStore and DataSet
+  * DataStore.window
+  * loading in chunks
+  
 * Preprocessing
   * to fill appliance gaps:
     - get good sections
@@ -21,6 +18,8 @@ Docs
     - then use Apply with pd.ffill
     - done!
   * activity distribution:
+    - use ElecMeter.get_timeframe() to get start and end
+    - use pd.period_range to make daily period index
     - load daily chunks
     - downsample using Apply
     - when_on

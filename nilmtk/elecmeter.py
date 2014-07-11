@@ -2,6 +2,8 @@ from __future__ import print_function, division
 from warnings import warn
 from collections import namedtuple
 from copy import deepcopy
+import pandas as pd
+import matplotlib.pyplot as plt
 from .preprocessing import Clip
 from .stats import TotalEnergy, GoodSections, DropoutRate
 from .hashable import Hashable

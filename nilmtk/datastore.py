@@ -3,7 +3,7 @@ import pandas as pd
 from itertools import repeat
 from time import time
 from copy import deepcopy
-from .timeframe import TimeFrame
+from .timeframe import TimeFrame, timeframes_from_periodindex
 from .node import Node
 
 MAX_MEM_ALLOWANCE_IN_BYTES = 1E9
@@ -58,7 +58,7 @@ class HDFDataStore(DataStore):
         cols : list of Measurements, optional
             e.g. [('power', 'active'), ('power', 'reactive'), ('voltage')]
             if not provided then will return all columns from the table.
-        sections : list of nilmtk.TimeFrame objects, optional
+        sections : list of nilmtk.TimeFrame objects or a pd.PeriodIndex, optional
             defines the time sections to load.  If `self.window` is enabled
             then each `period` will be intersected with `self.window`.
         n_look_ahead_rows : int, optional, defaults to 10
@@ -89,6 +89,9 @@ class HDFDataStore(DataStore):
             key = key[:-1]
 
         sections = [TimeFrame()] if sections is None else sections
+        if isinstance(sections, pd.PeriodIndex):
+            sections = timeframes_from_periodindex(sections)
+
         for period in sections:
             window_intersect = self.window.intersect(period)
             if window_intersect.empty:
@@ -254,7 +257,7 @@ class HDFDataStore(DataStore):
             nrows = storer.nrows
         return nrows
         
-    def _get_timeframe(self, key):
+    def get_timeframe(self, key):
         """
         Returns
         -------
