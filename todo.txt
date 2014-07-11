@@ -1,6 +1,4 @@
 * Stats:
-  * ElecMeter.dropout_rate()
-  * MeterGroup.dropout_rate() (raise NotImplementedError() if full_results=True)
   * function to load in chunks of regular length (e.g. daily)
   * ElecMeter.plot() and MeterGroup.plot() - how to select time? `load_kwargs`?
   * check proportion_of_energy_submetered agrees with v0.1 for REDD

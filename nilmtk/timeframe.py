@@ -251,3 +251,21 @@ def timeframe_from_dict(d):
 
 def list_of_timeframes_from_list_of_dicts(dicts):
     return [timeframe_from_dict(d) for d in dicts]
+
+
+def timeframes_from_periodindex(periods):
+    """
+    Parameters
+    ----------
+    periods : pd.PeriodIndex
+
+    Returns
+    -------
+    list of TimeFrames
+    """
+    assert isinstance(periods, pd.tseries.period.PeriodIndex)
+    timeframes = []
+    for period in periods:
+        timeframe = TimeFrame(period.start_time, period.end_time)
+        timeframes.append(timeframe)
+    return timeframes
