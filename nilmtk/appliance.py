@@ -88,7 +88,7 @@ class Appliance(Hashable):
                 if self.metadata[k] != v:
                     match = False
 
-            if k == 'category':
+            elif k == 'category':
                 if v not in self.categories():
                     match = False
 

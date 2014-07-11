@@ -106,7 +106,8 @@ class MeterGroup(Electric):
         return [m for m in self.meters if isinstance(m, MeterGroup)]
 
     def __getitem__(self, key):
-        """Get a single meter.
+        """Get a single meter using appliance type and instance unless
+        ElecMeterID is supplied.
         
         These formats for `key` are accepted:
         * `1` - retrieves meter instance 1, raises Exception if there are 
@@ -168,10 +169,17 @@ class MeterGroup(Electric):
             else:
                 raise TypeError()
         elif isinstance(key, dict):
+            meters = []
             for meter in self.meters:
-                if meter.matches(key):
-                    return meter
-            raise KeyError(key)
+                if meter.matches_appliances(key):
+                    meters.append(meter)
+            if len(meters) == 1:
+                return meters[0]
+            elif len(meters) > 1:
+                raise Exception('search terms match {} appliances'
+                                .format(len(meters)))
+            else:
+                raise KeyError(key)
         elif isinstance(key, int) and not isinstance(key, bool):
             meters_found = []
             for meter in self.meters:
@@ -285,8 +293,7 @@ class MeterGroup(Electric):
         """
         return self.select(func='matches_appliances', **kwargs)
 
-    @classmethod
-    def from_all_meters_in_dataset(cls, meter_ids):
+    def from_list(self, meter_ids):
         """
         Parameters
         ----------
@@ -303,9 +310,9 @@ class MeterGroup(Electric):
         meters = []
         for meter_id in meter_ids:
             if isinstance(meter_id, ElecMeterID):
-                meters.append(ElecMeter.all_meters[meter_id])
+                meters.append(self[meter_id])
             elif isinstance(meter_id, tuple):
-                metergroup = MeterGroup.from_all_meters_in_dataset(meter_id)
+                metergroup = self.from_list(meter_id)
                 meters.append(metergroup)
             else:
                 raise TypeError()
@@ -339,13 +346,16 @@ class MeterGroup(Electric):
                 new_identifiers.append(tuple(nested))
             else:
                 new_identifiers.append(new_id)
-        return MeterGroup.from_all_meters_in_dataset(new_identifiers)
+        return MeterGroup.from_list(new_identifiers)
 
     def __eq__(self, other):
         if isinstance(other, MeterGroup):
-            return other.meters == self.meters
+            return set(other.meters) == set(self.meters)
         else:
             return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
     @property
     def appliances(self):
@@ -394,7 +404,13 @@ class MeterGroup(Electric):
                     _build_wiring_graph(metergroup.meters)
                 else:
                     upstream_meter = meter.upstream_meter()
+                    # Need to ensure we use the same object
+                    # if upstream meter already exists.
                     if upstream_meter is not None:
+                        for node in wiring_graph.nodes():
+                            if upstream_meter == node:
+                                upstream_meter = node
+                                break
                         wiring_graph.add_edge(upstream_meter, meter)
         _build_wiring_graph(self.meters)
         return wiring_graph

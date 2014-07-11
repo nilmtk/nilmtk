@@ -3,7 +3,7 @@ from __future__ import print_function, division
 import unittest
 from os.path import join
 from nilmtk.tests.testingtools import data_dir
-from nilmtk import Appliance, MeterGroup, ElecMeter, HDFDataStore
+from nilmtk import Appliance, MeterGroup, ElecMeter, HDFDataStore, global_meter_group
 from nilmtk.utils import tree_root, nodes_adjacent_to_root
 from nilmtk.elecmeter import ElecMeterID
 from nilmtk.building import BuildingID
@@ -43,7 +43,7 @@ class TestMeterGroup(unittest.TestCase):
         fridge_meter.appliances = [fridge]
         mg = MeterGroup([fridge_meter])
 
-        self.assertEqual(mg.select(category='cold'), mg)
+        self.assertEqual(mg.select_using_appliances(category='cold'), mg)
         # TODO: make this test more rigorous!
         
     def test_wiring_graph(self):
@@ -89,12 +89,12 @@ class TestMeterGroup(unittest.TestCase):
         self.assertIsInstance(mg['washer dryer'], MeterGroup)
         self.assertIsInstance(mg['fridge'], ElecMeter)
 
-    def test_from_all_meters_in_dataset(self):
+    def test_from_list(self):
         meters = []
         for i in range(1,6):
             meters.append(ElecMeter(meter_id=ElecMeterID(i, 1, None)))
             
-        mg = MeterGroup.from_all_meters_in_dataset([
+        mg = global_meter_group.from_list([
             ElecMeterID(1,1,None),
             (ElecMeterID(2,1,None), 
              (ElecMeterID(3,1,None), ElecMeterID(4,1,None), ElecMeterID(5,1,None)))
