@@ -1,10 +1,5 @@
-nilmtk API Reference
-====================
-
-This is the class and function reference of nilmtk. Please refer to
-the :ref:`full user guide <userguide>` for further details, as the class and
-function raw specifications may not be enough to give full guidelines on their
-uses.
+nilmtk package
+==============
 
 Subpackages
 -----------
@@ -24,8 +19,6 @@ Submodules
 nilmtk.building module
 ----------------------
 
-A building is a physical entity and its description is given below.
-
 .. automodule:: nilmtk.building
     :members:
     :undoc-members:
@@ -35,6 +28,14 @@ nilmtk.cross_validation module
 ------------------------------
 
 .. automodule:: nilmtk.cross_validation
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+nilmtk.exceptions module
+------------------------
+
+.. automodule:: nilmtk.exceptions
     :members:
     :undoc-members:
     :show-inheritance:

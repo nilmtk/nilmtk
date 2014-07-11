@@ -60,6 +60,14 @@ nilmtk.dataset.smart module
     :undoc-members:
     :show-inheritance:
 
+nilmtk.dataset.smart_circuits module
+------------------------------------
+
+.. automodule:: nilmtk.dataset.smart_circuits
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 nilmtk.dataset.ukpd module
 --------------------------
 
@@ -67,6 +75,7 @@ nilmtk.dataset.ukpd module
     :members:
     :undoc-members:
     :show-inheritance:
+
 
 Module contents
 ---------------
