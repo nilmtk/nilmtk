@@ -49,7 +49,7 @@ class HDFDataStore(DataStore):
         self.store = pd.HDFStore(filename, mode=mode)
         super(HDFDataStore, self).__init__()
 
-    def load(self, key, cols=None, periods=None, n_look_ahead_rows=10,
+    def load(self, key, cols=None, sections=None, n_look_ahead_rows=10,
              chunksize=1000000):
         """
         Parameters
@@ -58,8 +58,8 @@ class HDFDataStore(DataStore):
         cols : list of Measurements, optional
             e.g. [('power', 'active'), ('power', 'reactive'), ('voltage')]
             if not provided then will return all columns from the table.
-        periods : list of nilmtk.TimeFrame objects, optional
-            defines the time periods to load.  If `self.window` is enabled
+        sections : list of nilmtk.TimeFrame objects, optional
+            defines the time sections to load.  If `self.window` is enabled
             then each `period` will be intersected with `self.window`.
         n_look_ahead_rows : int, optional, defaults to 10
         chunksize : int, optional
@@ -88,8 +88,8 @@ class HDFDataStore(DataStore):
         if len(key) > 1 and key[-1] == '/':
             key = key[:-1]
 
-        periods = [TimeFrame()] if periods is None else periods
-        for period in periods:
+        sections = [TimeFrame()] if sections is None else sections
+        for period in sections:
             window_intersect = self.window.intersect(period)
             if window_intersect.empty:
                 generator = repeat(pd.DataFrame(), 1)

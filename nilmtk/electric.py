@@ -70,13 +70,13 @@ def align_two_meters(master, slave, func='power_series'):
     sample_period = master.sample_period()
     period_alias = '{:d}S'.format(sample_period)
     sections = master.good_sections()
-    master_generator = getattr(master, func)(periods=sections)
+    master_generator = getattr(master, func)(sections=sections)
     for master_chunk in master_generator:
         if len(master_chunk) < 2:
             return
         chunk_timeframe = TimeFrame(master_chunk.index[0],
                                     master_chunk.index[-1])
-        slave_generator = getattr(slave, func)(periods=[chunk_timeframe],
+        slave_generator = getattr(slave, func)(sections=[chunk_timeframe],
                                                chunksize=1E9)
         slave_chunk = next(slave_generator)
 

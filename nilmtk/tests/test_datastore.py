@@ -68,7 +68,7 @@ class TestHDFDataStore(unittest.TestCase):
         self.datastore.window.clear()
         gen = self.datastore.load(key=self.keys[0], 
                                   cols=[('power', 'active')],
-                                  periods=[timeframe])
+                                  sections=[timeframe])
         df = next(gen)
         self.assertEqual(df.index[0], timeframe.start)
         self.assertEqual(df.index[-1], timeframe.end - timedelta(seconds=1))
@@ -88,7 +88,7 @@ class TestHDFDataStore(unittest.TestCase):
 
         timeframes = [TimeFrame('2012-01-01 00:00:00', '2012-01-01 00:00:05'),
                       TimeFrame('2012-01-01 00:10:00', '2012-01-01 00:10:05')]
-        chunks = self.datastore.load(key=self.keys[0], periods=timeframes)
+        chunks = self.datastore.load(key=self.keys[0], sections=timeframes)
         i = 0
         for chunk in chunks:
             self.assertEqual(chunk.index[0], timeframes[i].start)
@@ -99,7 +99,7 @@ class TestHDFDataStore(unittest.TestCase):
 
         # Check when we have a narrow mask
         self.datastore.window = TimeFrame('2012-01-01 00:10:02', '2012-01-01 00:10:10')
-        chunks = self.datastore.load(key=self.keys[0], periods=timeframes)
+        chunks = self.datastore.load(key=self.keys[0], sections=timeframes)
         i = 0
         for chunk in chunks:
             self.assertEqual(chunk.index[0], pd.Timestamp('2012-01-01 00:10:02'))

@@ -581,13 +581,13 @@ class MeterGroup(Electric):
         submeters_dict = {}
         mains = self.mains()
         mains_good_sections = mains.good_sections()
-        mains_energy = mains.total_energy(periods=mains_good_sections)
+        mains_energy = mains.total_energy(sections=mains_good_sections)
         energy_ac_type = select_best_ac_type(mains_energy.keys())
         energy_threshold = mains_energy[energy_ac_type] * 0.05
 
         # TODO: should iterate through 'most distal' meters
         for meter in [self.mains()] + self.meters_directly_downstream_of_mains():
-            meter_energy = meter.total_energy(periods=mains_good_sections)
+            meter_energy = meter.total_energy(sections=mains_good_sections)
             meter_energy_ac_type = select_best_ac_type(meter_energy.keys(),
                                                        mains_energy.keys())
             if meter_energy[meter_energy_ac_type] < energy_threshold:
@@ -595,7 +595,7 @@ class MeterGroup(Electric):
 
             # TODO: resampling etc should happen in pipeline
             chunks = []
-            for chunk in meter.power_series(periods=mains_good_sections):
+            for chunk in meter.power_series(sections=mains_good_sections):
                 chunk = chunk.resample(rule=rule, how='mean')
 
                 # Protect against getting duplicate indicies
@@ -629,7 +629,7 @@ class MeterGroup(Electric):
         submetered_energy = 0.0
         common_ac_types = None
         for meter in self.meters_directly_downstream_of_mains():
-            energy = meter.total_energy(periods=good_mains_sections)
+            energy = meter.total_energy(sections=good_mains_sections)
             ac_types = set(energy.keys())
             ac_type = select_best_ac_type(ac_types, 
                                           mains.available_power_ac_types())
@@ -652,7 +652,7 @@ class MeterGroup(Electric):
         each value is total energy.  Index is AC types.
 
         Does not care about wiring hierarchy.  Does not attempt to ensure all 
-        channels share the same time periods.
+        channels share the same time sections.
         """ 
         energy_per_meter = pd.DataFrame(columns=self.instance(), index=AC_TYPES)
         for meter in self.meters:
