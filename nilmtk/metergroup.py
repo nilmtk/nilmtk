@@ -9,7 +9,6 @@ from .utils import (tree_root, nodes_adjacent_to_root, simplest_type_for,
                     flatten_2d_list)
 from .measurement import select_best_ac_type, AC_TYPES
 from .electric import Electric
-import nilmtk
 
 class MeterGroup(Electric):
     """A group of ElecMeter objects. Can contain nested MeterGroup objects.
@@ -144,7 +143,7 @@ class MeterGroup(Electric):
                         group.dataset() == key.dataset):
                         return group
             elif key.instance == 0:
-                metergroup_of_building = nilmtk.global_meter_group.select(
+                metergroup_of_building = self.select(
                     building=key.building, dataset=key.dataset)
                 return metergroup_of_building.mains()
             else:
