@@ -1,6 +1,9 @@
 import pandas as pd
 from datetime import timedelta
+import matplotlib.pyplot as plt
 from ..results import Results
+from ..consts import SECS_PER_DAY
+
 
 class GoodSectionsResults(Results):
     """
@@ -83,3 +86,18 @@ class GoodSectionsResults(Results):
         good_sections_list_of_dicts = [timeframe.to_dict() 
                                        for timeframe in good_sections]
         return {'statistics': {'good_sections': good_sections_list_of_dicts}}
+
+    def plot(self, ax=None):
+        if ax is None:
+            ax = plt.gca()
+        ax.xaxis.axis_date()
+        for timeframe in self.combined():
+            length = ((timeframe.end - timeframe.start).total_seconds() / 
+                      SECS_PER_DAY)
+            rect = plt.Rectangle((timeframe.start, 0), # bottom left corner
+                                 length,
+                                 1, # width
+                                 color='b') 
+            ax.add_patch(rect)            
+
+        ax.autoscale_view()

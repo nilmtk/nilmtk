@@ -1,6 +1,6 @@
+import matplotlib.pyplot as plt
 from ..results import Results
 from ..consts import SECS_PER_DAY
-import matplotlib.pyplot as plt
 
 class DropoutRateResults(Results):
     """
@@ -39,7 +39,7 @@ class DropoutRateResults(Results):
         for index, row in self._data.iterrows():
             length = (row['end'] - index).total_seconds() / SECS_PER_DAY
             rect = plt.Rectangle((index, 0), # bottom left corner
-                                 length, # length
+                                 length,
                                  row['dropout_rate'], # width
                                  color='b') 
             ax.add_patch(rect)            
