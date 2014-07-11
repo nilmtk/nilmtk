@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 import networkx as nx
 import pandas as pd
+import numpy as np
 from warnings import warn
 from .elecmeter import ElecMeter, ElecMeterID
 from .appliance import Appliance
@@ -523,6 +524,31 @@ class MeterGroup(Electric):
             return total_energy
         else:
             return total_energy.simple()
+
+    def dropout_rate(self, **load_kwargs):
+        """Sums together total energy for each meter.
+
+        Parameters
+        ----------
+        full_results : bool, default=False
+        **loader_kwargs : key word arguments for DataStore.load()
+
+        Returns
+        -------
+        if `full_results` is True then return TotalEnergyResults object
+        else return either a single number of, if there are multiple
+        AC types, then return a pd.Series with a row for each AC type.
+        """
+        full_results = load_kwargs.pop('full_results', False)
+        if full_results:
+            raise NotImplementedError()
+
+        dropout_rates = []
+        for meter in self.meters:
+            meter_dropout = meter.dropout_rate(full_results=True, **load_kwargs)
+            dropout_rates.append(meter_dropout)
+
+        return np.mean(dropout_rates)
 
     def good_sections(self, **kwargs):
         """Returns good sections for just the first meter.

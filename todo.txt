@@ -1,4 +1,6 @@
 * Stats:
+  * ElecMeter.dropout_rate()
+  * MeterGroup.dropout_rate() (raise NotImplementedError() if full_results=True)
   * function to load in chunks of regular length (e.g. daily)
   * ElecMeter.plot() and MeterGroup.plot() - how to select time? `load_kwargs`?
   * check proportion_of_energy_submetered agrees with v0.1 for REDD
@@ -20,6 +22,13 @@ Docs
     - load only good sections
     - then use Apply with pd.ffill
     - done!
+  * activity distribution:
+    - load daily chunks
+    - downsample using Apply
+    - when_on
+    - answers = zeros(n_timeslices_per_chunk)
+    - add each chunk to answers
+    - answer is now the histogram!
   * nodes
   * the need for separate results classes
 

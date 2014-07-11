@@ -3,7 +3,7 @@ from warnings import warn
 from collections import namedtuple
 from copy import deepcopy
 from .preprocessing import Clip
-from .stats import TotalEnergy, GoodSections
+from .stats import TotalEnergy, GoodSections, DropoutRate
 from .hashable import Hashable
 from .appliance import Appliance
 from .datastore import Key
@@ -348,7 +348,7 @@ class ElecMeter(Hashable, Electric):
         else:
             return total_energy.results.simple()
         
-    def dropout_rate(self):
+    def dropout_rate(self, **loader_kwargs):
         """
         Parameters
         ----------
@@ -357,9 +357,17 @@ class ElecMeter(Hashable, Electric):
 
         Returns
         -------
-        DropoutRateResults object.
+        DropoutRateResults object if `full_results` is True, 
+        else float
         """
-        raise NotImplementedError
+        full_results = loader_kwargs.pop('full_results', False)
+        source_node = self.get_source_node(**loader_kwargs)
+        dropout_rate = DropoutRate(source_node)
+        dropout_rate.run()
+        if full_results:
+            return dropout_rate.results
+        else:
+            return dropout_rate.results.simple()
         
     def good_sections(self, **loader_kwargs):
         """
