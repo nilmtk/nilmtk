@@ -4,10 +4,10 @@ nilmtk.tests package
 Submodules
 ----------
 
-nilmtk.tests.test_feature_detectors module
-------------------------------------------
+nilmtk.tests.test_pass module
+-----------------------------
 
-.. automodule:: nilmtk.tests.test_feature_detectors
+.. automodule:: nilmtk.tests.test_pass
     :members:
     :undoc-members:
     :show-inheritance:

@@ -7,7 +7,6 @@ Subpackages
 .. toctree::
 
     nilmtk.disaggregate.appliance_models
-    nilmtk.disaggregate.feature_detectors
 
 Submodules
 ----------
