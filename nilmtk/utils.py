@@ -1,5 +1,6 @@
 from __future__ import print_function, division
 import numpy as np
+import pandas as pd
 import networkx as nx
 from copy import deepcopy
 
@@ -116,3 +117,22 @@ def flatten_2d_list(list2d):
         else:
             list1d.append(item)
     return list1d
+
+
+def get_index(data):
+    """
+    Parameters
+    ----------
+    data : pandas.DataFrame or Series or DatetimeIndex
+    
+    Returns
+    -------
+    index : the index for the DataFrame or Series
+    """
+    if isinstance(data, (pd.DataFrame, pd.Series)):
+        index = data.index
+    elif isinstance(data, pd.DatetimeIndex):
+        index = data
+    else:
+        raise TypeError('wrong type for `data`.')
+    return index

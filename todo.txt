@@ -1,6 +1,3 @@
-* Preprocessing: 
-  * fill appliance gaps before doing metrics
-
 * Stats:
   * Focus on stats for Scientific Data paper
   * ElecMeter.plot() and MeterGroup.plot() - how to select time? `load_kwargs`?
@@ -22,7 +19,15 @@
 Docs
 * New features (see email I sent to nipun and oli)
 * Convert dataset (point to how to write your own dataset converter)
+* Preprocessing
+  * to fill appliance gaps:
+    - get good sections
+    - load only good sections
+    - then use Apply with pd.ffill
+    - done!
 * Using MeterGroup to select meters.
+* Pipeline nodes have get_X functions for operating on a vanilla
+  dataframe (using NILMTK column names).
 * nilmtk.global_meter_group
 * re-run sphinx-apidoc
 
@@ -32,6 +37,7 @@ Blog
 more importers, WikiEnergy importer...
 
 Release
+* remove NotImplemented functions
 * change nilmtk.github.io.  Remove "Import 6 public data sets" and
 change image. Remove FHMM
 * Master's docs:
