@@ -15,7 +15,7 @@ from ...tests.testingtools import data_dir
 
 METER_ID = ElecMeterID(instance=1, building=1, dataset='REDD')
 
-class TestLocateGaps(unittest.TestCase):
+class TestLocateGoodSections(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):

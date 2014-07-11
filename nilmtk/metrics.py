@@ -94,8 +94,8 @@ def fraction_energy_assigned_correctly(predictions, ground_truth):
         Fraction of Energy Correctly Assigned.
     '''
 
-    predictions_submeters = MeterGroup(meters=predictions.submeters())
-    ground_truth_submeters = MeterGroup(meters=ground_truth.submeters())
+    predictions_submeters = MeterGroup(meters=predictions.submeters().meters)
+    ground_truth_submeters = MeterGroup(meters=ground_truth.submeters().meters)
 
     fraction_per_meter_predictions = predictions_submeters.fraction_per_meter()
     fraction_per_meter_ground_truth = ground_truth_submeters.fraction_per_meter()

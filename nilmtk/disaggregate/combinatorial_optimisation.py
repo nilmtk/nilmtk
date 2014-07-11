@@ -46,7 +46,7 @@ class CombinatorialOptimisation(object):
         else:
             max_num_clusters = 3
 
-        for i, meter in enumerate(metergroup.submeters()):
+        for i, meter in enumerate(metergroup.submeters().meters):
             for chunk in meter.power_series(preprocessing=[Clip()]):
                 self.model[meter.instance()] = cluster(chunk, max_num_clusters)
                 break # TODO handle multiple chunks per appliance

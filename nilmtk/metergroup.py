@@ -58,6 +58,8 @@ class MeterGroup(Electric):
 
         # Load each appliance
         for appliance_md in appliances:
+            appliance_md['dataset'] = building_id.dataset
+            appliance_md['building'] = building_id.instance
             appliance = Appliance(appliance_md)
             meter_ids = [ElecMeterID(instance=meter_instance,
                                      building=building_id.instance,
@@ -110,6 +112,8 @@ class MeterGroup(Electric):
         ElecMeterID is supplied.
         
         These formats for `key` are accepted:
+
+        Retrieve a meter using details of the meter:
         * `1` - retrieves meter instance 1, raises Exception if there are 
                 more than one meter with this instance, raises KeyError
                 if none are found.  If meter instance 1 is in a nested MeterGroup
@@ -122,6 +126,8 @@ class MeterGroup(Electric):
         * `ElecMeterID(1, 1, 'REDD')` - retrieves meter with specified meter ID
         * `ElecMeterID((1,2), 1, 'REDD')` - retrieve existing MeterGroup 
            which contains exactly meters 1 & 2.
+
+        Retrieve a meter using details of appliances attached to the meter:
         * `'toaster'`    - retrieves meter or group upstream of toaster instance 1
         * `'toaster', 2` - retrieves meter or group upstream of toaster instance 2
         * `{'dataset': 'redd', 'building': 3, 'type': 'toaster', 'instance': 2}`
@@ -489,9 +495,10 @@ class MeterGroup(Electric):
         return meters
 
     def submeters(self):
-        """Returns list of all meters except site_meters"""
-        return [meter for meter in self.meters
-                if not meter.is_site_meter()]
+        """Returns new MeterGroup of all meters except site_meters"""
+        submeters = [meter for meter in self.meters
+                     if not meter.is_site_meter()]
+        return MeterGroup(submeters)
 
     def is_site_meter(self):
         """Returns True if any meters are site meters"""
@@ -625,11 +632,11 @@ class MeterGroup(Electric):
         """
         mains = self.mains()
         good_mains_sections = mains.good_sections()
-        print("number of good sections =", len(good_mains_sections))
         submetered_energy = 0.0
         common_ac_types = None
         for meter in self.meters_directly_downstream_of_mains():
-            energy = meter.total_energy(sections=good_mains_sections)
+            energy = meter.total_energy(sections=good_mains_sections,
+                                        full_results=True).combined()
             ac_types = set(energy.keys())
             ac_type = select_best_ac_type(ac_types, 
                                           mains.available_power_ac_types())
@@ -638,7 +645,7 @@ class MeterGroup(Electric):
                 common_ac_types = ac_types
             else:
                 common_ac_types = common_ac_types.intersection(ac_types)
-        mains_energy = mains.total_energy()
+        mains_energy = mains.total_energy(full_results=True).combined()
         ac_type = select_best_ac_type(mains_energy.keys(), common_ac_types)
         return submetered_energy / mains_energy[ac_type]
     
@@ -751,7 +758,7 @@ class MeterGroup(Electric):
 def iterate_through_submeters_of_two_metergroups(master, slave):
     """
     Parameters
-    ---------
+    ----------
     master, slave : MeterGroup
 
     Returns
@@ -759,7 +766,7 @@ def iterate_through_submeters_of_two_metergroups(master, slave):
     list of 2-tuples of the form (`master_meter`, `slave_meter`)
     """
     zipped = []
-    for master_meter in master.submeters():
+    for master_meter in master.submeters().meters:
         slave_identifier = master_meter.identifier._replace(
             dataset=slave.dataset())
         slave_meter = slave[slave_identifier]

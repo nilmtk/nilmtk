@@ -6,14 +6,22 @@
 Welcome to NILMTK's documentation!
 ==================================
 
-Manual
-------
+User Manual
+-----------
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 2
+
+   convert_data_to_NILMTK_format
+
+Developer Manual
+----------------
+
+.. toctree::
+   :maxdepth: 2
 
    contribute
-   hdf5_file_format
+   writing_a_dataset_converter
 
 API
 ---

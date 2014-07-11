@@ -1,5 +1,5 @@
 ***************************
-HDF5 file format for NILMTK
+Writing a dataset converter
 ***************************
 
 The `HDF5 file format <http://www.hdfgroup.org/HDF5>`_ is developed by
@@ -11,14 +11,9 @@ in another other language.  Working with HDF5 files is really easy in
 Python using `Pandas <http://pandas.pydata.org/>`_ (which, in turn,
 uses the excellent `PyTables <http://www.pytables.org>`_ package).
 
-**Background reading**
-
-If you haven't done so already, then it might be worth reading the
-`Pandas tutorial on working with HDF5 files in Pandas
-<http://pandas.pydata.org/pandas-docs/stable/io.html#hdf5-pytables>`_.
-
-Writing a dataset converter
-===========================
+.. note:: If you haven't done so already, then it might be worth reading the
+   `Pandas tutorial on working with HDF5 files in Pandas
+   <http://pandas.pydata.org/pandas-docs/stable/io.html#hdf5-pytables>`_.
 
 If you would like to contribute a new dataset converter (or just
 better understand the existing converters) then the best way to get up

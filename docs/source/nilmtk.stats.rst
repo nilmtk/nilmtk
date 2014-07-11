@@ -11,6 +11,22 @@ Subpackages
 Submodules
 ----------
 
+nilmtk.stats.dropoutrate module
+-------------------------------
+
+.. automodule:: nilmtk.stats.dropoutrate
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+nilmtk.stats.dropoutrateresults module
+--------------------------------------
+
+.. automodule:: nilmtk.stats.dropoutrateresults
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 nilmtk.stats.goodsections module
 --------------------------------
 

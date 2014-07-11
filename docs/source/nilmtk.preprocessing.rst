@@ -11,6 +11,14 @@ Subpackages
 Submodules
 ----------
 
+nilmtk.preprocessing.apply module
+---------------------------------
+
+.. automodule:: nilmtk.preprocessing.apply
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 nilmtk.preprocessing.clip module
 --------------------------------
 

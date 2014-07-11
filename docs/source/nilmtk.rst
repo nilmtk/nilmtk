@@ -64,6 +64,22 @@ nilmtk.elecmeter module
     :undoc-members:
     :show-inheritance:
 
+nilmtk.electric module
+----------------------
+
+.. automodule:: nilmtk.electric
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+nilmtk.exceptions module
+------------------------
+
+.. automodule:: nilmtk.exceptions
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 nilmtk.hashable module
 ----------------------
 

@@ -2,10 +2,11 @@ from __future__ import print_function, division
 from collections import namedtuple
 from .metergroup import MeterGroup
 from .datastore import join_key
+from .hashable import Hashable
 
 BuildingID = namedtuple('BuildingID', ['instance', 'dataset'])
 
-class Building(object):   
+class Building(Hashable):
     """
     Attributes
     ----------

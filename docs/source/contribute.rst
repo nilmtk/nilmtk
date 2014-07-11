@@ -70,4 +70,4 @@ We use `sphinx-apidoc <http://sphinx-doc.org/man/sphinx-apidoc.html>`_
 to automatically generate out API pages from the code.  Run this code
 from the root nilmtk directory to regenerate the docs::
 
-    nilmtk/docs$ sphinx-apidoc -f -o docs/source nilmtk
+    /nilmtk$ sphinx-apidoc -f -o docs/source nilmtk

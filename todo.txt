@@ -5,9 +5,9 @@
   * TODO in combinatorial_optimisation (mostly metadata IIRC)
 
 Docs
-* New features (see email I sent to nipun and oli)
+* Introduction to NILMTK v0.2 (see email I sent to nipun and oli)
 * Convert dataset (point to how to write your own dataset converter)
-* DataStore and DataSet
+* Loading HDF5 data and 
   * DataStore.window
   * loading in chunks
   
