@@ -1,0 +1,28 @@
+name: iAWE
+long_name: Indian dataset for ambient, water and electricity sensing
+creators:
+- Batra, Nipun
+- Gulati, Manoj
+- Singh, Amarjeet
+- Srivastava, Mani
+publication_date: 2013
+institution: Indraprastha Institute of Information Technology Delhi (IIITD)
+contact: nipunb@iiitd.ac.in
+description: 73 days of ambient, water and electricity data for a home in Delhi
+subject: First dataset from a developing country
+number_of_buildings: 1
+timezone: Asia/Kolkata
+geo_location:
+  locality: Delhi   # village, town, city or state
+  country: IN  # standard two-letter country code defined by ISO 3166-1 alpha-2
+  latitude: 28.64 # 
+  longitude: 77.11
+related_documents:
+- http://iawe.github.io
+- >
+  Nipun Batra and Manoj Gulati and Amarjeet Singh and Mani Srivastava
+  It's Different: Insights into home energy consumption in India.
+  In proceedings of the 5th ACM Workshop On Embedded Systems 
+  For Energy-Efficient Buildings (Buildsys 2013)
+  http://nipunbatra.github.io/downloads/files/buildsys_2013.pdf
+schema: https://github.com/nilmtk/nilm_metadata/tree/v0.2
