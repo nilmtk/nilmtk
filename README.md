@@ -5,6 +5,10 @@ v0.2 is a complete re-write.  Please see
 The old v0.1 code is still available in the v0.1 branch and the [old
 docs are in v0.1.1](http://nilmtk.github.io/nilmtk/v0.1.1/index.html).
 
+If you are upgrading from v0.1.x then it is very likely that you will 
+eed to re-clone the git repository to avoid merge conflicts.
+
+
 nilmtk: Non-Intrusive Load Monitoring Toolkit
 ======
 
