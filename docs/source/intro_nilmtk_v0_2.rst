@@ -2,6 +2,8 @@
 Introducing NILMTK v0.2
 ***********************
 
+NILMTK v0.2 is a complete re-write of NILMTK from the ground up.
+
 Some feature highlights of v0.2:
 
 * The entire pipeline (loading, stats, preprocessing, disag, metrics)
