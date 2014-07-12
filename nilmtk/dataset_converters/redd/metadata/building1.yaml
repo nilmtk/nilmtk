@@ -43,14 +43,14 @@ appliances:
   meters: [6]
 
 - original_name: kitchen_outlets
-  room: kitchen
+  #room: kitchen
   type: sockets   # sockets is treated as an appliance
   instance: 1
   multiple: true   # likely to be more than 1 socket
   meters: [7]
 
 - original_name: kitchen_outlets
-  room: kitchen
+  #room: kitchen
   type: sockets
   instance: 2   # 2nd instance of 'sockets' in this building
   multiple: true   # likely to be more than 1 socket
