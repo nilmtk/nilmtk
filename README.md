@@ -1,7 +1,9 @@
 ### v0.2 Released!
 
-v0.2 is a complete re-write.  See the docs.  The old v0.1 code is
-still available in the v0.1 branch and the old docs are in v0.1.
+v0.2 is a complete re-write.  Please see
+[the docs for details](http://nilmtk.github.io/nilmtk/master/index.html).
+The old v0.1 code is still available in the v0.1 branch and the [old
+docs are in v0.1.1](http://nilmtk.github.io/nilmtk/v0.1.1/index.html).
 
 nilmtk: Non-Intrusive Load Monitoring Toolkit
 ======
@@ -44,6 +46,9 @@ Bibtex:
 }
 ```
 
+Please note that the paper was submitted back in Jan 2014 and the code
+has evolved *a lot* since then!  Please do not use the paper as a
+guide to the current API.  Instead please use the [online docs](http://nilmtk.github.io/nilmtk/master/index.html).
 
 ##### Current state of the project
 
