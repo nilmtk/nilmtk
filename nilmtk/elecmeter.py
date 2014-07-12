@@ -75,6 +75,10 @@ class ElecMeter(Hashable, Electric):
         else:
             return getattr(self.identifier, attr)
 
+    def get_timeframe(self):
+        return self.store.get_timeframe(key=self.key)
+        
+
     def upstream_meter(self):
         """
         Returns
@@ -310,10 +314,6 @@ class ElecMeter(Hashable, Electric):
             series.look_ahead = getattr(chunk, 'look_ahead', None)
             yield series
 
-    def voltage_series(self):
-        """Returns a generator of pd.Series of voltage, if available."""
-        raise NotImplementedError
-
     def dry_run_metadata(self):
         return self.metadata
 
@@ -392,45 +392,45 @@ class ElecMeter(Hashable, Electric):
         else:
             return good_sections.results.simple()
 
-    def total_on_duration(self):
-        """Return timedelta"""
-        raise NotImplementedError
+    # def total_on_duration(self):
+    #     """Return timedelta"""
+    #     raise NotImplementedError
     
-    def on_durations(self):
-        raise NotImplementedError
+    # def on_durations(self):
+    #     raise NotImplementedError
     
-    def activity_distribution(self, bin_size, timespan):
-        raise NotImplementedError
+    # def activity_distribution(self, bin_size, timespan):
+    #     raise NotImplementedError
     
-    def on_off_events(self):
-        # use self.metadata.minimum_[off|on]_duration
-        raise NotImplementedError
+    # def on_off_events(self):
+    #     # use self.metadata.minimum_[off|on]_duration
+    #     raise NotImplementedError
     
-    def discrete_appliance_activations(self):
-        """
-        Return a Mask defining the start and end times of each appliance
-        activation.
-        """
-        raise NotImplementedError
+    # def discrete_appliance_activations(self):
+    #     """
+    #     Return a Mask defining the start and end times of each appliance
+    #     activation.
+    #     """
+    #     raise NotImplementedError
     
-    def proportion_of_energy(self, mains):
-        """
-        Parameters
-        ----------
-        mains : nilmtk.ElecMeter or MeterGroup
-        """
-        mains_good_sects = mains.good_sections()
-        proportion_of_energy = (self.total_energy(timeframes=mains_good_sects) /
-                                mains.total_energy(timeframes=mains_good_sects))
-        return proportion_of_energy 
+    # def proportion_of_energy(self, mains):
+    #     """
+    #     Parameters
+    #     ----------
+    #     mains : nilmtk.ElecMeter or MeterGroup
+    #     """
+    #     mains_good_sects = mains.good_sections()
+    #     proportion_of_energy = (self.total_energy(timeframes=mains_good_sects) /
+    #                             mains.total_energy(timeframes=mains_good_sects))
+    #     return proportion_of_energy 
 
-    def contiguous_sections(self):
-        """retuns Mask object"""
-        raise NotImplementedError
+    # def contiguous_sections(self):
+    #     """retuns Mask object"""
+    #     raise NotImplementedError
         
-    def clean_and_export(self, destination_datastore):
-        """Apply all cleaning configured in meter.cleaning and then export.  Also identifies
-        and records the locations of gaps.  Also records metadata about exactly which
-        cleaning steps have been executed and some summary results (e.g. the number of
-        implausible values removed)"""
-        raise NotImplementedError
+    # def clean_and_export(self, destination_datastore):
+    #     """Apply all cleaning configured in meter.cleaning and then export.  Also identifies
+    #     and records the locations of gaps.  Also records metadata about exactly which
+    #     cleaning steps have been executed and some summary results (e.g. the number of
+    #     implausible values removed)"""
+    #     raise NotImplementedError

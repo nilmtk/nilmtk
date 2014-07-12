@@ -677,82 +677,74 @@ class MeterGroup(Electric):
         total_energy = energy_per_meter.sum()
         return energy_per_meter / total_energy
 
-    ################## NOT IMPLEMENTED FUNCTIONS ###################
-    def init_new_dataset(self):
-        self.infer_and_set_meter_connections()
-        self.infer_and_set_dual_supply_appliances()
-            
-    def infer_and_set_meter_connections(self):
-        """
-        Arguments
-        ---------
-        meters : list of Meter objects
-        """
-        # Maybe this should be a stand-alone function which
-        # takes a list of meters???
-        raise NotImplementedError
-        
-    def infer_and_set_dual_supply_appliances(self):
-        raise NotImplementedError
-    
-    def plot(self, how='stacked'):
-        """
-        Arguments
-        ---------
-        stacked : {'stacked', 'heatmap', 'lines', 'snakey'}
-        """
-        # pretty snakey:
-        # http://www.cl.cam.ac.uk/research/srg/netos/c-aware/joule/V4.00/
-        raise NotImplementedError
 
-    def total_on_duration(self):
-        """Return timedelta"""
-        raise NotImplementedError
-    
-    def on_durations(self):
-        # self.get_unique_upstream_meters()
-        # for each meter, get the on time, 
-        # assuming the on-power-threshold for the 
-        # smallest appliance connected to that meter???
-        raise NotImplementedError
-    
-    def activity_distribution(self, bin_size, timespan):
-        raise NotImplementedError
+    ################## FUNCTIONS NOT YET IMPLEMENTED ###################
+
+    # def init_new_dataset(self):
+    #     self.infer_and_set_meter_connections()
+    #     self.infer_and_set_dual_supply_appliances()
+            
+    # def infer_and_set_meter_connections(self):
+    #     """
+    #     Arguments
+    #     ---------
+    #     meters : list of Meter objects
+    #     """
+    #     # Maybe this should be a stand-alone function which
+    #     # takes a list of meters???
+    #     raise NotImplementedError
         
-    def cross_correlation(self):
-        """Correlation between items."""
-        raise NotImplementedError
+    # def infer_and_set_dual_supply_appliances(self):
+    #     raise NotImplementedError
+    
+    # def total_on_duration(self):
+    #     """Return timedelta"""
+    #     raise NotImplementedError
+    
+    # def on_durations(self):
+    #     # self.get_unique_upstream_meters()
+    #     # for each meter, get the on time, 
+    #     # assuming the on-power-threshold for the 
+    #     # smallest appliance connected to that meter???
+    #     raise NotImplementedError
+    
+    # def activity_distribution(self, bin_size, timespan):
+    #     raise NotImplementedError
+        
+    # def cross_correlation(self):
+    #     """Correlation between items."""
+    #     raise NotImplementedError
                     
-    def on_off_events(self, minimum_state_duration):
-        raise NotImplementedError
+    # def on_off_events(self, minimum_state_duration):
+    #     raise NotImplementedError
     
-    def select_top_k(self, k=5):
-        """
-        Returns
-        -------
-        MeterGroup containing top k meters.
-        """
-        top_k = self.energy_per_meter().iloc[:k]
+    # def select_top_k(self, k=5):
+    #     """
+    #     Returns
+    #     -------
+    #     MeterGroup containing top k meters.
+    #     """
+    #     top_k = self.energy_per_meter().iloc[:k]
             
-    def select_meters_contributing_more_than(self, threshold_proportion):
-        """Return new MeterGroup with all meters whose proportion of
-        energy usage is above threshold percentage."""
-        # see prepb.filter_contribution_less_than_x(building, x)
-        raise NotImplementedError
+    # def select_meters_contributing_more_than(self, threshold_proportion):
+    #     """Return new MeterGroup with all meters whose proportion of
+    #     energy usage is above threshold percentage."""
+    #     # see prepb.filter_contribution_less_than_x(building, x)
+    #     raise NotImplementedError
         
     
-    # SELECTION FUNCTIONS NOT IMPLEMENTED YET
+    # # SELECTION FUNCTIONS NOT IMPLEMENTED YET
 
-    def groupby(self, **kwargs):
-        """
-        e.g. groupby('category')
+    # def groupby(self, **kwargs):
+    #     """
+    #     e.g. groupby('category')
         
-        Returns
-        -------
-        A dict of MeterGroup objects e.g.:
-          {'cold': MeterGroup, 'hot': MeterGroup}
-        """
-        raise NotImplementedError
+    #     Returns
+    #     -------
+    #     A dict of MeterGroup objects e.g.:
+    #       {'cold': MeterGroup, 'hot': MeterGroup}
+    #     """
+    #     raise NotImplementedError
 
 
 def iterate_through_submeters_of_two_metergroups(master, slave):

@@ -12,4 +12,7 @@ class Apply(Node):
     def process(self):
         self.check_requirements()
         for chunk in self.upstream.process():
-            yield self.func(chunk)
+            new_chunk = self.func(chunk)
+            new_chunk.timeframe = chunk.timeframe
+            new_chunk.look_ahead = chunk.look_ahead
+            yield new_chunk

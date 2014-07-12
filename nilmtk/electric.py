@@ -65,6 +65,26 @@ class Electric(object):
     def plot(self, **loader_kwargs):
         all_data = self.power_series_all_data(**loader_kwargs)
         all_data.plot()
+        """ TODO:
+        Parameters
+        ----------
+        stacked : {'stacked', 'heatmap', 'lines', 'snakey'}
+
+        pretty snakey:
+        http://www.cl.cam.ac.uk/research/srg/netos/c-aware/joule/V4.00/
+        """
+
+  #   def activity_distribution(self):
+  # * activity distribution:
+  #   - use ElecMeter.get_timeframe() to get start and end
+  #   - use pd.period_range to make daily period index
+  #   - load daily chunks
+  #   - downsample using Apply
+  #   - when_on
+  #   - answers = zeros(n_timeslices_per_chunk)
+  #   - add each chunk to answers
+  #   - answer is now the histogram!
+
 
 
 def align_two_meters(master, slave, func='power_series'):

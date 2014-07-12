@@ -94,8 +94,8 @@ class CombinatorialOptimisation(object):
         # summed_power_of_each_combination is now an array where each 
         # value is the total power demand for each combination of states.
 
-        load_kwargs['periods'] = load_kwargs.pop('periods', 
-                                                 mains.good_sections())
+        load_kwargs['sections'] = load_kwargs.pop('sections', 
+                                                  mains.good_sections())
         resample_rule = '{:d}S'.format(resample_seconds)
         timeframes = []
         building_path = '/building{}'.format(mains.building())

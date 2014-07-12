@@ -75,6 +75,8 @@ class GoodSectionsResults(Results):
             sections.extend(row_sections)
 
         sections[-1].include_end = True
+        if sections[-1].end is None:
+            sections[-1].end = end_date_of_prev_row
         return sections
 
     def unify(self, other):

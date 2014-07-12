@@ -11,6 +11,8 @@ class DataSet(object):
         Each key is an integer, starting from 1.
         Each value is a nilmtk.Building object.
 
+    store : nilmtk.DataStore
+
     metadata : dict
         Metadata describing the dataset name, authors etc.
         (Metadata about specific buildings, meters, appliances etc.
@@ -36,6 +38,7 @@ class DataSet(object):
         ----------
         store : nilmtk.DataStore
         """
+        self.store = store
         self.metadata = store.load_metadata()
         self._init_buildings(store)
         return self

@@ -4,36 +4,6 @@
 * Metrics
   * TODO in combinatorial_optimisation (mostly metadata IIRC)
 
-Docs
-* Introduction to NILMTK v0.2 (see email I sent to nipun and oli)
-* Convert dataset (point to how to write your own dataset converter)
-* Loading HDF5 data and 
-  * DataStore.window
-  * loading in chunks
-  
-* Preprocessing
-  * to fill appliance gaps:
-    - get good sections
-    - load only good sections
-    - then use Apply with pd.ffill
-    - done!
-  * activity distribution:
-    - use ElecMeter.get_timeframe() to get start and end
-    - use pd.period_range to make daily period index
-    - load daily chunks
-    - downsample using Apply
-    - when_on
-    - answers = zeros(n_timeslices_per_chunk)
-    - add each chunk to answers
-    - answer is now the histogram!
-  * nodes
-  * the need for separate results classes
-
-* Using MeterGroup to select meters.
-* Pipeline nodes have get_X functions for operating on a vanilla
-  dataframe (using NILMTK column names).
-* nilmtk.global_meter_group
-* re-run sphinx-apidoc
 
 Blog
 * Background to NILMTK v0.2 (going on holiday)
@@ -41,14 +11,9 @@ Blog
 more importers, WikiEnergy importer...
 
 Release
-* remove NotImplemented functions
+
 * change nilmtk.github.io.  Remove "Import 6 public data sets" and
 change image. Remove FHMM
-* Master's docs:
-  * Modify master's docs/Makefile so it sends HTML to nilmtk/v0.1.x/
-  * Add Metrics
-  * Copy over 'contributing' to v0.2 branch
-* Tag master with v0.1.1
 * Merge develop into master
 * Tag with v0.2
 * Delete develop
