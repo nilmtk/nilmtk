@@ -1,7 +1,15 @@
-'''Metrics to compare disaggregation performance of various algorithms
+'''Metrics to compare disaggregation performance against ground truth
+data.
+
+All metrics functions have the same interface.  Each function takes
+`predictions` and `ground_truth` parameters.  Both of which are
+nilmtk.MeterGroup objects.  Each function returns one of two types:
+either a pd.Series or a single float.  Most functions return a
+pd.Series where each index element is a meter instance int or a tuple
+of ints for MeterGroups.
 
 Notation
------------
+--------
 
 Below is the notation used to mathematically define each metric. 
 
@@ -22,52 +30,48 @@ Below is the notation used to mathematically define each metric.
 :math:`\\hat{x}^{(n)}_t` - estimated state of appliance :math:`n` in time slice :math:`t`.
 
 Functions
------------
+---------
 
 '''
 
-
+from __future__ import print_function, division
 import numpy as np
 import pandas as pd
-from sklearn.metrics import f1_score
+import math
+from .metergroup import MeterGroup, iterate_through_submeters_of_two_metergroups
+from .electric import align_two_meters
 
-
-def error_energy(predicted_power, df_appliances_ground_truth):
-    '''Compute error in assigned energy
-
-    # TODO: Give a vanilla example
+def error_in_assigned_energy(predictions, ground_truth):
+    """Compute error in assigned energy.
     
     .. math::
         error^{(n)} = 
         \\left | \\sum_t y^{(n)}_t - \\sum_t \\hat{y}^{(n)}_t \\right |
 
-    Attributes
+    Parameters
     ----------
-
-    predicted_power: Pandas DataFrame of type {appliance :
-         [array of predictd power]}
-
-    df_appliances_ground_truth: Pandas DataFrame of type {appliance :
-        [array of ground truth power]}
+    predictions, ground_truth : nilmtk.MeterGroup
 
     Returns
     -------
-    error: dict of type {appliance : error in assigned energy}
-    '''
-    error = {}
+    errors : pd.Series
+        Each index is an meter instance int (or tuple for MeterGroups).
+        Each value is the absolute error in assigned energy for that appliance,
+        in kWh.
+    """
+    errors = {}
+    both_sets_of_meters = iterate_through_submeters_of_two_metergroups(
+        predictions, ground_truth)
+    for pred_meter, ground_truth_meter in both_sets_of_meters:
+        sections = pred_meter.good_sections()
+        ground_truth_energy = ground_truth_meter.total_energy(sections=sections)
+        predicted_energy = pred_meter.total_energy(sections=sections)
+        errors[pred_meter.instance()] = np.abs(ground_truth_energy - predicted_energy)
+    return pd.Series(errors)
 
-    for appliance in predicted_power:
-        ground_truth_energy = np.sum(
-            df_appliances_ground_truth[appliance].values)
-        predicted_energy = np.sum(predicted_power[appliance].values)
-        error[appliance] = np.abs(predicted_energy - ground_truth_energy)
-    return error
 
-
-def fraction_energy_assigned_correctly(predicted_power, df_appliances_ground_truth):
+def fraction_energy_assigned_correctly(predictions, ground_truth):
     '''Compute fraction of energy assigned correctly
-
-    # TODO: Give a vanilla example
     
     .. math::
         fraction = 
@@ -76,45 +80,35 @@ def fraction_energy_assigned_correctly(predicted_power, df_appliances_ground_tru
         \\frac{\\sum_n \\hat{y}}{\\sum_{n,t} \\hat{y}} 
         \\right )
 
-    Attributes
+    Ignores distinction between different AC types, instead if there are 
+    multiple AC types for each meter then we just take the max value across
+    the AC types.
+
+    Parameters
     ----------
-
-    predicted_power: Pandas DataFrame of type {appliance :
-         [array of predictd power]}
-
-    df_appliances_ground_truth: Pandas DataFrame of type {appliance :
-        [array of ground truth power]}
+    predictions, ground_truth : nilmtk.MeterGroup
 
     Returns
     -------
-    re: float representing Fraction of Energy Correctly Assigned
+    fraction : float in the range [0,1]
+        Fraction of Energy Correctly Assigned.
     '''
 
-    fraction = np.array([])
-    total_energy_predicted = np.sum(predicted_power.values)
+    predictions_submeters = MeterGroup(meters=predictions.submeters().meters)
+    ground_truth_submeters = MeterGroup(meters=ground_truth.submeters().meters)
 
-    for appliance in predicted_power:
+    fraction_per_meter_predictions = predictions_submeters.fraction_per_meter()
+    fraction_per_meter_ground_truth = ground_truth_submeters.fraction_per_meter()
 
-        appliance_energy_predicted = np.sum(predicted_power[appliance].values)
-
-        appliance_energy_ground_truth = np.sum(
-            df_appliances_ground_truth[appliance].values)
-        total_energy_ground_truth = np.sum(df_appliances_ground_truth.values)
-
-        fraction = np.append(
-            fraction, np.min(
-                [appliance_energy_predicted / total_energy_predicted,
-                 appliance_energy_ground_truth /
-                 total_energy_ground_truth
-                 ]))
-
-    return np.sum(fraction)
+    fraction = 0
+    for meter_instance in predictions_submeters.instance():
+        fraction += min(fraction_per_meter_ground_truth[meter_instance],
+                        fraction_per_meter_predictions[meter_instance])
+    return fraction
 
 
-def mean_normalized_error_power(predicted_power, df_appliances_ground_truth):
+def mean_normalized_error_power(predictions, ground_truth):
     '''Compute mean normalized error in assigned power
-
-    # TODO: Give a vanilla example
         
     .. math::
         error^{(n)} = 
@@ -122,95 +116,132 @@ def mean_normalized_error_power(predicted_power, df_appliances_ground_truth):
         { \\sum_t {\\left | y_t^{(n)} - \\hat{y}_t^{(n)} \\right |} }
         { \\sum_t y_t^{(n)} }
 
-    Attributes
+    Parameters
     ----------
-
-    predicted_power: Pandas DataFrame of type {appliance :
-         [array of predicted power]}
-
-    df_appliances_ground_truth: Pandas DataFrame of type {appliance :
-        [array of ground truth power]}
+    predictions, ground_truth : nilmtk.MeterGroup
 
     Returns
     -------
-    mne: dict of type {appliance : MNE error}
+    mne : pd.Series
+        Each index is an meter instance int (or tuple for MeterGroups).
+        Each value is the MNE for that appliance.
     '''
 
     mne = {}
-    numerator = {}
-    denominator = {}
+    both_sets_of_meters = iterate_through_submeters_of_two_metergroups(
+        predictions, ground_truth)
+    for pred_meter, ground_truth_meter in both_sets_of_meters:
+        total_abs_diff = 0.0
+        sum_of_ground_truth_power = 0.0
+        for aligned_meters_chunk in align_two_meters(pred_meter, 
+                                                     ground_truth_meter):
+            diff = aligned_meters_chunk.icol(0) - aligned_meters_chunk.icol(1)
+            total_abs_diff += sum(abs(diff.dropna()))
+            sum_of_ground_truth_power += aligned_meters_chunk.icol(1).sum()
 
-    for appliance in predicted_power:
-        numerator[appliance] = np.sum(np.abs(predicted_power[appliance] -
-                                             df_appliances_ground_truth[appliance].values))
-        denominator[appliance] = np.sum(
-            df_appliances_ground_truth[appliance].values)
-        mne[appliance] = numerator[appliance] * 1.0 / denominator[appliance]
-    return mne
+        mne[pred_meter.instance()] = total_abs_diff / sum_of_ground_truth_power
+
+    return pd.Series(mne)
 
 
-def rms_error_power(predicted_power, df_appliances_ground_truth):
+def rms_error_power(predictions, ground_truth):
     '''Compute RMS error in assigned power
-    
-    # TODO: Give a vanilla example
     
     .. math::
             error^{(n)} = \\sqrt{ \\frac{1}{T} \\sum_t{ \\left ( y_t - \\hat{y}_t \\right )^2 } }
 
-    Attributes
+    Parameters
     ----------
-
-    predicted_power: Pandas DataFrame of type {appliance :
-         [array of predicted power]}
-
-    df_appliances_ground_truth: Pandas DataFrame of type {appliance :
-        [array of ground truth power]}
+    predictions, ground_truth : nilmtk.MeterGroup
 
     Returns
     -------
-    re: dict of type {appliance : RMS error in predicted power}
+    error : pd.Series
+        Each index is an meter instance int (or tuple for MeterGroups).
+        Each value is the RMS error in predicted power for that appliance.
     '''
 
-    re = {}
+    error = {}
 
-    for appliance in predicted_power:
-        re[appliance] = np.std(predicted_power[appliance] -
-                               df_appliances_ground_truth[appliance].values)
+    both_sets_of_meters = iterate_through_submeters_of_two_metergroups(
+        predictions, ground_truth)
+    for pred_meter, ground_truth_meter in both_sets_of_meters:
+        sum_of_squared_diff = 0.0
+        n_samples = 0
+        for aligned_meters_chunk in align_two_meters(pred_meter, 
+                                                     ground_truth_meter):
+            diff = aligned_meters_chunk.icol(0) - aligned_meters_chunk.icol(1)
+            diff.dropna(inplace=True)
+            sum_of_squared_diff += (diff ** 2).sum()
+            n_samples += len(diff)
 
-    return re
+        error[pred_meter.instance()] = math.sqrt(sum_of_squared_diff / n_samples)
+
+    return pd.Series(error)
 
 
-def powers_to_states(powers):
-    '''Converts power demands into binary states
+def f1_score(predictions, ground_truth):
+    '''Compute F1 scores.
     
-    # TODO: Give a vanilla example
+    .. math::
+        F_{score}^{(n)} = \\frac
+            {2 * Precision * Recall}
+            {Precision + Recall}
 
-    Attributes
+    Parameters
     ----------
-
-    powers: Pandas DataFrame of type {appliance :
-         [array of power]}
+    predictions, ground_truth : nilmtk.MeterGroup
 
     Returns
     -------
-    states: Pandas DataFrame of type {appliance :
-         [array of states]}
+    f1_scores : pd.Series
+        Each index is an meter instance int (or tuple for MeterGroups).
+        Each value is the F1 score for that appliance.  If there are multiple
+        chunks then the value is the weighted mean of the F1 score for 
+        each chunk.
     '''
+    # If we import sklearn at top of file then sphinx breaks.
+    from sklearn.metrics import f1_score as sklearn_f1_score
 
-    on_power_threshold = 50
+    # sklearn produces lots of DepreciationWarnings with PyTables
+    import warnings
+    warnings.filterwarnings("ignore", category=DeprecationWarning) 
 
-    states = pd.DataFrame(np.zeros(power.shape))
-    states[power > on_power_threshold] = 1
+    f1_scores = {}
+    both_sets_of_meters = iterate_through_submeters_of_two_metergroups(
+        predictions, ground_truth)
+    for pred_meter, ground_truth_meter in both_sets_of_meters:
+        scores_for_meter = pd.DataFrame(columns=['score', 'n_samples'])
+        for aligned_states_chunk in align_two_meters(pred_meter, 
+                                                     ground_truth_meter,
+                                                     'when_on'):
+            aligned_states_chunk.dropna(inplace=True)
+            aligned_states_chunk = aligned_states_chunk.astype(int)
+            score = sklearn_f1_score(aligned_states_chunk.icol(0),
+                                     aligned_states_chunk.icol(1))
+            scores_for_meter = scores_for_meter.append(
+                {'score': score, 'n_samples': len(aligned_states_chunk)},
+                ignore_index=True)
 
-    return states
+        # Calculate weighted mean
+        tot_samples = scores_for_meter['n_samples'].sum()
+        scores_for_meter['proportion'] = (scores_for_meter['n_samples'] / 
+                                          tot_samples)
+        avg_score = (scores_for_meter['score'] * 
+                     scores_for_meter['proportion']).sum()
+        f1_scores[pred_meter.instance()] = avg_score
+
+    return pd.Series(f1_scores)
 
 
+##### FUNCTIONS BELOW THIS LINE HAVE NOT YET BEEN CONVERTED TO NILMTK v0.2 #####
+
+
+"""
 def confusion_matrices(predicted_states, ground_truth_states):
     '''Compute confusion matrix between appliance states for each appliance
 
-    # TODO: Give a vanilla example
-
-    Attributes
+    Parameters
     ----------
 
     predicted_state: Pandas DataFrame of type {appliance :
@@ -239,8 +270,6 @@ def confusion_matrices(predicted_states, ground_truth_states):
 
 def tp_fp_fn_tn(predicted_states, ground_truth_states):
     '''Compute counts of True Positives, False Positives, False Negatives, True Negatives
-
-    # TODO: Give a vanilla example
     
     .. math::
         TP^{(n)} = 
@@ -259,7 +288,7 @@ def tp_fp_fn_tn(predicted_states, ground_truth_states):
         \\sum_{t}
         and \\left ( x^{(n)}_t = off, \\hat{x}^{(n)}_t = off \\right )
 
-    Attributes
+    Parameters
     ----------
 
     predicted_state: Pandas DataFrame of type {appliance :
@@ -291,15 +320,13 @@ def tp_fp_fn_tn(predicted_states, ground_truth_states):
 
 def tpr_fpr(predicted_states, ground_truth_states):
     '''Compute True Positive Rate and False Negative Rate
-
-    # TODO: Give a vanilla example
     
     .. math::
         TPR^{(n)} = \\frac{TP}{\\left ( TP + FN \\right )}
         
         FPR^{(n)} = \\frac{FP}{\\left ( FP + TN \\right )}
 
-    Attributes
+    Parameters
     ----------
 
     predicted_state: Pandas DataFrame of type {appliance :
@@ -323,15 +350,13 @@ def tpr_fpr(predicted_states, ground_truth_states):
 
 def precision_recall(predicted_states, ground_truth_states):
     '''Compute Precision and Recall
-
-    # TODO: Give a vanilla example
     
     .. math::
         Precision^{(n)} = \\frac{TP}{\\left ( TP + FP \\right )}
         
         Recall^{(n)} = \\frac{TP}{\\left ( TP + FN \\right )}
 
-    Attributes
+    Parameters
     ----------
 
     predicted_state: Pandas DataFrame of type {appliance :
@@ -353,48 +378,8 @@ def precision_recall(predicted_states, ground_truth_states):
     return np.array([prec, rec])
 
 
-def f_score(predicted_power, ground_truth_power):
-    '''Compute F1 score
-
-    # TODO: Give a vanilla example
-    
-    .. math::
-        F_score^{(n)} = \\frac
-            {2 * Precision * Recall}
-            {Precision + Recall}
-
-    Attributes
-    ----------
-
-    predicted_state: Pandas DataFrame of type {appliance :
-         [array of predicted states]}
-
-    ground_truth_state: Pandas DataFrame of type {appliance :
-        [array of ground truth states]}
-
-    Returns
-    -------
-    numpy array where columns represent appliances and rows represent F score
-    '''
-    threshold = 30
-    predicted_states = (predicted_power > threshold).astype(int)
-    ground_truth_states = (ground_truth_power > threshold).astype(int)
-    f_score_out = {}
-    for appliance in predicted_states.columns:
-        f_score_out[appliance] = f1_score(
-            ground_truth_states[[appliance]], predicted_states[[appliance]])
-    return f_score_out
-
-    #prec_rec = precision_recall(predicted_states, ground_truth_states)
-    # return (2 * prec_rec[0, :] * prec_rec[1,:]) / (prec_rec[0,:] +
-    # prec_rec[1,:])
-    # return f1_score(ground_truth_states, predicted_states)
-
-
 def hamming_loss(predicted_state, ground_truth_state):
     '''Compute Hamming loss
-
-    # TODO: Give a vanilla example
     
     .. math::
         HammingLoss = 
@@ -402,7 +387,7 @@ def hamming_loss(predicted_state, ground_truth_state):
         \\frac{1}{N} \\sum_{n}
         xor \\left ( x^{(n)}_t, \\hat{x}^{(n)}_t \\right )
 
-    Attributes
+    Parameters
     ----------
 
     predicted_state: Pandas DataFrame of type {appliance :
@@ -422,3 +407,4 @@ def hamming_loss(predicted_state, ground_truth_state):
                   axis=1) / num_appliances
 
     return np.mean(xors)
+"""

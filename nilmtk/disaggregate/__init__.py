@@ -1,1 +1,1 @@
-from nilmtk.disaggregate import *
+from .combinatorial_optimisation import CombinatorialOptimisation

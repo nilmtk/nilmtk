@@ -1,0 +1,44 @@
+eMonitor:
+  model: eMonitor
+  manufacturer: Powerhouse Dynamics
+  manufacturer_url: http://powerhousedynamics.com
+  description: >
+    Measures circuit-level power demand.  Comes with 24 CTs.
+    This FAQ page suggests the eMonitor measures real (active)
+    power: http://www.energycircle.com/node/14103  although the REDD
+    readme.txt says all channels record apparent power.
+  sample_period: 3   # the interval between samples. In seconds.
+  max_sample_period: 50   # Max allowable interval between samples. Seconds.
+  measurements:
+  - physical_quantity: power   # power, voltage, energy, current?
+    type: active   # active (real power), reactive or apparent?
+    upper_limit: 5000
+    lower_limit: 0
+  wireless: false
+
+REDD_whole_house:
+  description: >
+    REDD's DIY power meter used to measure whole-home AC waveforms
+    at high frequency.  To quote from their paper: "CTs from TED
+    (http://www.theenergydetective.com) to measure current in the
+    power mains, a Pico TA041 oscilloscope probe
+    (http://www.picotechnologies.com) to measure voltage for one of
+    the two phases in the home, and a National Instruments NI-9239
+    analog to digital converter to transform both these analog
+    signals to digital readings. This A/D converter has 24 bit
+    resolution with noise of approximately 70 µV, which determines
+    the noise level of our current and voltage readings: the TED CTs
+    are rated for 200 amp circuits and a maximum of 3 volts, so we
+    are able to differentiate between currents of approximately
+    ((200))(70 × 10−6)/(3) = 4.66mA, corresponding to power changes
+    of about 0.5 watts. Similarly, since we use a 1:100 voltage
+    stepdown in the oscilloscope probe, we can detect voltage
+    differences of about 7mV."
+  sample_period: 1
+  max_sample_period: 30
+  measurements:
+  - physical_quantity: power
+    type: apparent
+    upper_limit: 50000
+    lower_limit: 0
+  wireless: false

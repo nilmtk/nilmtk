@@ -1,0 +1,161 @@
+instance: 5
+original_name: house_5
+elec_meters:
+  1: &redd_whole_house 
+    site_meter: true
+    device_model: REDD_whole_house
+  2: *redd_whole_house
+  3: &emonitor
+    submeter_of: 0 
+    device_model: eMonitor
+  4: *emonitor
+  5: *emonitor
+  6: *emonitor
+  7: *emonitor
+  8: *emonitor
+  9: *emonitor
+  10: *emonitor
+  11: *emonitor
+  12: *emonitor
+  13: *emonitor
+  14: *emonitor
+  15: *emonitor
+  16: *emonitor
+  17: *emonitor  
+  18: *emonitor
+  19: *emonitor
+  20: *emonitor
+  21: *emonitor
+  22: *emonitor
+  23: *emonitor
+  24: *emonitor
+  25: *emonitor
+  26: *emonitor
+
+appliances:
+- original_name: microwave
+  type: microwave
+  instance: 1
+  meters: [3]
+
+- original_name: lighting
+  type: light
+  instance: 1
+  multiple: true   # likely to be more than 1 light
+  meters: [4]
+
+- original_name: outlets_unknown
+  type: sockets
+  instance: 1
+  multiple: true
+  meters: [5]
+
+- original_name: furnace
+  type: electric furnace
+  instance: 1
+  meters: [6]
+
+- original_name: outlets_unknown
+  type: sockets
+  instance: 2
+  multiple: true
+  meters: [7]
+
+- original_name: washer_dryer
+  type: washer dryer
+  instance: 1
+  meters: [8, 9]
+
+- original_name: subpanel
+  type: subpanel
+  instance: 1
+  meters: [10]
+
+- original_name: subpanel
+  type: subpanel
+  instance: 2
+  meters: [11]
+
+- original_name: electric_heat
+  type: electric space heater
+  instance: 1
+  meters: [12, 13]
+
+- original_name: lighting
+  type: light
+  instance: 2
+  multiple: true   # likely to be more than 1 light
+  meters: [14]
+
+- original_name: outlets_unknown
+  type: sockets
+  instance: 3
+  multiple: true
+  meters: [15]
+
+- original_name: bathroom_gfi   # ground fault interrupter
+  room: bathroom
+  type: unknown
+  instance: 1
+  multiple: true
+  meters: [16]
+
+- original_name: lighting
+  type: light
+  instance: 3
+  multiple: true   # likely to be more than 1 light
+  meters: [17]
+
+- original_name: refrigerator
+  type: fridge
+  instance: 1
+  meters: [18]
+
+- original_name: lighting
+  type: light
+  instance: 4
+  multiple: true   # likely to be more than 1 light
+  meters: [19]
+
+- original_name: dishwaser
+  type: dish washer
+  instance: 1
+  meters: [20]
+
+- original_name: disposal
+  type: waste disposal unit
+  instance: 1
+  meters: [21]
+
+- original_name: electronics
+  type: CE appliance
+  instance: 1
+  multiple: true
+  meters: [22]
+
+- original_name: lighting
+  type: light
+  instance: 5
+  multiple: true   # likely to be more than 1 light
+  meters: [23]
+
+- original_name: kitchen_outlets
+  room: kitchen
+  type: sockets   # sockets is treated as an appliance
+  instance: 4
+  multiple: true   # likely to be more than 1 socket
+  meters: [24]
+
+- original_name: kitchen_outlets
+  room: kitchen
+  type: sockets   # sockets is treated as an appliance
+  instance: 5
+  multiple: true   # likely to be more than 1 socket
+  meters: [25]
+
+- original_name: outdoor_outlets
+  room: outdoors
+  type: sockets   # sockets is treated as an appliance
+  instance: 6
+  multiple: true   # likely to be more than 1 socket
+  meters: [26]

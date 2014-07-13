@@ -6,7 +6,27 @@ Subpackages
 
 .. toctree::
 
-    nilmtk.preprocessing.electricity
+    nilmtk.preprocessing.tests
+
+Submodules
+----------
+
+nilmtk.preprocessing.apply module
+---------------------------------
+
+.. automodule:: nilmtk.preprocessing.apply
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+nilmtk.preprocessing.clip module
+--------------------------------
+
+.. automodule:: nilmtk.preprocessing.clip
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
 Module contents
 ---------------

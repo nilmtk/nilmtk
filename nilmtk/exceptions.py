@@ -4,8 +4,3 @@
 class TooFewSamplesError(Exception):
     pass
 
-class NoSuitableMeasurementError(Exception):
-    pass
-
-class NoCommonMeasurementError(Exception):
-    pass

@@ -1,36 +1,13 @@
 nilmtk.disaggregate package
 ===========================
 
-Subpackages
------------
-
-.. toctree::
-
-    nilmtk.disaggregate.appliance_models
-
 Submodules
 ----------
 
-nilmtk.disaggregate.co_1d module
---------------------------------
+nilmtk.disaggregate.combinatorial_optimisation module
+-----------------------------------------------------
 
-.. automodule:: nilmtk.disaggregate.co_1d
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-nilmtk.disaggregate.disaggregator module
-----------------------------------------
-
-.. automodule:: nilmtk.disaggregate.disaggregator
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-nilmtk.disaggregate.fhmm_exact module
--------------------------------------
-
-.. automodule:: nilmtk.disaggregate.fhmm_exact
+.. automodule:: nilmtk.disaggregate.combinatorial_optimisation
     :members:
     :undoc-members:
     :show-inheritance:

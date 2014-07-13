@@ -1,63 +1,41 @@
-from nilmtk.sensors.utility import Utility
-from nilmtk.sensors.ambient import Ambient
-import json, copy
+from __future__ import print_function, division
+from collections import namedtuple
+from .metergroup import MeterGroup
+from .datastore import join_key
+from .hashable import Hashable
 
+BuildingID = namedtuple('BuildingID', ['instance', 'dataset'])
 
-class Building(object):
-
-    """Represent a physical building (e.g. a domestic house).
-
+class Building(Hashable):
+    """
     Attributes
     ----------
-
-    utility :  nilmtk Utility object
-
-    ambient : dict of nilmtk Ambient objects
-        Keys are pairs of the form
-        (<room name>, <number of that room type (indexed from 0>)
-        e.g. ('kitchen', 1) or ('bedroom', 3)
-        If there are sensors which cover the whole house (or if
-        a dataset gives a single set of ambient measurements for a single
-        house without describing which room those measurements are taken)
-        then use the key 'building'.
-        Values are nilmtk Ambient objects.
+    elec : MeterGroup
 
     metadata : dict
-        geographic_coordinates : pair of floats, optional
-            (latitude, longitude)
-            Only specify this if the geo location of the building is known.
-            Otherwise leave this blank and users should fall back to using
-            the geo location specified for the dataset as a whole.
-
-        n_occupants : int, optional
-             Max number of occupants.
-
-        rooms : dict of strings, optional
-            Keys are room names. Use standard names for each room from
-            docs/standard_names/rooms.txt.
-            Values are the number of each type of room in this building.
-            For example:
-            room = {'kitchen': 1, 'bedroom': 3, ...}
-
-        original_name : string, optional
-            The original name for this building from the original dataset
-
-        periods_unoccupied : list, optional
-            A list of pd.Periods when this building was empty for more than a
-            day (e.g. holidays).
+        Metadata just about this building (e.g. geo location etc).
+        See http://nilm-metadata.readthedocs.org/en/latest/dataset_metadata.html#building
+        Has these additional keys: 
+        dataset : string
     """
-
     def __init__(self):
+        self.elec = MeterGroup()
         self.metadata = {}
-        self.utility = Utility()
-        self.ambient = Ambient()
+    
+    def load(self, store, key, dataset_name):
+        self.metadata = store.load_metadata(key)
+        if not self.metadata.has_key('dataset'):
+            self.metadata['dataset'] = dataset_name
+        elec_meters = self.metadata.pop('elec_meters', {})
+        appliances = self.metadata.pop('appliances', [])
+        self.elec.load(store, elec_meters, appliances, self.identifier)
+                
+    def save(self, destination, key):
+        destination.write_metadata(key, self.metadata)
+        self.elec.save(destination, join_key(key, 'elec'))
 
-    def crop(self, start, end):
-        """Reduce all timeseries to just these dates"""
-        raise NotImplementedError
-
-    def to_json(self):
-        representation = copy.copy(self.metadata)
-        representation["utility"] = self.utility.to_json()
-        representation["ambient"] = self.ambient.to_json()
-        return json.dumps(representation)
+    @property
+    def identifier(self):
+        md = self.metadata
+        return BuildingID(instance=md.get('instance'), 
+                          dataset=md.get('dataset'))

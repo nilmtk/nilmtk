@@ -1,0 +1,81 @@
+instance: 1   # this is the first building in the dataset
+original_name: house_1   # original name from REDD dataset
+elec_meters:
+  1: &EM6400
+    site_meter: true
+    device_model: EM6400
+  2: *EM6400
+  3: &jplug
+    submeter_of: 0 
+    device_model: jplug
+  4: *jplug
+  5: *jplug
+  6: *jplug
+  7: *jplug
+  8: *jplug
+  9: *jplug
+  10: *jplug
+  11: &current cost
+
+appliances:
+- original_name: fridge
+  type: fridge
+  floor: 0
+  #room: kitchen
+  instance: 1
+  meters: [3]
+
+- original_name: air conditioner
+  type: air conditioner
+  instance: 1
+  floor: 1
+  meters: [4]
+
+- original_name: air conditioner
+  type: air conditioner
+  instance: 2
+  floor: 1
+  meters: [5]
+
+- original_name: washing machine
+  type: washing machine
+  instance: 1
+  floor: 1
+  #room: washing area
+  meters: [6]
+
+- original_name: laptop computer
+  floor: 1
+  #room: small
+  type: computer   
+  instance: 1
+  meters: [7]
+
+- original_name: clothes iron
+  #room: big 
+  floor: 1
+  type: iron
+  instance: 1  
+  meters: [8]
+
+- original_name: kitchen outlets
+  instance: 1  
+  meters: [9]
+
+- original_name: television
+  type: television
+  instance: 1
+  floor: 0
+  #room: drawing
+  meters: [10]
+
+- original_name: water filter
+  type: water filter
+  instance: 1
+  meters: [11]
+
+- original_name: water motor
+  type: motor
+  instance: 1
+  meters: [12]
+

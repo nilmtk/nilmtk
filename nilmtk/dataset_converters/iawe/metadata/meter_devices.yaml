@@ -1,0 +1,50 @@
+EM6400:
+  model: EM6400
+  manufacturer: Schneider Electric
+  manufacturer_url: http://www.schneider-electric.com/
+  description: >
+    Multifunction meter for feeders
+  sample_period: 1   # the interval between samples. In seconds.
+  measurements:
+  - physical_quantity: power   # power, voltage, energy, current?
+    type: active   # active (real power), reactive or apparent?
+  - physical_quantity: power   # power, voltage, energy, current?
+    type: apparent   # active (real power), reactive or apparent?
+  - physical_quantity: power   # power, voltage, energy, current?
+    type: reactive   # active (real power), reactive or apparent?
+  - physical_quantity: frequency   # power, voltage, energy, current?
+  - physical_quantity: voltage   # power, voltage, energy, current?
+  - physical_quantity: energy   # power, voltage, energy, current?
+    type: apparent   # active (real power), reactive or apparent?
+  - physical_quantity: power factor   # power, voltage, energy, current?
+  - physical_quantity: phase angle   # power, voltage, energy, current?
+  wireless: false
+
+jplug:
+  description: >
+  sample_period: 1
+  measurements:
+  - physical_quantity: power
+    type: apparent
+    lower_limit: 0
+  wireless: true
+
+current cost:
+  description: >
+  sample_period: 6
+  measurements:
+  - physical_quantity: power   # power, voltage, energy, current?
+    type: active   # active (real power), reactive or apparent?
+  - physical_quantity: power   # power, voltage, energy, current?
+    type: apparent   # active (real power), reactive or apparent?
+  - physical_quantity: power   # power, voltage, energy, current?
+    type: reactive   # active (real power), reactive or apparent?
+  - physical_quantity: frequency   # power, voltage, energy, current?
+  - physical_quantity: voltage   # power, voltage, energy, current?
+  - physical_quantity: energy   # power, voltage, energy, current?
+    type: apparent   # active (real power), reactive or apparent?
+  - physical_quantity: power factor   # power, voltage, energy, current?
+  - physical_quantity: phase angle   # power, voltage, energy, current?
+  - physical_quantity: current   # power, voltage, energy, current?
+    type: apparent   # active (real power), reactive or apparent?
+  wireless: true

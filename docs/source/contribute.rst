@@ -40,9 +40,15 @@ Commit your changes and push to nilmtk. And then commit all your changes to nilm
 Using IPython notebooks
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Follow [this](http://sphinx-ipynb.readthedocs.org/en/latest/howto.html) guide!
+Follow `this <http://sphinx-ipynb.readthedocs.org/en/latest/howto.html>`_ guide!
 
 
 
+sphinx-apidoc
+=============
 
+We use `sphinx-apidoc <http://sphinx-doc.org/man/sphinx-apidoc.html>`_
+to automatically generate out API pages from the code.  Run this code
+from the root nilmtk directory to regenerate the docs::
 
+    /nilmtk$ sphinx-apidoc -f -o docs/source nilmtk
