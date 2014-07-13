@@ -51,6 +51,12 @@ Please note that the paper was submitted back in Jan 2014 and the code
 has evolved *a lot* since then!  Please do not use the paper as a
 guide to the current API.  Instead please use the [online docs](http://nilmtk.github.io/nilmtk/master/index.html).
 
+##### Keeping up to date with NILMTK
+
+Please sign up to the [NILMTK-Announce mailing list](https://groups.google.com/forum/#!forum/nilmtk-announce) to be kept up to speed on NILMTK.  It will be a fairly low-traffic mailing list.  We'll just announce new versions, new docs etc.
+
+[NILMTK is also on Twitter](https://twitter.com/nilmtk).
+
 ##### Current state of the project
 
 The project is in its early stages.
