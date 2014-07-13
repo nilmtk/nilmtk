@@ -6,7 +6,8 @@ The old v0.1 code is still available in the v0.1 branch and the [old
 docs are in v0.1.1](http://nilmtk.github.io/nilmtk/v0.1.1/index.html).
 
 If you are upgrading from v0.1.x then it is very likely that you will 
-need to re-clone the git repository to avoid merge conflicts.
+need to re-clone the git repository to avoid merge conflicts.  Sorry
+about this.  I renamed the branches which, in retrospect, was a mistake!
 
 
 nilmtk: Non-Intrusive Load Monitoring Toolkit
@@ -65,6 +66,8 @@ will be capable of doing 'plug and play' disaggregation in the future.
 Please see the docs for more info.
 
 ##### Installing
+
+First, please install [NILM Metadata](https://github.com/nilmtk/nilm_metadata).
 
 If you just want to use the code without modifying it then:
 
