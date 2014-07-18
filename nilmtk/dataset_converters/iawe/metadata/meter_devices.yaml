@@ -2,8 +2,7 @@ EM6400:
   model: EM6400
   manufacturer: Schneider Electric
   manufacturer_url: http://www.schneider-electric.com/
-  description: >
-    Multifunction meter for feeders
+  description: Multifunction meter for feeders
   sample_period: 1   # the interval between samples. In seconds.
   measurements:
   - physical_quantity: power   # power, voltage, energy, current?
@@ -21,7 +20,7 @@ EM6400:
   wireless: false
 
 jplug:
-  description: >
+  description: 
   sample_period: 1
   measurements:
   - physical_quantity: power
@@ -29,8 +28,8 @@ jplug:
     lower_limit: 0
   wireless: true
 
-current cost:
-  description: >
+current_cost:
+  description: 
   sample_period: 6
   measurements:
   - physical_quantity: power   # power, voltage, energy, current?
