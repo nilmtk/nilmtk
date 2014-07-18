@@ -15,62 +15,61 @@ elec_meters:
   8: *jplug
   9: *jplug
   10: *jplug
-  11: &current cost
+  11: *jplug
+  12: &current_cost
+      submeter_of: 0
+      device_model: current_cost
 
 appliances:
 - original_name: fridge
   type: fridge
-  floor: 0
-  #room: kitchen
+  #floor: 0
   instance: 1
   meters: [3]
 
 - original_name: air conditioner
   type: air conditioner
   instance: 1
-  floor: 1
+  #floor: 1
   meters: [4]
 
 - original_name: air conditioner
   type: air conditioner
   instance: 2
-  floor: 1
+  #floor: 1
   meters: [5]
 
 - original_name: washing machine
   type: washing machine
   instance: 1
-  floor: 1
-  #room: washing area
+  #floor: 1
   meters: [6]
 
 - original_name: laptop computer
-  floor: 1
-  #room: small
+  #floor: 1
   type: computer   
   instance: 1
   meters: [7]
 
 - original_name: clothes iron
-  #room: big 
-  floor: 1
-  type: iron
+  #floor: 1
+  type: clothes iron
   instance: 1  
   meters: [8]
 
 - original_name: kitchen outlets
+  type: unknown
   instance: 1  
   meters: [9]
 
 - original_name: television
   type: television
   instance: 1
-  floor: 0
-  #room: drawing
+  #floor: 0
   meters: [10]
 
 - original_name: water filter
-  type: water filter
+  type: wet appliance
   instance: 1
   meters: [11]
 
@@ -78,4 +77,3 @@ appliances:
   type: motor
   instance: 1
   meters: [12]
-
