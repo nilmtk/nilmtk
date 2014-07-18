@@ -45,7 +45,7 @@ def convert_redd(redd_path, hdf_filename):
             stdout.flush()
             key = Key(building=house_id, meter=chan_id)
             ac_type = 'apparent' if chan_id <= 2 else 'active'
-            df = _load_chan(redd_path, key, [('power', ac_type)])
+            df = _load_chan(redd_path, key, [('power', ac_type)])            
             store.put(str(key), df, format='table')
             store.flush()
         print()
@@ -135,15 +135,15 @@ def _load_chan(redd_path, key_obj, columns):
     # Load data
     df = pd.read_csv(filename, sep=' ', names=columns,
                      dtype={m:np.float32 for m in columns})
-
+    
     # Set the names of the two levels in the column labels
     df.columns.set_names(LEVEL_NAMES, inplace=True)
 
     # raw REDD data isn't always sorted
     df = df.sort_index()
-
+    
     # Convert the integer index column to timezone-aware datetime 
-    df.index = pd.to_datetime((df.index.values*1E9).astype(int), utc=True) ####
+    df.index = pd.to_datetime((df.index.values*1E9), utc=True) ####
     df = df.tz_convert('US/Eastern')
 
     return df
