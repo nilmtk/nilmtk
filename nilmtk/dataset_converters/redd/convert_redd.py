@@ -143,7 +143,7 @@ def _load_chan(redd_path, key_obj, columns):
     df = df.sort_index()
     
     # Convert the integer index column to timezone-aware datetime 
-    df.index = pd.to_datetime((df.index.values*1E9), utc=True) ####
+    df.index = pd.to_datetime(df.index.values, unit='s', utc=True)
     df = df.tz_convert('US/Eastern')
 
     return df
