@@ -1,10 +1,17 @@
 from __future__ import print_function, division
 import os
+import re
 import datetime
 import sys
+from os.path import join, isdir, isfile, dirname, abspath
 import pandas as pd
+import yaml
 import psycopg2 as db
 from nilmtk.measurement import measurement_columns
+from nilmtk.measurement import LEVEL_NAMES
+from nilmtk.datastore import Key
+from nilm_metadata import convert_yaml_to_hdf5
+from inspect import currentframe, getfile, getsourcefile
 
 """
 MANUAL:
@@ -32,8 +39,86 @@ On Ubuntu:
 
 TODO:
 * intelligently handle queries that fail due to network
+* integrate 'grid' (use - gen) and 'gen'
 
 """
+
+feed_mapping = {
+                'use': {},
+                'air1': {'type': 'air conditioner'},
+                'air2': {'type': 'air conditioner'},
+                'air3': {'type': 'air conditioner'},
+                'airwindowunit1': {'type': 'air conditioner'},
+                'aquarium1': {'type': 'appliance'},
+                'bathroom1': {'type': 'sockets', 'room': 'bathroom'},
+                'bathroom2': {'type': 'sockets', 'room': 'bathroom'},
+                'bedroom1': {'type': 'sockets', 'room': 'bedroom'},
+                'bedroom2': {'type': 'sockets', 'room': 'bedroom'},
+                'bedroom3': {'type': 'sockets', 'room': 'bedroom'},
+                'bedroom4': {'type': 'sockets', 'room': 'bedroom'},
+                'bedroom5': {'type': 'sockets', 'room': 'bedroom'},
+                'car1': {'type': 'electric vehicle'},
+                'clotheswasher1': {'type': 'washing machine'},
+                'clotheswasher_dryg1': {'type': 'washer dryer'},
+                'diningroom1': {'type': 'sockets', 'room': 'dining room'},
+                'diningroom2': {'type': 'sockets', 'room': 'dining room'},
+                'dishwasher1': {'type': 'dish washer'},
+                'disposal1': {'type': 'waste disposal unit'},
+                'drye1': {'type': 'spin dryer'},
+                'dryg1': {'type': 'spin dryer'},
+                'freezer1': {'type': 'freezer'},
+                'furnace1': {'type': 'electric furnace'},
+                'furnace2': {'type': 'electric furnace'},
+                'garage1': {'type': 'sockets', 'room': 'dining room'},
+                'garage2': {'type': 'sockets', 'room': 'dining room'},
+                'gen': {},
+                'grid': {},
+                'heater1': {'type': 'electric space heater'},
+                'housefan1': {'type': 'electric space heater'},
+                'icemaker1': {'type': 'appliance'},
+                'jacuzzi1': {'type': 'electric hot tub heater'},
+                'kitchen1': {'type': 'sockets', 'room': 'kitchen'},
+                'kitchen2': {'type': 'sockets', 'room': 'kitchen'},
+                'kitchenapp1': {'type': 'sockets', 'room': 'kitchen'},
+                'kitchenapp2': {'type': 'sockets', 'room': 'kitchen'},
+                'lights_plugs1': {'type': 'light'},
+                'lights_plugs2': {'type': 'light'},
+                'lights_plugs3': {'type': 'light'},
+                'lights_plugs4': {'type': 'light'},
+                'lights_plugs5': {'type': 'light'},
+                'lights_plugs6': {'type': 'light'},
+                'livingroom1': {'type': 'sockets', 'room': 'living room'},
+                'livingroom2': {'type': 'sockets', 'room': 'living room'},
+                'microwave1': {'type': 'microwave'},
+                'office1': {'type': 'sockets', 'room': 'office'},
+                'outsidelights_plugs1': {'type': 'sockets', 'room': 'outside'},
+                'outsidelights_plugs2': {'type': 'sockets', 'room': 'outside'},
+                'oven1': {'type': 'oven'},
+                'oven2': {'type': 'oven'},
+                'pool1': {'type': 'electric swimming pool heater'},
+                'pool2': {'type': 'electric swimming pool heater'},
+                'poollight1': {'type': 'light'},
+                'poolpump1': {'type': 'electric swimming pool heater'},
+                'pump1': {'type': 'appliance'},
+                'range1': {'type': 'stove'},
+                'refrigerator1': {'type': 'fridge'},
+                'refrigerator2': {'type': 'fridge'},
+                'security1': {'type': 'security alarm'},
+                'shed1': {'type': 'sockets', 'room': 'shed'},
+                'sprinkler1': {'type': 'appliance'},
+                'unknown1': {'type': 'unknown'},
+                'unknown2': {'type': 'unknown'},
+                'unknown3': {'type': 'unknown'},
+                'unknown4': {'type': 'unknown'},
+                'utilityroom1': {'type': 'sockets', 'room': 'utility room'},
+                'venthood1': {'type': 'appliance'},
+                'waterheater1': {'type': 'electric water heating appliance'},
+                'waterheater2': {'type': 'electric water heating appliance'},
+                'winecooler1': {'type': 'appliance'},
+                }
+
+feed_ignore = ['gen', 'grid']
+
 
 def download_wikienergy(database_username, database_password, 
                      hdf_filename, periods_to_load=None):
@@ -67,10 +152,13 @@ def download_wikienergy(database_username, database_password,
         print('Could not connect to remote database')
         raise
 
-    # set up a new HDF5 datastore
-    if os.path.isfile(hdf_filename):
-        os.remove(hdf_filename)
+    # set up a new HDF5 datastore (overwrites existing store)
     store = pd.HDFStore(hdf_filename, 'w', complevel=9, complib='zlib')
+    
+    # remove existing building yaml files in module dir
+    for f in os.listdir(join(_get_module_directory(), 'metadata')):
+        if re.search('^building', f):
+            os.remove(join(_get_module_directory(), 'metadata', f))
 
     # get tables in database schema
     sql_query = ("SELECT TABLE_NAME" + 
@@ -172,9 +260,13 @@ def download_wikienergy(database_username, database_password,
                                      "'" + chunk_end.strftime(format) + "'" + 
                                      ' LIMIT 2000')
                         chunk_dataframe = pd.read_sql(sql_query, conn)
-
+                        
+                        # nilmtk requires building indices to start at 1
+                        nilmtk_building_id = buildings_to_load.index(building_id) + 1
                         # convert to nilmtk-df and save to disk
-                        nilmtk_dataframe = _wikienergy_dataframe_to_hdf(chunk_dataframe, store)
+                        nilmtk_dataframe = _wikienergy_dataframe_to_hdf(chunk_dataframe, store,
+                                                                         nilmtk_building_id,
+                                                                         building_id)
 
                         # print progress
                         print('    ' + str(chunk_start) + ' -> ' + 
@@ -183,44 +275,122 @@ def download_wikienergy(database_username, database_password,
                         sys.stdout.flush()
 
                         # append all chunks into list for csv writing
-                        dataframe_list.append(chunk_dataframe)
+                        #dataframe_list.append(chunk_dataframe)
 
                         # move on to next chunk
                         chunk_start = chunk_start + chunk_size
 
-        # saves all chunks
-        if len(dataframe_list) > 0:
-            dataframe_concat = pd.concat(dataframe_list)
+        # saves all chunks in list to csv
+        #if len(dataframe_list) > 0:
+            #dataframe_concat = pd.concat(dataframe_list)
             #dataframe_concat.to_csv(output_directory + str(building_id) + '.csv')
-
+            
     store.close()
     conn.close()
+    
+    # write yaml to hdf5
+    # dataset.yaml and meter_devices.yaml are static, building<x>.yaml are dynamic  
+    convert_yaml_to_hdf5(join(_get_module_directory(), 'metadata'),
+                         hdf_filename)
+                         
 
-def _wikienergy_dataframe_to_hdf(wikienergy_dataframe, store):
+def _wikienergy_dataframe_to_hdf(wikienergy_dataframe, 
+                                 store, 
+                                 nilmtk_building_id,
+                                 wikienergy_building_id):
     local_dataframe = wikienergy_dataframe.copy()
     
     # remove timezone information to avoid append errors
     local_dataframe['localminute'] = pd.DatetimeIndex([i.replace(tzinfo=None) 
                                                        for i in local_dataframe['localminute']])
+    
     # set timestamp as frame index
     local_dataframe = local_dataframe.set_index('localminute')
+    
+    # set timezone
+    local_dataframe = local_dataframe.tz_localize('US/Central')
+    
+    # remove timestamp column from dataframe
+    feeds_dataframe = local_dataframe.drop('dataid', axis=1)
 
     # Column names for dataframe
-    columns = measurement_columns([('power', 'active')])
+    column_names = [('power', 'active')]
     
-    for building_id in local_dataframe['dataid'].unique():
-        # remove building id column
-        feeds_dataframe = local_dataframe.drop('dataid', axis=1)
-        # convert from kW to W
-        feeds_dataframe = feeds_dataframe.mul(1000)
-        meter_id = 1
-        for column in feeds_dataframe.columns:
-            if feeds_dataframe[column].notnull().sum() > 0:
-                # convert timeseries into dataframe
-                feed_dataframe = pd.DataFrame(feeds_dataframe[column],
-                                              columns=columns)
+    # convert from kW to W
+    feeds_dataframe = feeds_dataframe.mul(1000)
+    
+    # building metadata
+    building_metadata = {}
+    building_metadata['instance'] = nilmtk_building_id
+    building_metadata['original_name'] = wikienergy_building_id
+    building_metadata['elec_meters'] = {}
+    building_metadata['appliances'] = []
+    
+    # initialise dict of instances of each appliance type
+    instance_counter = {}
+    
+    meter_id = 1
+    for column in feeds_dataframe.columns:
+        if feeds_dataframe[column].notnull().sum() > 0 and not column in feed_ignore:
+
+            # convert timeseries into dataframe
+            feed_dataframe = pd.DataFrame(feeds_dataframe[column])
+            
+            # set column names
+            feed_dataframe.columns = pd.MultiIndex.from_tuples(column_names)
+            
+            # Modify the column labels to reflect the power measurements recorded.
+            feed_dataframe.columns.set_names(LEVEL_NAMES, inplace=True)
+            
+            key = Key(building=nilmtk_building_id, meter=meter_id)
+            
+            # store dataframe
+            store.put(str(key), feed_dataframe, format='table', append=True)
+            store.flush()
+                        
+            # elec_meter metadata
+            if column == 'use':
+                meter_metadata = {'device_model': 'eGauge',
+                                  'site_meter': True}
+            else:
+                meter_metadata = {'device_model': 'eGauge',
+                                   'submeter_of': 0}
+            building_metadata['elec_meters'][meter_id] = meter_metadata
                 
-                key = 'building{:d}/elec/meter{:d}'.format(building_id, meter_id)
-                store.append(key, feed_dataframe)
+            # appliance metadata
+            if column != 'use':
+                # original name and meter id
+                appliance_metadata = {'original_name': column, 
+                                      'meters': [meter_id] }
+                # appliance type and room if available
+                appliance_metadata.update(feed_mapping[column])
+                # appliance instance number
+                if instance_counter.get(appliance_metadata['type']) == None:
+                    instance_counter[appliance_metadata['type']] = 0
+                instance_counter[appliance_metadata['type']] += 1 
+                appliance_metadata['instance'] = instance_counter[appliance_metadata['type']]
+                
+                building_metadata['appliances'].append(appliance_metadata)
+
             meter_id += 1
+    
+    # write building yaml to file
+    building = 'building{:d}'.format(nilmtk_building_id)
+    yaml_full_filename = join(_get_module_directory(), 'metadata', building + '.yaml')
+    with open(yaml_full_filename, 'w') as outfile:
+        outfile.write(yaml.dump(building_metadata))
+        
     return 0
+
+def _get_module_directory():
+    # Taken from http://stackoverflow.com/a/6098238/732596
+    path_to_this_file = dirname(getfile(currentframe()))
+    if not isdir(path_to_this_file):
+        encoding = getfilesystemencoding()
+        path_to_this_file = dirname(unicode(__file__, encoding))
+    if not isdir(path_to_this_file):
+        abspath(getsourcefile(lambda _: None))
+    if not isdir(path_to_this_file):
+        path_to_this_file = getcwd()
+    assert isdir(path_to_this_file), path_to_this_file + ' is not a directory'
+    return path_to_this_file
