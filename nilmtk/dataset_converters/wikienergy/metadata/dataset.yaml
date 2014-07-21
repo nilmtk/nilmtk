@@ -1,0 +1,21 @@
+name: WikiEnergy
+long_name: WikiEnergy database
+creators:
+- Jim Shead
+publication_date: 2014
+institution: Pecan Street Inc
+contact: jshead@pecanstreet.org
+description: Several months of power data for more than 239 different homes.
+subject: Disaggregated power demand from domestic buildings.
+number_of_buildings: 239 # as of 2014-06-25
+timezone: US/Central 
+geo_location:
+  locality: Austin   # village, town, city or state
+  country: US   # standard two-letter country code defined by ISO 3166-1 alpha-2
+  latitude: 30.292308 # Pecan Street lab's coorindates
+  longitude: -97.699671
+related_documents:
+- http://wiki-energy.org/
+- http://wiki-energy.org/wp-content/uploads/2014/02/20140610-WikiEnergy-Exporting-Data-Instructions.pdf
+- http://wiki-energy.org/wp-content/uploads/2014/02/Database-Descriptions-20140319.pdf
+schema: https://github.com/nilmtk/nilm_metadata/tree/v0.2

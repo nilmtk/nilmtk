@@ -1,0 +1,14 @@
+eGauge:
+  model: eGauge
+  manufacturer: eGauge Systems LLC
+  manufacturer_url: https://www.egauge.net
+  description: >
+    Measures circuit-level power demand.  Comes with 12 CTs.
+  sample_period: 60   # the interval between samples. In seconds.
+  max_sample_period: 120   # Max allowable interval between samples. Seconds.
+  measurements:
+  - physical_quantity: power   # power, voltage, energy, current?
+    type: active   # active (real power), reactive or apparent?
+    upper_limit: 5000
+    lower_limit: 0
+  wireless: false
