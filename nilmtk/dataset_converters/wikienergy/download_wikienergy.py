@@ -322,7 +322,7 @@ def _wikienergy_dataframe_to_hdf(wikienergy_dataframe,
     # building metadata
     building_metadata = {}
     building_metadata['instance'] = nilmtk_building_id
-    building_metadata['original_name'] = wikienergy_building_id
+    building_metadata['original_name'] = int(wikienergy_building_id) # use python int
     building_metadata['elec_meters'] = {}
     building_metadata['appliances'] = []
     
@@ -373,7 +373,7 @@ def _wikienergy_dataframe_to_hdf(wikienergy_dataframe,
                 building_metadata['appliances'].append(appliance_metadata)
 
             meter_id += 1
-    
+            
     # write building yaml to file
     building = 'building{:d}'.format(nilmtk_building_id)
     yaml_full_filename = join(_get_module_directory(), 'metadata', building + '.yaml')
