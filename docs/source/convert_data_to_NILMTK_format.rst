@@ -40,9 +40,11 @@ just to do the dataset conversion!).
 Other datasets
 --------------
 
-A converter for the Pecan Street `WikiEnergy
+A converter for the iAWE `dataset <http://iawe.github.io/>`__ is available.
+
+A downloader/converter for the Pecan Street `WikiEnergy
 dataset <http://wiki-energy.org/datasets/>`__ (>200 homes at 1 minute
-resolution) is almost ready.
+resolution) is also available.
 
 Contributing a new converter is easy and highly encouraged! `Learn how
 to write a dataset converter <writing_a_dataset_converter.html>`__.
