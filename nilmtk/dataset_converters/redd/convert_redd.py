@@ -116,8 +116,7 @@ def _load_chan(redd_path, key_obj, columns):
 
     Returns
     ------- 
-    DataFrame of data. Has extra attributes:
-        - timeframe : TimeFrame of period intersected with self.window
+    DataFrame of data.
     """
     assert isinstance(redd_path, str)
     assert isinstance(key_obj, Key)
@@ -136,7 +135,7 @@ def _load_chan(redd_path, key_obj, columns):
     df = pd.read_csv(filename, sep=' ', names=columns,
                      dtype={m:np.float32 for m in columns})
     
-    # Set the names of the two levels in the column labels
+    # Modify the column labels to reflect the power measurements recorded.
     df.columns.set_names(LEVEL_NAMES, inplace=True)
 
     # raw REDD data isn't always sorted
