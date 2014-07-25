@@ -384,6 +384,7 @@ class ElecMeter(Hashable, Electric):
         object otherwise return list of TimeFrame objects.
         """
         full_results = loader_kwargs.pop('full_results', False)
+        loader_kwargs['n_look_ahead_rows'] = 10
         source_node = self.get_source_node(**loader_kwargs)
         good_sections = GoodSections(source_node)
         good_sections.run()

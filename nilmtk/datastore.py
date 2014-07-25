@@ -49,7 +49,7 @@ class HDFDataStore(DataStore):
         self.store = pd.HDFStore(filename, mode=mode)
         super(HDFDataStore, self).__init__()
 
-    def load(self, key, cols=None, sections=None, n_look_ahead_rows=10,
+    def load(self, key, cols=None, sections=None, n_look_ahead_rows=0,
              chunksize=1000000):
         """
         Parameters
@@ -61,7 +61,10 @@ class HDFDataStore(DataStore):
         sections : list of nilmtk.TimeFrame objects or a pd.PeriodIndex, optional
             defines the time sections to load.  If `self.window` is enabled
             then each `period` will be intersected with `self.window`.
-        n_look_ahead_rows : int, optional, defaults to 10
+        n_look_ahead_rows : int, optional, defaults to 0
+            If >0 then each returned DataFrame will have a `look_ahead`
+            property which will be a DataFrame of length `n_look_ahead_rows`
+            of the data immediately in front of the data in the main DataFrame.
         chunksize : int, optional
 
         Returns
@@ -95,6 +98,7 @@ class HDFDataStore(DataStore):
         for period in sections:
             window_intersect = self.window.intersect(period)
             if window_intersect.empty:
+                # Trick to make a generator with just a single, empty DataFrame
                 generator = repeat(pd.DataFrame(), 1)
             else:
                 terms = window_intersect.query_terms('window_intersect')
@@ -103,21 +107,25 @@ class HDFDataStore(DataStore):
 
             for data in generator:
                 # Load look ahead
-                if len(data.index) > 0:
-                    look_ahead_coords = self.store.select_as_coordinates(
-                        key=key, where="index>data.index[-1]")
-                else:
-                    look_ahead_coords = []
-                if len(look_ahead_coords) > 0:
-                    look_ahead_start = look_ahead_coords[0]
-                    look_ahead_iterator = self.store.select(
-                        key=key, chunksize=n_look_ahead_rows,
-                        cols=cols, start=look_ahead_start).__iter__()
-                    data.look_ahead = next(look_ahead_iterator)
-                else:
-                    data.look_ahead = pd.DataFrame()
+                if n_look_ahead_rows > 0:
+                    if len(data.index) > 0:
+                        look_ahead_coords = self.store.select_as_coordinates(
+                            key=key, where="index>data.index[-1]")
+                    else:
+                        look_ahead_coords = []
+                    if len(look_ahead_coords) > 0:
+                        look_ahead_start = look_ahead_coords[0]
+                        look_ahead_iterator = self.store.select(
+                            key=key, chunksize=n_look_ahead_rows,
+                            cols=cols, start=look_ahead_start).__iter__()
+                        data.look_ahead = next(look_ahead_iterator)
+                    else:
+                        data.look_ahead = pd.DataFrame()
 
                 # Set timeframe
+                # TODO this should be `data.timeframe = window_intersect`
+                # but this breaks proportion_of_energy_submetered
+                # so using this simple hack for now...
                 if len(data) > 0:
                     data.timeframe = TimeFrame(data.index[0], data.index[-1])
                 else:
