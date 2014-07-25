@@ -102,7 +102,15 @@ class MeterGroup(Electric):
         elif n_dominant_appliances == 1:
             return dominant_appliances[0]
         else:
-            raise RuntimeError("More than one dominant appliance in MeterGroup!")
+            raise RuntimeError(
+                "More than one dominant appliance in MeterGroup!"
+                " (The dominant appliance per meter should be manually"
+                " specified in the metadata. If it isn't and if there are"
+                " multiple appliances for a meter then NILMTK assumes"
+                " all appliances on that meter are dominant. NILMTK"
+                " can't automatically distinguish between multiple"
+                " appliances on the same meter (at least,"
+                " not without using NILM!))")
 
     def nested_metergroups(self):
         return [m for m in self.meters if isinstance(m, MeterGroup)]
