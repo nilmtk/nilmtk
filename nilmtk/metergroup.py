@@ -591,6 +591,11 @@ class MeterGroup(Electric):
         TODO: combine good sections from every meter.
         """
         if self.meters:
+            if len(self.meters) > 1:
+                warn("As a quick implementation we only get Good Sections from"
+                " the first meter in the meter group.  We should really"
+                " return the intersection of the good sections for all"
+                " meters.  This will be fixed...")
             return self.meters[0].good_sections(**kwargs)
         else:
             return []
