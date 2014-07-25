@@ -68,7 +68,8 @@ class TestHDFDataStore(unittest.TestCase):
         self.datastore.window.clear()
         gen = self.datastore.load(key=self.keys[0], 
                                   cols=[('power', 'active')],
-                                  sections=[timeframe])
+                                  sections=[timeframe],
+                                  n_look_ahead_rows=10)
         df = next(gen)
         self.assertEqual(df.index[0], timeframe.start)
         self.assertEqual(df.index[-1], timeframe.end - timedelta(seconds=1))
