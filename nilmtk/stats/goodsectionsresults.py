@@ -74,13 +74,16 @@ class GoodSectionsResults(Results):
             end_date_of_prev_row = row['end']
             sections.extend(row_sections)
 
-        sections[-1].include_end = True
-        if sections[-1].end is None:
-            sections[-1].end = end_date_of_prev_row
+        if sections:
+            sections[-1].include_end = True
+            if sections[-1].end is None:
+                sections[-1].end = end_date_of_prev_row
+
         return sections
 
     def unify(self, other):
         # TODO!
+        warn("Not yet able to do unification of good sections results.")
         super(GoodSectionsResults, self).unify(other)
 
     def to_dict(self):
