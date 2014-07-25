@@ -60,7 +60,7 @@ class HDFDataStore(DataStore):
             if not provided then will return all columns from the table.
         sections : list of nilmtk.TimeFrame objects or a pd.PeriodIndex, optional
             defines the time sections to load.  If `self.window` is enabled
-            then each `period` will be intersected with `self.window`.
+            then each `section` will be intersected with `self.window`.
         n_look_ahead_rows : int, optional, defaults to 0
             If >0 then each returned DataFrame will have a `look_ahead`
             property which will be a DataFrame of length `n_look_ahead_rows`
@@ -71,15 +71,15 @@ class HDFDataStore(DataStore):
         ------- 
         generator of DataFrame objects
             Each DataFrame is has extra attributes:
-                - timeframe : TimeFrame of period intersected with self.window
+                - timeframe : TimeFrame of section intersected with self.window
                 - look_ahead : pd.DataFrame:
                     with `n_look_ahead_rows` rows.  The first row will be for
-                    `period.end`.  `look_ahead` stores data which appears on 
-                    disk immediately after `period.end`; i.e. it ignores
-                    the next `period.start`.
+                    `section.end`.  `look_ahead` stores data which appears on 
+                    disk immediately after `section.end`; i.e. it ignores
+                    the next `section.start`.
 
             Returns an empty DataFrame if no data is available for the
-            specified period (or if the period.intersect(self.window)
+            specified section (or if the section.intersect(self.window)
             is empty).
         """
         # TODO: calculate chunksize default based on physical 
@@ -95,8 +95,8 @@ class HDFDataStore(DataStore):
         if isinstance(sections, pd.PeriodIndex):
             sections = timeframes_from_periodindex(sections)
 
-        for period in sections:
-            window_intersect = self.window.intersect(period)
+        for section in sections:
+            window_intersect = self.window.intersect(section)
             if window_intersect.empty:
                 # Trick to make a generator with just a single, empty DataFrame
                 generator = repeat(pd.DataFrame(), 1)
@@ -104,12 +104,13 @@ class HDFDataStore(DataStore):
                 terms = window_intersect.query_terms('window_intersect')
                 generator = self.store.select(key=key, cols=cols, where=terms,
                                               chunksize=chunksize).__iter__()
-
+                
+            first_sub_chunk = True
             for data in generator:
                 if len(data) <= 2:
                     continue
 
-                # Load look ahead
+                # Load look ahead if necessary
                 if n_look_ahead_rows > 0:
                     if len(data.index) > 0:
                         look_ahead_coords = self.store.select_as_coordinates(
@@ -126,11 +127,30 @@ class HDFDataStore(DataStore):
                         data.look_ahead = pd.DataFrame()
 
                 # Set timeframe
-                if (window_intersect.start is None and 
-                    window_intersect.end is None):
-                    data.timeframe = TimeFrame(data.index[0], data.index[-1])
+                start = None
+                end = None
+                if len(data) == chunksize:
+                    # If len(data) == chunksize then we can fairly safely
+                    # assume that the full `section` is larger than the
+                    # chunksize so we're going to go through several
+                    # 'sub chunks'.
+                    if first_sub_chunk:
+                        start = window_intersect.start
+                elif not first_sub_chunk:
+                    # This is the last subchunk
+                    end = window_intersect.end
                 else:
-                    data.timeframe = window_intersect
+                    # Just a single 'subchunk'
+                    start = window_intersect.start
+                    end = window_intersect.end
+
+                if start is None:
+                    start = data.index[0]
+                if end is None:
+                    end = data.index[-1]
+
+                data.timeframe = TimeFrame(start, end)
+                first_sub_chunk = False
 
                 yield data
 
