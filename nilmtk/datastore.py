@@ -106,6 +106,9 @@ class HDFDataStore(DataStore):
                                               chunksize=chunksize).__iter__()
 
             for data in generator:
+                if len(data) <= 2:
+                    continue
+
                 # Load look ahead
                 if n_look_ahead_rows > 0:
                     if len(data.index) > 0:
@@ -123,16 +126,13 @@ class HDFDataStore(DataStore):
                         data.look_ahead = pd.DataFrame()
 
                 # Set timeframe
-                # TODO this should be `data.timeframe = window_intersect`
-                # but this breaks proportion_of_energy_submetered
-                # so using this simple hack for now...
-                if len(data) > 0:
+                if (window_intersect.start is None and 
+                    window_intersect.end is None):
                     data.timeframe = TimeFrame(data.index[0], data.index[-1])
                 else:
-                    data.timeframe = TimeFrame()
+                    data.timeframe = window_intersect
 
-                if len(data) > 2:
-                    yield data
+                yield data
 
     def append(self, *args, **kwargs):
         self.store.append(*args, **kwargs)
