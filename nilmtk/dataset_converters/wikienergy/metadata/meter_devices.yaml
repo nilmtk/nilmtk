@@ -1,9 +1,10 @@
 eGauge:
-  model: eGauge
+  model: eGauge SCT-400/750
   manufacturer: eGauge Systems LLC
   manufacturer_url: https://www.egauge.net
   description: >
     Measures circuit-level power demand.  Comes with 12 CTs.
+    http://egauge.net/docs/sct_0400.pdf
   sample_period: 60   # the interval between samples. In seconds.
   max_sample_period: 120   # Max allowable interval between samples. Seconds.
   measurements:
