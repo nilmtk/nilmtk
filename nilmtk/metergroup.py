@@ -552,7 +552,7 @@ class MeterGroup(Electric):
 
         dropout_rates = []
         for meter in self.meters:
-            meter_dropout = meter.dropout_rate(full_results=True, **load_kwargs)
+            meter_dropout = meter.dropout_rate(**load_kwargs)
             dropout_rates.append(meter_dropout)
 
         return np.mean(dropout_rates)

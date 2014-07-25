@@ -31,6 +31,8 @@ class TestLocateGoodSections(unittest.TestCase):
         source_node = meter.get_source_node()
         dropout_rate = DropoutRate(source_node)
         dropout_rate.run()
+
+        # TODO: remove prints and actually test value of dropout rate.
         print(dropout_rate.results)
         print(meter.power_series().next())
 
