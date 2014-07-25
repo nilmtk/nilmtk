@@ -50,7 +50,7 @@ def convert_iawe(iawe_path, hdf_filename):
     electricity_path = join(iawe_path, "electricity")
 
     # Mains data
-    for chan in [12]:
+    for chan in range(1,13):
         key = Key(building=1, meter=chan)
         filename = join(electricity_path, "%d.csv" %chan)
         print('Loading ', chan)
