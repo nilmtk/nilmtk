@@ -26,8 +26,13 @@ class DropoutRateResults(Results):
         return dropout_rate
 
     def unify(self, other):
-        # TODO!
         super(DropoutRateResults, self).unify(other)
+        for i, row in self._data.iterrows():
+            # store mean of dropout rate
+            self._data['dropout_rate'].loc[i] += other._data['dropout_rate'].loc[i]
+            self._data['dropout_rate'].loc[i] /= 2
+            
+            self._data['n_samples'].loc[i] += other._data['n_samples'].loc[i]
 
     def to_dict(self):
         return {'statistics': {'dropout_rate': self.combined()}}

@@ -546,16 +546,33 @@ class MeterGroup(Electric):
         else return either a single number of, if there are multiple
         AC types, then return a pd.Series with a row for each AC type.
         """
+        self._check_kwargs(load_kwargs)
         full_results = load_kwargs.pop('full_results', False)
-        if full_results:
-            raise NotImplementedError()
 
         dropout_rates = []
         for meter in self.meters:
-            meter_dropout = meter.dropout_rate(**load_kwargs)
+            meter_dropout = meter.dropout_rate(full_results=full_results, 
+                                               **load_kwargs)
             dropout_rates.append(meter_dropout)
 
-        return np.mean(dropout_rates)
+        if full_results and dropout_rates:
+            dropout_rate_results = dropout_rates[0]
+            for dr in dropout_rates[1:]:
+                dropout_rate_results.unify(dr)
+            return dropout_rate_results
+        else:
+            return np.mean(dropout_rates)
+
+    def _check_kwargs(self, load_kwargs):
+        if (load_kwargs.get('full_results ')
+            and not load_kwargs.has_key('sections') 
+            and len(self.meters) > 1):
+            raise RuntimeError("MeterGroup stats can only return full results"
+                               " objects if you specify 'sections' to load. If"
+                               " you do not specify periods then the results"
+                               " from individual meters are likely to be for"
+                               " different periods and hence"
+                               " cannot be unified.")
 
     def good_sections(self, **kwargs):
         """Returns good sections for just the first meter.
