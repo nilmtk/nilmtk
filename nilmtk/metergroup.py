@@ -513,7 +513,7 @@ class MeterGroup(Electric):
         return any([meter.is_site_meter() for meter in self.meters])
 
     def total_energy(self, **load_kwargs):
-        """Sums together total energy for each meter.
+        """Sums together total meter_energy for each meter.
 
         Parameters
         ----------
@@ -526,19 +526,22 @@ class MeterGroup(Electric):
         else return either a single number of, if there are multiple
         AC types, then return a pd.Series with a row for each AC type.
         """
+        self._check_kwargs(load_kwargs)
         full_results = load_kwargs.pop('full_results', False)
-        total_energy = None
+        meter_energies = []
         for meter in self.meters:
-            meter_energy = meter.total_energy(full_results=True, **load_kwargs)
-            if total_energy is None:
-                total_energy = meter_energy
-            else:
-                total_energy.unify(meter_energy)
+            meter_energy = meter.total_energy(full_results=full_results,
+                                              **load_kwargs)
+            meter_energies.append(meter_energy)
 
-        if full_results: 
-            return total_energy
-        else:
-            return total_energy.simple()
+        if meter_energies:
+            total_energy_results = meter_energies[0]
+            for meter_energy in meter_energies[1:]:
+                if full_results:
+                    total_energy_results.unify(meter_energy)
+                else:
+                    total_energy_results += meter_energy
+            return total_energy_results
 
     def dropout_rate(self, **load_kwargs):
         """Sums together total energy for each meter.
