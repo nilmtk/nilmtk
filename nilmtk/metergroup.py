@@ -761,13 +761,14 @@ class MeterGroup(Electric):
     # def on_off_events(self, minimum_state_duration):
     #     raise NotImplementedError
     
-    # def select_top_k(self, k=5):
-    #     """
-    #     Returns
-    #     -------
-    #     MeterGroup containing top k meters.
-    #     """
-    #     top_k = self.energy_per_meter().iloc[:k]
+    def select_top_k(self, k=5):
+        """
+        Returns
+        -------
+        MeterGroup containing top k meters.
+        """
+        top_k = self.energy_per_meter().iloc[:k]
+        return top_k
             
     # def select_meters_contributing_more_than(self, threshold_proportion):
     #     """Return new MeterGroup with all meters whose proportion of
