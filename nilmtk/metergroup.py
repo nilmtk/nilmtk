@@ -528,11 +528,9 @@ class MeterGroup(Electric):
         """
         self._check_kwargs(load_kwargs)
         full_results = load_kwargs.pop('full_results', False)
-        meter_energies = []
-        for meter in self.meters:
-            meter_energy = meter.total_energy(full_results=full_results,
-                                              **load_kwargs)
-            meter_energies.append(meter_energy)
+
+        meter_energies = self._collect_stats_on_all_meters(
+            load_kwargs, 'total_energy', full_results)
 
         if meter_energies:
             total_energy_results = meter_energies[0]
@@ -542,6 +540,21 @@ class MeterGroup(Electric):
                 else:
                     total_energy_results += meter_energy
             return total_energy_results
+
+    def _collect_stats_on_all_meters(self, load_kwargs, func, full_results):
+        collected_stats = []
+        for meter in self.meters:
+            single_stat = getattr(meter, func)(full_results=full_results,
+                                               **load_kwargs)
+            collected_stats.append(single_stat)
+            if (full_results and len(self.meters) > 1 and
+                not meter.store.all_sections_smaller_than_chunksize):
+                warn("at least one section requested from '{}' required"
+                     " multiple chunks to be loaded into memory. This may cause"
+                     " a failure when we try to unify results from multiple"
+                     " meters.".format(meter))
+
+        return collected_stats
 
     def dropout_rate(self, **load_kwargs):
         """Sums together total energy for each meter.
@@ -560,11 +573,8 @@ class MeterGroup(Electric):
         self._check_kwargs(load_kwargs)
         full_results = load_kwargs.pop('full_results', False)
 
-        dropout_rates = []
-        for meter in self.meters:
-            meter_dropout = meter.dropout_rate(full_results=full_results, 
-                                               **load_kwargs)
-            dropout_rates.append(meter_dropout)
+        dropout_rates = self._collect_stats_on_all_meters(
+            load_kwargs, 'dropout_rate', full_results)
 
         if full_results and dropout_rates:
             dropout_rate_results = dropout_rates[0]

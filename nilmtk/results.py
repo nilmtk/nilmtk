@@ -98,7 +98,10 @@ class Results(object):
         """
         assert isinstance(other, self.__class__)
         for i, row in self._data.iterrows():
-            assert other._data['end'].loc[i] == row['end']
+            if other._data['end'].loc[i] != row['end']:
+                raise RuntimeError("The sections we are trying to merge"
+                                   " do not have the same end times so we"
+                                   " cannot merge them.")
 
     def _columns_with_end_removed(self):
         cols = set(self._data.columns)

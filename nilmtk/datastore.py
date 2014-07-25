@@ -95,6 +95,8 @@ class HDFDataStore(DataStore):
         if isinstance(sections, pd.PeriodIndex):
             sections = timeframes_from_periodindex(sections)
 
+        self.all_sections_smaller_than_chunksize = True
+
         for section in sections:
             window_intersect = self.window.intersect(section)
             if window_intersect.empty:
@@ -109,6 +111,9 @@ class HDFDataStore(DataStore):
             for data in generator:
                 if len(data) <= 2:
                     continue
+
+                if not first_sub_chunk:
+                    self.all_sections_smaller_than_chunksize = False
 
                 # Load look ahead if necessary
                 if n_look_ahead_rows > 0:
