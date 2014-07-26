@@ -2,6 +2,7 @@ from __future__ import print_function, division
 import networkx as nx
 import pandas as pd
 import numpy as np
+from compiler.ast import flatten
 from warnings import warn
 from .elecmeter import ElecMeter, ElecMeterID
 from .appliance import Appliance
@@ -767,8 +768,30 @@ class MeterGroup(Electric):
         -------
         MeterGroup containing top k meters.
         """
-        top_k = self.energy_per_meter().iloc[:k]
-        return top_k
+        # Filtering out mains to create a meter group of appliances
+        appliance_meter_group = MeterGroup([meter for meter in self.meters if not meter.is_site_meter()])
+        # Energy per appliance
+        appliance_energy_per_meter  = appliance_meter_group.energy_per_meter()
+        # Finding the most relevant measurement to sort on. For now, this is a
+        # simple function which considers the measurement having the most records
+        # if there is only a single measurement, just take that
+        if len(appliance_energy_per_meter.T.columns)==1:
+            measurement = appliance_energy_per_meter.T.columns[0]
+        else:
+            measurement = appliance_energy_per_meter.T.isnull().sum().sort().head(1).index
+        top_k_appliance_index = flatten(appliance_energy_per_meter.T.sort(columns=[measurement], ascending=False).head(k).index.tolist())
+        meters_top_k = []
+        for meter in self.meters:
+
+            if hasattr(meter, 'meters'):
+                # Dual supply, so a meter group would be appended
+                if meter.meters[0].instance() in top_k_appliance_index:
+                    meters_top_k.append(meter)
+            else:
+                #print(meter.instance())
+                if meter.instance() in top_k_appliance_index:
+                    meters_top_k.append(meter)         
+        return MeterGroup(meters_top_k)
             
     # def select_meters_contributing_more_than(self, threshold_proportion):
     #     """Return new MeterGroup with all meters whose proportion of
