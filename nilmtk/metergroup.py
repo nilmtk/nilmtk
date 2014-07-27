@@ -3,6 +3,7 @@ import networkx as nx
 import pandas as pd
 import numpy as np
 from compiler.ast import flatten
+from datetime import timedelta
 from warnings import warn
 from .elecmeter import ElecMeter, ElecMeterID
 from .appliance import Appliance
@@ -720,6 +721,49 @@ class MeterGroup(Electric):
         energy_per_meter = self.energy_per_meter(**load_kwargs).max()
         total_energy = energy_per_meter.sum()
         return energy_per_meter / total_energy
+
+
+    def train_test_split(self, train_fraction=0.5):
+        """
+        Parameters
+        ----------
+        train_fraction
+
+        Returns
+        -------
+        split_time: pd.Timestamp where split should happen
+        """
+
+        assert(0<train_fraction<1), "`train_fraction` should be between 0 and 1"
+
+        #TODO: currently just works with the first mains meter, assuming
+        # both to be simultaneosly sampled
+        mains_first_meter = self.mains().meters[0]
+        good_sections = mains_first_meter.good_sections()
+        sample_period = mains_first_meter.device['sample_period']
+        appx_num_records_in_each_good_section = [int((ts.end-ts.start).total_seconds()/sample_period) for ts in good_sections]
+        appx_total_records = sum(appx_num_records_in_each_good_section)
+        records_in_train = appx_total_records*train_fraction
+        seconds_in_train = int(records_in_train*sample_period)
+        if len(appx_num_records_in_each_good_section)==1:
+            # all data is contained in one good section
+            split_point = good_sections[0].start + timedelta(seconds=seconds_in_train)
+            return split_point
+        else:
+            # data is split across multiple time deltas
+            records_remaining = records_in_train
+            while records_remaining:
+                for i, records_in_section in enumerate(appx_num_records_in_each_good_section):
+                    if records_remaining>records_in_section:
+                        records_remaining-=records_in_section
+                    elif records_remaining == records_in_section:
+                        # Next TimeFrame is the split point!!
+                        split_point = good_sections[i+1].start
+                        return split_point
+                    else:
+                        # Need to split this timeframe
+                        split_point = good_sections[i].start + timedelta(seconds=sample_period*records_remaining)
+                        return split_point
 
 
     ################## FUNCTIONS NOT YET IMPLEMENTED ###################
