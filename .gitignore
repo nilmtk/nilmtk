@@ -12,3 +12,4 @@ dist/
 .ropeproject/
 .ipynb_checkpoints/
 *.swp
+notebooks/*.h5
