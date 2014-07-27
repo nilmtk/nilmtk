@@ -9,13 +9,15 @@ before_install:
   - export PATH=/home/travis/anaconda/bin:$PATH
   - conda update --yes conda
   - sudo apt-get install libhdf5-serial-dev python-dev
+  - sudo apt-get install git
+  - git clone https://github.com/nilmtk/nilm_metadata/
+  - cd nilm_metadata; python setup.py develop; cd..
 install:
   - conda install --yes pip python=$TRAVIS_PYTHON_VERSION numpy scipy six scikit-learn pandas numexpr pytables dateutil matplotlib networkx
   # Have to use pip for nose-cov because its entry points are not supported by conda yet
   - sudo rm -rf /dev/shm
   - sudo ln -s /run/shm /dev/shm
   - pip install nose
-  - pip install https://github.com/nilmtk/nilm_metadata/archive/master.zip
   - python setup.py install
 script:
   - nosetests
