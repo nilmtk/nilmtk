@@ -12,7 +12,7 @@ before_install:
   - sudo apt-get install git
   - conda install --yes pip
   - git clone https://github.com/nilmtk/nilm_metadata/
-  - cd nilm_metadata; python setup.py develop; cd..
+  - cd nilm_metadata; python setup.py develop; cd ..
 install:
   - conda install --yes pip python=$TRAVIS_PYTHON_VERSION numpy scipy six scikit-learn pandas numexpr pytables dateutil matplotlib networkx
   # Have to use pip for nose-cov because its entry points are not supported by conda yet
