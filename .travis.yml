@@ -10,6 +10,7 @@ before_install:
   - conda update --yes conda
   - sudo apt-get install libhdf5-serial-dev python-dev
   - sudo apt-get install git
+  - conda install --yes pip
   - git clone https://github.com/nilmtk/nilm_metadata/
   - cd nilm_metadata; python setup.py develop; cd..
 install:
