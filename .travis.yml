@@ -18,6 +18,8 @@ install:
   # Have to use pip for nose-cov because its entry points are not supported by conda yet
   - sudo rm -rf /dev/shm
   - sudo ln -s /run/shm /dev/shm
+  - sudo apt-get build-dep python-psycopg2
+  - pip install psycopg2 
   - pip install nose
   - pip install coveralls coverage
   - python setup.py install
