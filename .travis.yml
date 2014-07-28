@@ -19,7 +19,10 @@ install:
   - sudo rm -rf /dev/shm
   - sudo ln -s /run/shm /dev/shm
   - pip install nose
+  - pip install coveralls coverage
   - python setup.py install
 script:
-  - nosetests
+  - nosetests --with-doctest --with-coverage
+after_success:
+  - coveralls
 

@@ -1,0 +1,8 @@
+[run]
+source = nilmtk
+[report]
+omit =
+    */python?.?/*
+    */site-packages/nose/*
+    *nilmtk/notebooks/*
+    
