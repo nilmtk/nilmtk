@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/nilmtk/nilmtk.svg?branch=master)](https://travis-ci.org/nilmtk/nilmtk)
+
 ### v0.2 Released!
 
 v0.2 is a complete re-write.  Please see
