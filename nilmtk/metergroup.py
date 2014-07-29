@@ -378,7 +378,21 @@ class MeterGroup(Electric):
         appliances = set()
         for meter in self.meters:
             appliances.update(meter.appliances)
-        return appliances
+        return list(appliances)
+
+    def map_meter_instances_to_appliance_ids(self):
+        """
+        Returns
+        -------
+        dict where keys are meter instances (for ElecMeters)
+        or tuples of meter instances (for MeterGroups) and values
+        are a list of ApplianceIDs.
+        """
+        meter_instance_to_appliance_ids_map = {}
+        for meter in self.meters:
+            meter_instance_to_appliance_ids_map[meter.instance()] = (
+                meter.appliances)
+        return meter_instance_to_appliance_ids_map
 
     def __repr__(self):
         s = "{:s}(meters=\n".format(self.__class__.__name__)
