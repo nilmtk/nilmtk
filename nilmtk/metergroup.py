@@ -813,7 +813,7 @@ class MeterGroup(Electric):
         MeterGroup containing top k meters.
         """
         # Filtering out mains to create a meter group of appliances
-        appliance_meter_group = MeterGroup([meter for meter in self.meters if not meter.is_site_meter()])
+        appliance_meter_group = self.submeters()
         # Energy per appliance
         appliance_energy_per_meter  = appliance_meter_group.energy_per_meter()
         # Finding the most relevant measurement to sort on. For now, this is a
@@ -827,12 +827,10 @@ class MeterGroup(Electric):
         meters_top_k = []
         for meter in self.meters:
 
-            if hasattr(meter, 'meters'):
-                # Dual supply, so a meter group would be appended
+            if isinstance(meter, MeterGroup):
                 if meter.meters[0].instance() in top_k_appliance_index:
                     meters_top_k.append(meter)
             else:
-                #print(meter.instance())
                 if meter.instance() in top_k_appliance_index:
                     meters_top_k.append(meter)         
         return MeterGroup(meters_top_k)
