@@ -759,7 +759,7 @@ class MeterGroup(Electric):
         appx_total_records = sum(appx_num_records_in_each_good_section)
         records_in_train = appx_total_records*train_fraction
         seconds_in_train = int(records_in_train*sample_period)
-        if len(appx_num_records_in_each_good_section)==1:
+        if len(good_sections)==1:
             # all data is contained in one good section
             split_point = good_sections[0].start + timedelta(seconds=seconds_in_train)
             return split_point
