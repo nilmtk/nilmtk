@@ -1,0 +1,20 @@
+circle:
+  model: circle
+  model_url: http://www.plugwise.com/product/circle
+  manufacturer: Plugwise
+  manufacturer_url: http://www.plugwise.com
+  sample_period: 1
+  #max_sample_period:
+  measurements:
+    physical_quantity: power
+    type: active 
+    upper_limit: 
+    lower_limit: 0
+  description: des
+  pre_pay: false
+  wireless: true
+  wireless_configuration:
+    base: Raspberry Pi
+    protocol: zigbee
+    carrier_frequency: 2400
+  data_logger: log
