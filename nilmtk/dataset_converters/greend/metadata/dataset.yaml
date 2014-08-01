@@ -1,0 +1,30 @@
+name: GREEND
+long_name: GREEND Electrical ENergy Dataset
+creators:
+- Egarter, Dominik
+- Elmenreich, Wilfried
+- Monacchi, Andrea
+- Pöchacker, Manfred
+timezone: Europe/Vienna
+#date: 
+#contact:
+institution: Alpen-Adria-Universität
+#description: 
+number_of_buildings: 8
+#identifier:
+#subject:
+#geospatial_coverage:
+#timeframe:
+#funding:
+#publisher:
+geo_location:
+  locality: Klagenfurt
+  country: AT
+  latitude: 46.614150
+  longitude: 14.263321
+#rights_list:
+#description_of_subjects:
+related_documents:
+- http://arxiv.org/abs/1405.3100
+schema: https://github.com/nilmtk/nilm_metadata/tree/v0.2
+
