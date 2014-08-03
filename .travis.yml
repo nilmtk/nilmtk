@@ -21,6 +21,7 @@ install:
   - sudo apt-get build-dep python-psycopg2
   - pip install psycopg2 
   - pip install nose
+  - pip install sh
   - pip install coveralls coverage
   - python setup.py install
 script:
