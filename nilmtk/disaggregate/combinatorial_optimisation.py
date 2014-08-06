@@ -15,6 +15,7 @@ np.random.seed(SEED)
 
 
 class CombinatorialOptimisation(object):
+
     """1 dimensional combinatorial optimisation NILM algorithm.
 
     Attributes
@@ -49,7 +50,7 @@ class CombinatorialOptimisation(object):
         for i, meter in enumerate(metergroup.submeters().meters):
             for chunk in meter.power_series(preprocessing=[Clip()]):
                 self.model[meter.instance()] = cluster(chunk, max_num_clusters)
-                break # TODO handle multiple chunks per appliance
+                break  # TODO handle multiple chunks per appliance
 
     def disaggregate(self, mains, output_datastore, **load_kwargs):
         '''Disaggregate mains according to the model learnt previously.
@@ -70,12 +71,13 @@ class CombinatorialOptimisation(object):
         '''
         MIN_CHUNK_LENGTH = 100
 
-        # If we import sklearn at the top of the file then it makes autodoc fail
+        # If we import sklearn at the top of the file then it makes autodoc
+        # fail
         from sklearn.utils.extmath import cartesian
 
         # sklearn produces lots of DepreciationWarnings with PyTables
         import warnings
-        warnings.filterwarnings("ignore", category=DeprecationWarning) 
+        warnings.filterwarnings("ignore", category=DeprecationWarning)
 
         # Extract optional parameters from load_kwargs
         date_now = datetime.now().isoformat().split('.')[0]
@@ -91,21 +93,22 @@ class CombinatorialOptimisation(object):
         # [[0, 0, 0, 0], [0, 0, 0, 100], [0, 0, 50, 0], [0, 0, 50, 100], ...]
 
         summed_power_of_each_combination = np.sum(state_combinations, axis=1)
-        # summed_power_of_each_combination is now an array where each 
+        # summed_power_of_each_combination is now an array where each
         # value is the total power demand for each combination of states.
 
-        load_kwargs['sections'] = load_kwargs.pop('sections', 
+        load_kwargs['sections'] = load_kwargs.pop('sections',
                                                   mains.good_sections())
         resample_rule = '{:d}S'.format(resample_seconds)
         timeframes = []
         building_path = '/building{}'.format(mains.building())
         mains_data_location = ('{}/elec/meter{}'
-                               .format(building_path, 
+                               .format(building_path,
                                        container_to_string(mains.instance())))
 
         for chunk in mains.power_series(**load_kwargs):
 
             if len(chunk) < MIN_CHUNK_LENGTH:
+
                 continue
 
             # Record metadata
@@ -132,7 +135,7 @@ class CombinatorialOptimisation(object):
                                                      columns=cols))
 
             # Copy mains data to disag output
-            output_datastore.append(key=mains_data_location, 
+            output_datastore.append(key=mains_data_location,
                                     value=pd.DataFrame(chunk, columns=cols))
 
         ##################################
@@ -152,7 +155,7 @@ class CombinatorialOptimisation(object):
                 'max_sample_period': resample_seconds,
                 'measurements': [{
                     'physical_quantity': measurement[0],
-                    'type': measurement[1] 
+                    'type': measurement[1]
                 }]
             },
             'mains': {
@@ -161,29 +164,29 @@ class CombinatorialOptimisation(object):
                 'max_sample_period': resample_seconds,
                 'measurements': [{
                     'physical_quantity': measurement[0],
-                    'type': measurement[1] 
-                }]                
+                    'type': measurement[1]
+                }]
             }
         }
 
         merged_timeframes = merge_timeframes(timeframes, gap=resample_seconds)
-        total_timeframe = TimeFrame(merged_timeframes[0].start, 
+        total_timeframe = TimeFrame(merged_timeframes[0].start,
                                     merged_timeframes[-1].end)
 
-        dataset_metadata = {'name': output_name, 'date': date_now, 
+        dataset_metadata = {'name': output_name, 'date': date_now,
                             'meter_devices': meter_devices,
                             'timeframe': total_timeframe.to_dict()}
         output_datastore.save_metadata('/', dataset_metadata)
 
         # Building metadata
-        
+
         # Mains meter:
         elec_meters = {
             mains.instance(): {
-                'device_model': 'mains', 
-                'site_meter': True, 
+                'device_model': 'mains',
+                'site_meter': True,
                 'data_location': mains_data_location,
-                'preprocessing_applied': {}, # TODO
+                'preprocessing_applied': {},  # TODO
                 'statistics': {
                     'timeframe': total_timeframe.to_dict(),
                     'good_sections': list_of_timeframe_dicts(merged_timeframes)
@@ -200,7 +203,7 @@ class CombinatorialOptimisation(object):
                     'data_location': ('{}/elec/meter{}'
                                       .format(building_path,
                                               container_to_string(chan))),
-                    'preprocessing_applied': {}, # TODO
+                    'preprocessing_applied': {},  # TODO
                     'statistics': {
                         'timeframe': total_timeframe.to_dict(),
                         'good_sections': list_of_timeframe_dicts(merged_timeframes)
@@ -209,13 +212,15 @@ class CombinatorialOptimisation(object):
             })
 
         # Appliances:
-        appliances = [] # TODO
+        appliances = []  # TODO
 
         building_metadata = {
             'instance': mains.building(),
             'elec_meters': elec_meters,
             'appliances': appliances
         }
+
+       
         output_datastore.save_metadata(building_path, building_metadata)
 
     def export_model(self, filename):

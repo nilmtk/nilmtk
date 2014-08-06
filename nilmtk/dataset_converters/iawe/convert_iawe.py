@@ -27,8 +27,8 @@ column_mapping = {
     'VA': ('power', 'apparent'),
     'VAR': ('power', 'reactive'),
     'VLN': ('voltage', ""),
-    'V': ('voltage', "")  ,
-    'f': ('frequency', "") 
+    'V': ('voltage', ""),
+    'f': ('frequency', "")
 }
 
 
@@ -50,12 +50,13 @@ def convert_iawe(iawe_path, hdf_filename):
     electricity_path = join(iawe_path, "electricity")
 
     # Mains data
-    for chan in range(1,13):
+    for chan in range(1, 13):
         key = Key(building=1, meter=chan)
-        filename = join(electricity_path, "%d.csv" %chan)
+        filename = join(electricity_path, "%d.csv" % chan)
         print('Loading ', chan)
         df = pd.read_csv(filename)
-        df.index = pd.to_datetime((df.timestamp.values*1E9).astype(int), utc=True) 
+        df.index = pd.to_datetime(
+            (df.timestamp.values * 1E9).astype(int), utc=True)
         df = df.tz_convert('Asia/Kolkata')
         df = df.drop('timestamp', 1)
         df.rename(columns=lambda x: column_mapping[x], inplace=True)
@@ -71,7 +72,6 @@ def convert_iawe(iawe_path, hdf_filename):
                          hdf_filename)
 
     print("Done converting iAWE to HDF5!")
-
 
 
 def _get_module_directory():

@@ -6,6 +6,10 @@ from copy import deepcopy
 from .timeframe import TimeFrame, timeframes_from_periodindex
 from .node import Node
 
+# do not edit! added by PythonBreakpoints
+from pdb import set_trace as _breakpoint
+
+
 MAX_MEM_ALLOWANCE_IN_BYTES = 1E9
 
 class DataStore(object):
@@ -51,6 +55,9 @@ class HDFDataStore(DataStore):
 
     def load(self, key, cols=None, sections=None, n_look_ahead_rows=0,
              chunksize=1000000):
+
+        #_breakpoint()  # 9a2a1bb0
+
         """
         Parameters
         ----------
@@ -90,6 +97,7 @@ class HDFDataStore(DataStore):
             key = '/' + key
         if len(key) > 1 and key[-1] == '/':
             key = key[:-1]
+
 
         sections = [TimeFrame()] if sections is None else sections
         if isinstance(sections, pd.PeriodIndex):
