@@ -4,30 +4,39 @@ original_name: Benjamin
 elec_meters:
   1:
     device_model: circle
+    submeter_of: 0
     room: lounge
   2:
     device_model: circle
+    submeter_of: 0
     room: lounge
   3:
     device_model: circle
+    submeter_of: 0
     room: utility
   4:
     device_model: circle
+    submeter_of: 0
     room: utility
   5:
     device_model: circle
+    submeter_of: 0
     room: kitchen
   6:
     device_model: circle
+    submeter_of: 0
     room: lounge
   7:
     device_model: circle
+    submeter_of: 0
     room: kitchen
   8:
     device_model: circle
+    submeter_of: 0
     room: kitchen
   9:
     device_model: circle
+    submeter_of: 0
     room: hall #wrong 'cause there's no storage room
 
 appliances:
@@ -35,7 +44,7 @@ appliances:
   instance: 1
   meters: [1]
   room: lounge
-  multiple: False
+  multiple: false
   control:
     - manual
   manufacturer: Panasonic
@@ -43,38 +52,42 @@ appliances:
   year_of_manufacture: 2007
   part_number: TH-42PZ70E
 
-- type: sockets
+- type: UPS
   instance: 1
   meters: [2]
   room: lounge
-  multiple: False
+  year_of_purchase: 2012
+  year_of_manufacture: 2012
   control:
-    -always_on
-  components:
-    - type: UPS
-      meters: [2]
-      year_of_purchase: 2012
-      year_of_manufacture: 2012
+    - always_on
 
-    - type: games console
-      meters: [2]
-      year_of_purchase: 2007
-      year_of_manufacture: 2007
+- type: games console
+  instance: 1
+  meters: [2]
+  room: lounge
+  year_of_purchase: 2007
+  year_of_manufacture: 2007
+  control:
+    - manual
 
-    - type: computer
-      meters: [2]
-      cpu: {type: Intel Atom D2700}
-      description: 5x WD red 3TB 
-      part_number: DS1512+
-      manufacturer: Synology
-      year_of_purchase: 2012
-      year_of_manufacture: 2012
+- type: computer
+  instance: 1
+  meters: [2]
+  room: lounge
+  cpu: {type: Intel Atom D2700}
+  description: 5x WD red 3TB 
+  part_number: DS1512+
+  manufacturer: Synology
+  year_of_purchase: 2012
+  year_of_manufacture: 2012
+  control:
+    - always_on
   
 - type: washing machine
   instance: 1
   meters: [3]
   room: utility
-  multiple: False
+  multiple: false
   control:
     - manual
 
@@ -82,7 +95,7 @@ appliances:
   instance: 1
   meters: [4]
   room: utility
-  multiple: False
+  multiple: false
   control:
     - manual
 
@@ -90,42 +103,37 @@ appliances:
   instance: 1
   meters: [5]
   room: kitchen
-  multiple: False
+  multiple: false
   control:
     - manual
 
-- type: sockets
+- type: laptop computer
+  instance: 1
+  meters: [6]
+  room: lounge
+  control:
+    - manual
+  manufacturer: Apple
+  year_of_purchase: 2012
+  year_of_manufacture: 2012
+  part_number: MacBook Pro 10.1
+
+- type: laptop computer
   instance: 2
   meters: [6]
   room: lounge
-  components:
-    - type: laptop computer
-      instance: 1
-      meters: [6]
-      control:
-      - manual
-      manufacturer: Apple
-      year_of_purchase: 2012
-      year_of_manufacture: 2012
-      part_number: MacBook Pro 10.1
-
-    - type: laptop computer
-      instance: 2
-      meters: [6]
-      control:
-      - manual
-      manufacturer: Acer
-      year_of_purchase: 2008
-      year_of_manufacture: 2008
-      part_number: Travelmate 6593
-    
-  
+  control:
+    - manual
+  manufacturer: Acer
+  year_of_purchase: 2008
+  year_of_manufacture: 2008
+  part_number: Travelmate 6593
 
 - type: food processor
   instance: 1
   meters: [7]
   room: kitchen
-  multiple: False
+  multiple: false
   control:
     - manual
 
@@ -133,7 +141,7 @@ appliances:
   instance: 1
   meters: [8]
   room: kitchen
-  multiple: False
+  multiple: false
   control:
     - manual
   year_of_purchase: 2011
@@ -143,7 +151,7 @@ appliances:
   instance: 1
   meters: [9]
   room: hall #wrong 'cause there's no storage room
-  multiple: False
+  multiple: false
   control:
     - manual
 
