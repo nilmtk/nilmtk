@@ -71,18 +71,57 @@ Please see the docs for more info.
 
 ##### Installing
 
-First, please install [NILM Metadata](https://github.com/nilmtk/nilm_metadata).
+NB: The following procedure is for Ubuntu like Linux variants (debian based). Please adapt accordingly for your OS. We would welcome installation instructions for other OS as well.
+We would recommend using [Anaconda](https://store.continuum.io/cshop/anaconda/), which bundles togther most of the required packages.
+After installing Anaconda, please do the following:
 
-If you just want to use the code without modifying it then:
+1. Updating anaconda
+```bash
+$ conda update --yes conda
+```
 
-`python setup.py install`
+2. Installing HDF5 libaries and python-dev
+```bash
+$ sudo apt-get install libhdf5-serial-dev python-dev
+```
 
-(you may have to run as `sudo`)
+3. Installing git client
+```bash
+$ sudo apt-get install git
+```
 
-If you want to get involved in development then:
+4. Installing pip and other dependencies which might be missing from Anaconda
+```bash
+$ conda install --yes pip numpy scipy six scikit-learn pandas numexpr pytables dateutil matplotlib networkx
+```
 
-`python setup.py develop`
+5. Installing [NILM Metadata](https://github.com/nilmtk/nilm_metadata).
+```bash
+git clone https://github.com/nilmtk/nilm_metadata/
+cd nilm_metadata; python setup.py develop; cd ..
+```
 
+6. Installing postgresql support (currently needed for WikiEnergy converter)
+```bash
+$ sudo apt-get build-dep python-psycopg2
+```
+
+7. Misc. pip installs
+```bash
+$ pip install psycopg2 nose sh coveralls coverage
+```
+
+8. Finally! Install nilmtk
+```bash
+$ git clone https://github.com/nilmtk/nilmtk.git
+$ cd nilmtk; python setup.py develop; cd..
+```
+
+9. Run tests
+```bash
+$ cd nilmtk
+$ nosetests
+```
 
 ##### Notes
 
