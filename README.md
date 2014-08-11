@@ -75,53 +75,53 @@ NB: The following procedure is for Ubuntu like Linux variants (debian based). Pl
 We would recommend using [Anaconda](https://store.continuum.io/cshop/anaconda/), which bundles togther most of the required packages.
 After installing Anaconda, please do the following:
 
-1. Updating anaconda
-```bash
-$ conda update --yes conda
-```
+	1. Updating anaconda
+	```bash
+	$ conda update --yes conda
+	```
 
-2. Installing HDF5 libaries and python-dev
-```bash
-$ sudo apt-get install libhdf5-serial-dev python-dev
-```
+	2. Installing HDF5 libaries and python-dev
+	```bash
+	$ sudo apt-get install libhdf5-serial-dev python-dev
+	```
 
-3. Installing git client
-```bash
-$ sudo apt-get install git
-```
+	3. Installing git client
+	```bash
+	$ sudo apt-get install git
+	```
 
-4. Installing pip and other dependencies which might be missing from Anaconda
-```bash
-$ conda install --yes pip numpy scipy six scikit-learn pandas numexpr pytables dateutil matplotlib networkx
-```
+	4. Installing pip and other dependencies which might be missing from Anaconda
+	```bash
+	$ conda install --yes pip numpy scipy six scikit-learn pandas numexpr pytables dateutil matplotlib networkx
+	```
 
-5. Installing [NILM Metadata](https://github.com/nilmtk/nilm_metadata).
-```bash
-git clone https://github.com/nilmtk/nilm_metadata/
-cd nilm_metadata; python setup.py develop; cd ..
-```
+	5. Installing [NILM Metadata](https://github.com/nilmtk/nilm_metadata).
+	```bash
+	git clone https://github.com/nilmtk/nilm_metadata/
+	cd nilm_metadata; python setup.py develop; cd ..
+	```
 
-6. Installing postgresql support (currently needed for WikiEnergy converter)
-```bash
-$ sudo apt-get build-dep python-psycopg2
-```
+	6. Installing postgresql support (currently needed for WikiEnergy converter)
+	```bash
+	$ sudo apt-get build-dep python-psycopg2
+	```
 
-7. Misc. pip installs
-```bash
-$ pip install psycopg2 nose sh coveralls coverage
-```
+	7. Misc. pip installs
+	```bash
+	$ pip install psycopg2 nose sh coveralls coverage
+	```
 
-8. Finally! Install nilmtk
-```bash
-$ git clone https://github.com/nilmtk/nilmtk.git
-$ cd nilmtk; python setup.py develop; cd..
-```
+	8. Finally! Install nilmtk
+	```bash
+	$ git clone https://github.com/nilmtk/nilmtk.git
+	$ cd nilmtk; python setup.py develop; cd..
+	```
 
-9. Run tests
-```bash
-$ cd nilmtk
-$ nosetests
-```
+	9. Run tests
+	```bash
+	$ cd nilmtk
+	$ nosetests
+	```
 
 ##### Notes
 
