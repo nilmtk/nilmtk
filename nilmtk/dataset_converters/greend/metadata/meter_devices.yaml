@@ -4,11 +4,11 @@ circle:
   manufacturer: Plugwise
   manufacturer_url: http://www.plugwise.com
   sample_period: 1
-  #max_sample_period:
+  max_sample_period: 30
   measurements:
     physical_quantity: power
     type: active 
-    upper_limit: 
+    upper_limit: 3000
     lower_limit: 0
   description: des
   pre_pay: false
