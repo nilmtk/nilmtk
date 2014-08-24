@@ -13,15 +13,18 @@ from .utils import (tree_root, nodes_adjacent_to_root, simplest_type_for,
 from .measurement import select_best_ac_type, AC_TYPES
 from .electric import Electric
 
+
 class MeterGroup(Electric):
+
     """A group of ElecMeter objects. Can contain nested MeterGroup objects.
 
     Implements many of the same methods as ElecMeter.
-    
+
     Attributes
     ----------
     meters : list of ElecMeters
     """
+
     def __init__(self, meters=None):
         self.meters = [] if meters is None else list(meters)
 
@@ -46,13 +49,13 @@ class MeterGroup(Electric):
         if not appliances:
             warn("Building {} has an empty 'appliances' list."
                  .format(building_id.instance), RuntimeWarning)
-            
+
         # Load static Meter Devices
         ElecMeter.load_meter_devices(store)
 
         # Load each meter
         for meter_i, meter_metadata_dict in elec_meters.iteritems():
-            meter_id = ElecMeterID(instance=meter_i, 
+            meter_id = ElecMeterID(instance=meter_i,
                                    building=building_id.instance,
                                    dataset=building_id.dataset)
             meter = ElecMeter(store, meter_metadata_dict, meter_id)
@@ -120,7 +123,7 @@ class MeterGroup(Electric):
     def __getitem__(self, key):
         """Get a single meter using appliance type and instance unless
         ElecMeterID is supplied.
-        
+
         These formats for `key` are accepted:
 
         Retrieve a meter using details of the meter:
@@ -156,8 +159,8 @@ class MeterGroup(Electric):
                 # ElecMeterID(instance=(1,2), building=1, dataset='REDD')
                 for group in self.nested_metergroups():
                     if (set(group.instance()) == set(key.instance) and
-                        group.building() == key.building and
-                        group.dataset() == key.dataset):
+                            group.building() == key.building and
+                            group.dataset() == key.dataset):
                         return group
             elif key.instance == 0:
                 metergroup_of_building = self.select(
@@ -168,10 +171,11 @@ class MeterGroup(Electric):
                     if meter.identifier == key:
                         return meter
             raise KeyError(key)
-        elif isinstance(key, list): # find MeterGroup from list of ElecMeterIDs
+        # find MeterGroup from list of ElecMeterIDs
+        elif isinstance(key, list):
             if not all([isinstance(item, tuple) for item in key]):
                 raise TypeError("requires a list of ElecMeterID objects.")
-            for meter in self.meters: # TODO: write unit tests for this
+            for meter in self.meters:  # TODO: write unit tests for this
                 # list of ElecMeterIDs.  Return existing MeterGroup
                 if isinstance(meter, MeterGroup):
                     metergroup = meter
@@ -212,7 +216,8 @@ class MeterGroup(Electric):
                 raise Exception('{} meters found with instance == {}'
                                 .format(n_meters_found, key))
             elif n_meters_found == 0:
-                raise KeyError('No meters found with instance == {}'.format(key))
+                raise KeyError(
+                    'No meters found with instance == {}'.format(key))
             else:
                 return meters_found[0]
         else:
@@ -245,7 +250,7 @@ class MeterGroup(Electric):
         * select(name=['fridge', 'tv']) # get all fridges and tvs
         * select(category='lighting', except={'room'=['kitchen lights']})
         * select('all', except=[('tv', 1)])
-        
+
         Also: see if we can do select(category='lighting' | name='tree lights')
         or select(energy > 100)??  Perhaps using:
         * Python's eval function something like this:
@@ -253,7 +258,7 @@ class MeterGroup(Electric):
           >>> eval('(x > 0) | (index > 2)', {'x':s, 'index':s.index})
           Hmm, yes, maybe we should just implement this!  e.g.
           select("(category == 'lighting') | (category == 'ict')")
-          
+
           But what about:
           * select('total_energy > 100')
           * select('mean(hours_on_per_day) > 3')
@@ -267,7 +272,7 @@ class MeterGroup(Electric):
           and shouldn't be too hard.  Would need to only calculate
           these stats if necessary though (e.g. by checking if 'total_energy'
           is in the query string before running `eval`)
-          
+
         * or numexpr: https://github.com/pydata/numexpr
         * see Pandas.eval(): 
           * http://pandas.pydata.org/pandas-docs/stable/indexing.html#the-query-method-experimental
@@ -322,7 +327,7 @@ class MeterGroup(Electric):
         MeterGroup
         """
         assert isinstance(meter_ids, (tuple, list))
-        meter_ids = list(set(meter_ids)) # make unique
+        meter_ids = list(set(meter_ids))  # make unique
         meters = []
         for meter_id in meter_ids:
             if isinstance(meter_id, ElecMeterID):
@@ -427,6 +432,7 @@ class MeterGroup(Electric):
     def wiring_graph(self):
         """Returns a networkx.DiGraph of connections between meters."""
         wiring_graph = nx.DiGraph()
+
         def _build_wiring_graph(meters):
             for meter in meters:
                 if isinstance(meter, MeterGroup):
@@ -453,9 +459,10 @@ class MeterGroup(Electric):
                 labels[meter] = meter.identifier.instance
             else:
                 metergroup = meter
-                meter_instances = [m.identifier.instance for m in metergroup.meters]
+                meter_instances = [
+                    m.identifier.instance for m in metergroup.meters]
                 labels[meter] = meter_instances
-        nx.draw(graph, labels=labels)        
+        nx.draw(graph, labels=labels)
 
     def power_series(self, **kwargs):
         """Sum together all meters and return power Series.
@@ -564,7 +571,7 @@ class MeterGroup(Electric):
                                                **load_kwargs)
             collected_stats.append(single_stat)
             if (full_results and len(self.meters) > 1 and
-                not meter.store.all_sections_smaller_than_chunksize):
+                    not meter.store.all_sections_smaller_than_chunksize):
                 warn("at least one section requested from '{}' required"
                      " multiple chunks to be loaded into memory. This may cause"
                      " a failure when we try to unify results from multiple"
@@ -602,8 +609,8 @@ class MeterGroup(Electric):
 
     def _check_kwargs(self, load_kwargs):
         if (load_kwargs.get('full_results ')
-            and not load_kwargs.has_key('sections') 
-            and len(self.meters) > 1):
+                and not load_kwargs.has_key('sections')
+                and len(self.meters) > 1):
             raise RuntimeError("MeterGroup stats can only return full results"
                                " objects if you specify 'sections' to load. If"
                                " you do not specify periods then the results"
@@ -619,9 +626,9 @@ class MeterGroup(Electric):
         if self.meters:
             if len(self.meters) > 1:
                 warn("As a quick implementation we only get Good Sections from"
-                " the first meter in the meter group.  We should really"
-                " return the intersection of the good sections for all"
-                " meters.  This will be fixed...")
+                     " the first meter in the meter group.  We should really"
+                     " return the intersection of the good sections for all"
+                     " meters.  This will be fixed...")
             return self.meters[0].good_sections(**kwargs)
         else:
             return []
@@ -669,10 +676,10 @@ class MeterGroup(Electric):
                     chunks.append(chunk.iloc[1:])
                 else:
                     chunks.append(chunk)
-                
+
             power_series = pd.concat(chunks)
 
-            # need to make sure 
+            # need to make sure
             # resample stays in sync with mains power_series.  Maybe want reindex???
             # If we're careful then I think we can get power_series with index
             # in common with mains, without having to post-process it
@@ -697,7 +704,7 @@ class MeterGroup(Electric):
             energy = meter.total_energy(sections=good_mains_sections,
                                         full_results=True).combined()
             ac_types = set(energy.keys())
-            ac_type = select_best_ac_type(ac_types, 
+            ac_type = select_best_ac_type(ac_types,
                                           mains.available_power_ac_types())
             submetered_energy += energy[ac_type]
             if common_ac_types is None:
@@ -707,10 +714,11 @@ class MeterGroup(Electric):
         mains_energy = mains.total_energy(full_results=True).combined()
         ac_type = select_best_ac_type(mains_energy.keys(), common_ac_types)
         return submetered_energy / mains_energy[ac_type]
-    
+
     def available_power_ac_types(self):
         """Returns set of all AC types recorded by all meters"""
-        all_ac_types = [meter.available_power_ac_types() for meter in self.meters]
+        all_ac_types = [meter.available_power_ac_types()
+                        for meter in self.meters]
         return set(flatten_2d_list(all_ac_types))
 
     def energy_per_meter(self, **load_kwargs):
@@ -719,8 +727,9 @@ class MeterGroup(Electric):
 
         Does not care about wiring hierarchy.  Does not attempt to ensure all 
         channels share the same time sections.
-        """ 
-        energy_per_meter = pd.DataFrame(columns=self.instance(), index=AC_TYPES)
+        """
+        energy_per_meter = pd.DataFrame(
+            columns=self.instance(), index=AC_TYPES)
         for meter in self.meters:
             meter_energy = meter.total_energy(full_results=True, **load_kwargs)
             energy_per_meter[meter.instance()] = meter_energy.combined()
@@ -736,7 +745,6 @@ class MeterGroup(Electric):
         total_energy = energy_per_meter.sum()
         return energy_per_meter / total_energy
 
-
     def train_test_split(self, train_fraction=0.5):
         """
         Parameters
@@ -748,78 +756,72 @@ class MeterGroup(Electric):
         split_time: pd.Timestamp where split should happen
         """
 
-        assert(0<train_fraction<1), "`train_fraction` should be between 0 and 1"
+        assert(
+            0 < train_fraction < 1), "`train_fraction` should be between 0 and 1"
 
-        #TODO: currently just works with the first mains meter, assuming
+        # TODO: currently just works with the first mains meter, assuming
         # both to be simultaneosly sampled
         mains_first_meter = self.mains().meters[0]
         good_sections = mains_first_meter.good_sections()
         sample_period = mains_first_meter.device['sample_period']
-        appx_num_records_in_each_good_section = [int((ts.end-ts.start).total_seconds()/sample_period) for ts in good_sections]
+        appx_num_records_in_each_good_section = [
+            int((ts.end - ts.start).total_seconds() / sample_period) for ts in good_sections]
         appx_total_records = sum(appx_num_records_in_each_good_section)
-        records_in_train = appx_total_records*train_fraction
-        seconds_in_train = int(records_in_train*sample_period)
-        if len(good_sections)==1:
+        records_in_train = appx_total_records * train_fraction
+        seconds_in_train = int(records_in_train * sample_period)
+        if len(good_sections) == 1:
             # all data is contained in one good section
-            split_point = good_sections[0].start + timedelta(seconds=seconds_in_train)
+            split_point = good_sections[
+                0].start + timedelta(seconds=seconds_in_train)
             return split_point
         else:
             # data is split across multiple time deltas
             records_remaining = records_in_train
             while records_remaining:
                 for i, records_in_section in enumerate(appx_num_records_in_each_good_section):
-                    if records_remaining>records_in_section:
-                        records_remaining-=records_in_section
+                    if records_remaining > records_in_section:
+                        records_remaining -= records_in_section
                     elif records_remaining == records_in_section:
                         # Next TimeFrame is the split point!!
-                        split_point = good_sections[i+1].start
+                        split_point = good_sections[i + 1].start
                         return split_point
                     else:
                         # Need to split this timeframe
-                        split_point = good_sections[i].start + timedelta(seconds=sample_period*records_remaining)
+                        split_point = good_sections[
+                            i].start + timedelta(seconds=sample_period * records_remaining)
                         return split_point
 
-
     ################## FUNCTIONS NOT YET IMPLEMENTED ###################
-
     # def init_new_dataset(self):
     #     self.infer_and_set_meter_connections()
     #     self.infer_and_set_dual_supply_appliances()
-            
     # def infer_and_set_meter_connections(self):
     #     """
     #     Arguments
     #     ---------
     #     meters : list of Meter objects
     #     """
-    #     # Maybe this should be a stand-alone function which
-    #     # takes a list of meters???
+    # Maybe this should be a stand-alone function which
+    # takes a list of meters???
     #     raise NotImplementedError
-        
     # def infer_and_set_dual_supply_appliances(self):
     #     raise NotImplementedError
-    
     # def total_on_duration(self):
     #     """Return timedelta"""
     #     raise NotImplementedError
-    
     # def on_durations(self):
-    #     # self.get_unique_upstream_meters()
-    #     # for each meter, get the on time, 
-    #     # assuming the on-power-threshold for the 
-    #     # smallest appliance connected to that meter???
+    # self.get_unique_upstream_meters()
+    # for each meter, get the on time,
+    # assuming the on-power-threshold for the
+    # smallest appliance connected to that meter???
     #     raise NotImplementedError
-    
     # def activity_distribution(self, bin_size, timespan):
     #     raise NotImplementedError
-        
     # def cross_correlation(self):
     #     """Correlation between items."""
     #     raise NotImplementedError
-                    
     # def on_off_events(self, minimum_state_duration):
     #     raise NotImplementedError
-    
     def select_top_k(self, k=5):
         """
         Returns
@@ -829,15 +831,38 @@ class MeterGroup(Electric):
         # Filtering out mains to create a meter group of appliances
         appliance_meter_group = self.submeters()
         # Energy per appliance
-        appliance_energy_per_meter  = appliance_meter_group.energy_per_meter()
+        appliance_energy_per_meter = appliance_meter_group.energy_per_meter()
+
+        # Removing appliances which may have no energy!
+        # See https://github.com/nilmtk/nilmtk/issues/174
+        appliances_to_ignore = []
+        for appliance_id in appliance_energy_per_meter.columns:
+            num_non_null_entries = appliance_energy_per_meter[
+                appliance_id].isnull().sum()
+            print(appliance_id, num_non_null_entries)
+            if (num_non_null_entries == len(appliance_energy_per_meter[appliance_id].index)):
+                appliances_to_ignore.append(appliance_id)
+
+        print(appliances_to_ignore)
+
+        appliances_to_consider = list(
+            set(appliance_energy_per_meter.columns) - set(appliances_to_ignore))
+
+        appliance_energy_per_meter = appliance_energy_per_meter[appliances_to_consider]
+
         # Finding the most relevant measurement to sort on. For now, this is a
         # simple function which considers the measurement having the most records
         # if there is only a single measurement, just take that
-        if len(appliance_energy_per_meter.T.columns)==1:
+        if len(appliance_energy_per_meter.T.columns) == 1:
             measurement = appliance_energy_per_meter.T.columns[0]
         else:
-            measurement = appliance_energy_per_meter.T.isnull().sum().sort().head(1).index
-        top_k_appliance_index = flatten(appliance_energy_per_meter.T.sort(columns=[measurement], ascending=False).head(k).index.tolist())
+            # temp find best measurement
+            temp = appliance_energy_per_meter.T.isnull().sum()
+            temp.sort()
+            measurement = temp.head(1).index[0]
+        print(measurement)
+        top_k_appliance_index = flatten(appliance_energy_per_meter.T.sort(
+            columns=[measurement], ascending=False).head(k).index.tolist())
         meters_top_k = []
         for meter in self.meters:
 
@@ -846,22 +871,22 @@ class MeterGroup(Electric):
                     meters_top_k.append(meter)
             else:
                 if meter.instance() in top_k_appliance_index:
-                    meters_top_k.append(meter)         
+                    meters_top_k.append(meter)
         return MeterGroup(meters_top_k)
-            
+
     # def select_meters_contributing_more_than(self, threshold_proportion):
     #     """Return new MeterGroup with all meters whose proportion of
     #     energy usage is above threshold percentage."""
-    #     # see prepb.filter_contribution_less_than_x(building, x)
+    # see prepb.filter_contribution_less_than_x(building, x)
     #     raise NotImplementedError
-        
-    
-    # # SELECTION FUNCTIONS NOT IMPLEMENTED YET
+
+
+    # SELECTION FUNCTIONS NOT IMPLEMENTED YET
 
     # def groupby(self, **kwargs):
     #     """
     #     e.g. groupby('category')
-        
+
     #     Returns
     #     -------
     #     A dict of MeterGroup objects e.g.:
