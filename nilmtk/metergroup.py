@@ -464,7 +464,6 @@ class MeterGroup(Electric):
                 labels[meter] = meter_instances
         nx.draw(graph, labels=labels)
 
-
     def power_series_all_columns(self, **kwargs):
         generators = []
         for meter in self.meters:
@@ -484,7 +483,6 @@ class MeterGroup(Electric):
 
             chunk.timeframe = timeframe
             yield chunk
-
 
     def power_series(self, **kwargs):
         """Sum together all meters and return power Series.
