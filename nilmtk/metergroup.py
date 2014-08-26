@@ -5,14 +5,17 @@ import numpy as np
 from compiler.ast import flatten
 from datetime import timedelta
 from warnings import warn
+import matplotlib.pyplot as plt
 from .elecmeter import ElecMeter, ElecMeterID
 from .appliance import Appliance
 from .datastore import join_key
 from .utils import (tree_root, nodes_adjacent_to_root, simplest_type_for,
-                    flatten_2d_list)
+                    flatten_2d_list, convert_to_timestamp)
+from .plots import plot_series
 from .measurement import select_best_ac_type, AC_TYPES
 from .electric import Electric
-
+from .timeframe import TimeFrame
+from .preprocessing import Apply
 
 class MeterGroup(Electric):
 
@@ -914,6 +917,66 @@ class MeterGroup(Electric):
     #     """
     #     raise NotImplementedError
 
+    def get_timeframe(self):
+        """
+        Returns
+        -------
+        nilmtk.TimeFrame representing the timeframe which is the union
+            of all meters in self.meters.
+        """
+        timeframe = None
+        for meter in self.meters:
+            if timeframe is None:
+                timeframe = meter.get_timeframe()
+            else:
+                timeframe = timeframe.union(meter.get_timeframe())
+        return timeframe
+
+    def plot(self, start=None, end=None, width=800, ax=None):
+        """
+        Parameters
+        ----------
+        start, end : str or pd.Timestamp or datetime or None, optional
+        width : int, optional
+            Number of points on the x axis required
+        ax : matplotlib.axes, optional
+        """
+        # Get start and end times for the plot
+        start = convert_to_timestamp(start)
+        end = convert_to_timestamp(end)
+        if start is None or end is None:
+            timeframe_for_group = self.get_timeframe()
+            if start is None:
+                start = timeframe_for_group.start
+            if end is None:
+                end = timeframe_for_group.end
+        timeframe = TimeFrame(start, end)
+
+        # Calculate the resolution for the x axis
+        duration = (end - start).total_seconds()
+        secs_per_pixel = int(round(duration / width))
+        
+        # Define a resample function
+        resample_func = lambda df: pd.DataFrame.resample(
+            df, rule='{:d}S'.format(secs_per_pixel))
+
+        # Load data and plot each meter
+        for meter in self.meters:
+            power_series = meter.power_series_all_data(
+                sections=[timeframe], preprocessing=[Apply(func=resample_func)])
+            ax = plot_series(power_series, ax=ax, label=meter.appliance_label())
+
+        plt.legend()
+        return ax
+
+    def appliance_label(self):
+        """
+        Returns
+        -------
+        string : A label listing all the appliance types.
+        """
+        return ", ".join(set([meter.appliance_label() for meter in self.meters]))
+        
 
 def iterate_through_submeters_of_two_metergroups(master, slave):
     """

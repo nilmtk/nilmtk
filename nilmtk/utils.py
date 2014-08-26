@@ -136,3 +136,16 @@ def get_index(data):
     else:
         raise TypeError('wrong type for `data`.')
     return index
+
+
+def convert_to_timestamp(t):
+    """
+    Parameters
+    ----------
+    t : str or pd.Timestamp or datetime or None
+
+    Returns
+    -------
+    pd.Timestamp or None
+    """
+    return None if t is None else pd.Timestamp(t)

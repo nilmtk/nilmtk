@@ -14,5 +14,6 @@ class Apply(Node):
         for chunk in self.upstream.process():
             new_chunk = self.func(chunk)
             new_chunk.timeframe = chunk.timeframe
-            new_chunk.look_ahead = chunk.look_ahead
+            if hasattr(chunk, 'look_ahead'):
+                new_chunk.look_ahead = chunk.look_ahead
             yield new_chunk
