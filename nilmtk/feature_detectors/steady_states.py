@@ -34,7 +34,6 @@ def find_steady_states(dataframe, min_n_samples=2, stateThreshold=15,
 
       # Tells whether we have both real and reactive power or only real power
     num_measurements = len(dataframe.columns)
-    print(num_measurements)
     estimatedSteadyPower = np.array([0] * num_measurements)
     lastSteadyPower = np.array([0] * num_measurements)
     previousMeasurement = np.array([0] * num_measurements)
@@ -138,10 +137,7 @@ def find_steady_states(dataframe, min_n_samples=2, stateThreshold=15,
     cols_steady = {1: ['active average'],
                    2: ['active average', 'reactive average']}
 
-    print(cols_transition[num_measurements])
-    print("*"*80)
-    print(len(index_transitions))
-    print("*"*80)
+    
     if len(index_transitions)==0:
         # No events
         return pd.DataFrame(), pd.DataFrame()
@@ -156,7 +152,6 @@ def find_steady_states(dataframe, min_n_samples=2, stateThreshold=15,
                                     columns=cols_steady[num_measurements])
         print("States frame created.")
         print("Finished.")
-        print(steadyStates)
         return steadyStates, transitions
 
 
