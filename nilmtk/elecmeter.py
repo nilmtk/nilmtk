@@ -275,7 +275,7 @@ class ElecMeter(Hashable, Electric):
 
         # Pull data through preprocessing pipeline
         for chunk in generator:            
-            series = chunk['power'].dropna()
+            series = chunk['power'].fillna(0)
             series.timeframe = getattr(chunk, 'timeframe', None)
             series.look_ahead = getattr(chunk, 'look_ahead', None)
             yield series
