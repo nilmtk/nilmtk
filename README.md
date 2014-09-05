@@ -81,49 +81,53 @@ After installing Anaconda, please do the following:
 
 - Updating anaconda
 ```bash
-$ conda update --yes conda
+conda update --yes conda
 ```
 
 - Installing HDF5 libaries and python-dev
 ```bash
-$ sudo apt-get install libhdf5-serial-dev python-dev
+sudo apt-get install libhdf5-serial-dev python-dev
 ```
 
 - Installing git client
 ```bash
-$ sudo apt-get install git
+sudo apt-get install git
 ```
 
 - Installing pip and other dependencies which might be missing from Anaconda
 ```bash
-$ conda install --yes pip numpy scipy six scikit-learn pandas numexpr pytables dateutil matplotlib networkx
+conda install --yes pip numpy scipy six scikit-learn pandas numexpr pytables dateutil matplotlib networkx
 ```
 
 - Installing [NILM Metadata](https://github.com/nilmtk/nilm_metadata).
 ```bash
 git clone https://github.com/nilmtk/nilm_metadata/
-cd nilm_metadata; python setup.py develop; cd ..
+cd nilm_metadata
+python setup.py develop
+cd ..
 ```
 -  Installing postgresql support (currently needed for WikiEnergy converter)
 ```bash
-$ sudo apt-get build-dep python-psycopg2
+sudo apt-get build-dep python-psycopg2
 ```
 
 - Misc. pip installs
 ```bash
-$ pip install psycopg2 nose sh coveralls coverage
+pip install psycopg2 nose sh coveralls coverage
 ```
 
 - Finally! Install nilmtk
 ```bash
-$ git clone https://github.com/nilmtk/nilmtk.git
-$ cd nilmtk; python setup.py develop; cd..
+git clone https://github.com/nilmtk/nilmtk.git
+cd nilmtk
+python setup.py develop
+cd..
 ```
 
 - Run tests
 ```bash
-$ cd nilmtk
-$ nosetests
+cd nilmtk
+nosetests
 ```
 
 ##### Installing on Windows
