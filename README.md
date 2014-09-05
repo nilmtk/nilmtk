@@ -143,8 +143,8 @@ $ conda install --yes pip numpy scipy six scikit-learn pandas numexpr pytables d
 
 - Installing [NILM Metadata](https://github.com/nilmtk/nilm_metadata) from git bash
 ```bash
-git clone https://github.com/nilmtk/nilm_metadata/
-cd nilm_metadata; python setup.py develop; cd ..
+$ git clone https://github.com/nilmtk/nilm_metadata/
+$ cd nilm_metadata; python setup.py develop; cd ..
 ```
 
 - Misc. pip installs
@@ -155,7 +155,9 @@ $ pip install nose pbs coveralls coverage
 - Finally! Install nilmtk from git bash
 ```bash
 $ git clone https://github.com/nilmtk/nilmtk.git
-$ cd nilmtk; python setup.py develop; cd..
+$ cd nilmtk
+$ python setup.py develop
+$ cd..
 ```
 
 - Run tests
