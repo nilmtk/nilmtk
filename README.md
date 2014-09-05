@@ -73,7 +73,7 @@ will be capable of doing 'plug and play' disaggregation in the future.
 
 Please see the docs for more info.
 
-##### Installing
+##### Installing on Ubuntu like Linux variants (debian based)
 
 NB: The following procedure is for Ubuntu like Linux variants (debian based). Please adapt accordingly for your OS. We would welcome installation instructions for other OS as well.
 We would recommend using [Anaconda](https://store.continuum.io/cshop/anaconda/), which bundles togther most of the required packages.
@@ -115,6 +115,40 @@ $ pip install psycopg2 nose sh coveralls coverage
 ```
 
 - Finally! Install nilmtk
+```bash
+$ git clone https://github.com/nilmtk/nilmtk.git
+$ cd nilmtk; python setup.py develop; cd..
+```
+
+- Run tests
+```bash
+$ cd nilmtk
+$ nosetests
+```
+
+##### Installing on Windows
+
+- Install [Anaconda](https://store.continuum.io/cshop/anaconda/), which bundles togther most of the required packages.
+
+- Install [git](http://git-scm.com/download/win) client
+
+- Installing pip and other dependencies which might be missing from Anaconda
+```bash
+$ conda install --yes pip numpy scipy six scikit-learn pandas numexpr pytables dateutil matplotlib networkx
+```
+
+- Installing [NILM Metadata](https://github.com/nilmtk/nilm_metadata) from git bash
+```bash
+git clone https://github.com/nilmtk/nilm_metadata/
+cd nilm_metadata; python setup.py develop; cd ..
+```
+
+- Misc. pip installs
+```bash
+$ pip install nose pbs coveralls coverage
+```
+
+- Finally! Install nilmtk from git bash
 ```bash
 $ git clone https://github.com/nilmtk/nilmtk.git
 $ cd nilmtk; python setup.py develop; cd..
