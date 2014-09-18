@@ -1,60 +1,77 @@
 appliances:
-- meter_ids: [2]
+- instance: 1
+  meters: [2]
   original_name: laptop
   type: laptop computer
-- meter_ids: [3]
+- instance: 1
+  meters: [3]
   original_name: monitor
   type: computer monitor
-- meter_ids: [4]
+- instance: 1
+  meters: [4]
   original_name: speakers
   type: active speaker
 - description: server
-  meter_ids: [5]
+  instance: 1
+  meters: [5]
   original_name: server
   type: computer
-- meter_ids: [6]
+- instance: 1
+  meters: [6]
   original_name: router
   type: broadband router
 - description: server_hdd
-  meter_ids: [7]
+  instance: 1
+  meters: [7]
   original_name: server_hdd
   type: external hard disk
-- meter_ids: [8]
+- instance: 1
+  meters: [8]
   original_name: kettle
   type: kettle
-- meter_ids: [9]
+- instance: 1
+  meters: [9]
   original_name: rice_cooker
   type: rice cooker
-- meter_ids: [10]
+- instance: 1
+  meters: [10]
   original_name: running_machine
   type: running machine
 - instance: 2
-  meter_ids: [11]
+  meters: [11]
   original_name: laptop2
   type: laptop computer
-- meter_ids: [12]
+- instance: 1
+  meters: [12]
   original_name: washing_machine
   type: washing machine
-- meter_ids: [13]
+- instance: 1
+  meters: [13]
   original_name: dish_washer
   type: dish washer
-- meter_ids: [14]
+- instance: 1
+  meters: [14]
   original_name: fridge
   type: fridge
-- meter_ids: [15]
+- instance: 1
+  meters: [15]
   original_name: microwave
   type: microwave
-- meter_ids: [16]
+- instance: 1
+  meters: [16]
   original_name: toaster
   type: toaster
-- meter_ids: [17]
+- instance: 1
+  meters: [17]
   model: Playstation
   original_name: playstation
   type: games console
-- meter_ids: [18]
+- instance: 1
+  meters: [18]
   original_name: modem
   type: modem
-- meter_ids: [19]
+- instance: 1
+  meters: [19]
   original_name: cooker
   type: cooker
 elec_meters:
@@ -193,7 +210,7 @@ elec_meters:
     timeframe: {end: '2013-10-10T06:15:39+01:00', start: '2013-05-20T22:28:40+01:00'}
   20:
     data_location: house_2/mains.dat
-    meter_device: SoundCardPowerMeter
+    device_model: SoundCardPowerMeter
     site_meter: true
     submeter_of: 1
     timeframe: {end: '2013-10-10T06:16:00.500000+01:00', start: '2013-04-16T21:45:16.300000+01:00'}

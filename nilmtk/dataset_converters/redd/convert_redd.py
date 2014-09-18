@@ -2,15 +2,15 @@ from __future__ import print_function, division
 import pandas as pd
 import numpy as np
 from copy import deepcopy
-from os.path import join, isdir, isfile, dirname, abspath
-from os import listdir, getcwd
+from os.path import join, isdir, isfile
+from os import listdir
 import re
-from sys import stdout, getfilesystemencoding
+from sys import stdout
 from nilmtk.datastore import Key
 from nilmtk.timeframe import TimeFrame
 from nilmtk.measurement import LEVEL_NAMES
+from nilmtk.utils import get_module_directory
 from nilm_metadata import convert_yaml_to_hdf5
-from inspect import currentframe, getfile, getsourcefile
 
 """
 TODO:
@@ -35,6 +35,15 @@ def convert_redd(redd_path, hdf_filename):
         return [('power', ac_type)]
 
     _convert(redd_path, hdf_filename, _redd_measurement_mapping_func, 'US/Eastern')
+
+    # Add metadata
+    convert_yaml_to_hdf5(join(get_module_directory(), 
+                              'dataset_converters', 
+                              'redd', 
+                              'metadata'),
+                         hdf_filename)
+
+    print("Done converting REDD to HDF5!")
 
 
 def _convert(input_path, hdf_filename, measurement_mapping_func, tz):
@@ -77,12 +86,6 @@ def _convert(input_path, hdf_filename, measurement_mapping_func, tz):
 
     store.close()
     
-    # Add metadata
-    convert_yaml_to_hdf5(join(_get_module_directory(), 'metadata'),
-                         hdf_filename)
-
-    print("Done converting to HDF5!")
-
 
 def _find_all_houses(input_path):
     """
@@ -172,17 +175,3 @@ def _load_chan(input_path, key_obj, columns, tz):
     df = df.tz_convert(tz)
 
     return df
-
-
-def _get_module_directory():
-    # Taken from http://stackoverflow.com/a/6098238/732596
-    path_to_this_file = dirname(getfile(currentframe()))
-    if not isdir(path_to_this_file):
-        encoding = getfilesystemencoding()
-        path_to_this_file = dirname(unicode(__file__, encoding))
-    if not isdir(path_to_this_file):
-        abspath(getsourcefile(lambda _: None))
-    if not isdir(path_to_this_file):
-        path_to_this_file = getcwd()
-    assert isdir(path_to_this_file), path_to_this_file + ' is not a directory'
-    return path_to_this_file

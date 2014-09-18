@@ -1,5 +1,9 @@
 from __future__ import print_function, division
-from nilmtk.dataset_converters.redd.convert_redd import _convert 
+from os.path import join
+from nilmtk.dataset_converters.redd.convert_redd import _convert
+from nilmtk.utils import get_module_directory
+from nilm_metadata import convert_yaml_to_hdf5
+
 
 def convert_ukdale(ukdale_path, hdf_filename):
     """
@@ -18,3 +22,12 @@ def convert_ukdale(ukdale_path, hdf_filename):
 
     _convert(ukdale_path, hdf_filename, _ukdale_measurement_mapping_func, 
              'Europe/London')
+
+    # Add metadata
+    convert_yaml_to_hdf5(join(get_module_directory(), 
+                              'dataset_converters', 
+                              'ukdale', 
+                              'metadata'),
+                         hdf_filename)
+
+    print("Done converting UK-DALE to HDF5!")

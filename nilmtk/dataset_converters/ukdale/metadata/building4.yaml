@@ -1,39 +1,50 @@
 appliances:
-- meter_ids: [2]
+- instance: 1
+  meters: [2]
   original_name: tv_dvd_digibox_lamp
   type: television
-- meter_ids: [2]
+- instance: 1
+  meters: [2]
   original_name: tv_dvd_digibox_lamp
   type: DVD player
 - description: digibox
-  meter_ids: [2]
+  instance: 1
+  meters: [2]
   original_name: tv_dvd_digibox_lamp
   type: set top box
 - description: probably near the television
-  meter_ids: [2]
+  instance: 1
+  meters: [2]
   original_name: tv_dvd_digibox_lamp
   type: light
-- meter_ids: [3]
+- instance: 1
+  meters: [3]
   original_name: kettle_radio
   type: kettle
 - description: probably near the kettle
-  meter_ids: [3]
+  instance: 1
+  meters: [3]
   original_name: kettle_radio
   type: radio
 - fuel: natural gas
-  meter_ids: [4]
+  instance: 1
+  meters: [4]
   original_name: gas_boiler
   type: boiler
-- meter_ids: [5]
+- instance: 1
+  meters: [5]
   original_name: freezer
   type: freezer
-- meter_ids: [6]
+- instance: 1
+  meters: [6]
   original_name: washing_machine_microwave_breadmaker
   type: washing machine
-- meter_ids: [6]
+- instance: 1
+  meters: [6]
   original_name: washing_machine_microwave_breadmaker
   type: microwave
-- meter_ids: [6]
+- instance: 1
+  meters: [6]
   original_name: washing_machine_microwave_breadmaker
   type: breadmaker
 elec_meters:

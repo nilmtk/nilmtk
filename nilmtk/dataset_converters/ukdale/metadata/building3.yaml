@@ -1,14 +1,18 @@
 appliances:
-- meter_ids: [2]
+- instance: 1
+  meters: [2]
   original_name: kettle
   type: kettle
-- meter_ids: [3]
+- instance: 1
+  meters: [3]
   original_name: electric_heater
   type: electric space heater
-- meter_ids: [4]
+- instance: 1
+  meters: [4]
   original_name: laptop
   type: laptop computer
-- meter_ids: [5]
+- instance: 1
+  meters: [5]
   original_name: projector
   type: projector
 elec_meters:
