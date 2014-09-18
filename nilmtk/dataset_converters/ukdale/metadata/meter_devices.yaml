@@ -1,0 +1,66 @@
+CurrentCostTx:
+  data_logger: &rfm_ecomanager_logger
+    creators: [Jack Kelly]
+    model: rfm_ecomanager_logger
+    model_url: https://github.com/JackKelly/rfm_ecomanager_logger
+  manufacturer: Current Cost
+  max_sample_period: 120
+  measurements:
+  - {upper_limit: 25000, lower_limit: 0, physical_quantity: power, type: apparent}
+  model: Transmitter
+  model_url: http://www.currentcost.com/product-transmitter.html
+  model: CurrentCost Tx
+  sample_period: 6
+  wireless: true
+  wireless_configuration: &wireless_config
+    base: >
+      creators: [Jack Kelly]
+      model: rfm_edf_ecomanager
+      model_url: https://github.com/JackKelly/rfm_edf_ecomanager/
+    protocol: custom
+    carrier_frequency: 434
+
+EcoManagerWholeHouseTx:
+  brand: EcoManager
+  brand_url: http://www.edfenergy.com/products-services/for-your-home/ecomanager
+  data_logger: *rfm_ecomanager_logger
+  manufacturer: Current Cost / Sailwider
+  max_sample_period: 120
+  measurements:
+  - {upper_limit: 25000, lower_limit: 0, physical_quantity: power, type: apparent}
+  model: EcoManager Whole House Transmitter
+  model_url: https://shop.edfenergy.com/Item.aspx?id=547
+  model: EcoManagerWholeHouseTx
+  sample_period: 6
+  seller: EDF Energy
+  site_meter: true
+  wireless: true
+  wireless_configuration: *wireless_config
+
+EcoManagerTxPlug:
+  brand: EcoManager
+  brand_url: http://www.edfenergy.com/products-services/for-your-home/ecomanager
+  data_logger: *rfm_ecomanager_logger
+  manufacturer: Current Cost / Sailwider
+  max_sample_period: 120
+  measurements:
+  - {upper_limit: 3300, lower_limit: 0, physical_quantity: power, type: active}
+  model: EcoManager Transmitter Plug
+  model_url: https://shop.edfenergy.com/Item.aspx?id=540
+  model: EcoManagerTxPlug
+  sample_period: 6
+  seller: EDF Energy
+  wireless: true
+  wireless_configuration: *wireless_config
+
+SoundCardPowerMeter:
+  manufacturer: Jack Kelly / Imperial College London
+  max_sample_period: 3
+  measurements:
+  - {upper_limit: 25000, lower_limit: 0, physical_quantity: power, type: active}
+  - {upper_limit: 25000, lower_limit: 0, physical_quantity: power, type: apparent}
+  - {description: RMS voltage, upper_limit: 275, lower_limit: 180, physical_quantity: voltage}
+  model: Sound Card Power Meter
+  model_url: https://github.com/JackKelly/snd_card_power_meter
+  sample_period: 1
+  wireless: false
