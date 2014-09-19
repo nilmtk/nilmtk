@@ -2,6 +2,7 @@
 from __future__ import print_function, division
 import unittest
 from os.path import join
+from os import remove
 import pandas as pd
 from datetime import timedelta
 from testingtools import data_dir
@@ -10,7 +11,6 @@ from nilmtk import TimeFrame
 from nilmtk import DataSet, TimeFrame
 from nilmtk.disaggregate import CombinatorialOptimisation
 from nilmtk import HDFDataStore
-from sh import rm
 
 
 class TestCO(unittest.TestCase):
@@ -40,7 +40,7 @@ class TestCO(unittest.TestCase):
             self.assertEqual((df1 == df2).sum().values[0], len(df1.index))
             self.assertEqual(len(df1.index), len(df2.index))
         output.close()
-        rm("output.h5")
+        remove("output.h5")
 
 
 if __name__ == '__main__':
