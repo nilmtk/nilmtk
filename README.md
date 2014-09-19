@@ -113,7 +113,7 @@ sudo apt-get build-dep python-psycopg2
 
 - Misc. pip installs
 ```bash
-pip install psycopg2 nose sh coveralls coverage
+pip install psycopg2 nose coveralls coverage
 ```
 
 - Finally! Install nilmtk

@@ -9,4 +9,3 @@ bottleneck==0.6.0
 numexpr==2.2.2
 MySQL-python
 nilm_metadata
-sh
