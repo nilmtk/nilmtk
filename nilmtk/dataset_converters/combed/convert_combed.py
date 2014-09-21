@@ -11,67 +11,59 @@ from nilmtk.timeframe import TimeFrame
 from nilmtk.measurement import LEVEL_NAMES
 from nilm_metadata import convert_yaml_to_hdf5
 from inspect import currentframe, getfile, getsourcefile
+from collections import OrderedDict
+
+PARAMS_TO_USE = ['Current', 'Energy', 'Power']
+
+SUBMETER_PATHS = OrderedDict({
+    'Building Total Mains':[0],
+    'Lifts':[0],
+    'Floor Total':[1, 2, 5],
+    'AHU': [0, 1, 2, 5]})
 
 
-column_mapping = {
-    'frequency': ('frequency', ""),
-    'voltage': ('voltage', ""),
-    'W': ('power', 'active'),
-    'Energy': ('energy', 'apparent'),
-    'Current': ('current', ''),
-    'reactive_power': ('power', 'reactive'),
-    'apparent_power': ('power', 'apparent'),
-    'power_factor': ('pf', ''),
-    'PF': ('pf', ''),
-    'phase_angle': ('phi', ''),
-    'VA': ('power', 'apparent'),
-    'VAR': ('power', 'reactive'),
-    'VLN': ('voltage', ""),
-    'V': ('voltage', ""),
-    'f': ('frequency', "")
-}
+column_mapping = OrderedDict({
+    'Power': ('power', 'active'),
+    'Energy': ('energy', 'active'),
+    'Current': ('current', '')
+    })
 
 
-def convert_iawe(iawe_path, hdf_filename):
+def convert_combed(combed_path, hdf_filename):
     """
     Parameters
     ----------
-    iawe_path : str
-        The root path of the iawe dataset.
+    combed_path : str
+        The root path of the combed dataset.
     hdf_filename : str
         The destination HDF5 filename (including path and suffix).
     """
 
-    assert isdir(iawe_path)
+    assert isdir(combed_path)
 
     # Open HDF5 file
     store = pd.HDFStore(hdf_filename, 'w', complevel=9, complib='zlib')
-
-    electricity_path = join(iawe_path, "electricity")
-
-    # Mains data
-    for chan in range(1, 13):
-        key = Key(building=1, meter=chan)
-        filename = join(electricity_path, "%d.csv" % chan)
-        print('Loading ', chan)
-        df = pd.read_csv(filename)
-        df.index = pd.to_datetime(
-            (df.timestamp.values * 1E9).astype(int), utc=True)
-        df = df.tz_convert('Asia/Kolkata')
-        df = df.drop('timestamp', 1)
-        df.rename(columns=lambda x: column_mapping[x], inplace=True)
-        df.columns.set_names(LEVEL_NAMES, inplace=True)
-        df = df.convert_objects(convert_numeric=True)
-        df = df.dropna()
-        df = df.astype(np.float32)
-        df = df.sort_index()
-        store.put(str(key), df, format='table')
-        store.flush()
-    store.close()
+    chan = 1
+    for building, meter_array in SUBMETER_PATHS.iteritems():
+        for meter in meter_array:
+            key = Key(building=1, meter=chan)
+            dfs = []
+            total = pd.DataFrame()
+            for attribute in column_mapping.keys():
+                filename_attribute = join(combed_path, building, str(meter), "%s.csv" %attribute )
+                print(filename_attribute)
+                dfs.append(pd.read_csv(filename_attribute, parse_dates = True, index_col = 0, header = True, names=[attribute]))
+            total = pd.concat(dfs, axis = 1)
+                   
+            total.rename(columns=lambda x: column_mapping[x], inplace=True)
+            total.columns.set_names(LEVEL_NAMES, inplace=True)
+            store.put(str(key), total, format='table')
+            store.flush()
+            chan = chan+ 1
     convert_yaml_to_hdf5(join(_get_module_directory(), 'metadata'),
                          hdf_filename)
 
-    print("Done converting iAWE to HDF5!")
+    print("Done converting COMBED to HDF5!")
 
 
 def _get_module_directory():
