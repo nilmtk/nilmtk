@@ -15,7 +15,7 @@ from nilm_metadata import convert_yaml_to_hdf5
 
 def convert(inputPath, hdfFilename, scheme=1):
 	files=[f for f in listdir(inputPath) if isfile (join(inputPath, f)) and '.csv' in f]
-	print(files)
+#	print(files)
 	store=HDFStore(hdfFilename)
 	for i in range(len(files)):
 		sent=files[i]
@@ -46,8 +46,8 @@ def convert(inputPath, hdfFilename, scheme=1):
 				fp=pd.read_csv(join(inputPath, sent))
                                 key=join('water', str(sent)[:len(str(sent)) - 4] + str(i+1))
                                 store.append(key, fp)
-	print(store)
-	print(store['/natural_gas/FRG1'])
+#	print(store)
+#	print(store['/natural_gas/FRG1'])
 
 def test():
 	inputPath='/Users/rishi/Documents/Master_folder/IIITD/5th_semester/Independent_Project/AMPds'
