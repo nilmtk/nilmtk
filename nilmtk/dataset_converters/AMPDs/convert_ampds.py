@@ -14,6 +14,8 @@ from nilmtk.utils import get_module_directory
 from nilm_metadata import convert_yaml_to_hdf5
 
 def convert(inputPath, hdfFilename, scheme=1, metadataPath='/'):
+# This function contains the bulk of the code. The test() function can simply be ignored for now
+# To do: Complete the metadata set. Then the convert_yaml_to_hdf5() function will stop throwing random errors.
 	files=[f for f in listdir(inputPath) if isfile (join(inputPath, f)) and '.csv' in f]
 #	print(files)
 	store=HDFStore(hdfFilename)
