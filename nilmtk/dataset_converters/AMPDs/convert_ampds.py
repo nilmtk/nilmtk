@@ -1,17 +1,20 @@
 from __future__ import print_function, division
+from inspect import currentframe, getfile, getsourcefile
+from sys import getfilesystemencoding
 import pandas as pd
 import numpy as np
 from pandas import *
 from copy import deepcopy
-from os.path import join, isdir, isfile
-from os import listdir
+from os.path import *
+from os import listdir, getcwd
 import re
 from sys import stdout
 from nilmtk.datastore import Key
 from nilmtk.timeframe import TimeFrame
 from nilmtk.measurement import LEVEL_NAMES
 from nilmtk.utils import get_module_directory
-from nilm_metadata import convert_yaml_to_hdf5
+from nilm_metadata import *
+#convert_yaml_to_hdf5
 from nilmtk.dataset import DataSet
 from nilmtk.building import Building
 
@@ -21,7 +24,7 @@ columnNameMapping={ 'V':('voltage', ''),
                     'I':('current', ''),
                     'f':('frequency', ''),
                     'DPF': ('pf', 'd'),
-                    'APF': ('pf', 'apparent'),
+                    'APF': ('power factor', 'apparent'),
                     'P': ('power', 'active'),
                     'Pt':('energy', 'active'),
                     'Q':('power', 'reactive'),
@@ -38,7 +41,20 @@ columnNameMapping={ 'V':('voltage', ''),
 	files=[f for f in listdir(inputPath) if isfile (join(inputPath, f)) and '.csv' in f]
 	return files	
 '''
-def convert(inputPath, hdfFilename, metadataPath='/'):
+def _get_module_directory():
+    # Taken from http://stackoverflow.com/a/6098238/732596
+    path_to_this_file = dirname(getfile(currentframe()))
+    if not isdir(path_to_this_file):
+        encoding = getfilesystemencoding()
+        path_to_this_file = dirname(unicode(__file__, encoding))
+    if not isdir(path_to_this_file):
+        abspath(getsourcefile(lambda _: None))
+    if not isdir(path_to_this_file):
+        path_to_this_file = getcwd()
+    assert isdir(path_to_this_file), path_to_this_file + ' is not a directory'
+    return path_to_this_file
+
+def convert(inputPath, hdfFilename): #, metadataPath='/'):
 
 	'''
 	Parameters: 
@@ -63,7 +79,7 @@ def convert(inputPath, hdfFilename, metadataPath='/'):
 #	fp=pd.read_csv(join(inputPath, sent))
 	for i, csv_file in enumerate(files):  #range(len(files)):
 		#sent=files[i]
-		key=Key(building=1, meter=(i+1))
+		key=Key(building=1, meter=(i+2))
 		print('Loading file #', (i+1), '. Please wait...')
 		fp=pd.read_csv(join(inputPath, csv_file))
 		fp.TS=fp.TS.astype('int')
@@ -78,6 +94,8 @@ def convert(inputPath, hdfFilename, metadataPath='/'):
 		store.flush()
 		print("Done with file #", (i+1))
 	store.close()
+	metadataPath=join(_get_module_directory(),'metadata.nilmtk')
+	print(metadataPath)
 #	convert_yaml_to_hdf5(metadataPath, hdfFilename)
 		
 '''if 'electricity' in inputPath:
@@ -114,13 +132,15 @@ def convert(inputPath, hdfFilename, metadataPath='/'):
 #	print (metadataPath)
 #	convert_yaml_to_hdf5(metadataPath, store)
 #	store.close()
+
+
 def test():
 	inputPath='/Users/rishi/Documents/Master_folder/IIITD/5th_semester/Independent_Project/AMPds/electricity'
 #	inputPath='/Users/rishi/Documents/Master_folder/IIITD/5th_semester/Independent_Project/Forked/nilmtk/nilmtk/dataset_converters/AMPDs'
-	fileName='/Users/rishi/Documents/Master_folder/IIITD/5th_semester/Independent_Project/AMPds/electricity/store1.h5'
+	fileName='/Users/rishi/Documents/Master_folder/IIITD/5th_semester/Independent_Project/AMPds/electricity/store2.h5'
 #	fileName='store.h5'
 	ip1=join(inputPath, 'natural_gas')
 	metadataPath='/Users/rishi/Documents/Master_folder/IIITD/5th_semester/Independent_Project/Forked/nilmtk/nilmtk/dataset_converters/AMPDs/metadata.nilmtk'
-	convert(inputPath, fileName, metadataPath)
+	convert(inputPath, fileName) #, metadataPath)
 
-test()
+#test()
