@@ -21,7 +21,7 @@ columnNameMapping={ 'V':('voltage', ''),
                     'I':('current', ''),
                     'f':('frequency', ''),
                     'DPF': ('pf', 'd'),
-                    'APF': ('pf', 'a'),
+                    'APF': ('pf', 'apparent'),
                     'P': ('power', 'active'),
                     'Pt':('energy', 'active'),
                     'Q':('power', 'reactive'),
@@ -31,7 +31,8 @@ columnNameMapping={ 'V':('voltage', ''),
 
 # Appliance name mapping. It is not used currently, but I put it here just in case I need it later on
 
-applianceNameMapping={ 'B1E': ('bedroom misc', 1), 'B2E': ('bedroom misc', 2),    'BME':('plugs', 1),    'CDE': ('dryer washer', 1),    'CWE': ('dryer washer', 2),    'DNE': ('plugs', 2), 'DWE': ('dishwasher', 1),    'EBE': ('workbench', 1),    'EQE':('security', 1),    'FGE': ('fridge', 1), 'FRE':('space heater', 1),    'GRE': ('misc', 3),    'HPE': ('air conditioner', 1),    'HTE': ('water heater', 1),'OFE': ('misc', 4),    'OUE': ('plugs', 3),    'TVE': ('entertainment', 1),    'UTE': ('plugs', 4),'WOE': ('oven', 1), 'UNE': ('unmetered', 1)}
+'''applianceNameMapping={ 'B1E': ('bedroom misc', 1), 'B2E': ('bedroom misc', 2),    'BME':('plugs', 1),    'CDE': ('dryer washer', 1),    'CWE': ('dryer washer', 2),    'DNE': ('plugs', 2), 'DWE': ('dishwasher', 1),    'EBE': ('workbench', 1),    'EQE':('security', 1),    'FGE': ('fridge', 1), 'FRE':('space heater', 1),    'GRE': ('misc', 3),    'HPE': ('air conditioner', 1),    'HTE': ('water heater', 1),'OFE': ('misc', 4),    'OUE': ('plugs', 3),    'TVE': ('entertainment', 1),    'UTE': ('plugs', 4),'WOE': ('oven', 1), 'UNE': ('unmetered', 1)}
+'''
 
 '''def readDataset(csvPath):
 	files=[f for f in listdir(inputPath) if isfile (join(inputPath, f)) and '.csv' in f]
@@ -60,14 +61,13 @@ def convert(inputPath, hdfFilename, metadataPath='/'):
 #	print(files)
 	store=HDFStore(hdfFilename)
 #	fp=pd.read_csv(join(inputPath, sent))
-	for i in range(len(files)):
-		sent=files[i]
+	for i, csv_file in enumerate(files):  #range(len(files)):
+		#sent=files[i]
 		key=Key(building=1, meter=(i+1))
 		print('Loading file #', (i+1), '. Please wait...')
-		fp=pd.read_csv(join(inputPath, sent))
+		fp=pd.read_csv(join(inputPath, csv_file))
 		fp.TS=fp.TS.astype('int')
 		fp.index=pd.to_datetime((fp.TS.values*1e9).astype(int))
-#		fp=fp.tz_convert('Asia/Kolkata')
         	fp=fp.drop('TS', 1)
 		fp.rename(columns=lambda x: columnNameMapping[x], inplace=True)
 		fp.columns.set_names(LEVEL_NAMES, inplace=True)
@@ -123,4 +123,4 @@ def test():
 	metadataPath='/Users/rishi/Documents/Master_folder/IIITD/5th_semester/Independent_Project/Forked/nilmtk/nilmtk/dataset_converters/AMPDs/metadata.nilmtk'
 	convert(inputPath, fileName, metadataPath)
 
-#test()
+test()
