@@ -84,11 +84,3 @@ def convert(inputPath, hdfFilename): #, metadataPath='/'):
 		
 
 
-def test():
-	inputPath='/Users/rishi/Documents/Master_folder/IIITD/5th_semester/Independent_Project/AMPds/electricity'
-	fileName='/Users/rishi/Documents/Master_folder/IIITD/5th_semester/Independent_Project/AMPds/electricity/store2.h5'
-	ip1=join(inputPath, 'natural_gas')
-	metadataPath='/Users/rishi/Documents/Master_folder/IIITD/5th_semester/Independent_Project/Forked/nilmtk/nilmtk/dataset_converters/AMPDs/metadata.nilmtk'
-	convert(inputPath, fileName) #, metadataPath)
-
-test()
