@@ -148,4 +148,4 @@ def test():
 	metadataPath='/Users/rishi/Documents/Master_folder/IIITD/5th_semester/Independent_Project/Forked/nilmtk/nilmtk/dataset_converters/AMPDs/metadata.nilmtk'
 	convert(inputPath, fileName) #, metadataPath)
 
-test()
+#test()
