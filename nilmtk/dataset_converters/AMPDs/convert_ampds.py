@@ -1,4 +1,5 @@
 from __future__ import print_function, division
+from nilm_metadata import *
 from inspect import currentframe, getfile, getsourcefile
 from sys import getfilesystemencoding
 import pandas as pd
@@ -72,7 +73,7 @@ def convert(inputPath, hdfFilename): #, metadataPath='/'):
 # This function contains the bulk of the code. The test() function can simply be ignored for now
 # To do: Complete the metadata set. Then the convert_yaml_to_hdf5() function will stop throwing random errors.
 	files=[f for f in listdir(inputPath) if isfile (join(inputPath, f)) and '.csv' in f and '.swp' not in f]
-	print (files)
+#	print (files)
 	assert isdir(inputPath)
 #	print(files)
 	store=HDFStore(hdfFilename)
@@ -80,7 +81,7 @@ def convert(inputPath, hdfFilename): #, metadataPath='/'):
 	for i, csv_file in enumerate(files):  #range(len(files)):
 		#sent=files[i]
 		key=Key(building=1, meter=(i+2))
-		print('Loading file #', (i+1), '. Please wait...')
+		print('Loading file #', (i+1),' : ', csv_file,'. Please wait...')
 		fp=pd.read_csv(join(inputPath, csv_file))
 		fp.TS=fp.TS.astype('int')
 		fp.index=pd.to_datetime((fp.TS.values*1e9).astype(int))
@@ -95,8 +96,12 @@ def convert(inputPath, hdfFilename): #, metadataPath='/'):
 		print("Done with file #", (i+1))
 	store.close()
 	metadataPath=join(_get_module_directory(),'metadata.nilmtk')
-	print(metadataPath)
-#	convert_yaml_to_hdf5(metadataPath, hdfFilename)
+#	print(metadataPath)
+#	print("File is about to be reopened")
+#	store=HDFStore(hdfFilename)
+#	print("File has been reopened")
+	print('Processing metadata...')
+	convert_yaml_to_hdf5(metadataPath, hdfFilename)
 		
 '''if 'electricity' in inputPath:
 			if scheme==1:
@@ -143,4 +148,4 @@ def test():
 	metadataPath='/Users/rishi/Documents/Master_folder/IIITD/5th_semester/Independent_Project/Forked/nilmtk/nilmtk/dataset_converters/AMPDs/metadata.nilmtk'
 	convert(inputPath, fileName) #, metadataPath)
 
-#test()
+test()
