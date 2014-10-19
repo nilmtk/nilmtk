@@ -83,4 +83,3 @@ def convert(inputPath, hdfFilename):  # , metadataPath='/'):
     print('Processing metadata...')
     convert_yaml_to_hdf5(metadataPath, hdfFilename)
 
-convert('/Users/rishi/Documents/Master_folder/IIITD/5th_semester/Independent_Project/AMPds/electricity', '/Users/rishi/Documents/Master_folder/IIITD/5th_semester/Independent_Project/AMPds/electricity/store2.h5 ')
