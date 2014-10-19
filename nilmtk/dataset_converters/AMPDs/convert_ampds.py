@@ -8,13 +8,11 @@ from pandas import *
 from copy import deepcopy
 from os.path import *
 from os import listdir, getcwd
-import re
 from sys import stdout
 from nilmtk.datastore import Key
 from nilmtk.timeframe import TimeFrame
 from nilmtk.measurement import LEVEL_NAMES
 from nilm_metadata import *
-# convert_yaml_to_hdf5
 from nilmtk.dataset import DataSet
 from nilmtk.building import Building
 
@@ -79,8 +77,7 @@ def convert(inputPath, hdfFilename):  # , metadataPath='/'):
         store.flush()
         print("Done with file #", (i + 1))
     store.close()
-    metadataPath = join(_get_module_directory(), 'metadata.nilmtk')
+    metadataPath = join(_get_module_directory(), 'metadata')
     print('Processing metadata...')
     convert_yaml_to_hdf5(metadataPath, hdfFilename)
 
-convert('/Users/rishi/Documents/Master_folder/IIITD/5th_semester/Independent_Project/AMPds/electricity', '/Users/rishi/Documents/Master_folder/IIITD/5th_semester/Independent_Project/AMPds/electricity/store2.h5 ')
