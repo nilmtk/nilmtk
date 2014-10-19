@@ -1,0 +1,82 @@
+instance: 5
+original_name: house_5
+
+# smart_meter_data:
+#   days: 215
+#   #coverage: 99.05
+#   period_start: 27.06.12
+#   period_end: 31.01.13
+
+elec_meters:
+  1: &smart_meter
+    site_meter: true
+    submeter_of: 0
+    device_model: smart_meter
+  2: &plug
+    site_meter: true
+    submeter_of: 0
+    device_model: plug
+  3: *plug
+  4: *plug
+  5: *plug
+  6: *plug
+  7: *plug
+  8: *plug
+  9: *plug
+
+appliances:
+- original_name: Tablet
+  type: laptop computer
+  #days_covered: 218
+  instance: 1
+  #coverage: 97.87
+  plug_num: [2] #Plug number
+
+- original_name: Coffee machine
+  type: coffee maker
+  #days_covered: 218
+  instance: 1
+  #coverage: 95.16
+  plug_num: [3] #Plug number
+
+- original_name: Fountain
+  type: garden sprinkler
+  #days_covered: 71
+  instance: 1
+  #coverage: 99.43
+  plug_num: [4] #Plug number
+
+- original_name: Microwave
+  type: microwave
+  #days_covered: 218
+  instance: 1
+  #coverage: 97.87
+  plug_num: [5] #Plug number
+
+- original_name: Fridge
+  type: fridge
+  #days_covered: 218
+  instance: 1
+  #coverage: 97.87
+  plug_num: [6] #Plug number
+
+- original_name: Entertainment
+  type: HTPC
+  #days_covered: 192
+  instance: 1
+  #coverage: 89.14
+  plug_num: [7] #Plug number
+
+- original_name: PC
+  type: computer
+  #days_covered: 218
+  instance: 1
+  #coverage: 97.87
+  plug_num: [8] #Plug number
+
+- original_name: Kettle
+  type: kettle
+  #days_covered: 25
+  instance: 1
+  #coverage: 76.64
+  plug_num: [9] #Plug number
