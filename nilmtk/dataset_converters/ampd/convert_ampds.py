@@ -1,14 +1,12 @@
 from __future__ import print_function, division
-from nilm_metadata import *
 from inspect import currentframe, getfile, getsourcefile
-from sys import getfilesystemencoding
 import pandas as pd
 import numpy as np
 from pandas import *
 from copy import deepcopy
 from os.path import *
 from os import listdir, getcwd
-from sys import stdout
+from sys import *
 from nilmtk.datastore import Key
 from nilmtk.timeframe import TimeFrame
 from nilmtk.measurement import LEVEL_NAMES
@@ -80,4 +78,4 @@ def convert(inputPath, hdfFilename):  # , metadataPath='/'):
     metadataPath = join(_get_module_directory(), 'metadata')
     print('Processing metadata...')
     convert_yaml_to_hdf5(metadataPath, hdfFilename)
-
+convert('/Users/rishi/Documents/Master_folder/IIITD/5th_semester/Independent_Project/AMPds/electricity', '/Users/rishi/Documents/Master_folder/IIITD/5th_semester/Independent_Project/AMPds/electricity/store2.h5')
