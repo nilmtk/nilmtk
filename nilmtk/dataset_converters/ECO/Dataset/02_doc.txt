@@ -1,0 +1,51 @@
+Household 2
+===========
+
+For a general description of the data (e.g., structure of the files), see '01_doc.txt'.
+
+
+SMART METER DATA
+----------------
+
+Measurement period:
+01.06.12 to 31.01.13
+
+Coverage:
+No. days: 244, Coverage: 98.58%
+
+
+
+PLUG DATA
+---------
+
+Measurement period:
+01.06.12 to 31.01.13
+
+01: Tablet (no. days: 240, coverage: 97.43%)
+02: Dishwasher (no. days: 240, coverage: 97.09%)
+03: Air exhaust (no. days: 240, coverage: 96.18%) (*)
+04: Fridge (no. days: 240, coverage: 98%)
+05: Entertainment (no. days: 240, coverage: 96.18%) (**)
+06: Freezer (no. days: 240, coverage: 96.39%)
+07: Kettle (no. days: 240, coverage: 88.5%)
+08: Lamp (no. days: 240, coverage: 90.21%) (***)
+09: Laptops (no. days: 240, coverage: 83.36%)
+10: Stove (no. days: 28, coverage: 100%) (****)
+11: TV (no. days: 240, coverage: 100%) (**)
+12: Stereo (no. days: 240, coverage: 95.95%) (**)
+
+Comments:
+
+(*) The air exhaust is located above the stove. We deployed a plug to identify when inhabitants were cooking, because the stove cannot be connected to a smart plug.
+(**) The entertainment system consists of a stereo system and a TV. We 'manually' disaggregated those two into plugs 11 and plugs 12. See the helper functions of the NILM-Eval project for more details. For this reason, adding the consumption of plugs 11 and 12 equals the consumption of plug 05. Except during 08.09.2012 and 13.09.2013 - during this time, only the TV was connected to plug 05.
+(***) This is a dimmable lamp, whose power consumption depends on the setting.
+(****) We extracted the power consumption of the stove 'manually': Therefore we made use of (1) the consumption of the air exhaust, and (2) the fact that the stove is the only appliance that consumes power on two phases at the same time (which means it is possible to detect switching events by investigating the power consumption measured on different phases at the same time).
+
+
+
+
+OCCUPANCY DATA
+--------------
+
+tbd.
+

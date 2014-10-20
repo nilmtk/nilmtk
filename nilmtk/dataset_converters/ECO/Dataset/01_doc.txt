@@ -1,0 +1,74 @@
+Household 1
+===========
+
+SMART METER DATA
+----------------
+
+Measurement period:
+01.06.12 to 31.01.13
+
+Coverage:
+No. days: 245, Coverage: 99.64%
+
+Limitation:
+The first 29 days (i.e., from 01.06.12 to 29.06.12), each of the power measurements has been rounded to 10W precision.
+
+Description:
+
+Each CVS file contains aggregate consumption data of a single day and is named accordingly (e.g., "2012-08-31.csv"). Each file contains 86,400 rows (i.e., one row for each second). Rows with missing measurements are denoted as "-1". The coverage specifies the proportion of "existing" values, i.e., values that are > -1.
+
+The rows consist of the following comma separated values:
+
+* powerallphases: Sum of real power over all phases
+* powerl1: Real power phase 1
+* powerl2: Real power phase 2
+* powerl3: Real power phase 3
+* currentneutral: Neutral current
+* currentl1: Current phase 1
+* currentl2: Current phase 2
+* currentl3: Current phase 3
+* voltagel1: Voltage phase 1
+* voltagel2: Voltage phase 2
+* voltagel3: Voltage phase 3
+* phaseanglevoltagel2l1: Phase shift between voltage on phase 2 and 1
+* phaseanglevoltagel3l1: Phase shift between voltage on phase 3 and 1
+* phaseanglecurrentvoltagel1: Phase shift between current/voltage on phase 1
+* phaseanglecurrentvoltagel2: Phase shift between current/voltage on phase 2 
+* phaseanglecurrentvoltagel3: Phase shift between current/voltage on phase 3
+
+We also provide Matlab files, which contain the same data stored as Matlab structs (using the field names described above). Each Matlab file contains aggregate consumption data of a single day (e.g., "2012-08-31.mat") and contains a single struct. The name of the struct encodes the date, number of household, and type of data ("00" represents a smart meter, "01" represents plug no. 1, ...). For instance, "Appliance010020120831" contains smart meter data from household 01 measured on August 31st, 2012.
+
+
+PLUG DATA
+---------
+
+Measurement period:
+01.06.12 to 23.01.13
+
+01: Fridge (no. days: 231, coverage: 98.53%)
+02: Dryer (no. days: 231, coverage: 98.56%)
+03: Coffee machine (no. days: 113, coverage: 85.36%)
+04: Kettle (no. days: 203, coverage: 77.65%)
+05: Washing machine (no. days: 231, coverage: 98.56%)
+06: PC (no,. days: 66, coverage: 84.77%) (*)
+07: Freezer (no. days: 231, coverage: 98.56%)
+
+Comments:
+
+(*) Including router
+
+Description: 
+
+Like the smart meter data, the plug data is also provided on a daily based (i.e., 86,400 measurements per day) both in CSV and Matlab format. In contrast to the smart meter data, it contains only one value:
+
+* consumption: Real power measured by the plug
+
+Each file contains plug measurements for the whole household. The (daily) data for each plug is stored in subfolders named after the plug ID (e.g., "05") described above.
+
+
+
+OCCUPANCY DATA
+--------------
+
+tbd.
+
