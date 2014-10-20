@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 from pandas import *
 from os.path import *
+from os import listdir
 from nilmtk.datastore import Key
 from nilmtk.measurement import LEVEL_NAMES
 from nilm_metadata import *
@@ -45,16 +46,15 @@ def convert_ampds(inputPath, hdfFilename):
     for i, csv_file in enumerate(files):  
         key = Key(building=1, meter=(i + 2))
         print('Loading file #', (i + 1), ' : ', csv_file, '. Please wait...')
-        fp = pd.read_csv(join(inputPath, csv_file))
-        fp.TS = fp.TS.astype('int')
-        fp.index = pd.to_datetime(fp.TS, unit='s')
-        fp = fp.drop('TS', 1)
-        fp.rename(columns=lambda x: columnNameMapping[x], inplace=True)
-        fp.columns.set_names(LEVEL_NAMES, inplace=True)
-        fp = fp.convert_objects(convert_numeric=True)
-        fp = fp.dropna()
-        fp = fp.astype(np.float32)
-        store.put(str(key), fp, format='Table')
+        df = pd.read_csv(join(inputPath, csv_file))
+        df.index = pd.to_datetime(df["TIMESTAMP"], unit='s')
+        df = df.drop('TIMESTAMP', 1)
+        df.rename(columns=lambda x: columnNameMapping[x], inplace=True)
+        df.columns.set_names(LEVEL_NAMES, inplace=True)
+        df = df.convert_objects(convert_numeric=True)
+        df = df.dropna()
+        df = df.astype(np.float32)
+        store.put(str(key), df, format='Table')
         store.flush()
         print("Done with file #", (i + 1))
     store.close()
