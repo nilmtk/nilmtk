@@ -1,11 +1,15 @@
 import pandas as pd
 import numpy as np
 import sys
-from os import listdir
-from os.path import isdir, join
+from os import listdir, getcwd
+from os.path import isdir, join, dirname, abspath
 from pandas.tools.merge import concat
 from nilmtk.utils import get_module_directory
 from nilmtk.datastore import Key
+from nilm_metadata import convert_yaml_to_hdf5
+from inspect import currentframe, getfile, getsourcefile
+from sys import getfilesystemencoding
+
 
 """
 PROBLEMS:
@@ -13,6 +17,19 @@ PROBLEMS:
 Refer to the blog @ nilmtkmridul.github.io to see current problems being faced.
 
 """
+
+def _get_module_directory():
+    # Taken from http://stackoverflow.com/a/6098238/732596
+    path_to_this_file = dirname(getfile(currentframe()))
+    if not isdir(path_to_this_file):
+        encoding = getfilesystemencoding()
+        path_to_this_file = dirname(unicode(__file__, encoding))
+    if not isdir(path_to_this_file):
+        abspath(getsourcefile(lambda _: None))
+    if not isdir(path_to_this_file):
+        path_to_this_file = getcwd()
+    assert isdir(path_to_this_file), path_to_this_file + ' is not a directory'
+    return path_to_this_file
 
 sm_column_name = {1:('power', 'apparent'),
 					2:('power', 'apparent'),
@@ -42,8 +59,8 @@ def _get_df(dir_loc, csv_name, meter_flag):
 
 	#Reading the CSV file and adding a datetime64 index to the Dataframe
 	df = pd.read_csv(join(dir_loc,csv_name), names=[i for i in range(1,column_num+1)])
-	df_index = pd.date_range(csv_name[:-4], periods=86400, freq = 's', tz = 'GMT')
-	df.index = pd.to_datetime(df_index)
+	#df_index = pd.date_range(csv_name[:-4], periods=86400, freq = 's', tz = 'GMT')	
+	df.index = pd.DatetimeIndex(start=csv_name[:-4], freq='s', periods=86400, tz = 'GMT')
 
 	if meter_flag == 'sm':
 		df.rename(columns=sm_column_name, inplace=True)
@@ -66,7 +83,7 @@ def convert_eco(dataset_loc, hdf_file, timezone):
 	"""
 
 	#Creating a new HDF File
-	store = pd.HDFStore(hdf_file, 'w')
+	store = pd.HDFStore(hdf_file, 'a')
 
 	"""
 	DATASET STRUCTURE:
@@ -97,7 +114,7 @@ def convert_eco(dataset_loc, hdf_file, timezone):
 		dir_list.sort()
 		print 'Current dir list:',dir_list
 		for fl in dir_list:
-			df = pd.DataFrame()
+			#df = pd.DataFrame()
 
 			#Meter number to be used in key
 			meter_num = 1 if meter_flag == 'sm' else int(fl) + 1
@@ -105,32 +122,43 @@ def convert_eco(dataset_loc, hdf_file, timezone):
 
 			fl_dir_list = [i for i in listdir(join(dataset_loc,folder,fl)) if '.csv' in i]
 			fl_dir_list.sort()
+
+			key = Key(building=building_no, meter=meter_num)
+
 			for fi in fl_dir_list:
 
 				#Getting dataframe for each csv file
 				df_fl = _get_df(join(dataset_loc,folder,fl),fi,meter_flag)
+				df_fl.sort_index(ascending=True,inplace=True)
+				df_fl = df_fl.tz_convert(timezone)
+
+				if not key in store:
+					store.put(str(key), df_fl, format='Table')
+				else:
+					store.append(str(key), df_fl, format='Table')
+				store.flush()
 
 				#Merging with the current Dataframe
-				df = concat([df,df_fl])
+				#df = concat([df,df_fl])
 				print 'Done for ',fi[:-4]
 
-			df.sort_index(ascending=True,inplace=True)
-			df = df.tz_convert(timezone)
-			print df[:5],'\n',df[-5:]
+			#df.sort_index(ascending=True,inplace=True)
+			#df = df.tz_convert(timezone)
+			#print df[:5],'\n',df[-5:]
 
 			#HDF5 file operations
-			key = Key(building=building_no, meter=meter_num)
-			store.put(str(key), df, format='Table')
-			store.flush()
+			
 			#temp = raw_input()
-
+	print "Data storage completed."
 	store.close()
 
 	#Adding the metadata to the HDF5file
-	meta_path = join(get_module_directory(), 'metadata')
+	meta_path = join(_get_module_directory(), 'metadata')
+	print meta_path
+	print hdf_file
 	convert_yaml_to_hdf5(meta_path, hdf_file)
 
 #Sample entries for checking
 dataset_loc = '/home/mridul/nilmtkProject/ECODataset/Dataset'
-hdf_file = '/home/mridul/nilmtkProject/ECODataset/hdf5store.h5'
+hdf_file = '/media/mridul/Data/HDF5file/hdf5.h5'   #'/home/mridul/nilmtkProject/ECODataset/hdf5store.h5'
 convert_eco(dataset_loc, hdf_file ,'GMT')
