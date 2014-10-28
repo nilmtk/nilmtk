@@ -132,31 +132,25 @@ def convert_eco(dataset_loc, hdf_file, timezone):
 				df_fl.sort_index(ascending=True,inplace=True)
 				df_fl = df_fl.tz_convert(timezone)
 
+				#HDF5 file operations
 				if not key in store:
 					store.put(str(key), df_fl, format='Table')
 				else:
 					store.append(str(key), df_fl, format='Table')
 				store.flush()
-
-				#Merging with the current Dataframe
-				#df = concat([df,df_fl])
-				print 'Done for ',fi[:-4]
-
-			#df.sort_index(ascending=True,inplace=True)
-			#df = df.tz_convert(timezone)
-			#print df[:5],'\n',df[-5:]
-
-			#HDF5 file operations
-			
+				print 'Building',building_no,', Meter no.',meter_num,'=> Done for ',fi[:-4]
 			#temp = raw_input()
+			
 	print "Data storage completed."
 	store.close()
 
+	print "Proceeding to Metadata conversion..."
 	#Adding the metadata to the HDF5file
 	meta_path = join(_get_module_directory(), 'metadata')
 	print meta_path
 	print hdf_file
 	convert_yaml_to_hdf5(meta_path, hdf_file)
+	print "Completed Metadata conversion."
 
 #Sample entries for checking
 dataset_loc = '/home/mridul/nilmtkProject/ECODataset/Dataset'
