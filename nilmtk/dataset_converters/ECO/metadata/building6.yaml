@@ -30,53 +30,53 @@ appliances:
   #days_covered: 166
   instance: 1
   #coverage: 67.2
-  plug_num: [2] #Plug number
+  meters: [2] #Plug number
 
 - original_name: Laptop
   type: laptop computer
   #days_covered: 185
   instance: 1
   #coverage: 97.3
-  plug_num: [3] #Plug number
+  meters: [3] #Plug number
 
 - original_name: Router
   type: broadband router
   #days_covered: 88
   instance: 1
   #coverage: 96.73
-  plug_num: [4] #Plug number
+  meters: [4] #Plug number
 
 - original_name: Coffee machine
   type: coffee maker
   #days_covered: 179
   instance: 1
   #coverage: 86.03
-  plug_num: [5] #Plug number
+  meters: [5] #Plug number
 
 - original_name: Entertainment
   type: HTPC
   #days_covered: 181
   instance: 1
   #coverage: 95.86
-  plug_num: [6] #Plug number
+  meters: [6] #Plug number
 
 - original_name: Fridge
   type: fridge
   #days_covered: 179
   instance: 1
   #coverage: 95.78
-  plug_num: [7] #Plug number
+  meters: [7] #Plug number
 
 - original_name: Freezer
   type: freezer
   #days_covered: 184
   instance: 1
   #coverage: 93.2
-  plug_num: [8] #Plug number
+  meters: [8] #Plug number
 
 - original_name: Kettle
   type: kettle
   #days_covered: 147
   instance: 1
   #coverage: 82.54
-  plug_num: [9] #Plug number
+  meters: [9] #Plug number

@@ -29,86 +29,79 @@ elec_meters:
   13: *plug
 
 appliances:
-- original_name: Tablet
+- original_name: Laptop and Tablet
   type: laptop computer
   #days_covered: 240
   instance: 1
   #coverage: 97.43
-  plug_num: [2] #Plug number
+  meters: [2,10] #Plug number
 
 - original_name: Dishwasher
   type: dish washer
   #days_covered: 240
   instance: 1
   #coverage: 97.09
-  plug_num: [3] #Plug number
+  meters: [3] #Plug number
 
 - original_name: Air exhaust
   type: air handling unit
   #days_covered: 240
   instance: 1
   #coverage: 96.18
-  plug_num: [4] #Plug number
+  meters: [4] #Plug number
 
 - original_name: Fridge
   type: fridge
   #days_covered: 240
   instance: 1
   #coverage: 98.0
-  plug_num: [5] #Plug number
+  meters: [5] #Plug number
 
 - original_name: Entertainment
   type: HTPC # Assuming entertainment implies the home theatre
   #days_covered: 240
   instance: 1
   #coverage: 96.18
-  plug_num: [6] #Plug number
+  meters: [6] #Plug number
 
 - original_name: Freezer
   type: freezer
   #days_covered: 240
   instance: 1
   #coverage: 96.39
-  plug_num: [7] #Plug number
+  meters: [7] #Plug number
 
 - original_name: Kettle
   type: kettle
   #days_covered: 240
   instance: 1
   #coverage: 88.5
-  plug_num: [8] #Plug number
+  meters: [8] #Plug number
 
 - original_name: Lamp
   type: lamp
   #days_covered: 240
   instance: 1
   #coverage: 90.21
-  plug_num: [9] #Plug number
-
-- original_name: Laptops
-  type: laptop computer
-  #days_covered: 240
-  instance: 1
-  #coverage: 83.36
-  plug_num: [10] #Plug number
+  meters: [9] #Plug number
 
 - original_name: Stove
   type: stove
   #days_covered: 28
   instance: 1
   #coverage: 100.0
-  plug_num: [11] #Plug number
+  meters: [11] #Plug number
 
 - original_name: TV
   type: television
   #days_covered: 240
   instance: 1
   #coverage: 100.0
-  plug_num: [12] #Plug number
+  meters: [12] #Plug number
 
 - original_name: Stereo
-  type: HTPC
+  type: audio system
   #days_covered: 240
   instance: 1
   #coverage: 95.95
-  plug_num: [13] #Plug number
+  meters: [13] #Plug number

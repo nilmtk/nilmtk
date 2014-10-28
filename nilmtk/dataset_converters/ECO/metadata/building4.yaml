@@ -30,53 +30,53 @@ appliances:
   #days_covered: 194
   instance: 1
   #coverage: 97.43
-  plug_num: [2] #Plug number
+  meters: [2] #Plug number
 
 - original_name: Kitchen appliances
   type: small cooking appliance
   #days_covered: 194
   instance: 1
   #coverage: 96.81
-  plug_num: [3] #Plug number
+  meters: [3] #Plug number
 
 - original_name: Lamp
   type: lamp
   #days_covered: 170
   instance: 1
   #coverage: 93.54
-  plug_num: [4] #Plug number
+  meters: [4] #Plug number
 
 - original_name: Stereo and laptop
-  type: laptop computer # Add multiple types?
+  type: laptop computer
   #days_covered: 169
   instance: 1
   #coverage: 90.98
-  plug_num: [5] #Plug number
+  meters: [5] #Plug number
 
 - original_name: Freezer
   type: freezer
   #days_covered: 192
   instance: 1
   #coverage: 93.08
-  plug_num: [6] #Plug number
+  meters: [6] #Plug number
 
 - original_name: Tablet
-  type: laptop computer
+  type: games console
   #days_covered: 189
   instance: 1
   #coverage: 93.6
-  plug_num: [7] #Plug number
+  meters: [7] #Plug number
 
 - original_name: Entertainment
   type: HTPC
   #days_covered: 186
   instance: 1
   #coverage: 94.69
-  plug_num: [8] #Plug number
+  meters: [8] #Plug number
 
 - original_name: Microwave
   type: microwave
   #days_covered: 194
   instance: 1
   #coverage: 97.08
-  plug_num: [9] #Plug number
+  meters: [9] #Plug number

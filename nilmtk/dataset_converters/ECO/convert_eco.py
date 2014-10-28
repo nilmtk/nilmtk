@@ -140,15 +140,13 @@ def convert_eco(dataset_loc, hdf_file, timezone):
 				store.flush()
 				print 'Building',building_no,', Meter no.',meter_num,'=> Done for ',fi[:-4]
 			#temp = raw_input()
-			
+
 	print "Data storage completed."
 	store.close()
 
 	print "Proceeding to Metadata conversion..."
 	#Adding the metadata to the HDF5file
 	meta_path = join(_get_module_directory(), 'metadata')
-	print meta_path
-	print hdf_file
 	convert_yaml_to_hdf5(meta_path, hdf_file)
 	print "Completed Metadata conversion."
 
