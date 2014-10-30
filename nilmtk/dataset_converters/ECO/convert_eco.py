@@ -12,18 +12,18 @@ from sys import getfilesystemencoding
 
 
 """
-	DATASET STRUCTURE:
-	------------------
-	On extracting all the dataset values, we should arrive at a similar directory structure as
-	mentioned.
+DATASET STRUCTURE:
+------------------
+On extracting all the dataset values, we should arrive at a similar directory structure as
+mentioned.
 
-	ECO Dataset will have a folder '<i>_sm_csv' and '<i>_plug_csv' where i is the building no.
+ECO Dataset will have a folder '<i>_sm_csv' and '<i>_plug_csv' where i is the building no.
 
-	<i>_sm_csv has a folder 01
-	<i>_plug_csv has a folder 01, 02,....<n> where n is the plug numbers.
+<i>_sm_csv has a folder 01
+<i>_plug_csv has a folder 01, 02,....<n> where n is the plug numbers.
 
-	Each folder has a CSV file as per each day, with each day csv file containing
-		86400 entries.
+Each folder has a CSV file as per each day, with each day csv file containing
+	86400 entries.
 """
 
 sm_column_name = {1:('power', 'apparent'),
