@@ -1,0 +1,153 @@
+instance: 8
+original_name: House#7
+
+elec_meters:
+  1:
+    device_model: circle
+    submeter_of: 0
+    room: lounge
+  2:
+    device_model: circle
+    submeter_of: 0
+    room: kitchen
+  3:
+    device_model: circle
+    submeter_of: 0
+    room: kitchen
+  4:
+    device_model: circle
+    submeter_of: 0
+    room: kitchen
+  5:
+    device_model: circle
+    submeter_of: 0
+    room: kitchen
+  6:
+    device_model: circle
+    submeter_of: 0
+    room: kitchen
+  7:
+    device_model: circle
+    submeter_of: 0
+    room: hall
+  8:
+    device_model: circle
+    submeter_of: 0
+    room: basement
+  9:
+    device_model: circle
+    submeter_of: 0
+    room: lounge
+
+appliances:
+- type: television
+  instance: 1
+  meters: [1]
+  room: lounge
+  control:
+    - manual
+  manufacturer: Loewe
+  year_of_purchase: 2008
+  year_of_manufacture: 2008
+
+- type: set top box
+  instance: 1
+  meters: [1]
+  room: lounge
+  control:
+    - manual
+  
+- type: electric oven
+  instance: 1
+  meters: [2]
+  room: kitchen
+  control:
+    - manual
+  
+- type: dish washer
+  instance: 1
+  meters: [3]
+  room: kitchen
+  control:
+    - manual
+
+- type: hood
+  instance: 1
+  meters: [4]
+  room: kitchen
+  control:
+    - manual
+
+- type: fridge freezer
+  instance: 1
+  meters: [5]
+  room: kitchen
+  control:
+    - thermostat
+  
+- type: television
+  instance: 1
+  meters: [6]
+  room: kitchen
+  control:
+    - manual
+  
+- type: modem
+  instance: 1
+  meters: [7]
+  room: hall
+  control:
+    - always on
+  
+- type: freezer
+  instance: 1
+  meters: [8]
+  room: basement
+  control:
+    - thermostat
+  
+- type: laptop computer
+  instance: 1
+  meters: [9]
+  room: lounge
+  control:
+    - manual
+
+- type: scanner
+  instance: 1
+  meters: [9]
+  room: lounge
+  control:
+    - manual
+
+- type: printer
+  instance: 1
+  meters: [9]
+  room: lounge
+  control:
+    - manual
+    
+description: An elderly couple living in a brick house, consisting in two floors and a basement, 250 sqm
+rooms:
+  - name: lounge
+    instance: 1
+    floor: 0 
+  - name: kitchen
+    instance: 1
+    floor: 0
+  - name: hall
+    instance: 1
+    description: between kitchen and washing room (to extend wireless signal of measurement equipment)
+    floor: 0
+  - name: bedroom
+    instance: 1
+    floor: 0
+  - name: bathroom
+    instance: 1
+    floor: 0
+
+n_occupants: 2
+#timeframe: check the csv
+construction_year: 1976
+energy_improvements:
+  - solar thermal
