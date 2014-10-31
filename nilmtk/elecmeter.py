@@ -16,9 +16,11 @@ import nilmtk
 
 ElecMeterID = namedtuple('ElecMeterID', ['instance', 'building', 'dataset'])
 
+
 class ElecMeter(Hashable, Electric):
+
     """Represents a physical electricity meter.
-    
+
     Attributes
     ----------
     appliances : list of Appliance objects connected immediately downstream
@@ -29,7 +31,7 @@ class ElecMeter(Hashable, Electric):
 
     key : string
         key into nilmtk.DataStore to access data.
-    
+
     metadata : dict.
         See http://nilm-metadata.readthedocs.org/en/latest/dataset_metadata.html#elecmeter
 
@@ -77,7 +79,6 @@ class ElecMeter(Hashable, Electric):
 
     def get_timeframe(self):
         return self.store.get_timeframe(key=self.key)
-        
 
     def upstream_meter(self):
         """
@@ -92,16 +93,18 @@ class ElecMeter(Hashable, Electric):
 
         # Sanity checks
         if submeter_of is None:
-            raise ValueError("This meter has no 'submeter_of' metadata attribute.")
+            raise ValueError(
+                "This meter has no 'submeter_of' metadata attribute.")
         if submeter_of < 0:
             raise ValueError("'submeter_of' must be >= 0.")
-        upstream_meter_in_building = self.metadata.get('upstream_meter_in_building')
+        upstream_meter_in_building = self.metadata.get(
+            'upstream_meter_in_building')
         if (upstream_meter_in_building is not None and
-            upstream_meter_in_building != self.identifier.building):
+                upstream_meter_in_building != self.identifier.building):
             raise NotImplementedError(
                 "'upstream_meter_in_building' not implemented yet.")
 
-        id_of_upstream = ElecMeterID(instance=submeter_of, 
+        id_of_upstream = ElecMeterID(instance=submeter_of,
                                      building=self.identifier.building,
                                      dataset=self.identifier.dataset)
 
@@ -110,7 +113,8 @@ class ElecMeter(Hashable, Electric):
     @classmethod
     def load_meter_devices(cls, store):
         dataset_metadata = store.load_metadata('/')
-        ElecMeter.meter_devices.update(dataset_metadata.get('meter_devices', {}))
+        ElecMeter.meter_devices.update(
+            dataset_metadata.get('meter_devices', {}))
 
     def save(self, destination, key):
         """
@@ -175,7 +179,7 @@ class ElecMeter(Hashable, Electric):
             if appliance.metadata.get('dominant_appliance'):
                 appliance_name = appliance_name.upper()
             appliance_names.append(appliance_name)
-        label = ", ".join(appliance_names) 
+        label = ", ".join(appliance_names)
         return label
 
     def available_power_ac_types(self):
@@ -186,13 +190,13 @@ class ElecMeter(Hashable, Electric):
         list of strings e.g. ['apparent', 'active']
         """
         measurements = self.device['measurements']
-        return [m['type'] for m in measurements 
+        return [m['type'] for m in measurements
                 if m['physical_quantity'] == 'power']
 
     def __repr__(self):
         string = super(ElecMeter, self).__repr__()
         # Now add list of appliances...
-        string = string[:-1] # remove last bracket
+        string = string[:-1]  # remove last bracket
 
         # Site meter
         if self.metadata.get('site_meter'):
@@ -200,7 +204,7 @@ class ElecMeter(Hashable, Electric):
 
         # Appliances
         string += ', appliances={}'.format(self.appliances)
-        
+
         # METER ROOM
         room = self.metadata.get('room')
         if room:
@@ -242,8 +246,8 @@ class ElecMeter(Hashable, Electric):
 
             elif self.device.has_key(k):
                 metadata_value = self.device[k]
-                if (isinstance(metadata_value, list) and 
-                    not isinstance(v, list)):
+                if (isinstance(metadata_value, list) and
+                        not isinstance(v, list)):
                     if v not in metadata_value:
                         match = False
                 elif metadata_value != v:
@@ -254,9 +258,31 @@ class ElecMeter(Hashable, Electric):
 
         return match
 
+    def power_series_all_columns(self, **kwargs):
+        """Get all power parameters available"""
+
+        preprocessing = kwargs.pop('preprocessing', [])
+
+        # Get source node
+        last_node = self.get_source_node(**kwargs)
+        generator = last_node.generator
+
+        # Connect together all preprocessing nodes
+        for node in preprocessing:
+            node.upstream = last_node
+            last_node = node
+            generator = last_node.process()
+
+        # Pull data through preprocessing pipeline
+        for chunk in generator:            
+            series = chunk['power'].fillna(0)
+            series.timeframe = getattr(chunk, 'timeframe', None)
+            series.look_ahead = getattr(chunk, 'look_ahead', None)
+            yield series
+
     def power_series(self, **kwargs):
         """Get power Series.
-        
+
         Parameters
         ----------
         measurement_ac_type_prefs : list of strings, optional
@@ -267,7 +293,7 @@ class ElecMeter(Hashable, Electric):
         preprocessing : list of Node subclass instances
         **kwargs :
             Any other key word arguments are passed to self.store.load()
-        
+
         Returns
         -------
         generator of pd.Series of power measurements.
@@ -288,7 +314,8 @@ class ElecMeter(Hashable, Electric):
             then will attempt to use voltage data from this meter.
         nominal_voltage : float
         """
-        measurement_ac_type_prefs = kwargs.pop('measurement_ac_type_prefs', None)
+        measurement_ac_type_prefs = kwargs.pop(
+            'measurement_ac_type_prefs', None)
         preprocessing = kwargs.pop('preprocessing', [])
 
         # Select power column:
@@ -322,11 +349,12 @@ class ElecMeter(Hashable, Electric):
 
     def get_source_node(self, **loader_kwargs):
         if self.store is None:
-            raise RuntimeError("Cannot get source node if meter.store is None!")
+            raise RuntimeError(
+                "Cannot get source node if meter.store is None!")
         generator = self.store.load(key=self.key, **loader_kwargs)
         self.metadata['device'] = self.device
         return Node(self, generator=generator)
-        
+
     def total_energy(self, **loader_kwargs):
         """
         Parameters
@@ -345,11 +373,11 @@ class ElecMeter(Hashable, Electric):
         clipped = Clip(source_node)
         total_energy = TotalEnergy(clipped)
         total_energy.run()
-        if full_results: 
+        if full_results:
             return total_energy.results
         else:
             return total_energy.results.simple()
-        
+
     def dropout_rate(self, **loader_kwargs):
         """
         Parameters
@@ -370,7 +398,7 @@ class ElecMeter(Hashable, Electric):
             return dropout_rate.results
         else:
             return dropout_rate.results.simple()
-        
+
     def good_sections(self, **loader_kwargs):
         """
         Parameters
@@ -396,24 +424,24 @@ class ElecMeter(Hashable, Electric):
     # def total_on_duration(self):
     #     """Return timedelta"""
     #     raise NotImplementedError
-    
+
     # def on_durations(self):
     #     raise NotImplementedError
-    
+
     # def activity_distribution(self, bin_size, timespan):
     #     raise NotImplementedError
-    
+
     # def on_off_events(self):
-    #     # use self.metadata.minimum_[off|on]_duration
+    # use self.metadata.minimum_[off|on]_duration
     #     raise NotImplementedError
-    
+
     # def discrete_appliance_activations(self):
     #     """
     #     Return a Mask defining the start and end times of each appliance
     #     activation.
     #     """
     #     raise NotImplementedError
-    
+
     # def proportion_of_energy(self, mains):
     #     """
     #     Parameters
@@ -423,12 +451,12 @@ class ElecMeter(Hashable, Electric):
     #     mains_good_sects = mains.good_sections()
     #     proportion_of_energy = (self.total_energy(timeframes=mains_good_sects) /
     #                             mains.total_energy(timeframes=mains_good_sects))
-    #     return proportion_of_energy 
+    #     return proportion_of_energy
 
     # def contiguous_sections(self):
     #     """retuns Mask object"""
     #     raise NotImplementedError
-        
+
     # def clean_and_export(self, destination_datastore):
     #     """Apply all cleaning configured in meter.cleaning and then export.  Also identifies
     #     and records the locations of gaps.  Also records metadata about exactly which

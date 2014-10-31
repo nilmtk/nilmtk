@@ -1,5 +1,6 @@
 from __future__ import print_function, division
 import numpy as np
+import pandas as pd 
 
 
 # Fix the seed for repeatability of experiments
@@ -26,9 +27,9 @@ def cluster(X, max_num_clusters=3):
 
     # Find clusters
     centroids = _apply_clustering(data, max_num_clusters)
-    centroids = np.append(centroids, 0) # add 'off' state
+    centroids = np.append(centroids, 0)  # add 'off' state
     centroids = np.round(centroids).astype(np.int32)
-    centroids = np.unique(centroids) # np.unique also sorts
+    centroids = np.unique(centroids)  # np.unique also sorts
     # TODO: Merge similar clusters
     return centroids
 
@@ -83,7 +84,7 @@ def _apply_clustering(X, max_num_clusters):
 
     # sklearn produces lots of DepreciationWarnings with PyTables
     import warnings
-    warnings.filterwarnings("ignore", category=DeprecationWarning) 
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
 
     # Finds whether 2 or 3 gives better Silhouellete coefficient
     # Whichever is higher serves as the number of clusters for that
@@ -117,3 +118,40 @@ def _apply_clustering(X, max_num_clusters):
                 return np.array([0])
 
     return k_means_cluster_centers[num_clus].flatten()
+
+
+def hart85_means_shift_cluster(pair_buffer_df, features):
+
+    from sklearn.cluster import MeanShift, estimate_bandwidth
+
+    # Creating feature vector
+    cluster_df = pd.DataFrame()
+    if 'active' in features:
+        cluster_df['active'] = pd.Series(pair_buffer_df.apply(lambda row:
+                                                                   ((np.fabs(row['T1 Active']) + np.fabs(row['T2 Active'])) / 2), axis=1), index=pair_buffer_df.index)
+    if 'reactive' in features:
+        cluster_df['reactive'] = pd.Series(pair_buffer_df.apply(lambda row:
+                                                                     ((np.fabs(row['T1 Reactive']) + np.fabs(row['T2 Reactive'])) / 2), axis=1), index=pair_buffer_df.index)
+    if 'delta' in features:
+        cluster_df['delta'] = pd.Series(pair_buffer_df.apply(lambda row:
+                                                                  (row['T2 Time'] - row['T1 Time']), axis=1), index=pair_buffer_df.index)
+        cluster_df['delta'] = cluster_df[
+            'delta'].apply(lambda x: int(x) / 6e10)
+
+    if 'hour_of_use' in features:
+        cluster_df['hour_of_use'] = pd.DatetimeIndex(
+            pair_buffer_df['T1 Time']).hour
+
+    if 'sd_event' in features:
+        cluster_df['sd_event'] = pd.Series(pair_buffer_df.apply(lambda row:
+                                                                     (df.power[row['T1 Time']:row['T2 Time']]).std(), axis=1), index=pair_buffer_df.index)
+
+    X = cluster_df.values.reshape((len(cluster_df.index), len(features)))
+    ms = MeanShift(bin_seeding=True)
+    ms.fit(X)
+    labels = ms.labels_
+    cluster_centers = ms.cluster_centers_
+    labels_unique = np.unique(labels)
+    n_clusters_ = len(labels_unique)
+
+    return pd.DataFrame(cluster_centers, columns=features)

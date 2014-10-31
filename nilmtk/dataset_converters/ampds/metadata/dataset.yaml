@@ -1,0 +1,29 @@
+name: AMPds
+long_name: The Almanac of Minutely Power Dataset
+creators:
+- Makonin, Stephen
+- Popowich, Fred
+- Bartram, Lyn
+- Gill, Bob
+- Bajic, Ivan V.
+publication_date: 2013, 2014
+institution: Simon Fraser University (SFU)
+contact: stephen@makonin.com
+description: a dataset consisting of electricity, water, and natural gas consumption for 2 years 
+subject: First dataset from Canada
+number_of_buildings: 1
+timezone: America/Vancouver
+geo_location:
+  locality: Burnaby
+  country: CA
+  latitude: 49.269
+  longitude: -122.992
+related_documents:
+- http://ampds.org
+- >
+  Stephen Makonin and Fred Popowich and Lyn Bartram and Bob Gill and Ivan V. Bajic
+  AMPds: A Public Dataset for Load Disaggregation and Eco-Feedback Research
+  In proceedings of the 2013 IEEE Electrical Power and Energy Conference 
+  (EPEC 2013)
+  http://ampds.org/EPEC_2013.pdf
+schema: https://github.com/nilmtk/nilm_metadata/tree/v0.2

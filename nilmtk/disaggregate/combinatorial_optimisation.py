@@ -220,7 +220,6 @@ class CombinatorialOptimisation(object):
             'appliances': appliances
         }
 
-       
         output_datastore.save_metadata(building_path, building_metadata)
 
     def export_model(self, filename):

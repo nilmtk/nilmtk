@@ -1,0 +1,178 @@
+instance: 1
+original_name: MAK
+elec_meters:
+  1: &PS18
+    site_meter: true
+    device_model: PS18
+  2: *PS18
+  3: *PS18
+  4: *PS18
+  5: *PS18
+  6: *PS18
+  7: *PS18
+  8: *PS18
+  9: *PS18
+  10: *PS18
+  11: *PS18
+  12: *PS18
+  13: *PS18
+  14: *PS18
+  15: *PS18
+  16: *PS18
+  17: *PS18
+  18: *PS18
+  19: *PS18
+  20: *PS18
+  21: *PS18
+
+appliances:
+- original_name: B1E
+  room: North Bedroom
+  type: light
+  description: Plugs and lights
+  instance: 1
+  meters: [2]
+
+- original_name: B2E
+  room: Master Bedroom and South Bedroom
+  type: light
+  description: Plugs and lights
+  instance: 2
+  meters: [3]
+
+- original_name: BME
+  room: Basement
+  type: light
+  description: Partial Plugs and lights
+  instance: 3
+  meters: [4]
+
+- original_name: CDE
+  room: Basement
+  type: unknown
+  description: Clothes Dryer
+  instance: 1
+  meters: [5]
+
+- original_name: CWE
+  room: Basement
+  type: unknown
+  description: Clothes Washer
+  instance: 2
+  meters: [6]
+
+- original_name: DNE
+  room: Dining Room
+  type: sockets
+  description: Plugs
+  instance: 1
+  meters: [7]
+
+- original_name: DWE
+  room: Kitchen
+  type: unknown
+  description: Dishwasher
+  instance: 3
+  meters: [8]
+
+- original_name: EBE
+  room: Home Office
+  type: unknown
+  description: Electronics Workbench
+  instance: 4
+  meters: [9]
+
+- original_name: EQE
+  room: Basement
+  type: unknown
+  description: Security/Network Equipment
+  instance: 5
+  meters: [10]
+
+- original_name: FGE
+  room: Kitchen
+  type: fridge
+  description: Fridge
+  instance: 1
+  meters: [11]
+
+- original_name: FRE
+  room: Basement
+  type: unknown
+  description: Forced Air Furnace Fan and Thermostat
+  instance: 6
+  meters: [12]
+
+- original_name: GRE
+  room: Garage
+  type: unknown
+  description: Sub-Panel, Detached Building
+  instance: 7
+  meters: [13]
+
+- original_name: HPE
+  room: Outside
+  type: heat pump
+  description: Heat Pump
+  instance: 1
+  meters: [14]
+
+- original_name: HTE
+  room: Basement
+  type: unknown
+  description: Instant Hot Water Unit
+  instance: 8
+  meters: [15]
+
+- original_name: OFE
+  room: Home Office
+  type: light
+  description: Home Office
+  instance: 4
+  meters: [16]
+
+- original_name: OUE
+  room: Outside
+  type: sockets
+  description: Plugs
+  instance: 2
+  meters: [17]
+
+- original_name: RSE
+  room: Rental Suite
+  type: unknown
+  description: Sub-Panel, Basement, 1 Occupant
+  instance: 9
+  meters: [18]
+
+- original_name: TVE
+  room: Basement Rec Room
+  type: television
+  description: Entertainment:TV, PVR, AMP
+  instance: 1
+  meters: [19]
+
+- original_name: UTE
+  room: Basement
+  type: sockets 
+  description: Utility Plug
+  instance: 3
+  meters: [20]
+
+- original_name: WOE
+  room: Kitchen
+  type: electric oven
+  description: Wall Oven
+  instance: 1
+  meters: [21]
+
+n_occupants: 3
+  start:2012-04-01T06:59:00Z
+  end:2014-04-01T07:00:00Z
+construction_year: 1955
+energy_improvements:
+  - heat pump
+  - loft insulation
+  - instant hot water
+  - double glazing
+  - lots of other things

@@ -1,4 +1,8 @@
-[![Build Status](https://travis-ci.org/nilmtk/nilmtk.svg?branch=master)](https://travis-ci.org/nilmtk/nilmtk) [![Coverage Status](https://coveralls.io/repos/nilmtk/nilmtk/badge.png)](https://coveralls.io/r/nilmtk/nilmtk)
+[![Build Status](https://travis-ci.org/nilmtk/nilmtk.svg?branch=master)](https://travis-ci.org/nilmtk/nilmtk) 
+
+[![Coverage Status](https://coveralls.io/repos/nilmtk/nilmtk/badge.png)](https://coveralls.io/r/nilmtk/nilmtk)
+
+[![Code Health](https://landscape.io/github/nilmtk/nilmtk/master/landscape.png)](https://landscape.io/github/nilmtk/nilmtk/master)
 
 ### v0.2 Released!
 
@@ -69,20 +73,100 @@ will be capable of doing 'plug and play' disaggregation in the future.
 
 Please see the docs for more info.
 
-##### Installing
+##### Installing on Ubuntu like Linux variants (debian based)
 
-First, please install [NILM Metadata](https://github.com/nilmtk/nilm_metadata).
+NB: The following procedure is for Ubuntu like Linux variants (debian based). Please adapt accordingly for your OS. We would welcome installation instructions for other OS as well.
+We would recommend using [Anaconda](https://store.continuum.io/cshop/anaconda/), which bundles togther most of the required packages.
+After installing Anaconda, please do the following:
 
-If you just want to use the code without modifying it then:
+- Updating anaconda
+```bash
+conda update --yes conda
+```
 
-`python setup.py install`
+- Installing HDF5 libaries and python-dev
+```bash
+sudo apt-get install libhdf5-serial-dev python-dev
+```
 
-(you may have to run as `sudo`)
+- Installing git client
+```bash
+sudo apt-get install git
+```
 
-If you want to get involved in development then:
+- Installing pip and other dependencies which might be missing from Anaconda
+```bash
+conda install --yes pip numpy scipy six scikit-learn pandas numexpr pytables dateutil matplotlib networkx
+```
 
-`python setup.py develop`
+- Installing [NILM Metadata](https://github.com/nilmtk/nilm_metadata).
+```bash
+git clone https://github.com/nilmtk/nilm_metadata/
+cd nilm_metadata
+python setup.py develop
+cd ..
+```
+-  Installing postgresql support (currently needed for WikiEnergy converter)
+```bash
+sudo apt-get build-dep python-psycopg2
+```
 
+- Misc. pip installs
+```bash
+pip install psycopg2 nose coveralls coverage
+```
+
+- Finally! Install nilmtk
+```bash
+git clone https://github.com/nilmtk/nilmtk.git
+cd nilmtk
+python setup.py develop
+cd..
+```
+
+- Run tests
+```bash
+cd nilmtk
+nosetests
+```
+
+##### Installing on Windows
+
+- Install [Anaconda](https://store.continuum.io/cshop/anaconda/), which bundles togther most of the required packages.
+
+- Install [git](http://git-scm.com/download/win) client
+
+- Installing pip and other dependencies which might be missing from Anaconda
+```bash
+$ conda install --yes pip numpy scipy six scikit-learn pandas numexpr pytables dateutil matplotlib networkx
+```
+
+- Installing [NILM Metadata](https://github.com/nilmtk/nilm_metadata) from git bash
+```bash
+$ git clone https://github.com/nilmtk/nilm_metadata/
+$ cd nilm_metadata
+$ python setup.py develop
+$ cd ..
+```
+
+- Misc. pip installs
+```bash
+$ pip install nose pbs coveralls coverage
+```
+
+- Finally! Install nilmtk from git bash
+```bash
+$ git clone https://github.com/nilmtk/nilmtk.git
+$ cd nilmtk
+$ python setup.py develop
+$ cd..
+```
+
+- Run tests
+```bash
+$ cd nilmtk
+$ nosetests
+```
 
 ##### Notes
 

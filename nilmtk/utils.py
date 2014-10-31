@@ -3,6 +3,10 @@ import numpy as np
 import pandas as pd
 import networkx as nx
 from copy import deepcopy
+from os.path import isdir, dirname, abspath
+from os import getcwd
+from inspect import currentframe, getfile, getsourcefile
+from sys import getfilesystemencoding
 
 
 def timedelta64_to_secs(timedelta):
@@ -136,3 +140,30 @@ def get_index(data):
     else:
         raise TypeError('wrong type for `data`.')
     return index
+
+
+def convert_to_timestamp(t):
+    """
+    Parameters
+    ----------
+    t : str or pd.Timestamp or datetime or None
+
+    Returns
+    -------
+    pd.Timestamp or None
+    """
+    return None if t is None else pd.Timestamp(t)
+
+
+def get_module_directory():
+    # Taken from http://stackoverflow.com/a/6098238/732596
+    path_to_this_file = dirname(getfile(currentframe()))
+    if not isdir(path_to_this_file):
+        encoding = getfilesystemencoding()
+        path_to_this_file = dirname(unicode(__file__, encoding))
+    if not isdir(path_to_this_file):
+        abspath(getsourcefile(lambda _: None))
+    if not isdir(path_to_this_file):
+        path_to_this_file = getcwd()
+    assert isdir(path_to_this_file), path_to_this_file + ' is not a directory'
+    return path_to_this_file
