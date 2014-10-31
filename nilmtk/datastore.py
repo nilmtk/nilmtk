@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 import pandas as pd
-from itertools import repeat
+from itertools import repeat, tee
 from time import time
 from copy import deepcopy
 from .timeframe import TimeFrame, timeframes_from_periodindex
@@ -55,9 +55,6 @@ class HDFDataStore(DataStore):
 
     def load(self, key, cols=None, sections=None, n_look_ahead_rows=0,
              chunksize=1000000):
-
-        #_breakpoint()  # 9a2a1bb0
-
         """
         Parameters
         ----------
@@ -98,7 +95,6 @@ class HDFDataStore(DataStore):
         if len(key) > 1 and key[-1] == '/':
             key = key[:-1]
 
-
         sections = [TimeFrame()] if sections is None else sections
         if isinstance(sections, pd.PeriodIndex):
             sections = timeframes_from_periodindex(sections)
@@ -108,19 +104,18 @@ class HDFDataStore(DataStore):
         for section in sections:
             window_intersect = self.window.intersect(section)
             if window_intersect.empty:
-                # Trick to make a generator with just a single, empty DataFrame
+                # Trick to make a generator with one empty DataFrame
                 generator = repeat(pd.DataFrame(), 1)
             else:
                 terms = window_intersect.query_terms('window_intersect')
                 generator = self.store.select(key=key, cols=cols, where=terms,
                                               chunksize=chunksize).__iter__()
                 
-            first_sub_chunk = True
-            for data in generator:
+            for subchunk_i, data in enumerate(generator):
                 if len(data) <= 2:
                     continue
 
-                if not first_sub_chunk:
+                if subchunk_i > 0:
                     self.all_sections_smaller_than_chunksize = False
 
                 # Load look ahead if necessary
@@ -142,14 +137,34 @@ class HDFDataStore(DataStore):
                 # Set timeframe
                 start = None
                 end = None
-                if len(data) == chunksize:
-                    # If len(data) == chunksize then we can fairly safely
-                    # assume that the full `section` is larger than the
-                    # chunksize so we're going to go through several
-                    # 'sub chunks'.
-                    if first_sub_chunk:
+
+                # Test if there are any more subchunks
+                # We cannot simply test if len(data) == chunksize
+                # because store.select(chunksize=chunksize) doesn't
+                # appear to respect the chunksize argument!
+                # TODO: report bug to Pandas / PyTables
+                # Alternative approach: before this loop,
+                # make a copy of the generator using tee()
+                # and loop through it to find out how many
+                # items there are in it, then count through those 
+                # in this loop.
+
+                # This strategy for 'peaking' into a generator from:
+                # http://stackoverflow.com/a/12059829/732596
+                generator_copy1, generator_copy2 = tee(generator)
+                generator = generator_copy2
+                try:
+                    generator_copy1.next()
+                except StopIteration:
+                    there_are_more_subchunks = False
+                else:
+                    there_are_more_subchunks = True
+                del generator_copy1
+
+                if there_are_more_subchunks:
+                    if subchunk_i == 0:
                         start = window_intersect.start
-                elif not first_sub_chunk:
+                elif subchunk_i > 0:
                     # This is the last subchunk
                     end = window_intersect.end
                 else:
@@ -163,8 +178,11 @@ class HDFDataStore(DataStore):
                     end = data.index[-1]
 
                 data.timeframe = TimeFrame(start, end)
-                first_sub_chunk = False
-
+                # print(section)
+                # print(data.timeframe)
+                # print()
+                # if section and section != data.timeframe:
+                #     import ipdb; ipdb.set_trace()
                 yield data
 
     def append(self, *args, **kwargs):

@@ -111,11 +111,10 @@ class TestHDFDataStore(unittest.TestCase):
 
     def test_load_chunks_small_chunksize(self):
         self.datastore.window.clear()
-        CHUNKSIZE = 55
         timeframes = [TimeFrame('2012-01-01 00:00:00', '2012-01-01 00:01:00'),
                       TimeFrame('2012-01-01 00:10:00', '2012-01-01 00:11:00')]
         chunks = self.datastore.load(key=self.keys[0], sections=timeframes,
-                                     chunksize=CHUNKSIZE)
+                                     chunksize=20)
         one_sec = timedelta(seconds=1)
 
         for i, chunk in enumerate(chunks):

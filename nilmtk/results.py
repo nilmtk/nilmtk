@@ -55,7 +55,6 @@ class Results(object):
         assert isinstance(new_results, dict), type(new_results)
         
         # check that there is no overlap
-
         for index, series in self._data.iterrows():
             tf = TimeFrame(index, series['end'])
             intersect = tf.intersect(timeframe)
