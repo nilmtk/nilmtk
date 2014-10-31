@@ -1,0 +1,152 @@
+instance: 4
+original_name: House#3
+
+elec_meters:
+  1:
+    device_model: circle
+    submeter_of: 0
+    room: bathroom
+  2:
+    device_model: circle
+    submeter_of: 0
+    room: lounge
+  3:
+    device_model: circle
+    submeter_of: 0
+    room: kitchen
+  4:
+    device_model: circle
+    submeter_of: 0
+    room: kitchen
+  5:
+    device_model: circle
+    submeter_of: 0
+    room: kitchen
+  6:
+    device_model: circle
+    submeter_of: 0
+    room: hall
+  7:
+    device_model: circle
+    submeter_of: 0
+    room: kitchen
+  8:
+    device_model: circle
+    submeter_of: 0
+    room: bathroom
+  9:
+    device_model: circle
+    submeter_of: 0
+    room: lounge
+
+appliances:
+- type: hair dryer
+  instance: 1
+  meters: [1]
+  room: bathroom
+  multiple: false
+  control:
+    - manual
+  manufacturer: Remington
+  model: D-3700
+  year_of_purchase: 2010
+  nominal_consumption: 2200
+
+- type: PC
+  instance: 1
+  meters: [2]
+  room: lounge
+  year_of_purchase: 2013
+  year_of_manufacture: 2013
+  control:
+    - manuel
+  manufacturer: dimotion PC
+  model: QuietONE Q2
+
+- type: fridge
+  instance: 1
+  meters: [3]
+  room: kitchen
+  manufacturer: Siemens
+  model: top-line
+  control:
+    - thermostat
+
+- type: kettle
+  instance: 1
+  meters: [4]
+  room: kitchen
+  manufacturer: Braun
+  model: 3217/ WK210
+  nominal_consumption: 2280
+  control:
+    - manuel
+  
+- type: coffee maker
+  instance: 1
+  meters: [5]
+  room: kitchen
+  multiple: false
+  control:
+    - manual
+  nominal_consumption: 1260
+  model: Delonghi Pixie
+  manufacturer: Delonghi
+
+- type: vacuum cleaner
+  instance: 1
+  meters: [6]
+  room: hall
+  multiple: false
+  manufacturer: Dyson
+  model: Root Cyclone
+  control:
+    - manual
+    
+
+- type: dish washer
+  instance: 1
+  meters: [7]
+  room: kitchen
+  multiple: false
+  control:
+    - manual
+  model: ADG 555IX
+  manufacturer: Whirlpool
+
+- type: washing machine
+  instance: 1
+  meters: [8]
+  room: bathroom
+  control:
+    - manual
+  manufacturer: Eudora
+  model: Sparmeister W
+  
+- type: TV
+  instance: 1
+  meters: [9]
+  room: lounge
+  control:
+    - manual
+  manufacturer: Samsung
+  model: LE32C650
+  
+description: House with two floors, 97sqm (except basement)
+rooms:
+  - name: lounge
+    instance: 1
+    floor: 0 
+  - name: kitchen
+    instance: 1
+    floor: 0
+  - name: hall #is a storage room
+    instance: 1
+    floor: 0
+  - name: bathroom
+    instance: 1
+    floor: 1
+
+n_occupants: 4
+#timeframe:
+periods_unoccupied: 19.6.2014 to 21.6.2014 and 26.7.2014 to 7.8.2014

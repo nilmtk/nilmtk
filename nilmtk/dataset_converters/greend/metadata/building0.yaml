@@ -1,0 +1,150 @@
+instance: 1
+original_name: House#0
+
+elec_meters:
+  1:
+    device_model: circle
+    submeter_of: 0
+    room: kitchen
+  2:
+    device_model: circle
+    submeter_of: 0
+    room: basement
+  3:
+    device_model: circle
+    submeter_of: 0
+    room: kitchen
+  4:
+    device_model: circle
+    submeter_of: 0
+    room: kitchen
+  5:
+    device_model: circle
+    submeter_of: 0
+    room: kitchen
+  6:
+    device_model: circle
+    submeter_of: 0
+    room: kitchen
+  7:
+    device_model: circle
+    submeter_of: 0
+    room: kitchen
+  8:
+    device_model: circle
+    submeter_of: 0
+    room: lounge
+  9:
+    device_model: circle
+    submeter_of: 0
+    room: hall
+
+appliances:
+- type: coffee maker
+  instance: 1
+  meters: [1]
+  room: kitchen
+  control:
+    - manual
+  nominal_consumption: 1450
+  model: ESAM04.110
+  manufacturer: Delonghi
+  year_of_purchase: 2012
+
+- type: washing machine
+  instance: 1
+  meters: [2]
+  room: basement
+  control:
+    - manuel
+  manufacturer: Miele
+  year_of_purchase: 2012
+
+- type: radio
+  instance: 1
+  meters: [3]
+  room: kitchen
+  control:
+    - manual
+  model: FA162
+  manufacturer: LG
+  year_of_purchase: 2013
+
+- type: kettle
+  instance: 1
+  meters: [4]
+  room: kitchen
+  control:
+    - manual
+  model: 3271/WK210
+  manufacturer: Braun
+  year_of_purchase: 2007
+  
+  
+- type: fridge freezer
+  instance: 1
+  meters: [5]
+  room: kitchen
+  control:
+    - thermostat
+  model: GC-P217LGCV
+  manufacturer: LG
+  year_of_purchase: 2012
+
+- type: dishwasher
+  instance: 1
+  meters: [6]
+  room: kitchen
+  control:
+    - manual
+  model: G578SCVi
+  manufacturer: Miele
+  year_of_purchase: 2012
+
+- type: lamp
+  instance: 1
+  meters: [7]
+  room: kitchen
+  control:
+    - manual
+
+- type: television
+  instance: 1
+  meters: [8]
+  room: lounge
+  control:
+    - manual
+  model: 46W905A
+  manufacturer: Sony
+  year_of_purchase: 2014
+ 
+- type: vacuum cleaner
+  instance: 1
+  meters: [9]
+  room: hall
+  control:
+    - manual
+  manufacturer: Dyson
+  year_of_purchase: 2003
+
+description: 2 floors; 140sqm
+rooms:
+  - name: lounge
+    instance: 1
+    floor: 0 
+  - name: kitchen
+    instance: 1
+    floor: 0
+  - name: hall #is a storage room
+    instance: 1
+    floor: 0
+  - name: bedroom
+    instance: 1
+    floor: 1
+
+n_occupants: 2
+#timeframe:
+#periods_unoccupied:
+construction_year: 2002
+energy_improvements:
+  - double glazing
