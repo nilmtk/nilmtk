@@ -1,7 +1,7 @@
 scikit-learn>=0.14
 pandas>=0.13
-matplotlib
 numpy==1.8.0
+matplotlib
 scipy
 ipython
 cython==0.19.1

@@ -1,0 +1,74 @@
+instance: 1
+original_name: house_1
+
+# smart_meter_data:
+#   days: 245
+#   coverage: 99.64
+#   period_start: 01.06.12
+#   period_end: 31.01.13
+
+elec_meters:
+  1: &smart_meter
+    site_meter: true
+    submeter_of: 0
+    device_model: smart_meter
+  2: &plug
+    site_meter: true
+    submeter_of: 0
+    device_model: plug
+  3: *plug
+  4: *plug
+  5: *plug
+  6: *plug
+  7: *plug
+  8: *plug
+
+appliances:
+- original_name: fridge
+  type: fridge
+  #days_covered: 231
+  instance: 1
+  #coverage: 98.53
+  meters: [2] #Plug number
+
+- original_name: dryer
+  type: hair dryer
+  #days_covered: 231
+  instance: 1
+  #coverage: 98.56
+  meters: [3] #Plug number
+
+- original_name: Coffee machine
+  type: coffee maker
+  #days_covered: 113
+  instance: 1
+  #coverage: 85.36
+  meters: [4] #Plug number
+
+- original_name: Kettle
+  type: kettle
+  #days_covered: 203
+  instance: 1
+  #coverage: 77.65
+  meters: [5] #Plug number
+
+- original_name: Washing machine
+  type: washing machine
+  #days_covered: 231
+  instance: 1
+  #coverage: 98.53
+  meters: [6] #Plug number
+
+- original_name: PC
+  type: computer
+  #days_covered: 66
+  instance: 1
+  #coverage: 84.77
+  meters: [7] #Plug number
+
+- original_name: Freezer
+  type: freezer
+  #days_covered: 231
+  instance: 1
+  #coverage: 98.53
+  meters: [8] #Plug number

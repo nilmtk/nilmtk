@@ -1,0 +1,22 @@
+name: ECO
+long_name: Electricity Consumption and Occupancy Dataset
+creators:
+- Beckel, Christian
+- Kleiminger, Wilhelm
+publication_date: 2014
+institution: Swiss Federal Institute of Technology Zurich
+contact: beckel@inf.ethz.ch
+description: >
+  Dataset of 6 Swiss residential buildings with avg. 8 meters for around 8 months.
+subject: > 
+  The ECO data set is a comprehensive data set for non-intrusive load monitoring 
+  and occupancy detection research. It was collected in 6 Swiss households over 
+  a period of 8 months.
+number_of_buildings: 6
+timezone: CET
+geo_location:
+  country: Sweden  # standard two-letter country code defined by ISO 3166-1 alpha-2
+  latitude: 59.35
+  longitude: 18.07
+related_documents:
+- http://www.vs.inf.ethz.ch/publ/papers/beckel-2014-nilm.pdf

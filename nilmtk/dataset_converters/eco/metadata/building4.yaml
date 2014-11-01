@@ -1,0 +1,82 @@
+instance: 4
+original_name: house_4
+
+# smart_meter_data:
+#   days: 219
+#   #coverage: 99.39
+#   period_start: 27.06.12
+#   period_end: 31.01.13
+
+elec_meters:
+  1: &smart_meter
+    site_meter: true
+    submeter_of: 0
+    device_model: smart_meter
+  2: &plug
+    site_meter: true
+    submeter_of: 0
+    device_model: plug
+  3: *plug
+  4: *plug
+  5: *plug
+  6: *plug
+  7: *plug
+  8: *plug
+  9: *plug
+
+appliances:
+- original_name: Fridge
+  type: fridge
+  #days_covered: 194
+  instance: 1
+  #coverage: 97.43
+  meters: [2] #Plug number
+
+- original_name: Kitchen appliances
+  type: small cooking appliance
+  #days_covered: 194
+  instance: 1
+  #coverage: 96.81
+  meters: [3] #Plug number
+
+- original_name: Lamp
+  type: lamp
+  #days_covered: 170
+  instance: 1
+  #coverage: 93.54
+  meters: [4] #Plug number
+
+- original_name: Stereo and laptop
+  type: laptop computer
+  #days_covered: 169
+  instance: 1
+  #coverage: 90.98
+  meters: [5] #Plug number
+
+- original_name: Freezer
+  type: freezer
+  #days_covered: 192
+  instance: 1
+  #coverage: 93.08
+  meters: [6] #Plug number
+
+- original_name: Tablet
+  type: games console
+  #days_covered: 189
+  instance: 1
+  #coverage: 93.6
+  meters: [7] #Plug number
+
+- original_name: Entertainment
+  type: HTPC
+  #days_covered: 186
+  instance: 1
+  #coverage: 94.69
+  meters: [8] #Plug number
+
+- original_name: Microwave
+  type: microwave
+  #days_covered: 194
+  instance: 1
+  #coverage: 97.08
+  meters: [9] #Plug number

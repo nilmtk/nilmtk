@@ -1,0 +1,82 @@
+instance: 6
+original_name: house_6
+
+# smart_meter_data:
+#   days: 166
+#   #coverage: 99.67
+#   period_start: 27.06.12
+#   period_end: 31.01.13
+
+elec_meters:
+  1: &smart_meter
+    site_meter: true
+    submeter_of: 0
+    device_model: smart_meter
+  2: &plug
+    site_meter: true
+    submeter_of: 0
+    device_model: plug
+  3: *plug
+  4: *plug
+  5: *plug
+  6: *plug
+  7: *plug
+  8: *plug
+  9: *plug
+
+appliances:
+- original_name: Lamp
+  type: lamp
+  #days_covered: 166
+  instance: 1
+  #coverage: 67.2
+  meters: [2] #Plug number
+
+- original_name: Laptop
+  type: laptop computer
+  #days_covered: 185
+  instance: 1
+  #coverage: 97.3
+  meters: [3] #Plug number
+
+- original_name: Router
+  type: broadband router
+  #days_covered: 88
+  instance: 1
+  #coverage: 96.73
+  meters: [4] #Plug number
+
+- original_name: Coffee machine
+  type: coffee maker
+  #days_covered: 179
+  instance: 1
+  #coverage: 86.03
+  meters: [5] #Plug number
+
+- original_name: Entertainment
+  type: HTPC
+  #days_covered: 181
+  instance: 1
+  #coverage: 95.86
+  meters: [6] #Plug number
+
+- original_name: Fridge
+  type: fridge
+  #days_covered: 179
+  instance: 1
+  #coverage: 95.78
+  meters: [7] #Plug number
+
+- original_name: Freezer
+  type: freezer
+  #days_covered: 184
+  instance: 1
+  #coverage: 93.2
+  meters: [8] #Plug number
+
+- original_name: Kettle
+  type: kettle
+  #days_covered: 147
+  instance: 1
+  #coverage: 82.54
+  meters: [9] #Plug number
