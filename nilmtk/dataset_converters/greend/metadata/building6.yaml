@@ -1,0 +1,49 @@
+instance: 7
+original_name: House#6
+
+elec_meters:
+  1:
+    device_model: circle
+    submeter_of: 0
+    room: hall
+  2:
+    device_model: circle
+    submeter_of: 0
+    room: hall
+  3:
+    device_model: circle
+    submeter_of: 0
+    room: hall
+
+description: Three floor terraced house
+rooms:
+  - name: hall
+    instance: 1
+    floor: 0 
+  - name: utility
+    instance: 1
+    floor: 0
+ - name: utility
+    instance: 2
+    floor: 0
+  - name: bathroom
+    instance: 1
+    floor: 0
+  - name: lounge
+    instance: 1
+    floor: 1
+  - name: kitchen
+    instance: 1
+    floor: 1
+  - name: bedroom
+    instance: 1
+    floor: 2
+  - name: bedroom
+    instance: 2
+    floor: 2
+  - name: bathroom
+    instance: 2
+    floor: 2
+
+n_occupants: 4
+construction_year: 2008

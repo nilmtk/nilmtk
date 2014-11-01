@@ -109,6 +109,19 @@ class TestHDFDataStore(unittest.TestCase):
             i += 1
         self.assertEqual(i, 1)
 
+    def test_load_chunks_small_chunksize(self):
+        self.datastore.window.clear()
+        timeframes = [TimeFrame('2012-01-01 00:00:00', '2012-01-01 00:01:00'),
+                      TimeFrame('2012-01-01 00:10:00', '2012-01-01 00:11:00')]
+        chunks = self.datastore.load(key=self.keys[0], sections=timeframes,
+                                     chunksize=20)
+        one_sec = timedelta(seconds=1)
+
+        for i, chunk in enumerate(chunks):
+            self.assertEqual(chunk.index[0], chunk.timeframe.start)
+            self.assertTrue((chunk.timeframe.end - one_sec) <= 
+                            chunk.index[-1] <= 
+                            chunk.timeframe.end)        
 
     #--------- helper functions ---------------------#
 

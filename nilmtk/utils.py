@@ -8,7 +8,6 @@ from os import getcwd
 from inspect import currentframe, getfile, getsourcefile
 from sys import getfilesystemencoding
 
-
 def timedelta64_to_secs(timedelta):
     """Convert `timedelta` to seconds.
 

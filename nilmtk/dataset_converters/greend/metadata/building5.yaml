@@ -1,0 +1,121 @@
+instance: 6
+original_name: House#5
+
+elec_meters:
+  1:
+    device_model: circle
+    submeter_of: 0
+    room: lounge
+  2:
+    device_model: circle
+    submeter_of: 0
+    room: lounge
+  3:
+    device_model: circle
+    submeter_of: 0
+    room: kitchen
+  4:
+    device_model: circle
+    submeter_of: 0
+    room: bedroom # bedroom 3
+  5:
+    device_model: circle
+    submeter_of: 0
+    room: utility
+  6:
+    device_model: circle
+    submeter_of: 0
+    room: bedroom # bedroom 2
+  7:
+    device_model: circle
+    submeter_of: 0
+    room: bedroom # bedroom 1
+  8:
+    device_model: circle
+    submeter_of: 0
+    room: utility
+  9:
+    device_model: circle
+    submeter_of: 0
+    room: kitchen
+
+appliances:
+- type: television
+  instance: 1
+  meters: [1]
+  control:
+    - manual
+  model: TH-37PA50E
+  manufacturer: Panasonic
+
+- type: incandescent lamp
+  instance: 1
+  meters: [2]
+  control:
+    - manual
+  nominal_consumption: 250
+  
+- type: toaster
+  instance: 1
+  meters: [3]
+  control:
+    - manual
+  nominal_consumption: 1600
+  model: TP36
+  manufacturer: Girmi
+    
+- type: electric heater
+  instance: 1
+  meters: [4]
+  control:
+    - manual
+  nominal_consumption: 1800
+  model: Kalimero
+  manufacturer: Argo
+  
+- type: clothes iron
+  instance: 1
+  meters: [5]
+  control:
+    - manual
+  model: Maxivap 2
+  manufacturer: Jura
+  
+- type: incandescent lamp
+  instance: 2
+  meters: [5]
+  control:
+    - manual
+  
+- type: laptop computer
+  instance: 1
+  meters: [6]
+  control:
+    - manual
+  model: S400C
+  manufacturer: Asus
+  
+- type: television
+  instance: 2
+  meters: [7]
+  control:
+    - manual
+  model: 32LD320-ZA
+  manufacturer: LG
+  
+- type: washing machine
+  instance: 1
+  meters: [8]
+  control:
+    - manual
+  model: R16
+  manufacturer: REX
+  energy_rating: AA
+  
+- type: fridge
+  instance: 1
+  meters: [9]
+  control:
+    - manual
+  model: KGN362LN0
+  manufacturer: Bosch

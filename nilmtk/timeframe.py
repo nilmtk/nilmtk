@@ -198,6 +198,9 @@ class TimeFrame(object):
                 (other.end == self.end) and
                 (other.empty == self.empty))
 
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
     def to_dict(self):
         return {'start': self.start.isoformat(), 
                 'end': self.end.isoformat()}
