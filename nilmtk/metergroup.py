@@ -5,6 +5,7 @@ import numpy as np
 from compiler.ast import flatten
 from datetime import timedelta
 from warnings import warn
+from sys import stdout
 import matplotlib.pyplot as plt
 from .elecmeter import ElecMeter, ElecMeterID
 from .appliance import Appliance
@@ -543,6 +544,19 @@ class MeterGroup(Electric):
         else:
             return MeterGroup(meters=site_meters)
 
+    def upstream_meter(self):
+        """Returns single upstream meter.
+        Raises RuntimeError if more than 1 upstream meter.
+        """
+        upstream_meters = []
+        for meter in self.meters:
+            upstream_meters.append(meter.upstream_meter())
+        unique_upstream_meters = list(set(upstream_meters))
+        if len(unique_upstream_meters) > 1:
+            raise RuntimeError("{:d} upstream meters found for meter group."
+                               "  Should be 1.".format(len(unique_upstream_meters)))
+        return unique_upstream_meters[0]
+
     def meters_directly_downstream_of_mains(self):
         meters = nodes_adjacent_to_root(self.wiring_graph())
         assert isinstance(meters, list)
@@ -569,7 +583,7 @@ class MeterGroup(Electric):
         Returns
         -------
         if `full_results` is True then return TotalEnergyResults object
-        else return either a single number of, if there are multiple
+        else return either a single number or, if there are multiple
         AC types, then return a pd.Series with a row for each AC type.
         """
         self._check_kwargs(load_kwargs)
@@ -745,17 +759,19 @@ class MeterGroup(Electric):
         return set(flatten_2d_list(all_ac_types))
 
     def energy_per_meter(self, **load_kwargs):
-        """Returns pd.DataFrame where columns is meter.instance and 
+        """Returns pd.DataFrame where columns is meter.identifier and 
         each value is total energy.  Index is AC types.
 
         Does not care about wiring hierarchy.  Does not attempt to ensure all 
         channels share the same time sections.
         """
-        energy_per_meter = pd.DataFrame(
-            columns=self.instance(), index=AC_TYPES)
-        for meter in self.meters:
+        energy_per_meter = pd.DataFrame(columns=self.instance(), index=AC_TYPES)
+        n_meters = len(self.meters)
+        for i, meter in enumerate(self.meters):
+            print('\r{:d}/{:d} {}'.format(i+1, n_meters, meter), end='')
+            stdout.flush()
             meter_energy = meter.total_energy(full_results=True, **load_kwargs)
-            energy_per_meter[meter.instance()] = meter_energy.combined()
+            energy_per_meter[meter.identifier] = meter_energy.combined()
         return energy_per_meter.dropna(how='all')
 
     def fraction_per_meter(self, **load_kwargs):
@@ -767,6 +783,18 @@ class MeterGroup(Electric):
         energy_per_meter = self.energy_per_meter(**load_kwargs).max()
         total_energy = energy_per_meter.sum()
         return energy_per_meter / total_energy
+
+    def proportion_of_upstream_total_per_meter(self, **load_kwargs):
+        prop_per_meter = pd.Series(index=self.identifier)
+        n_meters = len(self.meters)
+        for i, meter in enumerate(self.meters):
+            proportion = meter.proportion_of_upstream(**load_kwargs)
+            print('\r{:d}/{:d} {} = {:.3f}'
+                  .format(i+1, n_meters, meter, proportion), end='')
+            stdout.flush()
+            prop_per_meter[meter.identifier] = proportion
+        prop_per_meter.sort(ascending=False)
+        return prop_per_meter
 
     def train_test_split(self, train_fraction=0.5):
         """

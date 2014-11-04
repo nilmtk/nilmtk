@@ -1,5 +1,6 @@
 import pandas as pd
 from .timeframe import TimeFrame
+from .measurement import select_best_ac_type
 
 class Electric(object):
     """Common implementations of methods shared by ElecMeter and MeterGroup.
@@ -73,6 +74,20 @@ class Electric(object):
         pretty snakey:
         http://www.cl.cam.ac.uk/research/srg/netos/c-aware/joule/V4.00/
         """
+
+    def proportion_of_upstream(self, **load_kwargs):
+        """Returns a value in the range [0,1] specifying the proportion of
+        the upstream meter's total energy used by this meter.
+        """
+        upstream = self.upstream_meter()
+        upstream_good_sects = upstream.good_sections(**load_kwargs)
+        proportion_of_energy = (self.total_energy(sections=upstream_good_sects) /
+                                upstream.total_energy(sections=upstream_good_sects))
+        if isinstance(proportion_of_energy, pd.Series):
+            best_ac_type = select_best_ac_type(proportion_of_energy.keys())
+            return proportion_of_energy[best_ac_type]
+        else:
+            return proportion_of_energy
 
   #   def activity_distribution(self):
   # * activity distribution:

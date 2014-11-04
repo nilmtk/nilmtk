@@ -104,7 +104,7 @@ def get_good_sections(df, max_sample_period, look_ahead=None,
         `end=None`.  If this df starts with an open-ended good section
         then the first TimeFrame will have `start=None`.
     """
-    index = df.dropna().index
+    index = df.dropna().sort_index().index
     timedeltas_sec = timedelta64_to_secs(diff(index.values))
     timedeltas_check = timedeltas_sec <= max_sample_period
     timedeltas_check = concatenate(

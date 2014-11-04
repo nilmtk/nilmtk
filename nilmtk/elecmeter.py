@@ -365,7 +365,7 @@ class ElecMeter(Hashable, Electric):
         Returns
         -------
         if `full_results` is True then return TotalEnergyResults object
-        else return either a single number of, if there are multiple
+        else return either a single number or, if there are multiple
         AC types, then return a pd.Series with a row for each AC type.
         """
         full_results = loader_kwargs.pop('full_results', False)
@@ -441,17 +441,6 @@ class ElecMeter(Hashable, Electric):
     #     activation.
     #     """
     #     raise NotImplementedError
-
-    # def proportion_of_energy(self, mains):
-    #     """
-    #     Parameters
-    #     ----------
-    #     mains : nilmtk.ElecMeter or MeterGroup
-    #     """
-    #     mains_good_sects = mains.good_sections()
-    #     proportion_of_energy = (self.total_energy(timeframes=mains_good_sects) /
-    #                             mains.total_energy(timeframes=mains_good_sects))
-    #     return proportion_of_energy
 
     # def contiguous_sections(self):
     #     """retuns Mask object"""

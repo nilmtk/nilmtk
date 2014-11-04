@@ -178,11 +178,6 @@ class HDFDataStore(DataStore):
                     end = data.index[-1]
 
                 data.timeframe = TimeFrame(start, end)
-                # print(section)
-                # print(data.timeframe)
-                # print()
-                # if section and section != data.timeframe:
-                #     import ipdb; ipdb.set_trace()
                 yield data
 
     def append(self, *args, **kwargs):
