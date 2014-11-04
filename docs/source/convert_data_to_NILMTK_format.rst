@@ -1,7 +1,7 @@
 
 .. code:: python
 
-    from ipython_utils import print_dict
+    from nilmtk.utils import print_dict
 Convert data to NILMTK format and load into NILMTK
 ==================================================
 

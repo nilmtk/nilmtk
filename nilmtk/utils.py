@@ -7,6 +7,8 @@ from os.path import isdir, dirname, abspath
 from os import getcwd
 from inspect import currentframe, getfile, getsourcefile
 from sys import getfilesystemencoding
+from IPython.core.display import HTML, display
+
 
 def timedelta64_to_secs(timedelta):
     """Convert `timedelta` to seconds.
@@ -166,3 +168,29 @@ def get_module_directory():
         path_to_this_file = getcwd()
     assert isdir(path_to_this_file), path_to_this_file + ' is not a directory'
     return path_to_this_file
+
+
+def dict_to_html(dictionary):
+    html = '<ul>'
+    for key, value in dictionary.iteritems():
+        html += '<li><strong>{}</strong>: '.format(key)
+        if isinstance(value, list):
+            html += '<ul>'
+            for item in value:
+                html += '<li>{}</li>'.format(item)
+            html += '</ul>'
+        elif isinstance(value, dict):
+            html += dict_to_html(value)
+        else:
+            try:
+                html += '{}'.format(value)
+            except UnicodeEncodeError:
+                pass
+        html += '</li>'
+    html += '</ul>'
+    return html
+
+    
+def print_dict(dictionary):
+    html = dict_to_html(dictionary)
+    display(HTML(html))
