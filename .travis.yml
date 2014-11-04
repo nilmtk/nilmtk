@@ -14,7 +14,7 @@ before_install:
   - git clone https://github.com/nilmtk/nilm_metadata/
   - cd nilm_metadata; python setup.py develop; cd ..
 install:
-  - conda install --yes pip python=$TRAVIS_PYTHON_VERSION numpy scipy six scikit-learn pandas numexpr pytables dateutil matplotlib networkx
+  - conda install --yes pip python=$TRAVIS_PYTHON_VERSION numpy scipy six scikit-learn pandas numexpr pytables dateutil matplotlib networkx ipython
   # Have to use pip for nose-cov because its entry points are not supported by conda yet
   - sudo rm -rf /dev/shm
   - sudo ln -s /run/shm /dev/shm
