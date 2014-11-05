@@ -1,6 +1,7 @@
 import pandas as pd
 from .timeframe import TimeFrame
 from .measurement import select_best_ac_type
+from nilmtk.utils import offset_alias_to_seconds
 
 class Electric(object):
     """Common implementations of methods shared by ElecMeter and MeterGroup.
@@ -91,7 +92,35 @@ class Electric(object):
 
     def vampire_power(self, **load_kwargs):
         # TODO: this might be a naive approach to calculating vampire power.
-        return self.power_series_all_data().min()
+        return self.power_series_all_data(**load_kwargs).min()
+
+    def uptime(self, **load_kwargs):
+        """
+        Returns
+        -------
+        timedelta: total duration of all good sections.
+        """
+        good_sections = self.good_sections(**load_kwargs)
+        if not good_sections or len(good_sections) == 0:
+            return
+        uptime = good_sections[0].timedelta
+        for good_section in good_sections[1:]:
+            uptime += good_section.timedelta
+        return uptime
+
+    def average_energy_per_period(self, offset_alias='D', **load_kwargs):
+        """
+        Parameters
+        ----------
+        offset_alias : str
+            A Pandas `offset alias`.  See:
+            pandas.pydata.org/pandas-docs/stable/timeseries.html#offset-aliases
+        """
+        uptime_secs = self.uptime(**load_kwargs).total_seconds()
+        periods = uptime_secs / offset_alias_to_seconds(offset_alias)
+        energy = self.total_energy(**load_kwargs)
+        return energy / periods
+        
 
   #   def activity_distribution(self):
   # * activity distribution:

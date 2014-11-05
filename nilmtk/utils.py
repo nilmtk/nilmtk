@@ -194,3 +194,9 @@ def dict_to_html(dictionary):
 def print_dict(dictionary):
     html = dict_to_html(dictionary)
     display(HTML(html))
+
+
+def offset_alias_to_seconds(alias):
+    """Seconds for each period length."""
+    dr = pd.date_range('00:00', periods=2, freq=alias)
+    return (dr[-1] - dr[0]).total_seconds()
