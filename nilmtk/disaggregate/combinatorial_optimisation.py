@@ -20,17 +20,18 @@ class CombinatorialOptimisation(object):
 
     Attributes
     ----------
-    model : dict
-        Each key is either the instance integer for an ElecMeter, 
-        or a tuple of instances for a MeterGroup.
-        Each value is a sorted list of power in different states.
+    model : list of dicts
+       Each dict has these keys:
+           states : list of ints (the power (Watts) used in different states)
+           training_metadata : ElecMeter or MeterGroup object used for training 
+               this set of states.
     """
 
     def __init__(self):
-        self.model = {}
+        self.model = []
 
     def train(self, metergroup):
-        """Train using 1D CO. Places the learnt model in `model` attribute.
+        """Train using 1D CO. Places the learnt model in the `model` attribute.
 
         Parameters
         ----------
@@ -49,7 +50,9 @@ class CombinatorialOptimisation(object):
 
         for i, meter in enumerate(metergroup.submeters().meters):
             for chunk in meter.power_series(preprocessing=[Clip()]):
-                self.model[meter.instance()] = cluster(chunk, max_num_clusters)
+                self.model.append({
+                    'states': cluster(chunk, max_num_clusters),
+                    'training_metadata': meter})
                 break  # TODO handle multiple chunks per appliance
 
     def disaggregate(self, mains, output_datastore, **load_kwargs):
@@ -85,7 +88,7 @@ class CombinatorialOptimisation(object):
         resample_seconds = load_kwargs.pop('resample_seconds', 60)
 
         # Get centroids
-        centroids = self.model.values()
+        centroids = [model['states'] for model in self.model]
         state_combinations = cartesian(centroids)
         # state_combinations is a 2D array
         # each column is a chan
@@ -101,14 +104,12 @@ class CombinatorialOptimisation(object):
         resample_rule = '{:d}S'.format(resample_seconds)
         timeframes = []
         building_path = '/building{}'.format(mains.building())
-        mains_data_location = ('{}/elec/meter{}'
-                               .format(building_path,
-                                       container_to_string(mains.instance())))
+        mains_data_location = '{}/elec/meter1'.format(building_path)
 
         for chunk in mains.power_series(**load_kwargs):
 
+            # Check that chunk is sensible size before resampling
             if len(chunk) < MIN_CHUNK_LENGTH:
-
                 continue
 
             # Record metadata
@@ -116,6 +117,7 @@ class CombinatorialOptimisation(object):
             measurement = chunk.name
 
             chunk = chunk.resample(rule=resample_rule)
+            # Check chunk size *again* after resampling
             if len(chunk) < MIN_CHUNK_LENGTH:
                 continue
 
@@ -123,13 +125,12 @@ class CombinatorialOptimisation(object):
             indices_of_state_combinations, residual_power = find_nearest(
                 summed_power_of_each_combination, chunk.values)
 
-            for i, chan in enumerate(self.model.keys()):
+            for i, model in enumerate(self.model):
                 predicted_power = state_combinations[
                     indices_of_state_combinations, i].flatten()
-                chan_str = container_to_string(chan)
                 cols = pd.MultiIndex.from_tuples([chunk.name])
-                output_datastore.append('{}/elec/meter{}'
-                                        .format(building_path, chan_str),
+                output_datastore.append('{}/elec/meter{:d}'
+                                        .format(building_path, i+2),
                                         pd.DataFrame(predicted_power,
                                                      index=chunk.index,
                                                      columns=cols))
@@ -142,7 +143,6 @@ class CombinatorialOptimisation(object):
         # Add metadata to output_datastore
 
         # TODO: `preprocessing_applied` for all meters
-        # TODO: appliance metadata
         # TODO: split this metadata code into a separate function
         # TODO: submeter measurement should probably be the mains
         #       measurement we used to train on, not the mains measurement.
@@ -195,14 +195,14 @@ class CombinatorialOptimisation(object):
         }
 
         # Submeters:
-        for chan in self.model.keys():
+        # Starts at 2 because meter 1 is mains.
+        for chan in range(2, len(self.model)+2):
             elec_meters.update({
                 chan: {
                     'device_model': 'CO',
-                    'submeter_of': mains.instance(),
-                    'data_location': ('{}/elec/meter{}'
-                                      .format(building_path,
-                                              container_to_string(chan))),
+                    'submeter_of': 1,
+                    'data_location': ('{}/elec/meter{:d}'
+                                      .format(building_path, chan)),
                     'preprocessing_applied': {},  # TODO
                     'statistics': {
                         'timeframe': total_timeframe.to_dict(),
@@ -212,7 +212,17 @@ class CombinatorialOptimisation(object):
             })
 
         # Appliances:
-        appliances = []  # TODO
+        appliances = []
+        for i, model in enumerate(self.model):
+            for app in model['training_metadata'].appliances:
+                appliance = {
+                    'meters': [i+2],
+                    'type': app.identifier.type,
+                    'instance': app.identifier.instance
+                    # TODO this `instance` will only be correct when the
+                    # model is trained on the same house as it is tested on
+                }
+                appliances.append(appliance)
 
         building_metadata = {
             'instance': mains.building(),
@@ -222,21 +232,22 @@ class CombinatorialOptimisation(object):
 
         output_datastore.save_metadata(building_path, building_metadata)
 
-    def export_model(self, filename):
-        model_copy = {}
-        for appliance, appliance_states in self.model.iteritems():
-            model_copy[
-                "{}_{}".format(appliance.name, appliance.instance)] = appliance_states
-        j = json.dumps(model_copy)
-        with open(filename, 'w+') as f:
-            f.write(j)
+    # TODO: fix export and import!
+    # def export_model(self, filename):
+    #     model_copy = {}
+    #     for appliance, appliance_states in self.model.iteritems():
+    #         model_copy[
+    #             "{}_{}".format(appliance.name, appliance.instance)] = appliance_states
+    #     j = json.dumps(model_copy)
+    #     with open(filename, 'w+') as f:
+    #         f.write(j)
 
-    def import_model(self, filename):
-        with open(filename, 'r') as f:
-            temp = json.loads(f.read())
-        for appliance, centroids in temp.iteritems():
-            appliance_name = appliance.split("_")[0].encode("ascii")
-            appliance_instance = int(appliance.split("_")[1])
-            appliance_name_instance = ApplianceID(
-                appliance_name, appliance_instance)
-            self.model[appliance_name_instance] = centroids
+    # def import_model(self, filename):
+    #     with open(filename, 'r') as f:
+    #         temp = json.loads(f.read())
+    #     for appliance, centroids in temp.iteritems():
+    #         appliance_name = appliance.split("_")[0].encode("ascii")
+    #         appliance_instance = int(appliance.split("_")[1])
+    #         appliance_name_instance = ApplianceID(
+    #             appliance_name, appliance_instance)
+    #         self.model[appliance_name_instance] = centroids
