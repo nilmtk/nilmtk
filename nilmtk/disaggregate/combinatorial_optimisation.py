@@ -51,8 +51,14 @@ class CombinatorialOptimisation(object):
 
         for i, meter in enumerate(metergroup.submeters().meters):
             for chunk in meter.power_series(preprocessing=[Clip()]):
+                states = cluster(chunk, max_num_clusters)
+                if len(states) <= 1:
+                    # ignore appliances with no on-power states 
+                    # (only an off-power state)
+                    continue
+
                 self.model.append({
-                    'states': cluster(chunk, max_num_clusters),
+                    'states': states,
                     'training_metadata': meter})
                 break  # TODO handle multiple chunks per appliance
 
