@@ -74,8 +74,7 @@ class CombinatorialOptimisation(object):
         '''
         MIN_CHUNK_LENGTH = 100
 
-        # If we import sklearn at the top of the file then it makes autodoc
-        # fail
+        # If we import sklearn at the top of the file then autodoc fails.
         from sklearn.utils.extmath import cartesian
 
         # sklearn produces lots of DepreciationWarnings with PyTables
