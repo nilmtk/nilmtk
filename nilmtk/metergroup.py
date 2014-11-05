@@ -389,19 +389,31 @@ class MeterGroup(Electric):
             appliances.update(meter.appliances)
         return list(appliances)
 
-    def map_meter_instances_to_appliance_ids(self):
+    def map_meter_to_appliance_ids(self, key='identifier'):
         """
+        Parameters
+        ----------
+        key : {'identifier', 'instance'}
+
         Returns
         -------
-        dict where keys are meter instances (for ElecMeters)
-        or tuples of meter instances (for MeterGroups) and values
-        are a list of ApplianceIDs.
+        dict where keys are meter instances or identifiers (for ElecMeters)
+        or tuples of meter instances or identifiers (for MeterGroups).
+        Values are a list of ApplianceIDs.
         """
-        meter_instance_to_appliance_ids_map = {}
+        if key not in ['identifier', 'instance']:
+            raise ValueError("`key` must be one of `identifier` or `instance`")
+
+        meter_to_appliance_ids_map = {}
         for meter in self.meters:
-            meter_instance_to_appliance_ids_map[meter.instance()] = (
-                meter.appliances)
-        return meter_instance_to_appliance_ids_map
+            key = meter.instance() if key == 'instance' else meter.identifier
+            meter_to_appliance_ids_map[key] = meter.appliance_label()
+        return meter_to_appliance_ids_map      
+        
+    def map_meter_instances_to_appliance_ids(self):
+        warn("Please use `map_meter_to_appliance_ids(key='instance')`",
+             DeprecationWarning)
+        return self.map_meter_to_appliance_ids(key='instance')
 
     def __repr__(self):
         s = "{:s}(meters=\n".format(self.__class__.__name__)

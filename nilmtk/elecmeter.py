@@ -173,7 +173,6 @@ class ElecMeter(Hashable, Electric):
         string : A label listing all the appliance types.
         """
         appliance_names = []
-        dominant = self.dominant_appliance()
         for appliance in self.appliances:
             appliance_name = appliance.label()
             if appliance.metadata.get('dominant_appliance'):
