@@ -143,6 +143,8 @@ class MeterGroup(Electric):
         * `ElecMeterID(1, 1, 'REDD')` - retrieves meter with specified meter ID
         * `ElecMeterID((1,2), 1, 'REDD')` - retrieve existing MeterGroup 
            which contains exactly meters 1 & 2.
+        * `(1, 2, 'REDD')` - converts to ElecMeterID and treats as an ElecMeterID.
+           Items must be in the order expected for an ElecMeterID.
 
         Retrieve a meter using details of appliances attached to the meter:
         * `'toaster'`    - retrieves meter or group upstream of toaster instance 1
@@ -190,6 +192,8 @@ class MeterGroup(Electric):
         elif isinstance(key, tuple):
             if len(key) == 2:
                 return self[{'type': key[0], 'instance': key[1]}]
+            elif len(key) == 3:
+                return self[ElecMeterID(*key)]
             else:
                 raise TypeError()
         elif isinstance(key, dict):
@@ -389,31 +393,20 @@ class MeterGroup(Electric):
             appliances.update(meter.appliances)
         return list(appliances)
 
-    def map_meter_to_appliance_ids(self, key='identifier'):
-        """
+    def get_appliance_labels(self, meter_ids):
+        """Create human-readable appliance labels.
+
         Parameters
         ----------
-        key : {'identifier', 'instance'}
+        meter_ids : list of ElecMeterIDs (or 3-tuples in same order as ElecMeterID)
 
         Returns
         -------
-        dict where keys are meter instances or identifiers (for ElecMeters)
-        or tuples of meter instances or identifiers (for MeterGroups).
-        Values are a list of ApplianceIDs.
+        list of strings describing the appliances.
         """
-        if key not in ['identifier', 'instance']:
-            raise ValueError("`key` must be one of `identifier` or `instance`")
-
-        meter_to_appliance_ids_map = {}
-        for meter in self.meters:
-            key = meter.instance() if key == 'instance' else meter.identifier
-            meter_to_appliance_ids_map[key] = meter.appliance_label()
-        return meter_to_appliance_ids_map      
-        
-    def map_meter_instances_to_appliance_ids(self):
-        warn("Please use `map_meter_to_appliance_ids(key='instance')`",
-             DeprecationWarning)
-        return self.map_meter_to_appliance_ids(key='instance')
+        meters = [self[meter_id] for meter_id in meter_ids]
+        labels = [meter.appliance_label() for meter in meters]
+        return labels
 
     def __repr__(self):
         s = "{:s}(meters=\n".format(self.__class__.__name__)

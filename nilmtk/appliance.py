@@ -52,8 +52,13 @@ class Appliance(Hashable):
         return len(self.metadata['meters'])
 
     def label(self):
-        """Return string '(<type>, <identifier>)' e.g. '(fridge, 1)'."""
-        return str(tuple(self.identifier))
+        """Return string '(<type>, <identifier>)' e.g. '(fridge, 1)'.
+        If type == 'unknown' then also returns `original_name`."""
+        label = str(tuple(self.identifier))
+        if self.identifier.type is 'unknown':
+            label += ', original name = {}'.format(
+                self.metadata.get('original_name'))
+        return label
 
     def categories(self):
         """Return 1D list of category names (strings)."""
