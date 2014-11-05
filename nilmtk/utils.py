@@ -171,21 +171,28 @@ def get_module_directory():
 
 
 def dict_to_html(dictionary):
+    def format_string(value):
+        try:
+            if isinstance(value, basestring) and 'http' in value:
+                html = '<a href="{url}">{url}</a>'.format(url=value)
+            else:
+                html = '{}'.format(value)
+        except UnicodeEncodeError:
+            html = ''
+        return html
+
     html = '<ul>'
     for key, value in dictionary.iteritems():
         html += '<li><strong>{}</strong>: '.format(key)
         if isinstance(value, list):
             html += '<ul>'
             for item in value:
-                html += '<li>{}</li>'.format(item)
+                html += '<li>{}</li>'.format(format_string(item))
             html += '</ul>'
         elif isinstance(value, dict):
             html += dict_to_html(value)
         else:
-            try:
-                html += '{}'.format(value)
-            except UnicodeEncodeError:
-                pass
+            html += format_string(value)
         html += '</li>'
     html += '</ul>'
     return html
