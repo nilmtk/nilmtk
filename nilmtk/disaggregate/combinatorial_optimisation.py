@@ -52,15 +52,10 @@ class CombinatorialOptimisation(object):
         for i, meter in enumerate(metergroup.submeters().meters):
             for chunk in meter.power_series(preprocessing=[Clip()]):
                 states = cluster(chunk, max_num_clusters)
-                if len(states) <= 1:
-                    # ignore appliances with no on-power states 
-                    # (only an off-power state)
-                    continue
-
                 self.model.append({
                     'states': states,
                     'training_metadata': meter})
-                break  # TODO handle multiple chunks per appliance
+                break  # TODO handle multiple chunks per appliance        
 
     def disaggregate(self, mains, output_datastore, **load_kwargs):
         '''Disaggregate mains according to the model learnt previously.
@@ -81,7 +76,7 @@ class CombinatorialOptimisation(object):
         '''
         MIN_CHUNK_LENGTH = 100
 
-        # If we import sklearn at the top of the file then autodoc fails.
+        # If we import sklearn at the top of the file then auto doc fails.
         from sklearn.utils.extmath import cartesian
 
         # sklearn produces lots of DepreciationWarnings with PyTables
@@ -100,6 +95,13 @@ class CombinatorialOptimisation(object):
         # each column is a chan
         # each row is a possible combination of power demand values e.g.
         # [[0, 0, 0, 0], [0, 0, 0, 100], [0, 0, 50, 0], [0, 0, 50, 100], ...]
+
+        # Add vampire power to the model
+        vampire_power = mains.vampire_power()
+        print("vampire_power = {} watts".format(vampire_power))
+        n_rows = state_combinations.shape[0]
+        vampire_power_array = np.zeros((n_rows, 1)) + vampire_power
+        state_combinations = np.hstack((state_combinations, vampire_power_array))
 
         summed_power_of_each_combination = np.sum(state_combinations, axis=1)
         # summed_power_of_each_combination is now an array where each

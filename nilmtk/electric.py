@@ -89,6 +89,10 @@ class Electric(object):
         else:
             return proportion_of_energy
 
+    def vampire_power(self, **load_kwargs):
+        # TODO: this might be a naive approach to calculating vampire power.
+        return self.power_series_all_data().min()
+
   #   def activity_distribution(self):
   # * activity distribution:
   #   - use ElecMeter.get_timeframe() to get start and end
