@@ -23,7 +23,8 @@ class CombinatorialOptimisation(object):
     model : list of dicts
        Each dict has these keys:
            states : list of ints (the power (Watts) used in different states)
-           training_metadata : ElecMeter or MeterGroup object used for training 
+           training_metadata : (<appliance_type>, <instance>) tuple or 
+               ElecMeter or MeterGroup object used for training 
                this set of states.
     """
 
@@ -213,15 +214,26 @@ class CombinatorialOptimisation(object):
         # Appliances:
         appliances = []
         for i, model in enumerate(self.model):
-            for app in model['training_metadata'].appliances:
+            training_metadata = model['training_metadata']
+            if (isinstance(training_metadata, tuple) and 
+                len(training_metadata) == 2):
                 appliance = {
                     'meters': [i+2],
-                    'type': app.identifier.type,
-                    'instance': app.identifier.instance
-                    # TODO this `instance` will only be correct when the
-                    # model is trained on the same house as it is tested on
+                    'type': training_metadata[0],
+                    'instance': training_metadata[1]
                 }
                 appliances.append(appliance)
+            else:
+                for app in training_metadata.appliances:
+                    appliance = {
+                        'meters': [i+2],
+                        'type': app.identifier.type,
+                        'instance': app.identifier.instance
+                        # TODO this `instance` will only be correct when the
+                        # model is trained on the same house as it is tested on.
+                        # https://github.com/nilmtk/nilmtk/issues/194
+                    }
+                    appliances.append(appliance)
 
         building_metadata = {
             'instance': mains.building(),
@@ -232,6 +244,8 @@ class CombinatorialOptimisation(object):
         output_datastore.save_metadata(building_path, building_metadata)
 
     # TODO: fix export and import!
+    # https://github.com/nilmtk/nilmtk/issues/193
+    #
     # def export_model(self, filename):
     #     model_copy = {}
     #     for appliance, appliance_states in self.model.iteritems():
