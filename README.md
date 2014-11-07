@@ -33,6 +33,11 @@ Below is an illustration<sup>1</sup> of what NILM, in general, can do.
 
 http://nilmtk.github.io/nilmtk/
 
+[NILMTK v0.2 BuildSys 2014 demo](http://nbviewer.ipython.org/github/nilmtk/nilmtk/blob/master/notebooks/BuildSys_2014_demo.ipynb).
+This is the demo that [Oli Parson](http://www.oliverparson.co.uk)
+presented at [BuildSys 2014](http://www.buildsys.org/2014/) in Memphis
+and it won best demo.
+
 ##### Academic paper on NILMTK
 
 Batra, N., Kelly, J., Parson, O., Dutta, H., Knottenbelt, W., Rogers, A., Singh, A., Srivastava, M. (2014). NILMTK: An Open Source Toolkit for Non-intrusive Load Monitoring. In Fifth International Conference on Future Energy Systems (ACM e-Energy). Cambridge, UK. arXiv:[1404.3878](http://arxiv.org/abs/1404.3878) DOI:[10.1145/2602044.2602051](http://dx.doi.org/10.1145/2602044.2602051)
@@ -55,7 +60,29 @@ Bibtex:
 
 Please note that the paper was submitted back in Jan 2014 and the code
 has evolved *a lot* since then!  Please do not use the paper as a
-guide to the current API.  Instead please use the [online docs](http://nilmtk.github.io/nilmtk/master/index.html).
+guide to the current API.  Instead please use the
+[online docs](http://nilmtk.github.io/nilmtk/master/index.html).
+
+We also wrote a short paper on some of the updates to NILMTK v0.2:
+
+Kelly, J., Batra, N., Parson, O., Dutta, H., Knottenbelt, W., Rogers,
+A., Singh, A., Srivastava, M. (2014). NILMTK v0.2: A Non-intrusive
+Load Monitoring Toolkit for Large Scale Data Sets.  In
+BuildSys 2014. Memphis, USA. arXiv:1409.5908
+
+Bibtex:
+
+```
+@inproceedings{kelly2014nilmtk,
+  Title = {NILMTK v0.2: A Non-intrusive Load Monitoring Toolkit for Large Scale Data Sets},
+  Author = {Kelly, Jack and Batra, Nipun and Parson, Oliver and Dutta, Haimonti and Knottenbelt, William and Rogers, Alex and Singh, Amarjeet and Srivastava, Mani},
+  Booktitle = {BuildSys 2014},
+  Year = {2014},
+  Eprint = {1409.5908},
+  Eprinttype = {arXiv},
+  Address = {Memphis, USA}
+}
+```
 
 ##### Keeping up to date with NILMTK
 
