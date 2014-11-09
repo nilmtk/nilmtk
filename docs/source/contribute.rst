@@ -9,16 +9,9 @@ Firstly, we clone the main `nilmtk` repository::
 	cd ~
 	git clone https://github.com/nilmtk/nilmtk/
 
-Next, we create a folder named `nilmtksite`::
-
-	cd ~
-	mkdir nilmtksite
-
 `nilmtksite` would contain all the content which gets uploaded to nilmtk.github.io, including sphinx content.::
 
-
-    cd nilmtksite
-	git clone https://github.com/nilmtk/nilmtk.github.io
+	git clone https://github.com/nilmtk/nilmtk.github.io nilmtksite
 
 Now, move back to the main repository::
 
