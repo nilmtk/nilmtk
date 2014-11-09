@@ -68,19 +68,20 @@ We also wrote a short paper on some of the updates to NILMTK v0.2:
 Kelly, J., Batra, N., Parson, O., Dutta, H., Knottenbelt, W., Rogers,
 A., Singh, A., Srivastava, M. (2014). NILMTK v0.2: A Non-intrusive
 Load Monitoring Toolkit for Large Scale Data Sets.  In
-BuildSys 2014. Memphis, USA. arXiv:1409.5908
+The first ACM Workshop On Embedded Systems For Energy-Efficient Buildings at BuildSys 2014. Memphis, USA. DOI:[10.1145/2674061.2675024](http://dx.doi.org/10.1145/2674061.2675024) arXiv:[1409.5908](http://arxiv.org/abs/1409.5908)
 
 Bibtex:
 
 ```
-@inproceedings{kelly2014nilmtk,
-  Title = {NILMTK v0.2: A Non-intrusive Load Monitoring Toolkit for Large Scale Data Sets},
-  Author = {Kelly, Jack and Batra, Nipun and Parson, Oliver and Dutta, Haimonti and Knottenbelt, William and Rogers, Alex and Singh, Amarjeet and Srivastava, Mani},
-  Booktitle = {BuildSys 2014},
-  Year = {2014},
-  Eprint = {1409.5908},
-  Eprinttype = {arXiv},
-  Address = {Memphis, USA}
+@Inproceedings{kelly2014NILMTKv02,
+  Title                    = {NILMTK v0.2: A Non-intrusive Load Monitoring Toolkit for Large Scale Data Sets},
+  Author                   = {Kelly, Jack and Batra, Nipun and Parson, Oliver and Dutta, Haimonti and Knottenbelt, William and Rogers, Alex and Singh, Amarjeet and Srivastava, Mani},
+  Booktitle                = {The first ACM Workshop On Embedded Systems For Energy-Efficient Buildings at BuildSys 2014},
+  Year                     = {2014},
+  Doi                      = {10.1145/2674061.2675024},
+  Eprint                   = {1409.5908},
+  Eprinttype               = {arXiv},
+  Address                  = {Memphis, USA}
 }
 ```
 
