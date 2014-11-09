@@ -46,15 +46,19 @@ Bibtex:
 
 ```
 @inproceedings{NILMTK,
-   title = {{NILMTK: An Open Source Toolkit for Non-intrusive Load Monitoring}},
-   year = {2014},
-   author = {Batra, Nipun and Kelly, Jack and Parson, Oliver and Dutta, Haimonti and Knottenbelt, William and Rogers, Alex  and Singh, Amarjeet and Srivastava, Mani},
-   booktitle = {Fifth International Conference on Future Energy Systems (ACM e-Energy)},
-   address = {Cambridge, UK},
+   title         = {NILMTK: An Open Source Toolkit for
+                    Non-intrusive Load Monitoring},
+   year          = {2014},
+   author        = {Batra, Nipun and Kelly, Jack and Parson, Oliver and
+                    Dutta, Haimonti and Knottenbelt, William and
+                    Rogers, Alex and Singh, Amarjeet and Srivastava, Mani},
+   booktitle     = {Fifth International Conference on Future Energy
+                    Systems (ACM e-Energy)},
+   address       = {Cambridge, UK},
    archivePrefix = {arXiv},
-   arxivId = {1404.3878},
-   doi = {10.1145/2602044.2602051},
-   eprint = {1404.3878}
+   arxivId       = {1404.3878},
+   doi           = {10.1145/2602044.2602051},
+   eprint        = {1404.3878}
 }
 ```
 
@@ -74,14 +78,18 @@ Bibtex:
 
 ```
 @Inproceedings{kelly2014NILMTKv02,
-  Title                    = {NILMTK v0.2: A Non-intrusive Load Monitoring Toolkit for Large Scale Data Sets},
-  Author                   = {Kelly, Jack and Batra, Nipun and Parson, Oliver and Dutta, Haimonti and Knottenbelt, William and Rogers, Alex and Singh, Amarjeet and Srivastava, Mani},
-  Booktitle                = {The first ACM Workshop On Embedded Systems For Energy-Efficient Buildings at BuildSys 2014},
-  Year                     = {2014},
-  Doi                      = {10.1145/2674061.2675024},
-  Eprint                   = {1409.5908},
-  Eprinttype               = {arXiv},
-  Address                  = {Memphis, USA}
+  Title      = {NILMTK v0.2: A Non-intrusive Load Monitoring
+                Toolkit for Large Scale Data Sets},
+  Author     = {Kelly, Jack and Batra, Nipun and Parson, Oliver and
+                Dutta, Haimonti and Knottenbelt, William and
+                Rogers, Alex and Singh, Amarjeet and Srivastava, Mani},
+  Booktitle  = {The first ACM Workshop On Embedded Systems For
+                Energy-Efficient Buildings at BuildSys 2014},
+  Year       = {2014},
+  Doi        = {10.1145/2674061.2675024},
+  Eprint     = {1409.5908},
+  Eprinttype = {arXiv},
+  Address    = {Memphis, USA}
 }
 ```
 
