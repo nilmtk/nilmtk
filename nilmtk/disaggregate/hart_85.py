@@ -7,6 +7,7 @@ from ..appliance import ApplianceID
 from ..utils import find_nearest, container_to_string
 from ..feature_detectors import cluster, steady_states
 from ..feature_detectors.cluster import hart85_means_shift_cluster
+from ..feature_detectors.steady_states import find_steady_states_transients
 from ..timeframe import merge_timeframes, list_of_timeframe_dicts, TimeFrame
 from ..preprocessing import Apply, Clip
 
@@ -218,7 +219,9 @@ class Hart85(object):
     def __init__(self):
         self.model = {}
 
-    def train(self, metergroup, bsize=20, minTol=35, cluster_features=['active']):
+
+
+    def train(self, metergroup, cluster_features=['active'], bsize=20, minTol=35):
         """Train using Hart85. Places the learnt model in `model` attribute.
 
         Parameters
@@ -227,25 +230,7 @@ class Hart85(object):
 
 
         """
-        steady_states_list = []
-        transients_list = []
-
-        for power_df in metergroup.power_series_all_columns():
-            if len(power_df.columns) <= 2:
-                # Use whatever is available
-                power_dataframe = power_df
-            else:
-                # Active, reactive and apparent are available
-                power_dataframe = power_df[['active', 'reactive']]
-
-            power_dataframe = power_dataframe.dropna()
-
-            x, y = steady_states.find_steady_states(power_dataframe)
-            steady_states_list.append(x)
-            transients_list.append(y)
-
-        self.steady_states = pd.concat(steady_states_list)
-        self.transients = pd.concat(transients_list)
+        [self.steady_states, self.transients] = find_steady_states_transients(metergroup)
 
         self.pair_df = self.pair(bsize, minTol)
 
@@ -282,8 +267,98 @@ class Hart85(object):
         **load_kwargs : key word arguments
             Passed to `mains.power_series(**kwargs)`
         '''
+        [temp, transients] = find_steady_states_transients(mains)
 
-        raise NotImplementedError
+        # For now ignoring the first transient
+        transients = transients[1:]
+        states = pd.DataFrame(-1, index = mains.power_series_all_data().index, columns = self.centroids.index.values)
+        for transient_tuple in transients.itertuples():
+            
+            # Absolute value of transient
+            abs_value = np.abs(transient_tuple[1])
+            #print(abs_value)
+            positive = transient_tuple[1]>0
+
+            absolute_value_transient_minus_centroid = pd.Series((self.centroids - abs_value).abs().active)
+            index_least_delta = absolute_value_transient_minus_centroid.argmin()
+            #print(abs_value, index_least_delta)
+            if positive:
+                # Turned on
+                states.loc[transient_tuple[0]][index_least_delta] = 1
+            else:
+                
+                # Turned off
+                states.loc[transient_tuple[0]][index_least_delta] = 0
+
+        self.states = states
+
+        # Now for each column, we fill in 1 b/w 1 and 0 (if an appliance is on), it
+        # remains on till
+
+        di = {}
+        for column in self.states.columns:
+            df = pd.DataFrame(index = self.states.index)
+            values = self.states[[column]].values
+            power = np.zeros(len(values), dtype=int)
+            on = 
+            i = 0
+            while i <len(values)-1:
+                if values[i] == 1:
+                    on = True
+                    i = i +1 
+                    power[i] = self.centroids[column].value
+                    while values[i]!=0 and i<len(values)-1:
+                        power[i] = self.centroids[column].value
+                        i = i + 1
+                if values[i] == 0:
+                    on = False
+                    i = i +1 
+                    power[i] = 0
+                    while values[i]!=1 and i<len(values)-1:
+                        power[i] = 0
+                        i = i + 1
+
+
+            di[column] = power
+        self.di = di
+
+        """
+        # Each appliance is initially assumed to be in unknown state.
+        # Each appliance can have 3 states (unknown (-1), off(0) and on(1))
+
+        # In this first implementation, I am assuming that no event is missed
+        # Another assumption is that initially all appliances are off
+        # We'll create a state table telling whether appliance is on or orr
+        
+        state_table = pd.DataFrame(index = mains.index)
+        for chunk in mains.power_series(**load_kwargs):
+
+            # Start disaggregation
+            indices_of_state_combinations, residual_power = find_nearest(
+                summed_power_of_each_combination, chunk.values)
+
+            for i, model in enumerate(self.model):
+                predicted_power = state_combinations[
+                    indices_of_state_combinations, i].flatten()
+                cols = pd.MultiIndex.from_tuples([chunk.name])
+                output_datastore.append('{}/elec/meter{:d}'
+                                        .format(building_path, i+2),
+                                        pd.DataFrame(predicted_power,
+                                                     index=chunk.index,
+                                                     columns=cols))
+
+            # Copy mains data to disag output
+            output_datastore.append(key=mains_data_location,
+                                    value=pd.DataFrame(chunk, columns=cols))
+
+
+
+        critical_points = [[] for x in range(len(self.centroids.index))]
+        
+        """
+
+
+        
         
     def export_model(self, filename):
         model_copy = {}
