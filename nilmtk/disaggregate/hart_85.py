@@ -268,7 +268,13 @@ class Hart85(object):
             Passed to `mains.power_series(**kwargs)`
         '''
 
+        date_now = datetime.now().isoformat().split('.')[0]
+        output_name = load_kwargs.pop('output_name', 'Hart85_' + date_now)
+        resample_seconds = load_kwargs.pop('resample_seconds', 60)
+
         building_path = '/building{}'.format(mains.building())
+        mains_data_location = '{}/elec/meter1'.format(building_path)
+
         [temp, transients] = find_steady_states_transients(mains)
 
         # For now ignoring the first transient
@@ -334,6 +340,86 @@ class Hart85(object):
                                         pd.DataFrame(power,
                                                      index=df.index))
         self.di = di
+
+        chunk = mains.power_series().next()
+        timeframes=[]
+        timeframes.append(chunk.timeframe)
+        measurement = chunk.name
+        cols = pd.MultiIndex.from_tuples([chunk.name])
+        output_datastore.append(key=mains_data_location,
+                                    value=pd.DataFrame(chunk, columns=cols))
+
+        # DataSet and MeterDevice metadata:
+        meter_devices = {
+            'Hart85': {
+                'model': 'Hart85',
+                'sample_period': resample_seconds,
+                'max_sample_period': resample_seconds,
+                'measurements': [{
+                    'physical_quantity': measurement[0],
+                    'type': measurement[1]
+                }]
+            },
+            'mains': {
+                'model': 'mains',
+                'sample_period': resample_seconds,
+                'max_sample_period': resample_seconds,
+                'measurements': [{
+                    'physical_quantity': measurement[0],
+                    'type': measurement[1]
+                }]
+            }
+        }
+
+        merged_timeframes = merge_timeframes(timeframes, gap=resample_seconds)
+        total_timeframe = TimeFrame(merged_timeframes[0].start,
+                                    merged_timeframes[-1].end)
+
+        dataset_metadata = {'name': output_name, 'date': date_now,
+                            'meter_devices': meter_devices,
+                            'timeframe': total_timeframe.to_dict()}
+        output_datastore.save_metadata('/', dataset_metadata)
+
+        # Building metadata
+
+        # Mains meter:
+        elec_meters = {
+            mains.instance(): {
+                'device_model': 'mains',
+                'site_meter': True,
+                'data_location': mains_data_location,
+                'preprocessing_applied': {},  # TODO
+                'statistics': {
+                    'timeframe': total_timeframe.to_dict(),
+                    'good_sections': list_of_timeframe_dicts(merged_timeframes)
+                }
+            }
+        }
+
+        # Submeters:
+        # Starts at 2 because meter 1 is mains.
+        for chan in range(2, len(self.centroids)+2):
+            elec_meters.update({
+                chan: {
+                    'device_model': 'Hart85',
+                    'submeter_of': 1,
+                    'data_location': ('{}/elec/meter{:d}'
+                                      .format(building_path, chan)),
+                    'preprocessing_applied': {},  # TODO
+                    'statistics': {
+                        'timeframe': total_timeframe.to_dict(),
+                        'good_sections': list_of_timeframe_dicts(merged_timeframes)
+                    }
+                }
+            })
+
+       
+        building_metadata = {
+            'instance': mains.building(),
+            'elec_meters': elec_meters
+        }
+
+        output_datastore.save_metadata(building_path, building_metadata)
 
 
         """
