@@ -414,9 +414,23 @@ class Hart85(object):
             })
 
        
+        appliances = []
+        for i in range(len(self.centroids.index)):
+            appliance = {
+                    'meters': [i+2],
+                    'type': 'unknown',
+                    'instance': i
+                        # TODO this `instance` will only be correct when the
+                        # model is trained on the same house as it is tested on.
+                        # https://github.com/nilmtk/nilmtk/issues/194
+                    }
+            appliances.append(appliance)
+
+
         building_metadata = {
             'instance': mains.building(),
-            'elec_meters': elec_meters
+            'elec_meters': elec_meters,
+            'appliances':appliances
         }
 
         output_datastore.save_metadata(building_path, building_metadata)
