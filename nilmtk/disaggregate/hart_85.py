@@ -267,6 +267,8 @@ class Hart85(object):
         **load_kwargs : key word arguments
             Passed to `mains.power_series(**kwargs)`
         '''
+
+        building_path = '/building{}'.format(mains.building())
         [temp, transients] = find_steady_states_transients(mains)
 
         # For now ignoring the first transient
@@ -292,37 +294,51 @@ class Hart85(object):
 
         self.states = states
 
-        # Now for each column, we fill in 1 b/w 1 and 0 (if an appliance is on), it
-        # remains on till
+        print("States done")
 
         di = {}
+
         for column in self.states.columns:
-            df = pd.DataFrame(index = self.states.index)
-            values = self.states[[column]].values
+            print(column)
+            df = pd.DataFrame(index = self.states.head(100).index)
+            values = self.states[[column]].head(100).values.flatten()
             power = np.zeros(len(values), dtype=int)
-            on = 
+            on = False
             i = 0
             while i <len(values)-1:
+                     
                 if values[i] == 1:
                     on = True
                     i = i +1 
-                    power[i] = self.centroids[column].value
+                    power[i] = self.centroids.ix[column].active
                     while values[i]!=0 and i<len(values)-1:
-                        power[i] = self.centroids[column].value
+                        power[i] = self.centroids.ix[column].active
                         i = i + 1
-                if values[i] == 0:
+                elif values[i] == 0:
                     on = False
                     i = i +1 
                     power[i] = 0
                     while values[i]!=1 and i<len(values)-1:
                         power[i] = 0
                         i = i + 1
-
-
+                else:
+                    on =False
+                    i =i+1
+                    power[i] = 0
+                    while values[i]!=1 and i<len(values)-1:
+                        power[i] = 0
+                        i = i + 1
             di[column] = power
+            output_datastore.append('{}/elec/meter{:d}'
+                                        .format(building_path, column+2),
+                                        pd.DataFrame(power,
+                                                     index=df.index))
         self.di = di
 
+
         """
+      
+        
         # Each appliance is initially assumed to be in unknown state.
         # Each appliance can have 3 states (unknown (-1), off(0) and on(1))
 
