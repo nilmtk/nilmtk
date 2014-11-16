@@ -54,14 +54,15 @@ def convert_eco(dataset_loc, hdf_filename, timezone):
 	dataset_loc: str
 		The root directory where the dataset is located.
 	hdf_filename: str
-		The location where the hdf_filename is present. The directory location has to contain the 
+		The location where the hdf_filename is present. 
+                The directory location has to contain the 
 		hdf5file name for the converter to work.
 	timezone: str
 		specifies the timezone of the dataset.
 	"""
 
 	# Creating a new HDF File
-	store = pd.HDFStore(hdf_filename, 'a')
+	store = pd.HDFStore(hdf_filename, 'w')
 
 	assert isdir(dataset_loc)
 	directory_list = [i for i in listdir(dataset_loc) if '.txt' not in i]
