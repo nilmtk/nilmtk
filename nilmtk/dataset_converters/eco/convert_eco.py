@@ -64,13 +64,17 @@ def convert_eco(dataset_loc, hdf_filename, timezone):
 	# Creating a new HDF File
 	store = pd.HDFStore(hdf_filename, 'w')
 
-        check_directory_exists(dataset_loc)
+    check_directory_exists(dataset_loc)
 	directory_list = [i for i in listdir(dataset_loc) if '.txt' not in i]
 	directory_list.sort()
 	print directory_list
 
 	# Traversing every folder
 	for folder in directory_list:
+
+		if folder[0] == '.' or folder[-3:] == '.h5':
+			print 'Skipping folder ', folder
+			continue
 		print 'Computing for folder',folder
 
 		#Building number and meter_flag
