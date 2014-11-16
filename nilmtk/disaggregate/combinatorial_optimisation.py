@@ -25,7 +25,9 @@ class CombinatorialOptimisation(object):
            states : list of ints (the power (Watts) used in different states)
            training_metadata : (<appliance_type>, <instance>) tuple or 
                ElecMeter or MeterGroup object used for training 
-               this set of states.
+               this set of states.  We need this information because we 
+               need the appliance type (and perhaps some other metadata)
+               for each model.
     """
 
     def __init__(self):
@@ -75,6 +77,11 @@ class CombinatorialOptimisation(object):
             Passed to `mains.power_series(**kwargs)`
         '''
         MIN_CHUNK_LENGTH = 100
+
+        if not self.model:
+            raise RuntimeError("The model needs to be instantiated before"
+                               " calling `disaggregate`.  For example, the"
+                               " model can be instantiated by running `train`.")
 
         # If we import sklearn at the top of the file then auto doc fails.
         from sklearn.utils.extmath import cartesian
