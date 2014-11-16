@@ -168,6 +168,10 @@ class MeterGroup(Electric):
                             group.building() == key.building and
                             group.dataset() == key.dataset):
                         return group
+                # Else try to find an ElecMeter with instance=(1,2)
+                for meter in self.meters:
+                    if meter.identifier == key:
+                        return meter
             elif key.instance == 0:
                 metergroup_of_building = self.select(
                     building=key.building, dataset=key.dataset)
@@ -191,7 +195,11 @@ class MeterGroup(Electric):
             raise KeyError(key)
         elif isinstance(key, tuple):
             if len(key) == 2:
-                return self[{'type': key[0], 'instance': key[1]}]
+                if isinstance(key[0], str):
+                    return self[{'type': key[0], 'instance': key[1]}]
+                else:
+                    # Assume we're dealing with a request for 2 ElecMeters
+                    return MeterGroup([self[i] for i in key])
             elif len(key) == 3:
                 return self[ElecMeterID(*key)]
             else:

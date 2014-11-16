@@ -151,9 +151,7 @@ class CombinatorialOptimisation(object):
                     indices_of_state_combinations, i].flatten()
                 cols = pd.MultiIndex.from_tuples([chunk.name])
                 meter_instance = model['training_metadata'].instance()
-                if isinstance(meter_instance, tuple):
-                    meter_instance = meter_instance[0] # nasty hack until we fix #195
-                output_datastore.append('{}/elec/meter{:d}'
+                output_datastore.append('{}/elec/meter{}'
                                         .format(building_path, meter_instance),
                                         pd.DataFrame(predicted_power,
                                                      index=chunk.index,
@@ -224,9 +222,6 @@ class CombinatorialOptimisation(object):
             meter = model['training_metadata']
 
             meter_instance = meter.instance()
-            if isinstance(meter_instance, tuple):
-                # nasty hack until we fix #195
-                meter_instance = meter_instance[0]
 
             for app in meter.appliances:
                 meters = app.metadata['meters']
@@ -244,7 +239,7 @@ class CombinatorialOptimisation(object):
                 meter_instance: {
                     'device_model': 'CO',
                     'submeter_of': 1,
-                    'data_location': ('{}/elec/meter{:d}'
+                    'data_location': ('{}/elec/meter{}'
                                       .format(building_path, meter_instance)),
                     'preprocessing_applied': {},  # TODO
                     'statistics': {
