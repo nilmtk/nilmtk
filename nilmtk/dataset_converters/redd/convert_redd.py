@@ -9,7 +9,7 @@ from sys import stdout
 from nilmtk.datastore import Key
 from nilmtk.timeframe import TimeFrame
 from nilmtk.measurement import LEVEL_NAMES
-from nilmtk.utils import get_module_directory
+from nilmtk.utils import get_module_directory, check_directory_exists
 from nilm_metadata import convert_yaml_to_hdf5
 
 """
@@ -63,7 +63,7 @@ def _convert(input_path, hdf_filename, measurement_mapping_func, tz):
         Timezone e.g. 'US/Eastern'
     """
 
-    assert isdir(input_path)
+    check_directory_exists(input_path)
 
     # Open HDF5 file
     store = pd.HDFStore(hdf_filename, 'w', complevel=9, complib='zlib')

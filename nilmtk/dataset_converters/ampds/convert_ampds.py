@@ -6,6 +6,7 @@ from os.path import *
 from os import listdir
 from nilmtk.datastore import Key
 from nilmtk.measurement import LEVEL_NAMES
+from nilmtk.utils import check_directory_exists
 from nilm_metadata import *
 from inspect import currentframe, getfile, getsourcefile
 
@@ -55,7 +56,9 @@ def convert_ampds(inputPath, hdfFilename):
     convert('/AMPds/electricity', 'store.h5')    
 
     '''
-    files = [f for f in listdir(inputPath) if isfile(join(inputPath, f)) and '.csv' in f and '.swp' not in f]
+    check_directory_exists(inputPath)
+    files = [f for f in listdir(inputPath) if isfile(join(inputPath, f)) and 
+             '.csv' in f and '.swp' not in f]
     # Sorting Lexicographically
     files.sort()
     print(files)
