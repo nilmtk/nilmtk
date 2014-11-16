@@ -45,6 +45,10 @@ class CombinatorialOptimisation(object):
         * only uses first chunk for each meter (TODO: handle all chunks).
         """
 
+        if self.model:
+            raise RuntimeError("This implementation of Combinatorial Optimisation"
+                               " does not support multiple calls to `train`.")
+
         num_meters = len(metergroup.meters)
         if num_meters > 12:
             max_num_clusters = 2
@@ -52,12 +56,14 @@ class CombinatorialOptimisation(object):
             max_num_clusters = 3
 
         for i, meter in enumerate(metergroup.submeters().meters):
+            print("Training model for submeter '{}'".format(meter))
             for chunk in meter.power_series(preprocessing=[Clip()]):
                 states = cluster(chunk, max_num_clusters)
                 self.model.append({
                     'states': states,
                     'training_metadata': meter})
-                break  # TODO handle multiple chunks per appliance        
+                break  # TODO handle multiple chunks per appliance 
+        print("Done training!")
 
     def disaggregate(self, mains, output_datastore, **load_kwargs):
         '''Disaggregate mains according to the model learnt previously.
@@ -141,11 +147,13 @@ class CombinatorialOptimisation(object):
                 summed_power_of_each_combination, chunk.values)
 
             for i, model in enumerate(self.model):
+                print("Estimating power demand for '{}'".format(model['training_metadata']))
                 predicted_power = state_combinations[
                     indices_of_state_combinations, i].flatten()
                 cols = pd.MultiIndex.from_tuples([chunk.name])
+                meter_instance = model['training_metadata'].instance()
                 output_datastore.append('{}/elec/meter{:d}'
-                                        .format(building_path, i+2),
+                                        .format(building_path, meter_instance),
                                         pd.DataFrame(predicted_power,
                                                      index=chunk.index,
                                                      columns=cols))
@@ -197,7 +205,7 @@ class CombinatorialOptimisation(object):
 
         # Mains meter:
         elec_meters = {
-            mains.instance(): {
+            1: {
                 'device_model': 'mains',
                 'site_meter': True,
                 'data_location': mains_data_location,
@@ -209,15 +217,35 @@ class CombinatorialOptimisation(object):
             }
         }
 
-        # Submeters:
-        # Starts at 2 because meter 1 is mains.
-        for chan in range(2, len(self.model)+2):
+        # Appliances and submeters:
+        appliances = []
+        for i, model in enumerate(self.model):
+            meter = model['training_metadata']
+            if isinstance(meter, tuple) and len(meter) == 2:
+                appliance = {
+                    'meters': [i+2],
+                    'type': meter[0],
+                    'instance': meter[1]
+                }
+                appliances.append(appliance)
+            else:
+                for app in meter.appliances:
+                    appliance = {
+                        'meters': app.metadata['meters'],
+                        'type': app.identifier.type,
+                        'instance': app.identifier.instance
+                        # TODO this `instance` will only be correct when the
+                        # model is trained on the same house as it is tested on.
+                        # https://github.com/nilmtk/nilmtk/issues/194
+                    }
+                    appliances.append(appliance)
+
             elec_meters.update({
-                chan: {
+                meter.instance(): {
                     'device_model': 'CO',
                     'submeter_of': 1,
                     'data_location': ('{}/elec/meter{:d}'
-                                      .format(building_path, chan)),
+                                      .format(building_path, meter.instance())),
                     'preprocessing_applied': {},  # TODO
                     'statistics': {
                         'timeframe': total_timeframe.to_dict(),
@@ -226,29 +254,6 @@ class CombinatorialOptimisation(object):
                 }
             })
 
-        # Appliances:
-        appliances = []
-        for i, model in enumerate(self.model):
-            training_metadata = model['training_metadata']
-            if (isinstance(training_metadata, tuple) and 
-                len(training_metadata) == 2):
-                appliance = {
-                    'meters': [i+2],
-                    'type': training_metadata[0],
-                    'instance': training_metadata[1]
-                }
-                appliances.append(appliance)
-            else:
-                for app in training_metadata.appliances:
-                    appliance = {
-                        'meters': [i+2],
-                        'type': app.identifier.type,
-                        'instance': app.identifier.instance
-                        # TODO this `instance` will only be correct when the
-                        # model is trained on the same house as it is tested on.
-                        # https://github.com/nilmtk/nilmtk/issues/194
-                    }
-                    appliances.append(appliance)
 
         building_metadata = {
             'instance': mains.building(),

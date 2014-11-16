@@ -216,13 +216,16 @@ class MeterGroup(Electric):
                         meters_found.append(meter)
                 elif isinstance(meter.instance(), (tuple, list)):
                     if key in meter.instance():
-                        print("Meter", key, "is in a nested meter group."
-                              " Retrieving just the ElecMeter.")
-                        meters_found.append(meter[key])
+                        if isinstance(meter, MeterGroup):
+                            print("Meter", key, "is in a nested meter group."
+                                  " Retrieving just the ElecMeter.")
+                            meters_found.append(meter[key])
+                        else:
+                            meters_found.append(meter)
             n_meters_found = len(meters_found)
             if n_meters_found > 1:
-                raise Exception('{} meters found with instance == {}'
-                                .format(n_meters_found, key))
+                raise Exception('{} meters found with instance == {}: {}'
+                                .format(n_meters_found, key, meters_found))
             elif n_meters_found == 0:
                 raise KeyError(
                     'No meters found with instance == {}'.format(key))
