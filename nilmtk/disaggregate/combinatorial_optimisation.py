@@ -23,8 +23,7 @@ class CombinatorialOptimisation(object):
     model : list of dicts
        Each dict has these keys:
            states : list of ints (the power (Watts) used in different states)
-           training_metadata : (<appliance_type>, <instance>) tuple or 
-               ElecMeter or MeterGroup object used for training 
+           training_metadata : ElecMeter or MeterGroup object used for training 
                this set of states.  We need this information because we 
                need the appliance type (and perhaps some other metadata)
                for each model.
@@ -152,6 +151,8 @@ class CombinatorialOptimisation(object):
                     indices_of_state_combinations, i].flatten()
                 cols = pd.MultiIndex.from_tuples([chunk.name])
                 meter_instance = model['training_metadata'].instance()
+                if isinstance(meter_instance, tuple):
+                    meter_instance = meter_instance[0] # nasty hack until we fix #195
                 output_datastore.append('{}/elec/meter{:d}'
                                         .format(building_path, meter_instance),
                                         pd.DataFrame(predicted_power,
@@ -219,33 +220,32 @@ class CombinatorialOptimisation(object):
 
         # Appliances and submeters:
         appliances = []
-        for i, model in enumerate(self.model):
+        for model in self.model:
             meter = model['training_metadata']
-            if isinstance(meter, tuple) and len(meter) == 2:
+
+            meter_instance = meter.instance()
+            if isinstance(meter_instance, tuple):
+                # nasty hack until we fix #195
+                meter_instance = meter_instance[0]
+
+            for app in meter.appliances:
+                meters = app.metadata['meters']
                 appliance = {
-                    'meters': [i+2],
-                    'type': meter[0],
-                    'instance': meter[1]
+                    'meters': [meter_instance], 
+                    'type': app.identifier.type,
+                    'instance': app.identifier.instance
+                    # TODO this `instance` will only be correct when the
+                    # model is trained on the same house as it is tested on.
+                    # https://github.com/nilmtk/nilmtk/issues/194
                 }
                 appliances.append(appliance)
-            else:
-                for app in meter.appliances:
-                    appliance = {
-                        'meters': app.metadata['meters'],
-                        'type': app.identifier.type,
-                        'instance': app.identifier.instance
-                        # TODO this `instance` will only be correct when the
-                        # model is trained on the same house as it is tested on.
-                        # https://github.com/nilmtk/nilmtk/issues/194
-                    }
-                    appliances.append(appliance)
 
             elec_meters.update({
-                meter.instance(): {
+                meter_instance: {
                     'device_model': 'CO',
                     'submeter_of': 1,
                     'data_location': ('{}/elec/meter{:d}'
-                                      .format(building_path, meter.instance())),
+                                      .format(building_path, meter_instance)),
                     'preprocessing_applied': {},  # TODO
                     'statistics': {
                         'timeframe': total_timeframe.to_dict(),
@@ -253,7 +253,6 @@ class CombinatorialOptimisation(object):
                     }
                 }
             })
-
 
         building_metadata = {
             'instance': mains.building(),

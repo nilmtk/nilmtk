@@ -991,7 +991,7 @@ class MeterGroup(Electric):
         # Calculate the resolution for the x axis
         duration = (end - start).total_seconds()
         secs_per_pixel = int(round(duration / width))
-        
+
         # Define a resample function
         resample_func = lambda df: pd.DataFrame.resample(
             df, rule='{:d}S'.format(secs_per_pixel))
