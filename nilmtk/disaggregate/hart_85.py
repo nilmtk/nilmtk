@@ -295,7 +295,7 @@ class Hart85(object):
         print("States done")
 
         di = {}
-        chunk = mains.power_series().next().head(100)
+        chunk = mains.power_series().next()
         timeframes=[]
         timeframes.append(chunk.timeframe)
         measurement = chunk.name
@@ -303,8 +303,8 @@ class Hart85(object):
 
         for column in self.states.columns:
             print(column)
-            df = pd.DataFrame(index = self.states.head(100).index)
-            values = self.states[[column]].head(100).values.flatten()
+            df = pd.DataFrame(index = self.states.index)
+            values = self.states[[column]].values.flatten()
             power = np.zeros(len(values), dtype=int)
             on = False
             i = 0
