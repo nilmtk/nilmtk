@@ -57,15 +57,7 @@ class PairBuffer(object):
                                 'T2 Time', 'T2 Active']
         self.matchedPairs = pd.DataFrame(columns=self.pairColumns)
 
-    ''' # Slower method to clean the buffer
-    def cleanBuffer2(self):
-        newList = []
-        for entry in self.transitionList:
-            if entry[3] == False:
-                 newList.append(entry)
-        self.transitionList = MyDeque(newList, maxlen=self._bufferSize)
-    '''
-
+    
     def cleanBuffer(self):
         # Remove any matched transactions
         for idx, entry in enumerate(self.transitionList):
@@ -303,6 +295,11 @@ class Hart85(object):
         print("States done")
 
         di = {}
+        chunk = mains.power_series().next().head(100)
+        timeframes=[]
+        timeframes.append(chunk.timeframe)
+        measurement = chunk.name
+        cols = pd.MultiIndex.from_tuples([chunk.name])
 
         for column in self.states.columns:
             print(column)
@@ -338,14 +335,11 @@ class Hart85(object):
             output_datastore.append('{}/elec/meter{:d}'
                                         .format(building_path, column+2),
                                         pd.DataFrame(power,
-                                                     index=df.index))
+                                                     index=df.index,
+                                                     columns=cols))
         self.di = di
 
-        chunk = mains.power_series().next()
-        timeframes=[]
-        timeframes.append(chunk.timeframe)
-        measurement = chunk.name
-        cols = pd.MultiIndex.from_tuples([chunk.name])
+        
         output_datastore.append(key=mains_data_location,
                                     value=pd.DataFrame(chunk, columns=cols))
 
@@ -436,45 +430,7 @@ class Hart85(object):
         output_datastore.save_metadata(building_path, building_metadata)
 
 
-        """
-      
-        
-        # Each appliance is initially assumed to be in unknown state.
-        # Each appliance can have 3 states (unknown (-1), off(0) and on(1))
-
-        # In this first implementation, I am assuming that no event is missed
-        # Another assumption is that initially all appliances are off
-        # We'll create a state table telling whether appliance is on or orr
-        
-        state_table = pd.DataFrame(index = mains.index)
-        for chunk in mains.power_series(**load_kwargs):
-
-            # Start disaggregation
-            indices_of_state_combinations, residual_power = find_nearest(
-                summed_power_of_each_combination, chunk.values)
-
-            for i, model in enumerate(self.model):
-                predicted_power = state_combinations[
-                    indices_of_state_combinations, i].flatten()
-                cols = pd.MultiIndex.from_tuples([chunk.name])
-                output_datastore.append('{}/elec/meter{:d}'
-                                        .format(building_path, i+2),
-                                        pd.DataFrame(predicted_power,
-                                                     index=chunk.index,
-                                                     columns=cols))
-
-            # Copy mains data to disag output
-            output_datastore.append(key=mains_data_location,
-                                    value=pd.DataFrame(chunk, columns=cols))
-
-
-
-        critical_points = [[] for x in range(len(self.centroids.index))]
-        
-        """
-
-
-        
+    """        
         
     def export_model(self, filename):
         model_copy = {}
@@ -494,3 +450,4 @@ class Hart85(object):
             appliance_name_instance = ApplianceID(
                 appliance_name, appliance_instance)
             self.model[appliance_name_instance] = centroids
+    """
