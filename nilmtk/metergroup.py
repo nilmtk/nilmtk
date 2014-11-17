@@ -786,7 +786,7 @@ class MeterGroup(Electric):
         submetered_energy = 0.0
         common_ac_types = None
         for meter in self.meters_directly_downstream_of_mains():
-            print("Getting total energy for", meter)
+            print("Getting total energy for", meter.appliance_label())
             energy = meter.total_energy(sections=good_mains_sections,
                                         full_results=True).combined()
             print("  total energy =", energy)
