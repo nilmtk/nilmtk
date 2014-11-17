@@ -26,11 +26,15 @@ class MeterGroup(Electric):
 
     Attributes
     ----------
-    meters : list of ElecMeters
+    meters : list of ElecMeters or nested MeterGroups
+    disabled_meters : list of ElecMeters or nested MeterGroups
     """
 
-    def __init__(self, meters=None):
-        self.meters = [] if meters is None else list(meters)
+    def __init__(self, meters=None, disabled_meters=None):
+        def _convert_to_list(list_like):
+            return [] if list_like is None else list(list_like)
+        self.meters = _convert_to_list(meters)
+        self.disabled_meters = _convert_to_list(disabled_meters)
 
     def load(self, store, elec_meters, appliances, building_id):
         """
@@ -63,7 +67,10 @@ class MeterGroup(Electric):
                                    building=building_id.instance,
                                    dataset=building_id.dataset)
             meter = ElecMeter(store, meter_metadata_dict, meter_id)
-            self.meters.append(meter)
+            if meter.metadata.get('disabled'):
+                self.disabled_meters.append(meter)
+            else:
+                self.meters.append(meter)
 
         # Load each appliance
         for appliance_md in appliances:
