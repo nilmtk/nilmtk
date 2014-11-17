@@ -1,10 +1,16 @@
 from __future__ import print_function, division
 from os import remove
 from os.path import join
-from nilmtk.dataset_converters.redd.convert_redd import _convert
+import pandas as pd
+from nilmtk.dataset_converters.redd.convert_redd import _convert, _load_csv
 from nilmtk.utils import get_module_directory
-from nilm_metadata import convert_yaml_to_hdf5
 from nilmtk import DataSet
+from nilmtk.datastore import Key
+from nilm_metadata import convert_yaml_to_hdf5
+
+
+ONE_SEC_COLUMNS = [('power', 'active'), ('power', 'apparent'), ('voltage', '')]
+TZ = 'Europe/London'
 
 
 def convert_ukdale(ukdale_path, hdf_filename):
@@ -27,8 +33,11 @@ def convert_ukdale(ukdale_path, hdf_filename):
         ac_type = ac_type_map[(house_id, chan_id)][0]
         return [('power', ac_type)]
 
-    _convert(ukdale_path, hdf_filename, _ukdale_measurement_mapping_func, 
-             'Europe/London')
+    # Convert 6-second data
+    _convert(ukdale_path, hdf_filename, _ukdale_measurement_mapping_func, TZ)
+
+    # Convert 1-second data
+    _convert_one_sec_data(ukdale_path, hdf_filename, ac_type_map)
 
     # Add metadata
     convert_yaml_to_hdf5(join(ukdale_path, 'metadata'), hdf_filename)
@@ -39,7 +48,18 @@ def convert_ukdale(ukdale_path, hdf_filename):
 def _get_ac_type_map(ukdale_path):
     """First we need to convert the YAML metadata to HDF5
     so we can load the metadata into NILMTK to allow
-    us to use NILMTK to find the ac_type for each channel."""
+    us to use NILMTK to find the ac_type for each channel.
+    
+    Parameters
+    ----------
+    ukdale_path : str
+
+    Returns
+    -------
+    ac_type_map : dict.  
+        Keys are pairs of ints: (<house_instance>, <meter_instance>)
+        Values are list of available power ac type for that meter.
+    """
 
     hdf5_just_metadata = join(ukdale_path, 'metadata', 'ukdale_metadata.h5')
     convert_yaml_to_hdf5(join(ukdale_path, 'metadata'), hdf5_just_metadata)
@@ -52,3 +72,23 @@ def _get_ac_type_map(ukdale_path):
     ukdale_dataset.store.close()
     remove(hdf5_just_metadata)
     return ac_type_map
+
+
+def _convert_one_sec_data(ukdale_path, hdf_filename, ac_type_map):
+    ids_of_one_sec_data = [
+        identifier for identifier, ac_types in ac_type_map.iteritems()
+        if ac_types == ['active', 'apparent']]
+
+    if not ids_of_one_sec_data:
+        return
+
+    store = pd.HDFStore(hdf_filename, 'a')
+    for identifier in ids_of_one_sec_data:
+        key = Key(building=identifier[0], meter=identifier[1])
+        print("Loading 1-second data for", key, "...")
+        house_path = 'house_{:d}'.format(key.building)
+        filename = join(ukdale_path, house_path, 'mains.dat')
+        df = _load_csv(filename, ONE_SEC_COLUMNS, TZ)
+        store.put(str(key), df, format='table')
+        store.flush()
+    store.close()
