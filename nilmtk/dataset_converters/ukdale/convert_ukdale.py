@@ -10,7 +10,8 @@ def convert_ukdale(ukdale_path, hdf_filename):
     Parameters
     ----------
     ukdale_path : str
-        The root path of the UK-DALE dataset.
+        The root path of the UK-DALE dataset.  It is assumed that the YAML
+        metadata is in 'ukdale_path/metadata'.
     hdf_filename : str
         The destination HDF5 filename (including path and suffix).
     """
@@ -24,10 +25,6 @@ def convert_ukdale(ukdale_path, hdf_filename):
              'Europe/London')
 
     # Add metadata
-    convert_yaml_to_hdf5(join(get_module_directory(), 
-                              'dataset_converters', 
-                              'ukdale', 
-                              'metadata'),
-                         hdf_filename)
+    convert_yaml_to_hdf5(join(ukdale_path, 'metadata'), hdf_filename)
 
     print("Done converting UK-DALE to HDF5!")
