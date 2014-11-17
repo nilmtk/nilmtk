@@ -44,7 +44,7 @@ def _find_limits(measurement, measurements):
     lower, upper : numbers
     """
     for m in measurements:
-        if ((m['physical_quantity'], m['type']) == measurement):
+        if ((m.get('physical_quantity'), m.get('type')) == measurement):
             return m.get('lower_limit'), m.get('upper_limit')
 
     warn('No measurement limits for {}.'.format(measurement), RuntimeWarning)
