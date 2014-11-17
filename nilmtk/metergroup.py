@@ -67,10 +67,7 @@ class MeterGroup(Electric):
                                    building=building_id.instance,
                                    dataset=building_id.dataset)
             meter = ElecMeter(store, meter_metadata_dict, meter_id)
-            if meter.metadata.get('disabled'):
-                self.disabled_meters.append(meter)
-            else:
-                self.meters.append(meter)
+            self.meters.append(meter)
 
         # Load each appliance
         for appliance_md in appliances:
@@ -85,7 +82,12 @@ class MeterGroup(Electric):
             if appliance.n_meters == 1:
                 # Attach this appliance to just a single meter
                 meter = self[meter_ids[0]]
-                meter.appliances.append(appliance)
+                if isinstance(meter, MeterGroup): # MeterGroup of site_meters
+                    metergroup = meter
+                    for meter in metergroup.meters:
+                        meter.appliances.append(appliance)
+                else:
+                    meter.appliances.append(appliance)
             else:
                 # DualSupply or 3-phase appliance so need a meter group
                 metergroup = MeterGroup()
@@ -97,6 +99,13 @@ class MeterGroup(Electric):
                     self.meters.remove(meter)
                     meter.appliances.append(appliance)
                 self.meters.append(metergroup)
+
+        # disable disabled meters
+        meters_to_disable = [m for m in self.meters if m.metadata.get('disabled')]
+        for meter in meters_to_disable:
+            self.meters.remove(meter)
+            self.disabled_meters.append(meter)
+
 
     def union(self, other):
         """
