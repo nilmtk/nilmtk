@@ -786,8 +786,12 @@ class MeterGroup(Electric):
         submetered_energy = 0.0
         common_ac_types = None
         for meter in self.meters_directly_downstream_of_mains():
+            print("Getting total energy for", meter)
             energy = meter.total_energy(sections=good_mains_sections,
                                         full_results=True).combined()
+            print("  total energy =", energy)
+            if energy.empty:
+                continue
             ac_types = set(energy.keys())
             ac_type = select_best_ac_type(ac_types,
                                           mains.available_power_ac_types())
@@ -798,6 +802,7 @@ class MeterGroup(Electric):
                 common_ac_types = common_ac_types.intersection(ac_types)
         mains_energy = mains.total_energy(full_results=True).combined()
         ac_type = select_best_ac_type(mains_energy.keys(), common_ac_types)
+        print("Using AC type '{}' from mains.".format(ac_type))
         return submetered_energy / mains_energy[ac_type]
 
     def available_power_ac_types(self):
