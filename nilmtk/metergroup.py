@@ -567,6 +567,22 @@ class MeterGroup(Electric):
         else:
             return MeterGroup(meters=site_meters)
 
+    def use_alternative_mains(self):
+        """Swap present mains meter(s) for mains meter(s) in `disabled_meters`.
+        This is useful if the dataset has multiple, redundant mains meters
+        (e.g. in UK-DALE buildings 1, 2 and 5).
+        """
+        present_mains = [m for m in self.meters if m.is_site_meter()]
+        alternative_mains = [m for m in self.disabled_meters if m.is_site_meter()]
+        if not alternative_mains:
+            raise RuntimeError("No site meters found in `self.disabled_meters`")
+        for meter in present_mains:
+            self.meters.remove(meter)
+            self.disabled_meters.append(meter)
+        for meter in alternative_mains:
+            self.meters.append(meter)
+            self.disabled_meters.remove(meter)
+
     def upstream_meter(self):
         """Returns single upstream meter.
         Raises RuntimeError if more than 1 upstream meter.
