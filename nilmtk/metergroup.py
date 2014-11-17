@@ -101,7 +101,9 @@ class MeterGroup(Electric):
                 self.meters.append(metergroup)
 
         # disable disabled meters
-        meters_to_disable = [m for m in self.meters if m.metadata.get('disabled')]
+        meters_to_disable = [m for m in self.meters 
+                             if isinstance(m, ElecMeter) 
+                             and m.metadata.get('disabled')]
         for meter in meters_to_disable:
             self.meters.remove(meter)
             self.disabled_meters.append(meter)
