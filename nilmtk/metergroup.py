@@ -1004,6 +1004,8 @@ class MeterGroup(Electric):
         for meter in self.meters:
             if timeframe is None:
                 timeframe = meter.get_timeframe()
+            elif meter.get_timeframe().empty:
+                pass
             else:
                 timeframe = timeframe.union(meter.get_timeframe())
         return timeframe
