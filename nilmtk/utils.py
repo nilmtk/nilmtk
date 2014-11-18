@@ -207,3 +207,8 @@ def offset_alias_to_seconds(alias):
     """Seconds for each period length."""
     dr = pd.date_range('00:00', periods=2, freq=alias)
     return (dr[-1] - dr[0]).total_seconds()
+
+
+def check_directory_exists(d):
+    if not isdir(d):
+        raise IOError("Directory '{}' does not exist.".format(d))

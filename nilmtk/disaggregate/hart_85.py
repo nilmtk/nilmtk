@@ -7,6 +7,7 @@ from ..appliance import ApplianceID
 from ..utils import find_nearest, container_to_string
 from ..feature_detectors import cluster, steady_states
 from ..feature_detectors.cluster import hart85_means_shift_cluster
+from ..feature_detectors.steady_states import find_steady_states_transients
 from ..timeframe import merge_timeframes, list_of_timeframe_dicts, TimeFrame
 from ..preprocessing import Apply, Clip
 
@@ -56,15 +57,7 @@ class PairBuffer(object):
                                 'T2 Time', 'T2 Active']
         self.matchedPairs = pd.DataFrame(columns=self.pairColumns)
 
-    ''' # Slower method to clean the buffer
-    def cleanBuffer2(self):
-        newList = []
-        for entry in self.transitionList:
-            if entry[3] == False:
-                 newList.append(entry)
-        self.transitionList = MyDeque(newList, maxlen=self._bufferSize)
-    '''
-
+    
     def cleanBuffer(self):
         # Remove any matched transactions
         for idx, entry in enumerate(self.transitionList):
@@ -218,7 +211,9 @@ class Hart85(object):
     def __init__(self):
         self.model = {}
 
-    def train(self, metergroup, bsize=20, minTol=35, cluster_features=['active']):
+
+
+    def train(self, metergroup, cluster_features=['active'], bsize=20, minTol=35):
         """Train using Hart85. Places the learnt model in `model` attribute.
 
         Parameters
@@ -227,25 +222,7 @@ class Hart85(object):
 
 
         """
-        steady_states_list = []
-        transients_list = []
-
-        for power_df in metergroup.power_series_all_columns():
-            if len(power_df.columns) <= 2:
-                # Use whatever is available
-                power_dataframe = power_df
-            else:
-                # Active, reactive and apparent are available
-                power_dataframe = power_df[['active', 'reactive']]
-
-            power_dataframe = power_dataframe.dropna()
-
-            x, y = steady_states.find_steady_states(power_dataframe)
-            steady_states_list.append(x)
-            transients_list.append(y)
-
-        self.steady_states = pd.concat(steady_states_list)
-        self.transients = pd.concat(transients_list)
+        [self.steady_states, self.transients] = find_steady_states_transients(metergroup)
 
         self.pair_df = self.pair(bsize, minTol)
 
@@ -283,7 +260,177 @@ class Hart85(object):
             Passed to `mains.power_series(**kwargs)`
         '''
 
-        raise NotImplementedError
+        date_now = datetime.now().isoformat().split('.')[0]
+        output_name = load_kwargs.pop('output_name', 'Hart85_' + date_now)
+        resample_seconds = load_kwargs.pop('resample_seconds', 60)
+
+        building_path = '/building{}'.format(mains.building())
+        mains_data_location = '{}/elec/meter1'.format(building_path)
+
+        [temp, transients] = find_steady_states_transients(mains)
+
+        # For now ignoring the first transient
+        transients = transients[1:]
+        states = pd.DataFrame(-1, index = mains.power_series_all_data().index, columns = self.centroids.index.values)
+        for transient_tuple in transients.itertuples():
+            
+            # Absolute value of transient
+            abs_value = np.abs(transient_tuple[1])
+            #print(abs_value)
+            positive = transient_tuple[1]>0
+
+            absolute_value_transient_minus_centroid = pd.Series((self.centroids - abs_value).abs().active)
+            index_least_delta = absolute_value_transient_minus_centroid.argmin()
+            #print(abs_value, index_least_delta)
+            if positive:
+                # Turned on
+                states.loc[transient_tuple[0]][index_least_delta] = 1
+            else:
+                
+                # Turned off
+                states.loc[transient_tuple[0]][index_least_delta] = 0
+
+        self.states = states
+
+        print("States done")
+
+        di = {}
+        chunk = mains.power_series().next()
+        timeframes=[]
+        timeframes.append(chunk.timeframe)
+        measurement = chunk.name
+        cols = pd.MultiIndex.from_tuples([chunk.name])
+
+        for column in self.states.columns:
+            print(column)
+            df = pd.DataFrame(index = self.states.index)
+            values = self.states[[column]].values.flatten()
+            power = np.zeros(len(values), dtype=int)
+            on = False
+            i = 0
+            while i <len(values)-1:
+                     
+                if values[i] == 1:
+                    on = True
+                    i = i +1 
+                    power[i] = self.centroids.ix[column].active
+                    while values[i]!=0 and i<len(values)-1:
+                        power[i] = self.centroids.ix[column].active
+                        i = i + 1
+                elif values[i] == 0:
+                    on = False
+                    i = i +1 
+                    power[i] = 0
+                    while values[i]!=1 and i<len(values)-1:
+                        power[i] = 0
+                        i = i + 1
+                else:
+                    on =False
+                    i =i+1
+                    power[i] = 0
+                    while values[i]!=1 and i<len(values)-1:
+                        power[i] = 0
+                        i = i + 1
+            di[column] = power
+            output_datastore.append('{}/elec/meter{:d}'
+                                        .format(building_path, column+2),
+                                        pd.DataFrame(power,
+                                                     index=df.index,
+                                                     columns=cols))
+        self.di = di
+
+        
+        output_datastore.append(key=mains_data_location,
+                                    value=pd.DataFrame(chunk, columns=cols))
+
+        # DataSet and MeterDevice metadata:
+        meter_devices = {
+            'Hart85': {
+                'model': 'Hart85',
+                'sample_period': resample_seconds,
+                'max_sample_period': resample_seconds,
+                'measurements': [{
+                    'physical_quantity': measurement[0],
+                    'type': measurement[1]
+                }]
+            },
+            'mains': {
+                'model': 'mains',
+                'sample_period': resample_seconds,
+                'max_sample_period': resample_seconds,
+                'measurements': [{
+                    'physical_quantity': measurement[0],
+                    'type': measurement[1]
+                }]
+            }
+        }
+
+        merged_timeframes = merge_timeframes(timeframes, gap=resample_seconds)
+        total_timeframe = TimeFrame(merged_timeframes[0].start,
+                                    merged_timeframes[-1].end)
+
+        dataset_metadata = {'name': output_name, 'date': date_now,
+                            'meter_devices': meter_devices,
+                            'timeframe': total_timeframe.to_dict()}
+        output_datastore.save_metadata('/', dataset_metadata)
+
+        # Building metadata
+
+        # Mains meter:
+        elec_meters = {
+            mains.instance(): {
+                'device_model': 'mains',
+                'site_meter': True,
+                'data_location': mains_data_location,
+                'preprocessing_applied': {},  # TODO
+                'statistics': {
+                    'timeframe': total_timeframe.to_dict(),
+                    'good_sections': list_of_timeframe_dicts(merged_timeframes)
+                }
+            }
+        }
+
+        # Submeters:
+        # Starts at 2 because meter 1 is mains.
+        for chan in range(2, len(self.centroids)+2):
+            elec_meters.update({
+                chan: {
+                    'device_model': 'Hart85',
+                    'submeter_of': 1,
+                    'data_location': ('{}/elec/meter{:d}'
+                                      .format(building_path, chan)),
+                    'preprocessing_applied': {},  # TODO
+                    'statistics': {
+                        'timeframe': total_timeframe.to_dict(),
+                        'good_sections': list_of_timeframe_dicts(merged_timeframes)
+                    }
+                }
+            })
+
+       
+        appliances = []
+        for i in range(len(self.centroids.index)):
+            appliance = {
+                    'meters': [i+2],
+                    'type': 'unknown',
+                    'instance': i
+                        # TODO this `instance` will only be correct when the
+                        # model is trained on the same house as it is tested on.
+                        # https://github.com/nilmtk/nilmtk/issues/194
+                    }
+            appliances.append(appliance)
+
+
+        building_metadata = {
+            'instance': mains.building(),
+            'elec_meters': elec_meters,
+            'appliances':appliances
+        }
+
+        output_datastore.save_metadata(building_path, building_metadata)
+
+
+    """        
         
     def export_model(self, filename):
         model_copy = {}
@@ -303,3 +450,4 @@ class Hart85(object):
             appliance_name_instance = ApplianceID(
                 appliance_name, appliance_instance)
             self.model[appliance_name_instance] = centroids
+    """

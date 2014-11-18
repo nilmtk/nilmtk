@@ -4,7 +4,7 @@ import sys
 from os import listdir, getcwd
 from os.path import isdir, join, dirname, abspath
 from pandas.tools.merge import concat
-from nilmtk.utils import get_module_directory
+from nilmtk.utils import get_module_directory, check_directory_exists
 from nilmtk.datastore import Key
 from nilm_metadata import convert_yaml_to_hdf5
 from inspect import currentframe, getfile, getsourcefile
@@ -54,16 +54,17 @@ def convert_eco(dataset_loc, hdf_filename, timezone):
 	dataset_loc: str
 		The root directory where the dataset is located.
 	hdf_filename: str
-		The location where the hdf_filename is present. The directory location has to contain the 
+		The location where the hdf_filename is present. 
+                The directory location has to contain the 
 		hdf5file name for the converter to work.
 	timezone: str
 		specifies the timezone of the dataset.
 	"""
 
 	# Creating a new HDF File
-	store = pd.HDFStore(hdf_filename, 'a')
+	store = pd.HDFStore(hdf_filename, 'w')
 
-	assert isdir(dataset_loc)
+        check_directory_exists(dataset_loc)
 	directory_list = [i for i in listdir(dataset_loc) if '.txt' not in i]
 	directory_list.sort()
 	print directory_list

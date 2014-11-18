@@ -9,6 +9,7 @@ from sys import stdout, getfilesystemencoding
 from nilmtk.datastore import Key
 from nilmtk.timeframe import TimeFrame
 from nilmtk.measurement import LEVEL_NAMES
+from nilmtk.utils import check_directory_exists
 from nilm_metadata import convert_yaml_to_hdf5
 from inspect import currentframe, getfile, getsourcefile
 
@@ -42,7 +43,7 @@ def convert_iawe(iawe_path, hdf_filename):
         The destination HDF5 filename (including path and suffix).
     """
 
-    assert isdir(iawe_path)
+    check_directory_exists(iawe_path)
 
     # Open HDF5 file
     store = pd.HDFStore(hdf_filename, 'w', complevel=9, complib='zlib')
