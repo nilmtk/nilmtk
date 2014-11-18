@@ -1,7 +1,8 @@
 from __future__ import print_function, division
+import os
 from collections import OrderedDict
 from .building import Building
-from .datastore import join_key, HDFDataStore
+from .datastore import join_key, HDFDataStore, CSVDataStore
 
 class DataSet(object):
     """
@@ -20,17 +21,25 @@ class DataSet(object):
         See http://nilm-metadata.readthedocs.org/en/latest/dataset_metadata.html#dataset
     """
 
-    def __init__(self, filename=None):
+    def __init__(self, filename=None, format='HDF'):
         """
         Parameters
         ----------
         filename : str
-            HDF5 file
+            path to data set
+			
+		format : str
+            format of output. Either 'HDF' or 'CSV'. Defaults to 'HDF'
         """
         self.buildings = OrderedDict()
         self.metadata = {}
         if filename is not None:
-            self.load(HDFDataStore(filename))
+			if format == 'HDF':
+				self.load(HDFDataStore(filename))
+			elif format == 'CSV':
+				self.load(CSVDataStore(filename))
+			else:
+				raise ValueError('format not recognised')
         
     def load(self, store):
         """
