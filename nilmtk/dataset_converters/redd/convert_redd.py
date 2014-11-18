@@ -46,7 +46,8 @@ def convert_redd(redd_path, hdf_filename):
     print("Done converting REDD to HDF5!")
 
 
-def _convert(input_path, hdf_filename, measurement_mapping_func, tz):
+def _convert(input_path, hdf_filename, measurement_mapping_func, tz, 
+             sort_index=True):
     """
     Parameters
     ----------
@@ -61,12 +62,13 @@ def _convert(input_path, hdf_filename, measurement_mapping_func, tz):
         Function should return a list of tuples e.g. [('power', 'active')]
     tz : str 
         Timezone e.g. 'US/Eastern'
+    sort_index : bool
     """
 
     check_directory_exists(input_path)
 
     # Open HDF5 file
-    store = pd.HDFStore(hdf_filename, 'w', complevel=9, complib='zlib')
+    store = pd.HDFStore(hdf_filename, 'w', complevel=9, complib='blosc')
 
     # Iterate though all houses and channels
     houses = _find_all_houses(input_path)
@@ -81,12 +83,25 @@ def _convert(input_path, hdf_filename, measurement_mapping_func, tz):
             measurements = measurement_mapping_func(house_id, chan_id)
             csv_filename = _get_csv_filename(input_path, key)
             df = _load_csv(csv_filename, measurements, tz)
-            df = df.sort_index() # raw REDD data isn't always sorted
-            store.put(str(key), df, format='table')
+            if sort_index:
+                df = df.sort_index() # raw REDD data isn't always sorted
+            _store_put(store, str(key), df)
             store.flush()
         print()
 
     store.close()
+    
+
+def _store_put(store, key, df):
+    """
+    Parameters
+    ----------
+    store : HDFStore
+    key : str
+    df : pd.DataFrame
+    """
+    store.put(key, df, format='table', expectedrows=len(df), index=False)
+    store.create_table_index(key, columns=['index'], kind='full', optlevel=9)
     
 
 def _find_all_houses(input_path):

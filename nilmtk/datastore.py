@@ -27,8 +27,8 @@ class DataStore(object):
       specific time span and columns
     * Totally agnostic about what the data 'means'. It could be voltage,
       current, temperature, PIR readings etc.
-    * could have subclasses for NILMTK HDF5, NILMTK CSV, Xively, REDD, iAWE,
-      UK-DALE, MetOffice XLS data, Current Cost meters etc.
+    * could have subclasses for NILMTK HDF5, NILMTK CSV, Xively,
+      Current Cost meters etc.
     * One DataStore per HDF5 file or folder or CSV files or Xively
       feed etc.
 
@@ -88,7 +88,6 @@ class HDFDataStore(DataStore):
         """
         # TODO: calculate chunksize default based on physical 
         # memory installed and number of columns
-
         # Make sure key has a slash at the front but not at the end.
         if key[0] != '/':
             key = '/' + key
@@ -109,9 +108,10 @@ class HDFDataStore(DataStore):
             else:
                 terms = window_intersect.query_terms('window_intersect')
                 generator = self.store.select(key=key, cols=cols, where=terms,
-                                              chunksize=chunksize).__iter__()
-                
+                                              chunksize=chunksize)
+
             for subchunk_i, data in enumerate(generator):
+
                 if len(data) <= 2:
                     continue
 
@@ -140,16 +140,13 @@ class HDFDataStore(DataStore):
 
                 # Test if there are any more subchunks
                 # We cannot simply test if len(data) == chunksize
-                # because store.select(chunksize=chunksize) doesn't
-                # appear to respect the chunksize argument!
-                # TODO: report bug to Pandas / PyTables
-                # Alternative approach: before this loop,
-                # make a copy of the generator using tee()
-                # and loop through it to find out how many
-                # items there are in it, then count through those 
-                # in this loop.
-
-                # This strategy for 'peaking' into a generator from:
+                # because, to quote the Pandas docs,
+                # "the chunksize keyword applies to the source rows. 
+                # So if you are doing a query, then the chunksize will
+                # subdivide the total rows in the table and the query applied,
+                # returning an iterator on potentially unequal sized chunks."
+                # 
+                # The following strategy for 'peaking' into a generator from:
                 # http://stackoverflow.com/a/12059829/732596
                 generator_copy1, generator_copy2 = tee(generator)
                 generator = generator_copy2
