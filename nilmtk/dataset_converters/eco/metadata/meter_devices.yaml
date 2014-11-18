@@ -1,76 +1,65 @@
 smart_meter:
   model:  Smart Meter
+  model_url: http://www.landisgyr.com/webfoo/wp-content/uploads/2012/12/Landis+Gyr-E750-Brochure-English.pdf
   description: >
     1 Hz aggregate consumption data. Each measurement contains data 
     on current, voltage, and phase shift for each of the three phases 
     in the household.
   sample_period: 1
-  max_sample_period: 1
+  max_sample_period: 10
   measurements:
   - physical_quantity: power #powerallphases
-    type: apparent
+    type: active
     upper_limit: 100000
-    lower_limit: 0
+    lower_limit: -1
   - physical_quantity: power #powerl1
-    type: apparent
+    type: active
     upper_limit: 100000
-    lower_limit: 0
+    lower_limit: -1
   - physical_quantity: power #powerl2
-    type: apparent
+    type: active
     upper_limit: 100000
-    lower_limit: 0
+    lower_limit: -1
   - physical_quantity: power #powerl3
-    type: apparent
+    type: active
     upper_limit: 100000
-    lower_limit: 0
+    lower_limit: -1
   - physical_quantity: current #currentneutral
-    type: apparent
     upper_limit: 20
-    lower_limit: 0
+    lower_limit: -1
   - physical_quantity: current #currentl1
-    type: apparent
     upper_limit: 20
-    lower_limit: 0
+    lower_limit: -1
   - physical_quantity: current #currentl2
-    type: apparent
     upper_limit: 20
-    lower_limit: 0
+    lower_limit: -1
   - physical_quantity: current #currentl3
-    type: apparent
     upper_limit: 20
-    lower_limit: 0
+    lower_limit: -1
   - physical_quantity: voltage #voltagel1
-    type: apparent
     upper_limit: 400
-    lower_limit: 100
+    lower_limit: -1
   - physical_quantity: voltage #voltagel2
-    type: apparent
     upper_limit: 400
-    lower_limit: 100
+    lower_limit: -1
   - physical_quantity: voltage #voltagel3
-    type: apparent
     upper_limit: 400
-    lower_limit: 100
-  - physical_quantity: phase angle #phaseanglevoltagel2l1
-    type: apparent
-    upper_limit: 400
-    lower_limit: 100
-  - physical_quantity: phase angle #phaseanglevoltagel3l1
-    type: apparent
-    upper_limit: 90
-    lower_limit: -90
-  - physical_quantity: phase angle #phaseanglecurrentvoltagel1
-    type: apparent
-    upper_limit: 90
-    lower_limit: -90
-  - physical_quantity: phase angle #phaseanglecurrentvoltagel2
-    type: apparent
-    upper_limit: 90
-    lower_limit: -90
-  - physical_quantity: phase angle #phaseanglecurrentvoltagel3
-    type: apparent
-    upper_limit: 90
-    lower_limit: -90
+    lower_limit: -1
+  - physical_quantity: phase_angle #phaseanglevoltagel2l1
+    upper_limit: 360
+    lower_limit: -1
+  - physical_quantity: phase_angle #phaseanglevoltagel3l1
+    upper_limit: 360
+    lower_limit: -1
+  - physical_quantity: phase_angle #phaseanglecurrentvoltagel1
+    upper_limit: 360
+    lower_limit: -1
+  - physical_quantity: phase_angle #phaseanglecurrentvoltagel2
+    upper_limit: 360
+    lower_limit: -1
+  - physical_quantity: phase_angle #phaseanglecurrentvoltagel3
+    upper_limit: 360
+    lower_limit: -1
   wireless: false
 
 plug:
@@ -78,10 +67,12 @@ plug:
   description: >
     1 Hz plug-level data measured from selected appliances.
   sample_period: 1
-  max_sample_period: 1
+  max_sample_period: 10
   measurements:
   - physical_quantity: power
-    type: active #Check active vs reactive vs apparant
-    upper_limit: 100000
-    lower_limit: 0
-  wireless: false
+    type: active
+    upper_limit: 10000
+    lower_limit: -1
+  wireless: true
+  wireless_configuration:
+    protocol: ZigBee

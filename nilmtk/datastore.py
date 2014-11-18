@@ -3,6 +3,12 @@ import pandas as pd
 from itertools import repeat, tee
 from time import time
 from copy import deepcopy
+from collections import OrderedDict
+import yaml
+from os.path import isdir, isfile, join
+from os import listdir
+import re
+from nilm_metadata.convert_yaml_to_hdf5 import _load_file
 from .timeframe import TimeFrame, timeframes_from_periodindex
 from .node import Node
 
@@ -39,7 +45,6 @@ class DataStore(object):
     """
     def __init__(self):
         self.window = TimeFrame()
-
 
 class HDFDataStore(DataStore):
     def __init__(self, filename, mode='r'):
@@ -337,6 +342,117 @@ class HDFDataStore(DataStore):
         if key not in self._keys():
             raise KeyError(key + ' not in store')
 
+class CSVDataStore(DataStore):
+    def __init__(self, filename):
+        """
+        Parameters
+        ----------
+        filename : string
+        """
+        self.filename = filename
+        super(CSVDataStore, self).__init__()
+
+    def load(self, key, cols=None, chunksize=1000000):
+        """
+        Parameters
+        ----------
+        key : string, the location of a table within the DataStore.
+        cols : list of Measurements, optional
+            e.g. [('power', 'active'), ('power', 'reactive'), ('voltage')]
+            if not provided then will return all columns from the table.
+        chunksize : int, optional
+
+        Returns
+        ------- 
+        TextFileReader of DataFrame objects
+        """
+        # TODO: add optional args to match HDFDataStore?
+        relative_path = key[1:]
+        file_path = join(self.filename, relative_path + '.csv')
+        text_file_reader = pd.read_csv(file_path, 
+                                        index_col=0, 
+                                        header=[0,1], 
+                                        parse_dates=True, 
+                                        usecols=cols,
+                                        chunksize=chunksize)
+        return text_file_reader
+
+    def append(self, *args, **kwargs):
+        pass
+
+    def load_metadata(self, key='/'):
+        """
+        Parameters
+        ----------
+        key : string, optional
+            if '/' then load metadata for the whole dataset.
+
+        Returns
+        -------
+        metadata : dict
+        """
+        if key == '/':
+            filepath = join(self.filename, 'metadata')
+            metadata = _load_file(filepath, 'dataset.yaml')
+            meter_devices = _load_file(filepath, 'meter_devices.yaml')
+            metadata['meter_devices'] = meter_devices
+        else:
+            key_object = Key(key)
+            if key_object.building and not key_object.meter:
+                # load building metadata from file
+                filename = 'building'+str(key_object.building)+'.yaml'
+                filepath = join(self.filename, 'metadata')
+                metadata = _load_file(filepath, filename)
+                # set data_location
+                for meter_instance in metadata['elec_meters']:
+                    # not sure why I need to use meter_instance-1
+                    data_location = '/building{:d}/elec/meter{:d}'.format(key_object.building, meter_instance-1)
+                    metadata['elec_meters'][meter_instance]['data_location'] = data_location
+            else:
+                raise NotImplementedError("NotImplementedError")        
+        
+        return metadata
+
+    def save_metadata(self, key, metadata):
+        """
+        Parameters
+        ----------
+        key : string
+        metadata : dict
+        """
+        pass
+
+    def elements_below_key(self, key='/'):
+        """
+        Traverses file hierarchy rather than metadata
+        
+        Returns
+        -------
+        list of strings
+        """
+        
+        elements = OrderedDict()
+        if key == '/':
+            for directory in listdir(self.filename):
+                dir_path = join(self.filename, directory)
+                if isdir(dir_path) and re.match('building[0-9]*', directory):
+                    elements[directory] = join_key(key, directory)
+        else:
+            relative_path = key[1:]
+            dir_path = join(self.filename, relative_path)
+            if isdir(dir_path):
+                for element in listdir(dir_path):
+                    elements[element] = join_key(key, element)
+
+        return elements
+
+    def close(self):
+        # not needed for CSV data store
+        pass
+
+    def open(self):
+        # not needed for CSV data store
+        pass
 
 def join_key(*args):
     """
@@ -359,7 +475,6 @@ def join_key(*args):
     if len(key) > 1:
         key = key[:-1] # remove last trailing slash
     return key
-
 
 class Key(object):
     """A location of data or metadata within NILMTK.

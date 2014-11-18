@@ -78,3 +78,7 @@ appliances:
   instance: 1
   #coverage: 97.08
   meters: [9] #Plug number
+  
+time_frame:
+  start: 2012-06-27
+  end: 2013-01-31
