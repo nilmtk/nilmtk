@@ -16,7 +16,7 @@ from .node import Node
 from pdb import set_trace as _breakpoint
 
 
-MAX_MEM_ALLOWANCE_IN_BYTES = 1E9
+MAX_MEM_ALLOWANCE_IN_BYTES = 2**29 # 512 MBytes
 
 class DataStore(object):
     """
@@ -59,7 +59,7 @@ class HDFDataStore(DataStore):
         super(HDFDataStore, self).__init__()
 
     def load(self, key, cols=None, sections=None, n_look_ahead_rows=0,
-             chunksize=1000000):
+             chunksize=MAX_MEM_ALLOWANCE_IN_BYTES):
         """
         Parameters
         ----------
