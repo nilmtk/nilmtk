@@ -108,14 +108,17 @@ class HDFDataStore(DataStore):
         for section in sections:
             window_intersect = self.window.intersect(section)
             if window_intersect.empty:
-                # Trick to make a generator with one empty DataFrame
-                generator = repeat(pd.DataFrame(), 1)
+                coords = []
             else:
                 terms = window_intersect.query_terms('window_intersect')
-                generator = self.store.select(key=key, cols=cols, where=terms,
-                                              chunksize=chunksize)
+                coords = self.store.select_as_coordinates(key=key, where=terms)
 
-            for subchunk_i, data in enumerate(generator):
+            n_coords = len(coords)
+            for subchunk_i, slice_start in enumerate(xrange(0, n_coords, chunksize)):
+
+                slice_end = slice_start + chunksize
+                coords_for_chunk = coords[slice_start:slice_end]
+                data = self.store.select(key=key, cols=cols, where=coords_for_chunk)
 
                 if len(data) <= 2:
                     continue
@@ -126,16 +129,18 @@ class HDFDataStore(DataStore):
                 # Load look ahead if necessary
                 if n_look_ahead_rows > 0:
                     if len(data.index) > 0:
-                        look_ahead_coords = self.store.select_as_coordinates(
-                            key=key, where="index>data.index[-1]")
+                        look_ahead_start_i = coords_for_chunk[-1] + 1
+                        look_ahead_end_i = look_ahead_start_i + n_look_ahead_rows
+                        look_ahead_coords = range(look_ahead_start_i, 
+                                                  look_ahead_end_i)
                     else:
                         look_ahead_coords = []
                     if len(look_ahead_coords) > 0:
-                        look_ahead_start = look_ahead_coords[0]
-                        look_ahead_iterator = self.store.select(
-                            key=key, chunksize=n_look_ahead_rows,
-                            cols=cols, start=look_ahead_start).__iter__()
-                        data.look_ahead = next(look_ahead_iterator)
+                        try:
+                            data.look_ahead = self.store.select(
+                                key=key, cols=cols, where=look_ahead_coords)
+                        except ValueError:
+                            data.look_ahead = pd.DataFrame()
                     else:
                         data.look_ahead = pd.DataFrame()
 
@@ -144,25 +149,7 @@ class HDFDataStore(DataStore):
                 end = None
 
                 # Test if there are any more subchunks
-                # We cannot simply test if len(data) == chunksize
-                # because, to quote the Pandas docs,
-                # "the chunksize keyword applies to the source rows. 
-                # So if you are doing a query, then the chunksize will
-                # subdivide the total rows in the table and the query applied,
-                # returning an iterator on potentially unequal sized chunks."
-                # 
-                # The following strategy for 'peaking' into a generator from:
-                # http://stackoverflow.com/a/12059829/732596
-                generator_copy1, generator_copy2 = tee(generator)
-                generator = generator_copy2
-                try:
-                    generator_copy1.next()
-                except StopIteration:
-                    there_are_more_subchunks = False
-                else:
-                    there_are_more_subchunks = True
-                del generator_copy1
-
+                there_are_more_subchunks = (len(data) == chunksize)
                 if there_are_more_subchunks:
                     if subchunk_i == 0:
                         start = window_intersect.start
@@ -529,3 +516,5 @@ class Key(object):
         if self.meter is not None:
             s += "/elec/meter{:d}".format(self.meter)
         return s
+
+Python finished at Wed Nov 19 10:23:07
