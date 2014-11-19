@@ -114,8 +114,9 @@ class HDFDataStore(DataStore):
                 coords = self.store.select_as_coordinates(key=key, where=terms)
 
             n_coords = len(coords)
-            for subchunk_i, slice_start in enumerate(xrange(0, n_coords, chunksize)):
-
+            slice_starts = range(0, n_coords, chunksize)
+            n_subchunks = len(slice_starts)
+            for subchunk_i, slice_start in enumerate(slice_starts):
                 slice_end = slice_start + chunksize
                 coords_for_chunk = coords[slice_start:slice_end]
                 data = self.store.select(key=key, cols=cols, where=coords_for_chunk)
@@ -149,7 +150,7 @@ class HDFDataStore(DataStore):
                 end = None
 
                 # Test if there are any more subchunks
-                there_are_more_subchunks = (len(data) == chunksize)
+                there_are_more_subchunks = (subchunk_i < n_subchunks-1)
                 if there_are_more_subchunks:
                     if subchunk_i == 0:
                         start = window_intersect.start
