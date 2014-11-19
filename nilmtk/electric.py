@@ -61,8 +61,13 @@ class Electric(object):
     def power_series_all_data(self, **kwargs):
         chunks = []        
         for series in self.power_series(**kwargs):
-            chunks.append(series)
-        return pd.concat(chunks)
+            if len(series) > 0:
+                chunks.append(series)
+        if chunks:
+            all_data = pd.concat(chunks)
+        else:
+            all_data = None
+        return all_data
 
     def plot(self, **loader_kwargs):
         all_data = self.power_series_all_data(**loader_kwargs)
