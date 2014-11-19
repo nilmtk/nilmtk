@@ -4,3 +4,5 @@
 class TooFewSamplesError(Exception):
     pass
 
+class PerformanceWarning(RuntimeWarning):
+    pass

@@ -2,7 +2,8 @@ from __future__ import print_function, division
 from os import remove
 from os.path import join
 import pandas as pd
-from nilmtk.dataset_converters.redd.convert_redd import _convert, _load_csv
+from nilmtk.dataset_converters.redd.convert_redd import (_convert, _load_csv, 
+                                                         _store_put)
 from nilmtk.utils import get_module_directory
 from nilmtk import DataSet
 from nilmtk.datastore import Key
@@ -34,7 +35,8 @@ def convert_ukdale(ukdale_path, hdf_filename):
         return [('power', ac_type)]
 
     # Convert 6-second data
-    _convert(ukdale_path, hdf_filename, _ukdale_measurement_mapping_func, TZ)
+    _convert(ukdale_path, hdf_filename, _ukdale_measurement_mapping_func, TZ,
+             sort_index=False)
 
     # Add metadata
     convert_yaml_to_hdf5(join(ukdale_path, 'metadata'), hdf_filename)
@@ -89,7 +91,7 @@ def _convert_one_sec_data(ukdale_path, hdf_filename, ac_type_map):
         house_path = 'house_{:d}'.format(key.building)
         filename = join(ukdale_path, house_path, 'mains.dat')
         df = _load_csv(filename, ONE_SEC_COLUMNS, TZ)
-        store.put(str(key), df, format='table')
+        _store_put(store, str(key), df)       
         
         # Set 'disabled' metadata attributes
         group = store._handle.get_node('/building{:d}'.format(key.building))

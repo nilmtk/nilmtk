@@ -16,7 +16,7 @@ from .node import Node
 from pdb import set_trace as _breakpoint
 
 
-MAX_MEM_ALLOWANCE_IN_BYTES = 1E9
+MAX_MEM_ALLOWANCE_IN_BYTES = 2**29 # 512 MBytes
 
 class DataStore(object):
     """
@@ -33,8 +33,8 @@ class DataStore(object):
       specific time span and columns
     * Totally agnostic about what the data 'means'. It could be voltage,
       current, temperature, PIR readings etc.
-    * could have subclasses for NILMTK HDF5, NILMTK CSV, Xively, REDD, iAWE,
-      UK-DALE, MetOffice XLS data, Current Cost meters etc.
+    * could have subclasses for NILMTK HDF5, NILMTK CSV, Xively,
+      Current Cost meters etc.
     * One DataStore per HDF5 file or folder or CSV files or Xively
       feed etc.
 
@@ -59,7 +59,7 @@ class HDFDataStore(DataStore):
         super(HDFDataStore, self).__init__()
 
     def load(self, key, cols=None, sections=None, n_look_ahead_rows=0,
-             chunksize=1000000):
+             chunksize=MAX_MEM_ALLOWANCE_IN_BYTES):
         """
         Parameters
         ----------
@@ -93,7 +93,6 @@ class HDFDataStore(DataStore):
         """
         # TODO: calculate chunksize default based on physical 
         # memory installed and number of columns
-
         # Make sure key has a slash at the front but not at the end.
         if key[0] != '/':
             key = '/' + key
@@ -109,33 +108,43 @@ class HDFDataStore(DataStore):
         for section in sections:
             window_intersect = self.window.intersect(section)
             if window_intersect.empty:
-                # Trick to make a generator with one empty DataFrame
-                generator = repeat(pd.DataFrame(), 1)
-            else:
-                terms = window_intersect.query_terms('window_intersect')
-                generator = self.store.select(key=key, cols=cols, where=terms,
-                                              chunksize=chunksize).__iter__()
-                
-            for subchunk_i, data in enumerate(generator):
+                continue
+            terms = window_intersect.query_terms('window_intersect')
+            coords = self.store.select_as_coordinates(key=key, where=terms)
+            n_coords = len(coords)
+            if n_coords == 0:
+                continue
+            section_start_i = coords[0]
+            section_end_i   = coords[-1]
+            slice_starts = range(section_start_i, section_end_i, chunksize)
+            n_chunks = len(slice_starts)
+            for chunk_i, chunk_start_i in enumerate(slice_starts):
+                chunk_end_i = chunk_start_i + chunksize
+                if chunk_end_i > section_end_i:
+                    chunk_end_i = section_end_i
+                chunk_end_i += 1
+
+                data = self.store.select(key=key, cols=cols, 
+                                         start=chunk_start_i, stop=chunk_end_i)
+
                 if len(data) <= 2:
                     continue
 
-                if subchunk_i > 0:
+                if chunk_i > 0:
                     self.all_sections_smaller_than_chunksize = False
 
                 # Load look ahead if necessary
                 if n_look_ahead_rows > 0:
                     if len(data.index) > 0:
-                        look_ahead_coords = self.store.select_as_coordinates(
-                            key=key, where="index>data.index[-1]")
-                    else:
-                        look_ahead_coords = []
-                    if len(look_ahead_coords) > 0:
-                        look_ahead_start = look_ahead_coords[0]
-                        look_ahead_iterator = self.store.select(
-                            key=key, chunksize=n_look_ahead_rows,
-                            cols=cols, start=look_ahead_start).__iter__()
-                        data.look_ahead = next(look_ahead_iterator)
+                        look_ahead_start_i = chunk_end_i
+                        look_ahead_end_i = look_ahead_start_i + n_look_ahead_rows
+                        try:
+                            data.look_ahead = self.store.select(
+                                key=key, cols=cols, 
+                                start=look_ahead_start_i,
+                                stop=look_ahead_end_i)
+                        except ValueError:
+                            data.look_ahead = pd.DataFrame()
                     else:
                         data.look_ahead = pd.DataFrame()
 
@@ -144,32 +153,11 @@ class HDFDataStore(DataStore):
                 end = None
 
                 # Test if there are any more subchunks
-                # We cannot simply test if len(data) == chunksize
-                # because store.select(chunksize=chunksize) doesn't
-                # appear to respect the chunksize argument!
-                # TODO: report bug to Pandas / PyTables
-                # Alternative approach: before this loop,
-                # make a copy of the generator using tee()
-                # and loop through it to find out how many
-                # items there are in it, then count through those 
-                # in this loop.
-
-                # This strategy for 'peaking' into a generator from:
-                # http://stackoverflow.com/a/12059829/732596
-                generator_copy1, generator_copy2 = tee(generator)
-                generator = generator_copy2
-                try:
-                    generator_copy1.next()
-                except StopIteration:
-                    there_are_more_subchunks = False
-                else:
-                    there_are_more_subchunks = True
-                del generator_copy1
-
+                there_are_more_subchunks = (chunk_i < n_chunks-1)
                 if there_are_more_subchunks:
-                    if subchunk_i == 0:
+                    if chunk_i == 0:
                         start = window_intersect.start
-                elif subchunk_i > 0:
+                elif chunk_i > 0:
                     # This is the last subchunk
                     end = window_intersect.end
                 else:

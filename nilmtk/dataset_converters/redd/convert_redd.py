@@ -57,8 +57,7 @@ def convert_redd(redd_path, hdf_filename, format='HDF'):
 
     print("Done converting REDD to HDF5!")
 
-
-def _convert(input_path, store, measurement_mapping_func, tz):
+def _convert(input_path, store, measurement_mapping_func, tz, sort_index=True):
     """
     Parameters
     ----------
@@ -73,6 +72,7 @@ def _convert(input_path, store, measurement_mapping_func, tz):
         Function should return a list of tuples e.g. [('power', 'active')]
     tz : str 
         Timezone e.g. 'US/Eastern'
+    sort_index : bool
     """
 
     check_directory_exists(input_path)
@@ -90,13 +90,29 @@ def _convert(input_path, store, measurement_mapping_func, tz):
             measurements = measurement_mapping_func(house_id, chan_id)
             csv_filename = _get_csv_filename(input_path, key)
             df = _load_csv(csv_filename, measurements, tz)
-            df = df.sort_index() # raw REDD data isn't always sorted
-            #store.put(str(key), df, format='table')
-            #store.flush()
-            store.append(str(key), df)
-        print()
 
-    #store.close()
+            if sort_index:
+                df = df.sort_index() # raw REDD data isn't always sorted
+            # Hack to check if HDFDataStore
+            if isinstance(store, HDFDataStore):
+                # I think this code should be in HDFDataStore.append
+                _store_put(store.store, str(key), df)
+                store.store.flush()
+            else:
+                store.append(str(key), df)
+        print()
+    
+
+def _store_put(store, key, df):
+    """
+    Parameters
+    ----------
+    store : HDFStore
+    key : str
+    df : pd.DataFrame
+    """
+    store.put(key, df, format='table', expectedrows=len(df), index=False)
+    store.create_table_index(key, columns=['index'], kind='full', optlevel=9)
     
 
 def _find_all_houses(input_path):
