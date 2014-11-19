@@ -108,31 +108,35 @@ class HDFDataStore(DataStore):
         for section in sections:
             window_intersect = self.window.intersect(section)
             if window_intersect.empty:
-                coords = []
-            else:
-                terms = window_intersect.query_terms('window_intersect')
-                coords = self.store.select_as_coordinates(key=key, where=terms)
-
+                continue
+            terms = window_intersect.query_terms('window_intersect')
+            coords = self.store.select_as_coordinates(key=key, where=terms)
             n_coords = len(coords)
-            slice_starts = range(0, n_coords, chunksize)
-            n_subchunks = len(slice_starts)
-            for subchunk_i, slice_start in enumerate(slice_starts):
-                slice_end = slice_start + chunksize
-                coords_for_chunk = coords[slice_start:slice_end]
+            if n_coords == 0:
+                continue
+            section_start_i = coords[0]
+            section_end_i   = coords[-1]
+            slice_starts = range(section_start_i, section_end_i, chunksize)
+            n_chunks = len(slice_starts)
+            for chunk_i, chunk_start_i in enumerate(slice_starts):
+                chunk_end_i = chunk_start_i + chunksize
+                if chunk_end_i > section_end_i:
+                    chunk_end_i = section_end_i
+                chunk_end_i += 1
+
                 data = self.store.select(key=key, cols=cols, 
-                                         start=coords_for_chunk[0],
-                                         stop=coords_for_chunk[-1]+1)
+                                         start=chunk_start_i, stop=chunk_end_i)
 
                 if len(data) <= 2:
                     continue
 
-                if subchunk_i > 0:
+                if chunk_i > 0:
                     self.all_sections_smaller_than_chunksize = False
 
                 # Load look ahead if necessary
                 if n_look_ahead_rows > 0:
                     if len(data.index) > 0:
-                        look_ahead_start_i = coords_for_chunk[-1] + 1
+                        look_ahead_start_i = chunk_end_i
                         look_ahead_end_i = look_ahead_start_i + n_look_ahead_rows
                         try:
                             data.look_ahead = self.store.select(
@@ -149,11 +153,11 @@ class HDFDataStore(DataStore):
                 end = None
 
                 # Test if there are any more subchunks
-                there_are_more_subchunks = (subchunk_i < n_subchunks-1)
+                there_are_more_subchunks = (chunk_i < n_chunks-1)
                 if there_are_more_subchunks:
-                    if subchunk_i == 0:
+                    if chunk_i == 0:
                         start = window_intersect.start
-                elif subchunk_i > 0:
+                elif chunk_i > 0:
                     # This is the last subchunk
                     end = window_intersect.end
                 else:
