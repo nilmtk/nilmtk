@@ -119,7 +119,9 @@ class HDFDataStore(DataStore):
             for subchunk_i, slice_start in enumerate(slice_starts):
                 slice_end = slice_start + chunksize
                 coords_for_chunk = coords[slice_start:slice_end]
-                data = self.store.select(key=key, cols=cols, where=coords_for_chunk)
+                data = self.store.select(key=key, cols=cols, 
+                                         start=coords_for_chunk[0],
+                                         stop=coords_for_chunk[-1]+1)
 
                 if len(data) <= 2:
                     continue
@@ -132,14 +134,11 @@ class HDFDataStore(DataStore):
                     if len(data.index) > 0:
                         look_ahead_start_i = coords_for_chunk[-1] + 1
                         look_ahead_end_i = look_ahead_start_i + n_look_ahead_rows
-                        look_ahead_coords = range(look_ahead_start_i, 
-                                                  look_ahead_end_i)
-                    else:
-                        look_ahead_coords = []
-                    if len(look_ahead_coords) > 0:
                         try:
                             data.look_ahead = self.store.select(
-                                key=key, cols=cols, where=look_ahead_coords)
+                                key=key, cols=cols, 
+                                start=look_ahead_start_i,
+                                stop=look_ahead_end_i)
                         except ValueError:
                             data.look_ahead = pd.DataFrame()
                     else:
