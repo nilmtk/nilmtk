@@ -15,8 +15,8 @@ subject: >
 number_of_buildings: 6
 timezone: CET
 geo_location:
-  country: Sweden  # standard two-letter country code defined by ISO 3166-1 alpha-2
-  latitude: 59.35
-  longitude: 18.07
+  country: CH  # standard two-letter country code defined by ISO 3166-1 alpha-2
+  latitude: 46.757
+  longitude: 7.61333
 related_documents:
 - http://www.vs.inf.ethz.ch/publ/papers/beckel-2014-nilm.pdf

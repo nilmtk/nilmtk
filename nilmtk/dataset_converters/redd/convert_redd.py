@@ -9,7 +9,7 @@ from sys import stdout
 from nilmtk.datastore import Key
 from nilmtk.timeframe import TimeFrame
 from nilmtk.measurement import LEVEL_NAMES
-from nilmtk.utils import get_module_directory
+from nilmtk.utils import get_module_directory, check_directory_exists
 from nilm_metadata import convert_yaml_to_hdf5
 
 """
@@ -46,7 +46,8 @@ def convert_redd(redd_path, hdf_filename):
     print("Done converting REDD to HDF5!")
 
 
-def _convert(input_path, hdf_filename, measurement_mapping_func, tz):
+def _convert(input_path, hdf_filename, measurement_mapping_func, tz, 
+             sort_index=True):
     """
     Parameters
     ----------
@@ -61,12 +62,13 @@ def _convert(input_path, hdf_filename, measurement_mapping_func, tz):
         Function should return a list of tuples e.g. [('power', 'active')]
     tz : str 
         Timezone e.g. 'US/Eastern'
+    sort_index : bool
     """
 
-    assert isdir(input_path)
+    check_directory_exists(input_path)
 
     # Open HDF5 file
-    store = pd.HDFStore(hdf_filename, 'w', complevel=9, complib='zlib')
+    store = pd.HDFStore(hdf_filename, 'w', complevel=9, complib='blosc')
 
     # Iterate though all houses and channels
     houses = _find_all_houses(input_path)
@@ -79,12 +81,27 @@ def _convert(input_path, hdf_filename, measurement_mapping_func, tz):
             stdout.flush()
             key = Key(building=house_id, meter=chan_id)
             measurements = measurement_mapping_func(house_id, chan_id)
-            df = _load_chan(input_path, key, measurements, tz)
-            store.put(str(key), df, format='table')
+            csv_filename = _get_csv_filename(input_path, key)
+            df = _load_csv(csv_filename, measurements, tz)
+            if sort_index:
+                df = df.sort_index() # raw REDD data isn't always sorted
+            _store_put(store, str(key), df)
             store.flush()
         print()
 
     store.close()
+    
+
+def _store_put(store, key, df):
+    """
+    Parameters
+    ----------
+    store : HDFStore
+    key : str
+    df : pd.DataFrame
+    """
+    store.put(key, df, format='table', expectedrows=len(df), index=False)
+    store.create_table_index(key, columns=['index'], kind='full', optlevel=9)
     
 
 def _find_all_houses(input_path):
@@ -134,18 +151,16 @@ def _matching_ints(strings, regex):
     return ints
 
 
-def _load_chan(input_path, key_obj, columns, tz):
+def _get_csv_filename(input_path, key_obj):
     """
     Parameters
     ----------
     input_path : (str) the root path of the REDD low_freq dataset
     key_obj : (nilmtk.Key) the house and channel to load
-    columns : list of tuples (for hierarchical column index)
-    tz : str e.g. 'US/Eastern'
 
     Returns
     ------- 
-    DataFrame of data.
+    filename : str
     """
     assert isinstance(input_path, str)
     assert isinstance(key_obj, Key)
@@ -160,6 +175,21 @@ def _load_chan(input_path, key_obj, columns, tz):
     filename = join(path, filename)
     assert isfile(filename)
 
+    return filename
+
+
+def _load_csv(filename, columns, tz):
+    """
+    Parameters
+    ----------
+    filename : str
+    columns : list of tuples (for hierarchical column index)
+    tz : str e.g. 'US/Eastern'
+
+    Returns
+    -------
+    dataframe
+    """
     # Load data
     df = pd.read_csv(filename, sep=' ', names=columns,
                      dtype={m:np.float32 for m in columns})
@@ -167,9 +197,6 @@ def _load_chan(input_path, key_obj, columns, tz):
     # Modify the column labels to reflect the power measurements recorded.
     df.columns.set_names(LEVEL_NAMES, inplace=True)
 
-    # raw REDD data isn't always sorted
-    df = df.sort_index()
-    
     # Convert the integer index column to timezone-aware datetime 
     df.index = pd.to_datetime(df.index.values, unit='s', utc=True)
     df = df.tz_convert(tz)

@@ -26,11 +26,15 @@ class MeterGroup(Electric):
 
     Attributes
     ----------
-    meters : list of ElecMeters
+    meters : list of ElecMeters or nested MeterGroups
+    disabled_meters : list of ElecMeters or nested MeterGroups
     """
 
-    def __init__(self, meters=None):
-        self.meters = [] if meters is None else list(meters)
+    def __init__(self, meters=None, disabled_meters=None):
+        def _convert_to_list(list_like):
+            return [] if list_like is None else list(list_like)
+        self.meters = _convert_to_list(meters)
+        self.disabled_meters = _convert_to_list(disabled_meters)
 
     def load(self, store, elec_meters, appliances, building_id):
         """
@@ -78,7 +82,12 @@ class MeterGroup(Electric):
             if appliance.n_meters == 1:
                 # Attach this appliance to just a single meter
                 meter = self[meter_ids[0]]
-                meter.appliances.append(appliance)
+                if isinstance(meter, MeterGroup): # MeterGroup of site_meters
+                    metergroup = meter
+                    for meter in metergroup.meters:
+                        meter.appliances.append(appliance)
+                else:
+                    meter.appliances.append(appliance)
             else:
                 # DualSupply or 3-phase appliance so need a meter group
                 metergroup = MeterGroup()
@@ -90,6 +99,15 @@ class MeterGroup(Electric):
                     self.meters.remove(meter)
                     meter.appliances.append(appliance)
                 self.meters.append(metergroup)
+
+        # disable disabled meters
+        meters_to_disable = [m for m in self.meters 
+                             if isinstance(m, ElecMeter) 
+                             and m.metadata.get('disabled')]
+        for meter in meters_to_disable:
+            self.meters.remove(meter)
+            self.disabled_meters.append(meter)
+
 
     def union(self, other):
         """
@@ -168,6 +186,10 @@ class MeterGroup(Electric):
                             group.building() == key.building and
                             group.dataset() == key.dataset):
                         return group
+                # Else try to find an ElecMeter with instance=(1,2)
+                for meter in self.meters:
+                    if meter.identifier == key:
+                        return meter
             elif key.instance == 0:
                 metergroup_of_building = self.select(
                     building=key.building, dataset=key.dataset)
@@ -191,7 +213,11 @@ class MeterGroup(Electric):
             raise KeyError(key)
         elif isinstance(key, tuple):
             if len(key) == 2:
-                return self[{'type': key[0], 'instance': key[1]}]
+                if isinstance(key[0], str):
+                    return self[{'type': key[0], 'instance': key[1]}]
+                else:
+                    # Assume we're dealing with a request for 2 ElecMeters
+                    return MeterGroup([self[i] for i in key])
             elif len(key) == 3:
                 return self[ElecMeterID(*key)]
             else:
@@ -216,13 +242,16 @@ class MeterGroup(Electric):
                         meters_found.append(meter)
                 elif isinstance(meter.instance(), (tuple, list)):
                     if key in meter.instance():
-                        print("Meter", key, "is in a nested meter group."
-                              " Retrieving just the ElecMeter.")
-                        meters_found.append(meter[key])
+                        if isinstance(meter, MeterGroup):
+                            print("Meter", key, "is in a nested meter group."
+                                  " Retrieving just the ElecMeter.")
+                            meters_found.append(meter[key])
+                        else:
+                            meters_found.append(meter)
             n_meters_found = len(meters_found)
             if n_meters_found > 1:
-                raise Exception('{} meters found with instance == {}'
-                                .format(n_meters_found, key))
+                raise Exception('{} meters found with instance == {}: {}'
+                                .format(n_meters_found, key, meters_found))
             elif n_meters_found == 0:
                 raise KeyError(
                     'No meters found with instance == {}'.format(key))
@@ -549,6 +578,22 @@ class MeterGroup(Electric):
         else:
             return MeterGroup(meters=site_meters)
 
+    def use_alternative_mains(self):
+        """Swap present mains meter(s) for mains meter(s) in `disabled_meters`.
+        This is useful if the dataset has multiple, redundant mains meters
+        (e.g. in UK-DALE buildings 1, 2 and 5).
+        """
+        present_mains = [m for m in self.meters if m.is_site_meter()]
+        alternative_mains = [m for m in self.disabled_meters if m.is_site_meter()]
+        if not alternative_mains:
+            raise RuntimeError("No site meters found in `self.disabled_meters`")
+        for meter in present_mains:
+            self.meters.remove(meter)
+            self.disabled_meters.append(meter)
+        for meter in alternative_mains:
+            self.meters.append(meter)
+            self.disabled_meters.remove(meter)
+
     def upstream_meter(self):
         """Returns single upstream meter.
         Raises RuntimeError if more than 1 upstream meter.
@@ -743,8 +788,12 @@ class MeterGroup(Electric):
         submetered_energy = 0.0
         common_ac_types = None
         for meter in self.meters_directly_downstream_of_mains():
+            print("Getting total energy for", meter.appliance_label())
             energy = meter.total_energy(sections=good_mains_sections,
                                         full_results=True).combined()
+            print("  total energy =", energy)
+            if energy.empty:
+                continue
             ac_types = set(energy.keys())
             ac_type = select_best_ac_type(ac_types,
                                           mains.available_power_ac_types())
@@ -755,6 +804,7 @@ class MeterGroup(Electric):
                 common_ac_types = common_ac_types.intersection(ac_types)
         mains_energy = mains.total_energy(full_results=True).combined()
         ac_type = select_best_ac_type(mains_energy.keys(), common_ac_types)
+        print("Using AC type '{}' from mains.".format(ac_type))
         return submetered_energy / mains_energy[ac_type]
 
     def available_power_ac_types(self):
@@ -961,6 +1011,8 @@ class MeterGroup(Electric):
         for meter in self.meters:
             if timeframe is None:
                 timeframe = meter.get_timeframe()
+            elif meter.get_timeframe().empty:
+                pass
             else:
                 timeframe = timeframe.union(meter.get_timeframe())
         return timeframe
@@ -988,7 +1040,7 @@ class MeterGroup(Electric):
         # Calculate the resolution for the x axis
         duration = (end - start).total_seconds()
         secs_per_pixel = int(round(duration / width))
-        
+
         # Define a resample function
         resample_func = lambda df: pd.DataFrame.resample(
             df, rule='{:d}S'.format(secs_per_pixel))

@@ -10,10 +10,8 @@ original_name: house_5
 elec_meters:
   1: &smart_meter
     site_meter: true
-    submeter_of: 0
     device_model: smart_meter
   2: &plug
-    site_meter: true
     submeter_of: 0
     device_model: plug
   3: *plug
@@ -80,3 +78,7 @@ appliances:
   instance: 1
   #coverage: 76.64
   meters: [9] #Plug number
+  
+time_frame:
+  start: 2012-06-27
+  end: 2013-01-31

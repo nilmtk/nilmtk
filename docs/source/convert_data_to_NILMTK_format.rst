@@ -37,14 +37,16 @@ metadata. In NILMTK v0.2 this conversion only uses a tiny fraction of
 the system memory (unlike NILMTK v0.1 which would guzzle ~1 GByte of RAM
 just to do the dataset conversion!).
 
+Of course, if you want to run ``convert_redd`` on your own machine then
+you first need to download `REDD <http://redd.csail.mit.edu>`__,
+decompress it and pass the relevant ``source_directory`` and
+``output_filename`` to ``convert_redd()``.
+
 Other datasets
 --------------
 
-A converter for the iAWE `dataset <http://iawe.github.io/>`__ is available.
-
-A downloader/converter for the Pecan Street `WikiEnergy
-dataset <http://wiki-energy.org/datasets/>`__ (>200 homes at 1 minute
-resolution) is also available.
+At the time of writing, `NILMTK contains converters for 8
+datasets <https://github.com/nilmtk/nilmtk/tree/master/nilmtk/dataset_converters>`__.
 
 Contributing a new converter is easy and highly encouraged! `Learn how
 to write a dataset converter <writing_a_dataset_converter.html>`__.
@@ -171,4 +173,5 @@ And here's a wiring diagram of the meter hierarchy:
 It isn't very pretty but it shows that all the submeters are immediately
 downstream of the two mains meters.
 
-Let's dive in a little deeper and tinker with ``ElecMeter`` objects...
+Let's dive in a little deeper and tinker with ``MeterGroup``...
+

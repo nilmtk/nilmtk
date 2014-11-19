@@ -10,10 +10,8 @@ original_name: house_2
 elec_meters:
   1: &smart_meter
     site_meter: true
-    submeter_of: 0
     device_model: smart_meter
   2: &plug
-    site_meter: true
     submeter_of: 0
     device_model: plug
   3: *plug
@@ -29,12 +27,12 @@ elec_meters:
   13: *plug
 
 appliances:
-- original_name: Laptop and Tablet
-  type: laptop computer
+- original_name: Tablet
+  type: tablet computer charger
   #days_covered: 240
   instance: 1
   #coverage: 97.43
-  meters: [2,10] #Plug number
+  meters: [2] #Plug number
 
 - original_name: Dishwasher
   type: dish washer
@@ -85,6 +83,13 @@ appliances:
   #coverage: 90.21
   meters: [9] #Plug number
 
+- original_name: Laptops
+  type: laptop computer
+  #days_covered: 240
+  instance: 1
+  #coverage: 83.36
+  meters: [10] #Plug number
+  
 - original_name: Stove
   type: stove
   #days_covered: 28
@@ -105,3 +110,8 @@ appliances:
   instance: 1
   #coverage: 95.95
   meters: [13] #Plug number
+  
+time_frame:
+  start: 2012-06-01
+  end: 2013-01-31
+  

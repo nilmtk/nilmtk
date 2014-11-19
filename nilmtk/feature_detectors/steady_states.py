@@ -9,6 +9,26 @@ SEED = 42
 np.random.seed(SEED)
 
 
+def find_steady_states_transients(metergroup):
+    steady_states_list = []
+    transients_list = []
+
+    for power_df in metergroup.power_series_all_columns():
+        if len(power_df.columns) <= 2:
+            # Use whatever is available
+            power_dataframe = power_df
+        else:
+            # Active, reactive and apparent are available
+            power_dataframe = power_df[['active', 'reactive']]
+
+        power_dataframe = power_dataframe.dropna()
+
+        x, y = find_steady_states(power_dataframe)
+        steady_states_list.append(x)
+        transients_list.append(y)
+    return [pd.concat(steady_states_list), pd.concat(transients_list)]
+
+
 def find_steady_states(dataframe, min_n_samples=2, stateThreshold=15,
                        noise_level=70):
     """Finds steady states given a datafram of power
