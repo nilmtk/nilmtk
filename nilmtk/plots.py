@@ -29,6 +29,8 @@ def plot_series(series, **kwargs):
     fig = kwargs.pop('fig', None)
     date_format = kwargs.pop('date_format', '%d/%m/%y %H:%M:%S')
     tz_localize = kwargs.pop('tz_localize', True)
+    if series is None or len(series) == 0:
+        return ax
 
     if ax is None:
         ax = plt.gca()

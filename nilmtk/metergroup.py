@@ -1017,7 +1017,7 @@ class MeterGroup(Electric):
                 timeframe = timeframe.union(meter.get_timeframe())
         return timeframe
 
-    def plot(self, start=None, end=None, width=800, ax=None):
+    def plot(self, start=None, end=None, width=800, ax=None, plot_legend=True):
         """
         Parameters
         ----------
@@ -1025,6 +1025,8 @@ class MeterGroup(Electric):
         width : int, optional
             Number of points on the x axis required
         ax : matplotlib.axes, optional
+        plot_legend : boolean, optional
+            Defaults to True.  Set to False to not plot legend.
         """
         # Get start and end times for the plot
         start = convert_to_timestamp(start)
@@ -1051,7 +1053,8 @@ class MeterGroup(Electric):
                 sections=[timeframe], preprocessing=[Apply(func=resample_func)])
             ax = plot_series(power_series, ax=ax, label=meter.appliance_label())
 
-        plt.legend()
+        if plot_legend:
+            plt.legend()
         return ax
 
     def appliance_label(self):
