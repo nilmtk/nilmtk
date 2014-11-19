@@ -516,5 +516,3 @@ class Key(object):
         if self.meter is not None:
             s += "/elec/meter{:d}".format(self.meter)
         return s
-
-Python finished at Wed Nov 19 10:23:07
