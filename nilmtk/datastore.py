@@ -5,8 +5,8 @@ from time import time
 from copy import deepcopy
 from collections import OrderedDict
 import yaml
-from os.path import isdir, isfile, join
-from os import listdir
+from os.path import isdir, isfile, join, exists, dirname
+from os import listdir, makedirs
 import re
 from nilm_metadata.convert_yaml_to_hdf5 import _load_file
 from .timeframe import TimeFrame, timeframes_from_periodindex
@@ -353,6 +353,14 @@ class CSVDataStore(DataStore):
         filename : string
         """
         self.filename = filename
+        # make root directory
+        path = self._key_to_abs_path('/')
+        if not exists(path):
+            makedirs(path)
+        # make metadata directory
+        path = self._get_metadata_path()
+        if not exists(path):
+            makedirs(path)
         super(CSVDataStore, self).__init__()
 
     def load(self, key, cols=None, chunksize=1000000):
@@ -380,8 +388,14 @@ class CSVDataStore(DataStore):
                                         chunksize=chunksize)
         return text_file_reader
 
-    def append(self, *args, **kwargs):
-        pass
+    def append(self, key, dataframe):
+        file_path = self._key_to_abs_path(key)
+        path = dirname(file_path)
+        if not exists(path):
+            makedirs(path)
+        dataframe.to_csv(file_path,
+                    mode='a',
+                    header=True)
 
     def load_metadata(self, key='/'):
         """
@@ -395,7 +409,7 @@ class CSVDataStore(DataStore):
         metadata : dict
         """
         if key == '/':
-            filepath = join(self.filename, 'metadata')
+            filepath = self._get_metadata_path()
             metadata = _load_file(filepath, 'dataset.yaml')
             meter_devices = _load_file(filepath, 'meter_devices.yaml')
             metadata['meter_devices'] = meter_devices
@@ -404,7 +418,7 @@ class CSVDataStore(DataStore):
             if key_object.building and not key_object.meter:
                 # load building metadata from file
                 filename = 'building'+str(key_object.building)+'.yaml'
-                filepath = join(self.filename, 'metadata')
+                filepath = self._get_metadata_path()
                 metadata = _load_file(filepath, filename)
                 # set data_location
                 for meter_instance in metadata['elec_meters']:
@@ -418,12 +432,22 @@ class CSVDataStore(DataStore):
 
     def save_metadata(self, key, metadata):
         """
+        Overrites existing metadata at location specified by key
+        
         Parameters
         ----------
         key : string
         metadata : dict
         """
-        pass
+        if key == '/':
+            metadata_filename = join(self._get_metadata_path(), 'dataset.yaml')
+        else:
+            key_object = Key(key)
+            assert key_object.building and not key_object.meter
+            metadata_filename = join(self._get_metadata_path(), 'building{:d}.yaml'.format(key_object.building))
+        metadata_file = file(metadata_filename, 'w')
+        yaml.dump(metadata, metadata_file)
+        metadata_file.close()
 
     def elements_below_key(self, key='/'):
         """
@@ -456,6 +480,19 @@ class CSVDataStore(DataStore):
     def open(self):
         # not needed for CSV data store
         pass
+        
+    def _get_metadata_path(self):
+        return join(self.filename, 'metadata')
+        
+    def _key_to_abs_path(self, key):
+        abs_path = self.filename
+        if key and len(key) > 1:
+            relative_path = key[1:]
+            abs_path = join(self.filename, relative_path)
+            key_object = Key(key)
+            if key_object.building and key_object.meter:
+                abs_path += '.csv'
+        return abs_path
 
 def join_key(*args):
     """

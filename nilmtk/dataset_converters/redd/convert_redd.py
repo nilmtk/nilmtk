@@ -6,11 +6,11 @@ from os.path import join, isdir, isfile
 from os import listdir
 import re
 from sys import stdout
-from nilmtk.datastore import Key
+from nilmtk.datastore import Key, HDFDataStore, CSVDataStore
 from nilmtk.timeframe import TimeFrame
 from nilmtk.measurement import LEVEL_NAMES
 from nilmtk.utils import get_module_directory, check_directory_exists
-from nilm_metadata import convert_yaml_to_hdf5
+from nilm_metadata import convert_yaml_to_hdf5, save_yaml_to_datastore
 
 """
 TODO:
@@ -20,7 +20,7 @@ TODO:
 """
 
 
-def convert_redd(redd_path, hdf_filename):
+def convert_redd(redd_path, hdf_filename, format='HDF'):
     """
     Parameters
     ----------
@@ -28,32 +28,44 @@ def convert_redd(redd_path, hdf_filename):
         The root path of the REDD low_freq dataset.
     hdf_filename : str
         The destination HDF5 filename (including path and suffix).
+    format : str
+        format of output. Either 'HDF' or 'CSV'. Defaults to 'HDF'
     """
 
     def _redd_measurement_mapping_func(house_id, chan_id):
         ac_type = 'apparent' if chan_id <= 2 else 'active'
         return [('power', ac_type)]
+        
+    # Open DataStore
+    if format == 'HDF':
+        store = HDFDataStore(hdf_filename, mode='w')
+    elif format == 'CSV':
+        store = CSVDataStore(hdf_filename)
+    else:
+        raise ValueError('format not recognised')
 
-    _convert(redd_path, hdf_filename, _redd_measurement_mapping_func, 'US/Eastern')
+    # Convert raw data to DataStore
+    _convert(redd_path, store, _redd_measurement_mapping_func, 'US/Eastern')
 
     # Add metadata
-    convert_yaml_to_hdf5(join(get_module_directory(), 
+    save_yaml_to_datastore(join(get_module_directory(), 
                               'dataset_converters', 
                               'redd', 
                               'metadata'),
-                         hdf_filename)
+                         store)
+    store.close()
 
     print("Done converting REDD to HDF5!")
 
 
-def _convert(input_path, hdf_filename, measurement_mapping_func, tz):
+def _convert(input_path, store, measurement_mapping_func, tz):
     """
     Parameters
     ----------
     input_path : str
         The root path of the REDD low_freq dataset.
-    hdf_filename : str
-        The destination HDF5 filename (including path and suffix).
+    store : DataStore
+        The NILMTK DataStore object.
     measurement_mapping_func : function
         Must take these parameters:
             - house_id
@@ -64,9 +76,6 @@ def _convert(input_path, hdf_filename, measurement_mapping_func, tz):
     """
 
     check_directory_exists(input_path)
-
-    # Open HDF5 file
-    store = pd.HDFStore(hdf_filename, 'w', complevel=9, complib='zlib')
 
     # Iterate though all houses and channels
     houses = _find_all_houses(input_path)
@@ -82,11 +91,12 @@ def _convert(input_path, hdf_filename, measurement_mapping_func, tz):
             csv_filename = _get_csv_filename(input_path, key)
             df = _load_csv(csv_filename, measurements, tz)
             df = df.sort_index() # raw REDD data isn't always sorted
-            store.put(str(key), df, format='table')
-            store.flush()
+            #store.put(str(key), df, format='table')
+            #store.flush()
+            store.append(str(key), df)
         print()
 
-    store.close()
+    #store.close()
     
 
 def _find_all_houses(input_path):
