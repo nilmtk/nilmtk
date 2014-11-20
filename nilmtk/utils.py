@@ -8,7 +8,42 @@ from os import getcwd
 from inspect import currentframe, getfile, getsourcefile
 from sys import getfilesystemencoding
 from IPython.core.display import HTML, display
+from collections import OrderedDict
+import datetime
 
+
+def dependencies_diagnostics():
+    """Prints versions of various dependencies"""
+    output= OrderedDict()
+    output["Date"] = str(datetime.datetime.now())
+    import sys 
+    import platform
+    output["Platform"] = str(platform.platform())
+    system_information = sys.version_info
+    output["System version"] = str(system_information.major) + "." +  str(system_information.minor)
+    import nilmtk
+    output["nilmtk version"] = nilmtk.__version__
+    try:
+        import numpy as np
+        output["Numpy version"] = np.version.version
+    except ImportError:
+        output["Numpy version"] = "Not found"
+    try:
+        import matplotlib
+        output["Matplotlib version"] = matplotlib.__version__
+    except ImportError:
+        output["Matplotlib version"] = "Not found"
+    try:
+        import pandas as pd 
+        output["Pandas version"] = pd.__version__
+    except ImportError:
+        output["Pandas version"] = "Not found"
+    try:
+        import sklearn as sklearn
+        output["Scikit-learn version"] = sklearn.__version__
+    except ImportError:
+        output["Scikit-learn version"] = "Not found"
+    return output
 
 def timedelta64_to_secs(timedelta):
     """Convert `timedelta` to seconds.
