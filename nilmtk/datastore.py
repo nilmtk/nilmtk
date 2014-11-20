@@ -173,8 +173,9 @@ class HDFDataStore(DataStore):
                 data.timeframe = TimeFrame(start, end)
                 yield data
 
-    def append(self, *args, **kwargs):
-        self.store.append(*args, **kwargs)
+    def append(self, key, df):
+        self._store_put(str(key), df)
+        self.store.flush()
 
     def load_metadata(self, key='/'):
         """
@@ -332,6 +333,17 @@ class HDFDataStore(DataStore):
         """
         if key not in self._keys():
             raise KeyError(key + ' not in store')
+            
+    def _store_put(self, key, df):
+        """
+        Parameters
+        ----------
+        store : HDFStore
+        key : str
+        df : pd.DataFrame
+        """
+        self.store.put(key, df, format='table', expectedrows=len(df), index=False)
+        self.store.create_table_index(key, columns=['index'], kind='full', optlevel=9)
 
 class CSVDataStore(DataStore):
     def __init__(self, filename):

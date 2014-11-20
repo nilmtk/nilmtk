@@ -6,7 +6,7 @@ from os.path import join, isdir, isfile
 from os import listdir
 import re
 from sys import stdout
-from nilmtk.datastore import Key, get_datastore, HDFDataStore, CSVDataStore
+from nilmtk.datastore import Key, get_datastore
 from nilmtk.timeframe import TimeFrame
 from nilmtk.measurement import LEVEL_NAMES
 from nilmtk.utils import get_module_directory, check_directory_exists
@@ -88,13 +88,7 @@ def _convert(input_path, store, measurement_mapping_func, tz, sort_index=True):
 
             if sort_index:
                 df = df.sort_index() # raw REDD data isn't always sorted
-            # Hack to check if HDFDataStore
-            if isinstance(store, HDFDataStore):
-                # I think this code should be in HDFDataStore.append
-                _store_put(store.store, str(key), df)
-                store.store.flush()
-            else:
-                store.append(str(key), df)
+            store.append(str(key), df)
         print()
     
 
