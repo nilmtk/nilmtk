@@ -17,7 +17,9 @@ New features
 Performance improvements
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-* ``HDFDataStore.load()`` is more than 40 times faster than in v0.2
+* ``HDFDataStore.load()`` is more than 40 times faster than in v0.2.
+  This function is called by pretty much every other function so this
+  speed up should be felt throughout much of NILMTK.
 
 
 API changes
