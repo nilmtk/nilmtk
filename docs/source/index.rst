@@ -31,6 +31,11 @@ Developer Manual
    contribute
    writing_a_dataset_converter
 
+.. toctree::
+   :maxdepth: 1
+
+   changelog
+
 API
 ---
 
