@@ -93,12 +93,14 @@ class HDFDataStore(DataStore):
         """
         # TODO: calculate chunksize default based on physical 
         # memory installed and number of columns
+
         # Make sure key has a slash at the front but not at the end.
         if key[0] != '/':
             key = '/' + key
         if len(key) > 1 and key[-1] == '/':
             key = key[:-1]
 
+        # Set `sections` variable
         sections = [TimeFrame()] if sections is None else sections
         if isinstance(sections, pd.PeriodIndex):
             sections = timeframes_from_periodindex(sections)
@@ -116,6 +118,7 @@ class HDFDataStore(DataStore):
                 continue
             section_start_i = coords[0]
             section_end_i   = coords[-1]
+            del coords
             slice_starts = range(section_start_i, section_end_i, chunksize)
             n_chunks = len(slice_starts)
             for chunk_i, chunk_start_i in enumerate(slice_starts):
