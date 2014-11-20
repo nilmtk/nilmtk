@@ -443,14 +443,22 @@ class CSVDataStore(DataStore):
         metadata : dict
         """
         if key == '/':
+            # Extract meter_devices
+            meter_devices_metadata = metadata['meter_devices']
+            dataset_metadata = dict(metadata)
+            del dataset_metadata['meter_devices']
+            # Write dataset metadata
             metadata_filename = join(self._get_metadata_path(), 'dataset.yaml')
+            _write_yaml_to_file(metadata_filename, dataset_metadata)
+            # Write meter_devices metadata
+            metadata_filename = join(self._get_metadata_path(), 'meter_devices.yaml')
+            _write_yaml_to_file(metadata_filename, meter_devices_metadata)
         else:
+            # Write building metadata
             key_object = Key(key)
             assert key_object.building and not key_object.meter
             metadata_filename = join(self._get_metadata_path(), 'building{:d}.yaml'.format(key_object.building))
-        metadata_file = file(metadata_filename, 'w')
-        yaml.dump(metadata, metadata_file)
-        metadata_file.close()
+            _write_yaml_to_file(metadata_filename, metadata)
 
     def elements_below_key(self, key='/'):
         """
@@ -496,6 +504,11 @@ class CSVDataStore(DataStore):
             if key_object.building and key_object.meter:
                 abs_path += '.csv'
         return abs_path
+        
+def _write_yaml_to_file(metadata_filename, metadata):
+    metadata_file = file(metadata_filename, 'w')
+    yaml.dump(metadata, metadata_file)
+    metadata_file.close()
 
 def join_key(*args):
     """
