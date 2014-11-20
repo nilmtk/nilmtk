@@ -370,13 +370,14 @@ class ElecMeter(Hashable, Electric):
         total_energy_from_metadata = self.get_stat_from_metadata('total_energy',
                                                                  **loader_kwargs)
         if total_energy_from_metadata is not None:
+            print("Using cached result from metadata.")
             return pd.Series(total_energy_from_metadata)
         full_results = loader_kwargs.pop('full_results', False)
         source_node = self.get_source_node(**loader_kwargs)
         clipped = Clip(source_node)
         total_energy = TotalEnergy(clipped)
         total_energy.run()
-        self.save_stat_in_metadata(total_energy.results.to_dict())
+        self.save_stat_in_metadata(total_energy.results.to_dict(), **loader_kwargs)
         return total_energy.results if full_results else total_energy.results.simple()
 
     def masked_timeframes(self, timeframes):
@@ -457,24 +458,24 @@ class ElecMeter(Hashable, Electric):
         # Get timeframes which consist of all `sections` passed in 
         # with kwargs masked by self.store.window
         masked_timeframes = self.masked_timeframes(kwargs.get('sections', []))
+        masked_timeframes = set(masked_timeframes)
 
         stats_matching_timeframes = []
-        masked_timeframes = set(masked_timeframes)
         for stat in stats_matching_name:
             stat_timeframes = set([TimeFrame.from_dict(d) 
                                    for d in stat.get('timeframes', [])])
             if stat_timeframes == masked_timeframes:
                 stats_matching_timeframes.append(stat)
 
-        if not stats_matching_timeframes:
-            return
-
         n_stats_matching_timeframes = len(stats_matching_timeframes)
-        if n_stats_matching_timeframes > 1:
+        if n_stats_matching_timeframes == 0:
+            return
+        elif n_stats_matching_timeframes == 1:
+            return stats_matching_timeframes[0][stat_name]
+        else:
             raise RuntimeError("{:d} stats found in metadata for {}. Expected 1 or 0."
                                .format(n_stats_matching_timeframes, stat_name))
 
-        return stats_matching_timeframes[0][stat_name]
 
     # def total_on_duration(self):
     #     """Return timedelta"""
