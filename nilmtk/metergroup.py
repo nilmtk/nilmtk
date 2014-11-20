@@ -108,7 +108,6 @@ class MeterGroup(Electric):
             self.meters.remove(meter)
             self.disabled_meters.append(meter)
 
-
     def union(self, other):
         """
         Returns
@@ -458,6 +457,17 @@ class MeterGroup(Electric):
         buildings = set([meter.building() for meter in self.meters])
         return simplest_type_for(buildings)
 
+    def contains_meters_from_multiple_buildings(self):
+        """Returns True if this MeterGroup contains meters from 
+        more than one building."""
+        building = self.building()
+        try:
+            n = len(building)
+        except TypeError:
+            return False
+        else:
+            return n > 1
+
     def dataset(self):
         """Returns dataset string(s)."""
         datasets = set([meter.dataset() for meter in self.meters])
@@ -569,6 +579,12 @@ class MeterGroup(Electric):
         -------
         ElecMeter or MeterGroup or None
         """
+        if self.contains_meters_from_multiple_buildings():
+            msg = ("This MeterGroup contains meters from buildings '{}'."
+                   " It only makes sense to get `mains` if the MeterGroup"
+                   " contains meters from a single building."
+                   .format(self.building()))
+            raise RuntimeError(msg)
         site_meters = [meter for meter in self.meters if meter.is_site_meter()]
         n_site_meters = len(site_meters)
         if n_site_meters == 0:
