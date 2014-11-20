@@ -390,11 +390,18 @@ class ElecMeter(Hashable, Electric):
         return masked_timeframes
 
     def save_stat_in_metadata(self, results_dict, **kwargs):
+        # Update in-memory metadata
         stats_from_metadata = self.metadata.setdefault('statistics', [])
         masked_timeframes = self.masked_timeframes(kwargs.get('sections', []))
         timeframes = list_of_timeframe_dicts(masked_timeframes)
         results_dict.update({'timeframes': timeframes})
         stats_from_metadata.append(results_dict)
+        
+        # Now save to disk
+        key = "/building{:d}".format(self.building())
+        building_metadata = self.store.load_metadata(key)
+        building_metadata['elec_meters'][self.instance()]['statistics'] = stats_from_metadata
+        self.store.save_metadata(key, building_metadata)
 
     def dropout_rate(self, **loader_kwargs):
         """
