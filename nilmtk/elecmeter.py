@@ -59,6 +59,12 @@ class ElecMeter(Hashable, Electric):
             if self not in nilmtk.global_meter_group.meters:
                 nilmtk.global_meter_group.meters.append(self)
 
+        # Mutable metadata:
+        try:
+            self.mutable_metadata = self.store.load_metadata(self.key_for_mutable_metadata())
+        except AttributeError:
+            self.mutable_metadata = {}
+
     @property
     def key(self):
         return self.metadata['data_location']
@@ -391,17 +397,17 @@ class ElecMeter(Hashable, Electric):
 
     def save_stat_in_metadata(self, results_dict, **kwargs):
         # Update in-memory metadata
-        stats_from_metadata = self.metadata.setdefault('statistics', [])
+        stats_from_metadata = self.mutable_metadata.setdefault('statistics', [])
         masked_timeframes = self.masked_timeframes(kwargs.get('sections', []))
         timeframes = list_of_timeframe_dicts(masked_timeframes)
         results_dict.update({'timeframes': timeframes})
         stats_from_metadata.append(results_dict)
         
         # Now save to disk
-        key = "/building{:d}".format(self.building())
-        building_metadata = self.store.load_metadata(key)
-        building_metadata['elec_meters'][self.instance()]['statistics'] = stats_from_metadata
-        self.store.save_metadata(key, building_metadata)
+        key = self.key_for_mutable_metadata()
+        # mutable_metadata = self.store.load_metadata(key)
+        # mutable_metadata['statistics'] = stats_from_metadata
+        self.store.save_metadata(key, self.mutable_metadata)
 
     def dropout_rate(self, **loader_kwargs):
         """
@@ -446,13 +452,16 @@ class ElecMeter(Hashable, Electric):
         else:
             return good_sections.results.simple()
 
+    def key_for_mutable_metadata(self):
+        return "building{:d}/elec/meter{:d}".format(self.building(), self.instance())
+
     def get_stat_from_metadata(self, stat_name, **kwargs):
         # We don't store full results in metadata
         if kwargs.get('full_results'):
             return
 
         # Does metadata have a 'statistics' key?
-        stats_from_metadata = self.metadata.get('statistics')
+        stats_from_metadata = self.mutable_metadata.get('statistics')
         if not stats_from_metadata:
             return
 
