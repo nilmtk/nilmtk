@@ -649,8 +649,7 @@ class MeterGroup(Electric):
         Returns
         -------
         if `full_results` is True then return TotalEnergyResults object
-        else return either a single number or, if there are multiple
-        AC types, then return a pd.Series with a row for each AC type.
+        else return a pd.Series with a row for each AC type.
         """
         self._check_kwargs(load_kwargs)
         full_results = load_kwargs.pop('full_results', False)

@@ -47,13 +47,13 @@ class DataStore(object):
         self.window = TimeFrame()
 
 class HDFDataStore(DataStore):
-    def __init__(self, filename, mode='r'):
+    def __init__(self, filename, mode='a'):
         """
         Parameters
         ----------
         filename : string
-        mode : string
-            File open mode.  e.g. 'r' or 'w'
+        mode : string, default='a'
+            File open mode.  e.g. 'a', 'r' or 'w'
         """
         self.store = pd.HDFStore(filename, mode, complevel=9, complib='blosc')
         super(HDFDataStore, self).__init__()
@@ -176,8 +176,8 @@ class HDFDataStore(DataStore):
                 data.timeframe = TimeFrame(start, end)
                 yield data
 
-    def append(self, key, df):
-        self._store_put(str(key), df)
+    def append(self, key, value):
+        self._store_put(str(key), value)
         self.store.flush()
 
     def load_metadata(self, key='/'):
@@ -553,7 +553,7 @@ def join_key(*args):
         key = key[:-1] # remove last trailing slash
     return key
     
-def get_datastore(filename, format, mode='r'):
+def get_datastore(filename, format, mode='a'):
     if filename is not None:
         if format == 'HDF':
             return HDFDataStore(filename, mode)

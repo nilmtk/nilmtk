@@ -59,6 +59,12 @@ class ElecMeter(Hashable, Electric):
             if self not in nilmtk.global_meter_group.meters:
                 nilmtk.global_meter_group.meters.append(self)
 
+        # Mutable metadata:
+        try:
+            self.mutable_metadata = self.store.load_metadata(self.key_for_mutable_metadata())
+        except AttributeError:
+            self.mutable_metadata = {}
+
     @property
     def key(self):
         return self.metadata['data_location']
@@ -370,13 +376,14 @@ class ElecMeter(Hashable, Electric):
         total_energy_from_metadata = self.get_stat_from_metadata('total_energy',
                                                                  **loader_kwargs)
         if total_energy_from_metadata is not None:
+            print("Using cached result from metadata.")
             return pd.Series(total_energy_from_metadata)
         full_results = loader_kwargs.pop('full_results', False)
         source_node = self.get_source_node(**loader_kwargs)
         clipped = Clip(source_node)
         total_energy = TotalEnergy(clipped)
         total_energy.run()
-        self.save_stat_in_metadata(total_energy.results.to_dict())
+        self.save_stat_in_metadata(total_energy.results.to_dict(), **loader_kwargs)
         return total_energy.results if full_results else total_energy.results.simple()
 
     def masked_timeframes(self, timeframes):
@@ -389,11 +396,18 @@ class ElecMeter(Hashable, Electric):
         return masked_timeframes
 
     def save_stat_in_metadata(self, results_dict, **kwargs):
-        stats_from_metadata = self.metadata.setdefault('statistics', [])
+        # Update in-memory metadata
+        stats_from_metadata = self.mutable_metadata.setdefault('statistics', [])
         masked_timeframes = self.masked_timeframes(kwargs.get('sections', []))
         timeframes = list_of_timeframe_dicts(masked_timeframes)
         results_dict.update({'timeframes': timeframes})
         stats_from_metadata.append(results_dict)
+        
+        # Now save to disk
+        key = self.key_for_mutable_metadata()
+        # mutable_metadata = self.store.load_metadata(key)
+        # mutable_metadata['statistics'] = stats_from_metadata
+        self.store.save_metadata(key, self.mutable_metadata)
 
     def dropout_rate(self, **loader_kwargs):
         """
@@ -438,13 +452,16 @@ class ElecMeter(Hashable, Electric):
         else:
             return good_sections.results.simple()
 
+    def key_for_mutable_metadata(self):
+        return "building{:d}/elec/meter{:d}".format(self.building(), self.instance())
+
     def get_stat_from_metadata(self, stat_name, **kwargs):
         # We don't store full results in metadata
         if kwargs.get('full_results'):
             return
 
         # Does metadata have a 'statistics' key?
-        stats_from_metadata = self.metadata.get('statistics')
+        stats_from_metadata = self.mutable_metadata.get('statistics')
         if not stats_from_metadata:
             return
 
@@ -457,24 +474,24 @@ class ElecMeter(Hashable, Electric):
         # Get timeframes which consist of all `sections` passed in 
         # with kwargs masked by self.store.window
         masked_timeframes = self.masked_timeframes(kwargs.get('sections', []))
+        masked_timeframes = set(masked_timeframes)
 
         stats_matching_timeframes = []
-        masked_timeframes = set(masked_timeframes)
         for stat in stats_matching_name:
             stat_timeframes = set([TimeFrame.from_dict(d) 
                                    for d in stat.get('timeframes', [])])
             if stat_timeframes == masked_timeframes:
                 stats_matching_timeframes.append(stat)
 
-        if not stats_matching_timeframes:
-            return
-
         n_stats_matching_timeframes = len(stats_matching_timeframes)
-        if n_stats_matching_timeframes > 1:
+        if n_stats_matching_timeframes == 0:
+            return
+        elif n_stats_matching_timeframes == 1:
+            return stats_matching_timeframes[0][stat_name]
+        else:
             raise RuntimeError("{:d} stats found in metadata for {}. Expected 1 or 0."
                                .format(n_stats_matching_timeframes, stat_name))
 
-        return stats_matching_timeframes[0][stat_name]
 
     # def total_on_duration(self):
     #     """Return timedelta"""

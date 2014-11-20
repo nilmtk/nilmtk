@@ -9,7 +9,7 @@ from nilmtk.measurement import LEVEL_NAMES
 from nilmtk.utils import check_directory_exists
 from nilm_metadata import *
 from inspect import currentframe, getfile, getsourcefile
-
+from sys import getfilesystemencoding
 
 # Column name mapping
 columnNameMapping = {'V': ('voltage', ''),
