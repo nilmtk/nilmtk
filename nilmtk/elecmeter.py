@@ -12,6 +12,7 @@ from .datastore import Key
 from .measurement import select_best_ac_type
 from .node import Node
 from .electric import Electric
+from .timeframe import TimeFrame, list_of_timeframe_dicts
 import nilmtk
 
 ElecMeterID = namedtuple('ElecMeterID', ['instance', 'building', 'dataset'])
@@ -364,18 +365,35 @@ class ElecMeter(Hashable, Electric):
         Returns
         -------
         if `full_results` is True then return TotalEnergyResults object
-        else return either a single number or, if there are multiple
-        AC types, then return a pd.Series with a row for each AC type.
+        else returns a pd.Series with a row for each AC type.
         """
+        total_energy_from_metadata = self.get_stat_from_metadata('total_energy',
+                                                                 **loader_kwargs)
+        if total_energy_from_metadata is not None:
+            return pd.Series(total_energy_from_metadata)
         full_results = loader_kwargs.pop('full_results', False)
         source_node = self.get_source_node(**loader_kwargs)
         clipped = Clip(source_node)
         total_energy = TotalEnergy(clipped)
         total_energy.run()
-        if full_results:
-            return total_energy.results
-        else:
-            return total_energy.results.simple()
+        self.save_stat_in_metadata(total_energy.results.to_dict())
+        return total_energy.results if full_results else total_energy.results.simple()
+
+    def masked_timeframes(self, timeframes):
+        """Returns list of TimeFrames masked by self.get_timeframe()"""
+        elecmeter_timeframe = self.get_timeframe()
+        masked_timeframes = [tf.intersect(elecmeter_timeframe) 
+                             for tf in timeframes]
+        if not masked_timeframes:
+            masked_timeframes = [elecmeter_timeframe]
+        return masked_timeframes
+
+    def save_stat_in_metadata(self, results_dict, **kwargs):
+        stats_from_metadata = self.metadata.setdefault('statistics', [])
+        masked_timeframes = self.masked_timeframes(kwargs.get('sections', []))
+        timeframes = list_of_timeframe_dicts(masked_timeframes)
+        results_dict.update({'timeframes': timeframes})
+        stats_from_metadata.append(results_dict)
 
     def dropout_rate(self, **loader_kwargs):
         """
@@ -419,6 +437,44 @@ class ElecMeter(Hashable, Electric):
             return good_sections.results
         else:
             return good_sections.results.simple()
+
+    def get_stat_from_metadata(self, stat_name, **kwargs):
+        # We don't store full results in metadata
+        if kwargs.get('full_results'):
+            return
+
+        # Does metadata have a 'statistics' key?
+        stats_from_metadata = self.metadata.get('statistics')
+        if not stats_from_metadata:
+            return
+
+        # Do any statistics match `stat_name`?
+        stats_matching_name = [stat for stat in stats_from_metadata 
+                               if stat.has_key(stat_name)]
+        if not stats_matching_name:
+            return
+
+        # Get timeframes which consist of all `sections` passed in 
+        # with kwargs masked by self.store.window
+        masked_timeframes = self.masked_timeframes(kwargs.get('sections', []))
+
+        stats_matching_timeframes = []
+        masked_timeframes = set(masked_timeframes)
+        for stat in stats_matching_name:
+            stat_timeframes = set([TimeFrame.from_dict(d) 
+                                   for d in stat.get('timeframes', [])])
+            if stat_timeframes == masked_timeframes:
+                stats_matching_timeframes.append(stat)
+
+        if not stats_matching_timeframes:
+            return
+
+        n_stats_matching_timeframes = len(stats_matching_timeframes)
+        if n_stats_matching_timeframes > 1:
+            raise RuntimeError("{:d} stats found in metadata for {}. Expected 1 or 0."
+                               .format(n_stats_matching_timeframes, stat_name))
+
+        return stats_matching_timeframes[0][stat_name]
 
     # def total_on_duration(self):
     #     """Return timedelta"""

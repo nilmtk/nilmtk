@@ -108,7 +108,6 @@ class MeterGroup(Electric):
             self.meters.remove(meter)
             self.disabled_meters.append(meter)
 
-
     def union(self, other):
         """
         Returns
@@ -458,6 +457,17 @@ class MeterGroup(Electric):
         buildings = set([meter.building() for meter in self.meters])
         return simplest_type_for(buildings)
 
+    def contains_meters_from_multiple_buildings(self):
+        """Returns True if this MeterGroup contains meters from 
+        more than one building."""
+        building = self.building()
+        try:
+            n = len(building)
+        except TypeError:
+            return False
+        else:
+            return n > 1
+
     def dataset(self):
         """Returns dataset string(s)."""
         datasets = set([meter.dataset() for meter in self.meters])
@@ -569,6 +579,12 @@ class MeterGroup(Electric):
         -------
         ElecMeter or MeterGroup or None
         """
+        if self.contains_meters_from_multiple_buildings():
+            msg = ("This MeterGroup contains meters from buildings '{}'."
+                   " It only makes sense to get `mains` if the MeterGroup"
+                   " contains meters from a single building."
+                   .format(self.building()))
+            raise RuntimeError(msg)
         site_meters = [meter for meter in self.meters if meter.is_site_meter()]
         n_site_meters = len(site_meters)
         if n_site_meters == 0:
@@ -789,8 +805,7 @@ class MeterGroup(Electric):
         common_ac_types = None
         for meter in self.meters_directly_downstream_of_mains():
             print("Getting total energy for", meter.appliance_label())
-            energy = meter.total_energy(sections=good_mains_sections,
-                                        full_results=True).combined()
+            energy = meter.total_energy(sections=good_mains_sections)
             print("  total energy =", energy)
             if energy.empty:
                 continue
@@ -802,7 +817,7 @@ class MeterGroup(Electric):
                 common_ac_types = ac_types
             else:
                 common_ac_types = common_ac_types.intersection(ac_types)
-        mains_energy = mains.total_energy(full_results=True).combined()
+        mains_energy = mains.total_energy()
         ac_type = select_best_ac_type(mains_energy.keys(), common_ac_types)
         print("Using AC type '{}' from mains.".format(ac_type))
         return submetered_energy / mains_energy[ac_type]
@@ -825,8 +840,8 @@ class MeterGroup(Electric):
         for i, meter in enumerate(self.meters):
             print('\r{:d}/{:d} {}'.format(i+1, n_meters, meter), end='')
             stdout.flush()
-            meter_energy = meter.total_energy(full_results=True, **load_kwargs)
-            energy_per_meter[meter.identifier] = meter_energy.combined()
+            meter_energy = meter.total_energy(**load_kwargs)
+            energy_per_meter[meter.identifier] = meter_energy
         return energy_per_meter.dropna(how='all')
 
     def fraction_per_meter(self, **load_kwargs):

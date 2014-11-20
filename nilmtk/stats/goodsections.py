@@ -27,21 +27,9 @@ class GoodSections(Node):
         self.check_requirements()
         self.results = GoodSectionsResults(
             metadata['device']['max_sample_period'])
-        stats = metadata.get('statistics', {})
-        previously_calculated_good_sections = stats.get('good_sections')
-        if previously_calculated_good_sections:
-            # TODO: check if temporal coverage of stats is same or larger
-            # than temporal coverage of metadata['timeframe']
-            good_sections = list_of_timeframes_from_list_of_dicts(
-                previously_calculated_good_sections)
-            timeframe = timeframe_from_dict(stats['timeframe'])
-            self.results.append(timeframe, {'sections': [good_sections]})
-            for chunk in self.upstream.process():
-                yield chunk # pass through
-        else:
-            for chunk in self.upstream.process():
-                self._process_chunk(chunk, metadata)
-                yield chunk
+        for chunk in self.upstream.process():
+            self._process_chunk(chunk, metadata)
+            yield chunk
 
     def _process_chunk(self, df, metadata):
         """
