@@ -2,7 +2,7 @@ from __future__ import print_function, division
 import os
 from collections import OrderedDict
 from .building import Building
-from .datastore import join_key, HDFDataStore, CSVDataStore
+from .datastore import join_key, get_datastore
 
 class DataSet(object):
     """
@@ -27,19 +27,13 @@ class DataSet(object):
         ----------
         filename : str
             path to data set
-			
-		format : str
+        
+        format : str
             format of output. Either 'HDF' or 'CSV'. Defaults to 'HDF'
         """
         self.buildings = OrderedDict()
         self.metadata = {}
-        if filename is not None:
-			if format == 'HDF':
-				self.load(HDFDataStore(filename))
-			elif format == 'CSV':
-				self.load(CSVDataStore(filename))
-			else:
-				raise ValueError('format not recognised')
+        self.load(get_datastore(filename, format))
         
     def load(self, store):
         """

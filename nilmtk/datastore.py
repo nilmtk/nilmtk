@@ -55,7 +55,7 @@ class HDFDataStore(DataStore):
         mode : string
             File open mode.  e.g. 'r' or 'w'
         """
-        self.store = pd.HDFStore(filename, mode=mode)
+        self.store = pd.HDFStore(filename, mode, complevel=9, complib='blosc')
         super(HDFDataStore, self).__init__()
 
     def load(self, key, cols=None, sections=None, n_look_ahead_rows=0,
@@ -503,6 +503,17 @@ def join_key(*args):
     if len(key) > 1:
         key = key[:-1] # remove last trailing slash
     return key
+    
+def get_datastore(filename, format, mode='r'):
+    if filename is not None:
+        if format == 'HDF':
+            return HDFDataStore(filename, mode)
+        elif format == 'CSV':
+            return CSVDataStore(filename)
+        else:
+            raise ValueError('format not recognised')
+    else:
+        ValueError('filename is None')
 
 class Key(object):
     """A location of data or metadata within NILMTK.

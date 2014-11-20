@@ -6,7 +6,7 @@ from os.path import join, isdir, isfile
 from os import listdir
 import re
 from sys import stdout
-from nilmtk.datastore import Key, HDFDataStore, CSVDataStore
+from nilmtk.datastore import Key, get_datastore, HDFDataStore, CSVDataStore
 from nilmtk.timeframe import TimeFrame
 from nilmtk.measurement import LEVEL_NAMES
 from nilmtk.utils import get_module_directory, check_directory_exists
@@ -20,13 +20,13 @@ TODO:
 """
 
 
-def convert_redd(redd_path, hdf_filename, format='HDF'):
+def convert_redd(redd_path, output_filename, format='HDF'):
     """
     Parameters
     ----------
     redd_path : str
         The root path of the REDD low_freq dataset.
-    hdf_filename : str
+    output_filename : str
         The destination HDF5 filename (including path and suffix).
     format : str
         format of output. Either 'HDF' or 'CSV'. Defaults to 'HDF'
@@ -37,12 +37,7 @@ def convert_redd(redd_path, hdf_filename, format='HDF'):
         return [('power', ac_type)]
         
     # Open DataStore
-    if format == 'HDF':
-        store = HDFDataStore(hdf_filename, mode='w')
-    elif format == 'CSV':
-        store = CSVDataStore(hdf_filename)
-    else:
-        raise ValueError('format not recognised')
+    store = get_datastore(output_filename, format, mode='w')
 
     # Convert raw data to DataStore
     _convert(redd_path, store, _redd_measurement_mapping_func, 'US/Eastern')
