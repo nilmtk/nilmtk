@@ -176,8 +176,8 @@ class HDFDataStore(DataStore):
                 data.timeframe = TimeFrame(start, end)
                 yield data
 
-    def append(self, key, df):
-        self._store_put(str(key), df)
+    def append(self, key, value):
+        self._store_put(str(key), value)
         self.store.flush()
 
     def load_metadata(self, key='/'):
