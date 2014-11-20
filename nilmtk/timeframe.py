@@ -34,6 +34,15 @@ class TimeFrame(object):
         self._end = None
         self._empty = False
 
+    @classmethod
+    def from_dict(cls, d):
+        def key_to_timestamp(key):
+            string = d.get(key)
+            return None if string is None else pd.Timestamp(string)
+        start = key_to_timestamp('start')
+        end = key_to_timestamp('end')
+        return cls(start, end)
+
     @property
     def start(self):
         if self.enabled:
@@ -201,9 +210,16 @@ class TimeFrame(object):
     def __ne__(self, other):
         return not self.__eq__(other)
 
+    def __hash__(self):
+        return hash((self.start, self.end, self.empty))
+
     def to_dict(self):
-        return {'start': self.start.isoformat(), 
-                'end': self.end.isoformat()}
+        dct = {}
+        if self.start:
+            dct['start'] = self.start.isoformat()
+        if self.end:
+            dct['end'] = self.end.isoformat()
+        return dct
 
 
 def merge_timeframes(timeframes, gap=0):
@@ -249,7 +265,7 @@ def list_of_timeframe_dicts(timeframes):
 
 
 def timeframe_from_dict(d):
-    return TimeFrame(start=d['start'], end=d['end'])
+    return TimeFrame.from_dict(d)
 
 
 def list_of_timeframes_from_list_of_dicts(dicts):

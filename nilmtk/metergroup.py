@@ -805,8 +805,7 @@ class MeterGroup(Electric):
         common_ac_types = None
         for meter in self.meters_directly_downstream_of_mains():
             print("Getting total energy for", meter.appliance_label())
-            energy = meter.total_energy(sections=good_mains_sections,
-                                        full_results=True).combined()
+            energy = meter.total_energy(sections=good_mains_sections)
             print("  total energy =", energy)
             if energy.empty:
                 continue
@@ -818,7 +817,7 @@ class MeterGroup(Electric):
                 common_ac_types = ac_types
             else:
                 common_ac_types = common_ac_types.intersection(ac_types)
-        mains_energy = mains.total_energy(full_results=True).combined()
+        mains_energy = mains.total_energy()
         ac_type = select_best_ac_type(mains_energy.keys(), common_ac_types)
         print("Using AC type '{}' from mains.".format(ac_type))
         return submetered_energy / mains_energy[ac_type]
@@ -841,8 +840,8 @@ class MeterGroup(Electric):
         for i, meter in enumerate(self.meters):
             print('\r{:d}/{:d} {}'.format(i+1, n_meters, meter), end='')
             stdout.flush()
-            meter_energy = meter.total_energy(full_results=True, **load_kwargs)
-            energy_per_meter[meter.identifier] = meter_energy.combined()
+            meter_energy = meter.total_energy(**load_kwargs)
+            energy_per_meter[meter.identifier] = meter_energy
         return energy_per_meter.dropna(how='all')
 
     def fraction_per_meter(self, **load_kwargs):
