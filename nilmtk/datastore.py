@@ -232,6 +232,17 @@ class HDFDataStore(DataStore):
 
     def open(self):
         self.store.close()
+        
+    def get_timeframe(self, key):
+        """
+        Returns
+        -------
+        nilmtk.TimeFrame of entire table after intersecting with self.window.
+        """
+        data_start_date = self.store.select(key, [0]).index[0]
+        data_end_date = self.store.select(key, start=-1).index[0]
+        timeframe = TimeFrame(data_start_date, data_end_date)
+        return self.window.intersect(timeframe)
     
     def _check_columns(self, key, columns):
         if columns is None:
@@ -307,17 +318,6 @@ class HDFDataStore(DataStore):
             storer = self._get_storer(key)
             nrows = storer.nrows
         return nrows
-        
-    def get_timeframe(self, key):
-        """
-        Returns
-        -------
-        nilmtk.TimeFrame of entire table after intersecting with self.window.
-        """
-        data_start_date = self.store.select(key, [0]).index[0]
-        data_end_date = self.store.select(key, start=-1).index[0]
-        timeframe = TimeFrame(data_start_date, data_end_date)
-        return self.window.intersect(timeframe)
     
     def _keys(self):
         return self.store.keys()
@@ -366,7 +366,8 @@ class CSVDataStore(DataStore):
             makedirs(path)
         super(CSVDataStore, self).__init__()
 
-    def load(self, key, cols=None, chunksize=1000000):
+    def load(self, key, cols=None, sections=None, n_look_ahead_rows=0,
+             chunksize=MAX_MEM_ALLOWANCE_IN_BYTES):
         """
         Parameters
         ----------
@@ -374,13 +375,15 @@ class CSVDataStore(DataStore):
         cols : list of Measurements, optional
             e.g. [('power', 'active'), ('power', 'reactive'), ('voltage')]
             if not provided then will return all columns from the table.
+        n_look_ahead_rows : not used yet
         chunksize : int, optional
 
         Returns
         ------- 
         TextFileReader of DataFrame objects
+        TODO: do something with args: sections and n_look_ahead_rows
         """
-        # TODO: add optional args to match HDFDataStore?
+        
         relative_path = key[1:]
         file_path = join(self.filename, relative_path + '.csv')
         text_file_reader = pd.read_csv(file_path, 
@@ -389,6 +392,8 @@ class CSVDataStore(DataStore):
                                         parse_dates=True, 
                                         usecols=cols,
                                         chunksize=chunksize)
+        for data in text_file_reader:
+            data.timeframe = TimeFrame(data.index[0], data.index[-1])
         return text_file_reader
 
     def append(self, key, dataframe):
@@ -426,7 +431,7 @@ class CSVDataStore(DataStore):
                 # set data_location
                 for meter_instance in metadata['elec_meters']:
                     # not sure why I need to use meter_instance-1
-                    data_location = '/building{:d}/elec/meter{:d}'.format(key_object.building, meter_instance-1)
+                    data_location = '/building{:d}/elec/meter{:d}'.format(key_object.building, meter_instance)
                     metadata['elec_meters'][meter_instance]['data_location'] = data_location
             else:
                 raise NotImplementedError("NotImplementedError")        
@@ -491,6 +496,22 @@ class CSVDataStore(DataStore):
     def open(self):
         # not needed for CSV data store
         pass
+        
+    def get_timeframe(self, key):
+        """
+        Returns
+        -------
+        nilmtk.TimeFrame of entire table after intersecting with self.window.
+        """
+        generator = self.load(key)
+        start = None
+        end = None
+        for df in generator:
+            if start is None:
+                start = df.timeframe.start
+            end = df.timeframe.end
+        timeframe = TimeFrame(start, end)
+        return self.window.intersect(timeframe)
         
     def _get_metadata_path(self):
         return join(self.filename, 'metadata')
