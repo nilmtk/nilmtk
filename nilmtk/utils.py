@@ -24,6 +24,11 @@ def dependencies_diagnostics():
     import nilmtk
     output["nilmtk version"] = nilmtk.__version__
     try:
+        import nilm_metadata
+        output["nilm_metadata version"] = nilm_metadata.__version__
+    except ImportError:
+        output["nilm_metadata version"] = "Not found"
+    try:
         import numpy as np
         output["Numpy version"] = np.version.version
     except ImportError:
