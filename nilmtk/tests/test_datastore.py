@@ -24,9 +24,6 @@ class TestHDFDataStore(unittest.TestCase):
     def tearDownClass(cls):
         cls.datastore.close()
 
-    def test_keys(self):
-        self.assertEqual(self.datastore._keys(), self.keys)
-
     def test_column_names(self):
         for key in self.keys:
             self.assertEqual(self.datastore._column_names(key), 

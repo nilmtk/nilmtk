@@ -58,6 +58,9 @@ class HDFDataStore(DataStore):
         self.store = pd.HDFStore(filename, mode, complevel=9, complib='blosc')
         super(HDFDataStore, self).__init__()
 
+    def __getitem__(self, key):
+        return self.store[key]
+
     def load(self, key, cols=None, sections=None, n_look_ahead_rows=0,
              chunksize=MAX_MEM_ALLOWANCE_IN_BYTES):
         """
@@ -90,6 +93,10 @@ class HDFDataStore(DataStore):
             Returns an empty DataFrame if no data is available for the
             specified section (or if the section.intersect(self.window)
             is empty).
+
+        Raises
+        ------
+        KeyError if `key` is not in store.
         """
         # TODO: calculate chunksize default based on physical 
         # memory installed and number of columns
@@ -112,7 +119,14 @@ class HDFDataStore(DataStore):
             if window_intersect.empty:
                 continue
             terms = window_intersect.query_terms('window_intersect')
-            coords = self.store.select_as_coordinates(key=key, where=terms)
+            try:
+                coords = self.store.select_as_coordinates(key=key, where=terms)
+            except AttributeError as e:
+                if str(e) == ("'NoneType' object has no attribute "
+                              "'read_coordinates'"):
+                    raise KeyError("key '{}' not found".format(key))
+                else:
+                    raise
             n_coords = len(coords)
             if n_coords == 0:
                 continue
@@ -177,7 +191,18 @@ class HDFDataStore(DataStore):
                 yield data
 
     def append(self, key, value):
-        self._store_put(str(key), value)
+        # TODO: perhaps we should rename this method to 'put' or 'write'
+        # because it doesn't really *append* as such?? - Jack
+        """
+        Parameters
+        ----------
+        key : str
+        value : pd.DataFrame
+        """
+        self.store.put(key, value, format='table', 
+                       expectedrows=len(value), index=False)
+        self.store.create_table_index(key, columns=['index'], 
+                                      kind='full', optlevel=9)
         self.store.flush()
 
     def load_metadata(self, key='/'):
@@ -336,17 +361,7 @@ class HDFDataStore(DataStore):
         """
         if key not in self._keys():
             raise KeyError(key + ' not in store')
-            
-    def _store_put(self, key, df):
-        """
-        Parameters
-        ----------
-        store : HDFStore
-        key : str
-        df : pd.DataFrame
-        """
-        self.store.put(key, df, format='table', expectedrows=len(df), index=False)
-        self.store.create_table_index(key, columns=['index'], kind='full', optlevel=9)
+
 
 class CSVDataStore(DataStore):
     def __init__(self, filename):
