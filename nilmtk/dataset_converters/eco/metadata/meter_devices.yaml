@@ -6,60 +6,60 @@ smart_meter:
     on current, voltage, and phase shift for each of the three phases 
     in the household.
   sample_period: 1
-  max_sample_period: 10
+  max_sample_period: 1
   measurements:
   - physical_quantity: power #powerallphases
     type: active
     upper_limit: 100000
-    lower_limit: -1
+    lower_limit: 0
   - physical_quantity: power #powerl1
     type: active
     upper_limit: 100000
-    lower_limit: -1
+    lower_limit: 0
   - physical_quantity: power #powerl2
     type: active
     upper_limit: 100000
-    lower_limit: -1
+    lower_limit: 0
   - physical_quantity: power #powerl3
     type: active
     upper_limit: 100000
-    lower_limit: -1
+    lower_limit: 0
   - physical_quantity: current #currentneutral
     upper_limit: 20
-    lower_limit: -1
+    lower_limit: 0
   - physical_quantity: current #currentl1
     upper_limit: 20
-    lower_limit: -1
+    lower_limit: 0
   - physical_quantity: current #currentl2
     upper_limit: 20
-    lower_limit: -1
+    lower_limit: 0
   - physical_quantity: current #currentl3
     upper_limit: 20
-    lower_limit: -1
+    lower_limit: 0
   - physical_quantity: voltage #voltagel1
     upper_limit: 400
-    lower_limit: -1
+    lower_limit: 0
   - physical_quantity: voltage #voltagel2
     upper_limit: 400
-    lower_limit: -1
+    lower_limit: 0
   - physical_quantity: voltage #voltagel3
     upper_limit: 400
-    lower_limit: -1
+    lower_limit: 0
   - physical_quantity: phase_angle #phaseanglevoltagel2l1
     upper_limit: 360
-    lower_limit: -1
+    lower_limit: 0
   - physical_quantity: phase_angle #phaseanglevoltagel3l1
     upper_limit: 360
-    lower_limit: -1
+    lower_limit: 0
   - physical_quantity: phase_angle #phaseanglecurrentvoltagel1
     upper_limit: 360
-    lower_limit: -1
+    lower_limit: 0
   - physical_quantity: phase_angle #phaseanglecurrentvoltagel2
     upper_limit: 360
-    lower_limit: -1
+    lower_limit: 0
   - physical_quantity: phase_angle #phaseanglecurrentvoltagel3
     upper_limit: 360
-    lower_limit: -1
+    lower_limit: 0
   wireless: false
 
 plug:
@@ -67,12 +67,12 @@ plug:
   description: >
     1 Hz plug-level data measured from selected appliances.
   sample_period: 1
-  max_sample_period: 10
+  max_sample_period: 1
   measurements:
   - physical_quantity: power
     type: active
     upper_limit: 10000
-    lower_limit: -1
+    lower_limit: 0
   wireless: true
   wireless_configuration:
     protocol: ZigBee
