@@ -114,12 +114,20 @@ class Electric(object):
         return uptime
 
     def average_energy_per_period(self, offset_alias='D', **load_kwargs):
-        """
+        """Calculate the average energy per period.  e.g. the average 
+        energy per day.
+
         Parameters
         ----------
         offset_alias : str
             A Pandas `offset alias`.  See:
             pandas.pydata.org/pandas-docs/stable/timeseries.html#offset-aliases
+
+        Returns
+        -------
+        pd.Series
+            Keys are AC types.
+            Values are energy in kWh per period.
         """
         uptime_secs = self.uptime(**load_kwargs).total_seconds()
         periods = uptime_secs / offset_alias_to_seconds(offset_alias)
