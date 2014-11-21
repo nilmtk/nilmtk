@@ -11,16 +11,18 @@ elec_meters:
   1: &smart_meter
     site_meter: true
     device_model: smart_meter
-  2: &plug
+  2: *smart_meter
+  3: *smart_meter
+  4: &plug
     submeter_of: 0
     device_model: plug
-  3: *plug
-  4: *plug
   5: *plug
   6: *plug
   7: *plug
   8: *plug
   9: *plug
+  10: *plug
+  11: *plug
 
 appliances:
 - original_name: Tablet
@@ -28,56 +30,56 @@ appliances:
   #days_covered: 218
   instance: 1
   #coverage: 97.87
-  meters: [2] #Plug number
+  meters: [4] #Plug number
 
 - original_name: Coffee machine
   type: coffee maker
   #days_covered: 218
   instance: 1
   #coverage: 95.16
-  meters: [3] #Plug number
+  meters: [5] #Plug number
 
 - original_name: Fountain
   type: garden sprinkler
   #days_covered: 71
   instance: 1
   #coverage: 99.43
-  meters: [4] #Plug number
+  meters: [6] #Plug number
 
 - original_name: Microwave
   type: microwave
   #days_covered: 218
   instance: 1
   #coverage: 97.87
-  meters: [5] #Plug number
+  meters: [7] #Plug number
 
 - original_name: Fridge
   type: fridge
   #days_covered: 218
   instance: 1
   #coverage: 97.87
-  meters: [6] #Plug number
+  meters: [8] #Plug number
 
 - original_name: Entertainment
   type: HTPC
   #days_covered: 192
   instance: 1
   #coverage: 89.14
-  meters: [7] #Plug number
+  meters: [9] #Plug number
 
 - original_name: PC
   type: computer
   #days_covered: 218
   instance: 1
   #coverage: 97.87
-  meters: [8] #Plug number
+  meters: [10] #Plug number
 
 - original_name: Kettle
   type: kettle
   #days_covered: 25
   instance: 1
   #coverage: 76.64
-  meters: [9] #Plug number
+  meters: [11] #Plug number
   
 time_frame:
   start: 2012-06-27
