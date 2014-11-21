@@ -6,6 +6,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from .preprocessing import Clip
 from .stats import TotalEnergy, GoodSections, DropoutRate
+from .stats.totalenergyresults import TotalEnergyResults
 from .hashable import Hashable
 from .appliance import Appliance
 from .datastore import Key
@@ -59,12 +60,6 @@ class ElecMeter(Hashable, Electric):
             if self not in nilmtk.global_meter_group.meters:
                 nilmtk.global_meter_group.meters.append(self)
 
-        # Mutable metadata:
-        try:
-            self.mutable_metadata = self.store.load_metadata(self.key_for_mutable_metadata())
-        except AttributeError:
-            self.mutable_metadata = {}
-
     @property
     def key(self):
         return self.metadata['data_location']
@@ -85,7 +80,13 @@ class ElecMeter(Hashable, Electric):
             return getattr(self.identifier, attr)
 
     def get_timeframe(self):
+        self._check_store()
         return self.store.get_timeframe(key=self.key)
+
+    def _check_store(self):
+        if self.store is None:
+            raise RuntimeError("ElecMeter needs `store` attribute set to an"
+                               " instance of a `nilmtk.DataStore` subclass")
 
     def upstream_meter(self):
         """
@@ -373,41 +374,52 @@ class ElecMeter(Hashable, Electric):
         if `full_results` is True then return TotalEnergyResults object
         else returns a pd.Series with a row for each AC type.
         """
-        total_energy_from_metadata = self.get_stat_from_metadata('total_energy',
-                                                                 **loader_kwargs)
-        if total_energy_from_metadata is not None:
-            print("Using cached result from metadata.")
-            return pd.Series(total_energy_from_metadata)
+        # TODO: refactor this.  This code should probably be in 
+        # ElecMeter.get_cached_stat or perhaps in Results.
         full_results = loader_kwargs.pop('full_results', False)
+        sections = loader_kwargs.get('sections')
+        if sections is None:
+            tf = self.get_timeframe()
+            tf.include_end = True
+            sections = [tf]
+        sections_to_compute = []
+        key_for_cached_stat = self.key_for_cached_stat('total_energy')
+        if loader_kwargs.get('preprocessing') is None:
+            cached_total_energy = self.get_cached_stat(key_for_cached_stat)
+            for section in sections:
+                try:
+                    end_time = cached_total_energy['end'].loc[section.start]
+                except KeyError:
+                    sections_to_compute.append(section)
+                else:
+                    if end_time != section.end:
+                        sections_to_compute.append(section)
+        else:
+            sections_to_compute = sections
+
+        if not sections_to_compute:
+            print("Using cached result from metadata.")
+            cached_results = TotalEnergyResults()
+            cached_results._data = cached_total_energy
+            return (cached_results if full_results 
+                    else cached_results.simple())
+
+        # If we get to here then we have to compute some stats
+        loader_kwargs['sections'] = sections_to_compute
         source_node = self.get_source_node(**loader_kwargs)
         clipped = Clip(source_node)
         total_energy = TotalEnergy(clipped)
         total_energy.run()
-        self.save_stat_in_metadata(total_energy.results.to_dict(), **loader_kwargs)
-        return total_energy.results if full_results else total_energy.results.simple()
 
-    def masked_timeframes(self, timeframes):
-        """Returns list of TimeFrames masked by self.get_timeframe()"""
-        elecmeter_timeframe = self.get_timeframe()
-        masked_timeframes = [tf.intersect(elecmeter_timeframe) 
-                             for tf in timeframes]
-        if not masked_timeframes:
-            masked_timeframes = [elecmeter_timeframe]
-        return masked_timeframes
+        # Merge cached results with newly computed
+        total_energy.results._data = total_energy.results._data.append(
+            cached_total_energy, verify_integrity=True)
+        total_energy.results._data.sort_index(inplace=True)
 
-    def save_stat_in_metadata(self, results_dict, **kwargs):
-        # Update in-memory metadata
-        stats_from_metadata = self.mutable_metadata.setdefault('statistics', [])
-        masked_timeframes = self.masked_timeframes(kwargs.get('sections', []))
-        timeframes = list_of_timeframe_dicts(masked_timeframes)
-        results_dict.update({'timeframes': timeframes})
-        stats_from_metadata.append(results_dict)
-        
-        # Now save to disk
-        key = self.key_for_mutable_metadata()
-        # mutable_metadata = self.store.load_metadata(key)
-        # mutable_metadata['statistics'] = stats_from_metadata
-        self.store.save_metadata(key, self.mutable_metadata)
+        # Save to disk and return results
+        self.store.append(key_for_cached_stat, total_energy.results._data)
+        return (total_energy.results if full_results 
+                else total_energy.results.simple())
 
     def dropout_rate(self, **loader_kwargs):
         """
@@ -452,45 +464,19 @@ class ElecMeter(Hashable, Electric):
         else:
             return good_sections.results.simple()
 
-    def key_for_mutable_metadata(self):
-        return "building{:d}/elec/meter{:d}".format(self.building(), self.instance())
+    def key_for_cached_stat(self, stat_name):
+        return ("building{:d}/elec/cache/meter{:d}/{:s}"
+                .format(self.building(), self.instance(), stat_name))
 
-    def get_stat_from_metadata(self, stat_name, **kwargs):
-        # We don't store full results in metadata
-        if kwargs.get('full_results'):
-            return
-
-        # Does metadata have a 'statistics' key?
-        stats_from_metadata = self.mutable_metadata.get('statistics')
-        if not stats_from_metadata:
-            return
-
-        # Do any statistics match `stat_name`?
-        stats_matching_name = [stat for stat in stats_from_metadata 
-                               if stat.has_key(stat_name)]
-        if not stats_matching_name:
-            return
-
-        # Get timeframes which consist of all `sections` passed in 
-        # with kwargs masked by self.store.window
-        masked_timeframes = self.masked_timeframes(kwargs.get('sections', []))
-        masked_timeframes = set(masked_timeframes)
-
-        stats_matching_timeframes = []
-        for stat in stats_matching_name:
-            stat_timeframes = set([TimeFrame.from_dict(d) 
-                                   for d in stat.get('timeframes', [])])
-            if stat_timeframes == masked_timeframes:
-                stats_matching_timeframes.append(stat)
-
-        n_stats_matching_timeframes = len(stats_matching_timeframes)
-        if n_stats_matching_timeframes == 0:
-            return
-        elif n_stats_matching_timeframes == 1:
-            return stats_matching_timeframes[0][stat_name]
+    def get_cached_stat(self, key_for_stat):
+        if self.store is None:
+            return pd.DataFrame()
+        try:
+            stat_from_cache = self.store[key_for_stat]
+        except KeyError:
+            return pd.DataFrame()
         else:
-            raise RuntimeError("{:d} stats found in metadata for {}. Expected 1 or 0."
-                               .format(n_stats_matching_timeframes, stat_name))
+            return stat_from_cache
 
 
     # def total_on_duration(self):
