@@ -71,7 +71,7 @@ class Electric(object):
 
     def plot(self, **loader_kwargs):
         all_data = self.power_series_all_data(**loader_kwargs)
-        all_data.plot()
+        return all_data.plot()
         """ TODO:
         Parameters
         ----------
