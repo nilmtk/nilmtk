@@ -413,7 +413,7 @@ class ElecMeter(Hashable, Electric):
 
         # Merge cached results with newly computed
         total_energy.results._data = total_energy.results._data.append(
-            cached_total_energy, verify_integrity=True)
+            cached_total_energy)
         total_energy.results._data.sort_index(inplace=True)
 
         # Save to disk and return results
