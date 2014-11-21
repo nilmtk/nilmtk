@@ -167,8 +167,7 @@ def align_two_meters(master, slave, func='power_series'):
             return
         chunk_timeframe = TimeFrame(master_chunk.index[0],
                                     master_chunk.index[-1])
-        slave_generator = getattr(slave, func)(sections=[chunk_timeframe],
-                                               chunksize=1E9)
+        slave_generator = getattr(slave, func)(sections=[chunk_timeframe])
         slave_chunk = next(slave_generator)
 
         # TODO: do this resampling in the pipeline?
