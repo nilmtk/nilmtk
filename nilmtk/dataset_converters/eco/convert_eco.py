@@ -44,7 +44,7 @@ def convert_eco(dataset_loc, hdf_filename, timezone):
     """
 
     # Creating a new HDF File
-    store = pd.HDFStore(hdf_filename, 'w')
+    store = pd.HDFStore(hdf_filename, 'w', complevel=9, complib='blosc')    
     
     check_directory_exists(dataset_loc)
     directory_list = [i for i in listdir(dataset_loc) if '.txt' not in i]
@@ -76,7 +76,7 @@ def convert_eco(dataset_loc, hdf_filename, timezone):
 
             if meter_flag == 'sm':
                 for fi in fl_dir_list:
-                    df = pd.read_csv(join(dataset_loc,folder,fl,fi), names=[i for i in range(1,17)], dtype=np.float64)
+                    df = pd.read_csv(join(dataset_loc,folder,fl,fi), names=[i for i in range(1,17)], dtype=np.float32)
                     
                     for phase in range(1,4):
                         key = str(Key(building=building_no, meter=phase))
