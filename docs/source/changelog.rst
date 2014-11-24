@@ -29,8 +29,10 @@ Disaggregation algorithms
 
 * An implementation of George Hart's 1985 algorithm
 * The combinatorial optimisation algorithm has received several
-  updates:
+  updates including:
+
   * it takes the 'vampire power' into account during disaggregation
+
 * Disaggregation output now includes basic metadata such as the
   appliance types.
 
