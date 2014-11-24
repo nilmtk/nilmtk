@@ -403,6 +403,13 @@ class CSVDataStore(DataStore):
             makedirs(path)
         super(CSVDataStore, self).__init__()
 
+    def __getitem__(self, key):
+        file_path = self._key_to_abs_path(key)
+        if isfile(file_path):
+            return pd.read_csv(file_path)
+        else:
+            raise KeyError('{} not found'.format(key))
+
     def load(self, key, cols=None, sections=None, n_look_ahead_rows=0,
              chunksize=MAX_MEM_ALLOWANCE_IN_BYTES):
         """
@@ -421,8 +428,7 @@ class CSVDataStore(DataStore):
         TODO: do something with args: sections and n_look_ahead_rows
         """
         
-        relative_path = key[1:]
-        file_path = join(self.filename, relative_path + '.csv')
+        file_path = self._key_to_abs_path(key)
         text_file_reader = pd.read_csv(file_path, 
                                         index_col=0, 
                                         header=[0,1], 
@@ -432,7 +438,6 @@ class CSVDataStore(DataStore):
         for data in text_file_reader:
             data.timeframe = TimeFrame(data.index[0], data.index[-1])
             yield data
-        #return text_file_reader
 
     def append(self, key, value):
         """
@@ -441,6 +446,7 @@ class CSVDataStore(DataStore):
         key : str
         value : pd.DataFrame
         """
+        print(key)
         file_path = self._key_to_abs_path(key)
         path = dirname(file_path)
         if not exists(path):
@@ -450,6 +456,7 @@ class CSVDataStore(DataStore):
                     header=True)
                     
     def put(self, key, value):
+        print(key)
         """
         Parameters
         ----------
@@ -585,7 +592,9 @@ class CSVDataStore(DataStore):
     def _key_to_abs_path(self, key):
         abs_path = self.filename
         if key and len(key) > 1:
-            relative_path = key[1:]
+            relative_path = key
+            if key[0] == '/':
+                relative_path = relative_path[1:]
             abs_path = join(self.filename, relative_path)
             key_object = Key(key)
             if key_object.building and key_object.meter:
