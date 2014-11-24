@@ -641,6 +641,11 @@ class MeterGroup(Electric):
     def total_energy(self, **load_kwargs):
         """Sums together total meter_energy for each meter.
 
+        Note that this function does *not* return the total aggregate
+        energy for a building.  Instead this function adds up the total energy
+        for all the meters contained in this MeterGroup.  If you want the total
+        aggregate energy then please use `MeterGroup.mains().total_energy()`.
+
         Parameters
         ----------
         full_results : bool, default=False
