@@ -7,7 +7,8 @@ from collections import OrderedDict
 import numpy as np
 import yaml
 from os.path import isdir, isfile, join, exists, dirname
-from os import listdir, makedirs
+from os import listdir, makedirs, remove
+from shutil import rmtree
 import re
 from nilm_metadata.convert_yaml_to_hdf5 import _load_file
 from .timeframe import TimeFrame, timeframes_from_periodindex
@@ -432,14 +433,42 @@ class CSVDataStore(DataStore):
             data.timeframe = TimeFrame(data.index[0], data.index[-1])
         return text_file_reader
 
-    def append(self, key, dataframe):
+    def append(self, key, value):
+        """
+        Parameters
+        ----------
+        key : str
+        value : pd.DataFrame
+        """
         file_path = self._key_to_abs_path(key)
         path = dirname(file_path)
         if not exists(path):
             makedirs(path)
-        dataframe.to_csv(file_path,
+        value.to_csv(file_path,
                     mode='a',
                     header=True)
+                    
+    def put(self, key, value):
+        """
+        Parameters
+        ----------
+        key : str
+        value : pd.DataFrame
+        """
+        file_path = self._key_to_abs_path(key)
+        path = dirname(file_path)
+        if not exists(path):
+            makedirs(path)
+        value.to_csv(file_path,
+                    mode='w',
+                    header=True)
+                    
+    def remove(self, key):
+    	file_path = self._key_to_abs_path(key)
+    	if isfile(file_path):
+    	    remove(file_path)
+        else:
+            rmtree(file_path)
 
     def load_metadata(self, key='/'):
         """
