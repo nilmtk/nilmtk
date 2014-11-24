@@ -195,9 +195,22 @@ class HDFDataStore(DataStore):
                 yield data
 
     def append(self, key, value):
-        # TODO: perhaps we should rename this method to 'put' or 'write'
-        # because it doesn't really *append* as such?? - Jack
-        # https://github.com/nilmtk/nilmtk/issues/232
+        """
+        Parameters
+        ----------
+        key : str
+        value : pd.DataFrame
+
+        Notes
+        -----
+        To quote the Pandas documentation for pandas.io.pytables.HDFStore.append:
+        Append does *not* check if data being appended overlaps with existing
+        data in the table, so be careful.
+        """
+        self.store.append(key=key, value=value)
+        self.store.flush()
+
+    def put(self, key, value):
         """
         Parameters
         ----------

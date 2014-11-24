@@ -27,7 +27,7 @@ def convert_redd(redd_path, output_filename, format='HDF'):
     redd_path : str
         The root path of the REDD low_freq dataset.
     output_filename : str
-        The destination HDF5 filename (including path and suffix).
+        The destination filename (including path and suffix).
     format : str
         format of output. Either 'HDF' or 'CSV'. Defaults to 'HDF'
     """
@@ -88,21 +88,9 @@ def _convert(input_path, store, measurement_mapping_func, tz, sort_index=True):
 
             if sort_index:
                 df = df.sort_index() # raw REDD data isn't always sorted
-            store.append(str(key), df)
+            store.put(str(key), df)
         print()
-    
 
-def _store_put(store, key, df):
-    """
-    Parameters
-    ----------
-    store : HDFStore
-    key : str
-    df : pd.DataFrame
-    """
-    store.put(key, df, format='table', expectedrows=len(df), index=False)
-    store.create_table_index(key, columns=['index'], kind='full', optlevel=9)
-    
 
 def _find_all_houses(input_path):
     """

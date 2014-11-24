@@ -421,13 +421,14 @@ class ElecMeter(Hashable, Electric):
         total_energy = TotalEnergy(clipped)
         total_energy.run()
 
+        # Save to disk newly computed stats
+        self.store.append(key_for_cached_stat, total_energy.results._data)
+
         # Merge cached results with newly computed
         total_energy.results._data = total_energy.results._data.append(
             usable_sections_from_cache)
         total_energy.results._data.sort_index(inplace=True)
 
-        # Save to disk and return results
-        self.store.append(key_for_cached_stat, total_energy.results._data)
         return (total_energy.results if full_results 
                 else total_energy.results.simple())
 
