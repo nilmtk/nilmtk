@@ -4,6 +4,7 @@ from itertools import repeat, tee
 from time import time
 from copy import deepcopy
 from collections import OrderedDict
+import numpy as np
 import yaml
 from os.path import isdir, isfile, join, exists, dirname
 from os import listdir, makedirs
@@ -106,6 +107,9 @@ class HDFDataStore(DataStore):
             key = '/' + key
         if len(key) > 1 and key[-1] == '/':
             key = key[:-1]
+
+        # Make sure chunksize is an int otherwise `range` complains later.
+        chunksize = np.int64(chunksize)
 
         # Set `sections` variable
         sections = [TimeFrame()] if sections is None else sections
