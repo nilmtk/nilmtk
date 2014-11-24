@@ -418,6 +418,20 @@ class CSVDataStore(DataStore):
         super(CSVDataStore, self).__init__()
 
     def __getitem__(self, key):
+        """Loads all of a DataFrame from disk.
+
+        Parameters
+        ----------
+        key : str
+
+        Returns
+        -------
+        DataFrame
+
+        Raises
+        ------
+        KeyError if `key` is not found.
+        """
         file_path = self._key_to_abs_path(key)
         if isfile(file_path):
             return pd.read_csv(file_path)
