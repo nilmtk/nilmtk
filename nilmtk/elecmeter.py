@@ -377,22 +377,30 @@ class ElecMeter(Hashable, Electric):
         # TODO: refactor this.  This code should probably be in 
         # ElecMeter.get_cached_stat or perhaps in Results.
         full_results = loader_kwargs.pop('full_results', False)
+
+        # Prepare `sections` list
         sections = loader_kwargs.get('sections')
         if sections is None:
             tf = self.get_timeframe()
             tf.include_end = True
             sections = [tf]
+
         sections_to_compute = []
+        usable_sections_from_cache = pd.DataFrame()
         key_for_cached_stat = self.key_for_cached_stat('total_energy')
         if loader_kwargs.get('preprocessing') is None:
             cached_total_energy = self.get_cached_stat(key_for_cached_stat)
             for section in sections:
                 try:
-                    end_time = cached_total_energy['end'].loc[section.start]
+                    row = cached_total_energy.loc[section.start]
                 except KeyError:
                     sections_to_compute.append(section)
                 else:
-                    if end_time != section.end:
+                    end_time = row['end']
+                    if end_time == section.end:
+                        usable_sections_from_cache = (
+                            usable_sections_from_cache.append(row))
+                    else:
                         sections_to_compute.append(section)
         else:
             sections_to_compute = sections
@@ -400,7 +408,7 @@ class ElecMeter(Hashable, Electric):
         if not sections_to_compute:
             print("Using cached result from metadata.")
             cached_results = TotalEnergyResults()
-            cached_results._data = cached_total_energy
+            cached_results._data = usable_sections_from_cache
             return (cached_results if full_results 
                     else cached_results.simple())
 
@@ -413,7 +421,7 @@ class ElecMeter(Hashable, Electric):
 
         # Merge cached results with newly computed
         total_energy.results._data = total_energy.results._data.append(
-            cached_total_energy)
+            usable_sections_from_cache)
         total_energy.results._data.sort_index(inplace=True)
 
         # Save to disk and return results
