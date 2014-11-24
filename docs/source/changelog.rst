@@ -13,6 +13,26 @@ New features
 * ``MeterGroup.plot()``
 * ``CSVDataStore``
 
+New dataset converters
+**********************
+
+* AMPds
+* COMBED
+* ECO
+* GREEND
+* iAWE
+* UK-DALE
+* WikiEnergy
+
+Disaggregation algorithms
+*************************
+
+* An implementation of George Hart's 1985 algorithm
+* The combinatorial optimisation algorithm has received several
+  updates:
+  * it takes the 'vampire power' into account during disaggregation
+* Disaggregation output now includes basic metadata such as the
+  appliance types.
 
 Performance improvements
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -30,17 +50,6 @@ API changes
   scalar if the meter only had a single AC type, or a Series if there
   were multiple AC types).
 
-
-New dataset converters
-^^^^^^^^^^^^^^^^^^^^^^
-
-* AMPds
-* COMBED
-* ECO
-* GREEND
-* iAWE
-* UK-DALE
-* WikiEnergy
 
 
 Bug fixes
