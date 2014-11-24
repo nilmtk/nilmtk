@@ -427,11 +427,12 @@ class CSVDataStore(DataStore):
                                         index_col=0, 
                                         header=[0,1], 
                                         parse_dates=True, 
-                                        usecols=cols,
+                                        #usecols=cols,
                                         chunksize=chunksize)
         for data in text_file_reader:
             data.timeframe = TimeFrame(data.index[0], data.index[-1])
-        return text_file_reader
+            yield data
+        #return text_file_reader
 
     def append(self, key, value):
         """
