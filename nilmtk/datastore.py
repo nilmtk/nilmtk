@@ -61,6 +61,20 @@ class HDFDataStore(DataStore):
         super(HDFDataStore, self).__init__()
 
     def __getitem__(self, key):
+        """Loads all of a DataFrame from disk.
+
+        Parameters
+        ----------
+        key : str
+
+        Returns
+        -------
+        DataFrame
+
+        Raises
+        ------
+        KeyError if `key` is not found.
+        """
         return self.store[key]
 
     def load(self, key, cols=None, sections=None, n_look_ahead_rows=0,
