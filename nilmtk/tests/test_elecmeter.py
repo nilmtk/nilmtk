@@ -40,6 +40,12 @@ class TestElecMeter(WarningTestMixin, unittest.TestCase):
                           meter_id=METER_ID)
         energy = meter.total_energy()
         check_energy_numbers(self, energy)
+
+        # Check a second time to check cache
+        energy = meter.total_energy()
+        check_energy_numbers(self, energy)
+
+        meter.clear_cache()
         
     def test_upstream_meter(self):
         meter1 = ElecMeter(metadata={'site_meter': True}, meter_id=METER_ID)

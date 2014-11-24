@@ -72,6 +72,9 @@ class TestMeterGroup(unittest.TestCase):
         mains = meters[0]
         mg = MeterGroup(meters)
         self.assertEqual(mg.proportion_of_energy_submetered(), 1.0) 
+        # Check a second time to check cache works
+        self.assertEqual(mg.proportion_of_energy_submetered(), 1.0) 
+        mg.clear_cache()
 
     def test_dual_supply(self):
         elec_meters = {1: {'data_location': '/building1/elec/meter1',
@@ -87,8 +90,14 @@ class TestMeterGroup(unittest.TestCase):
         mg.load(self.datastore, elec_meters, appliances, BuildingID(1, 'REDD'))
         self.assertEqual(mg['washer dryer'].total_energy()['active'], 
                          mg['fridge'].total_energy()['active'] * 2)
+
+        # Test total_energy a second time to check cache works
+        self.assertEqual(mg['washer dryer'].total_energy()['active'], 
+                         mg['fridge'].total_energy()['active'] * 2)
+
         self.assertIsInstance(mg['washer dryer'], MeterGroup)
         self.assertIsInstance(mg['fridge'], ElecMeter)
+        mg.clear_cache()
 
     def test_from_list(self):
         meters = []
@@ -117,6 +126,8 @@ class TestMeterGroup(unittest.TestCase):
         filename = join(data_dir(), 'random.h5')
         ds = DataSet(filename)
         ds.buildings[1].elec.total_energy()
+        ds.buildings[1].elec.total_energy() # test cache
+        ds.buildings[1].elec.clear_cache()
         
 
 if __name__ == '__main__':

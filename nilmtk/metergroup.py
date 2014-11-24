@@ -1078,6 +1078,10 @@ class MeterGroup(Electric):
         string : A label listing all the appliance types.
         """
         return ", ".join(set([meter.appliance_label() for meter in self.meters]))
+
+    def clear_cache(self):
+        for meter in self.meters:
+            meter.clear_cache()
         
 
 def iterate_through_submeters_of_two_metergroups(master, slave):

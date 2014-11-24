@@ -385,6 +385,8 @@ class ElecMeter(Hashable, Electric):
             tf.include_end = True
             sections = [tf]
 
+        # TODO: check sections do not overlap
+
         sections_to_compute = []
         usable_sections_from_cache = pd.DataFrame()
         key_for_cached_stat = self.key_for_cached_stat('total_energy')
@@ -475,6 +477,16 @@ class ElecMeter(Hashable, Electric):
     def key_for_cached_stat(self, stat_name):
         return ("building{:d}/elec/cache/meter{:d}/{:s}"
                 .format(self.building(), self.instance(), stat_name))
+
+    def clear_cache(self):
+        if self.store is not None:
+            key_for_cache = self.key_for_cached_stat('')
+            try:
+                self.store.remove(key_for_cache)
+            except KeyError as e:
+                print(e)
+            else:
+                print("Removed", key_for_cache)
 
     def get_cached_stat(self, key_for_stat):
         if self.store is None:

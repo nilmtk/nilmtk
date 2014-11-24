@@ -197,6 +197,7 @@ class HDFDataStore(DataStore):
     def append(self, key, value):
         # TODO: perhaps we should rename this method to 'put' or 'write'
         # because it doesn't really *append* as such?? - Jack
+        # https://github.com/nilmtk/nilmtk/issues/232
         """
         Parameters
         ----------
@@ -208,6 +209,9 @@ class HDFDataStore(DataStore):
         self.store.create_table_index(key, columns=['index'], 
                                       kind='full', optlevel=9)
         self.store.flush()
+
+    def remove(self, key):
+        self.store.remove(key)
 
     def load_metadata(self, key='/'):
         """
