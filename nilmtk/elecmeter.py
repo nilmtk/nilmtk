@@ -465,15 +465,28 @@ class ElecMeter(Hashable, Electric):
         if `full_results` is True then return nilmtk.stats.GoodSectionsResults 
         object otherwise return list of TimeFrame objects.
         """
-        full_results = loader_kwargs.pop('full_results', False)
         loader_kwargs['n_look_ahead_rows'] = 10
-        source_node = self.get_source_node(**loader_kwargs)
-        good_sections = GoodSections(source_node)
-        good_sections.run()
-        if full_results:
-            return good_sections.results
-        else:
-            return good_sections.results.simple()
+        nodes = [GoodSections]
+        return self._compute_stat(nodes, loader_kwargs)
+
+    def _compute_stat(self, nodes, loader_kwargs):
+        """General function for computing statistics.
+
+        Parameters
+        ----------
+        nodes : list of nilmtk.Node classes
+
+        Returns
+        -------
+        if `full_results` is True then return nilmtk.Results subclass
+        instance otherwise return nilmtk.Results.simple().
+        """
+        node = self.get_source_node(**loader_kwargs)
+        for n in nodes:
+            node = n(node)
+        node.run()
+        full_results = loader_kwargs.get('full_results')
+        return node.results if full_results else node.results.simple()
 
     def key_for_cached_stat(self, stat_name):
         return ("building{:d}/elec/cache/meter{:d}/{:s}"
