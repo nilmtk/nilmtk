@@ -91,6 +91,7 @@ class Results(object):
         """Take results from another table of data (another physical meter)
         and merge those results into self.  For example, if we have a dual-split
         mains supply then we want to merge the results from each physical meter.
+        The two sets of results must be for exactly the same timeframes.
 
         Parameters
         ----------

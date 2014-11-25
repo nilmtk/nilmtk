@@ -25,7 +25,6 @@ class TotalEnergy(Node):
         metadata = self.upstream.get_metadata()
         max_sample_period = metadata['device']['max_sample_period']
         for chunk in self.upstream.process():
-        
             energy = get_total_energy(chunk, max_sample_period)
             self.results.append(chunk.timeframe, energy)
             yield chunk
