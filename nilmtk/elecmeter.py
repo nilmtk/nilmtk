@@ -444,14 +444,8 @@ class ElecMeter(Hashable, Electric):
         DropoutRateResults object if `full_results` is True, 
         else float
         """
-        full_results = loader_kwargs.pop('full_results', False)
-        source_node = self.get_source_node(**loader_kwargs)
-        dropout_rate = DropoutRate(source_node)
-        dropout_rate.run()
-        if full_results:
-            return dropout_rate.results
-        else:
-            return dropout_rate.results.simple()
+        nodes = [DropoutRate]
+        return self._compute_stat(nodes, loader_kwargs)
 
     def good_sections(self, **loader_kwargs):
         """
@@ -465,7 +459,7 @@ class ElecMeter(Hashable, Electric):
         if `full_results` is True then return nilmtk.stats.GoodSectionsResults 
         object otherwise return list of TimeFrame objects.
         """
-        loader_kwargs['n_look_ahead_rows'] = 10
+        loader_kwargs.setdefault('n_look_ahead_rows', 10)
         nodes = [GoodSections]
         return self._compute_stat(nodes, loader_kwargs)
 
@@ -481,11 +475,11 @@ class ElecMeter(Hashable, Electric):
         if `full_results` is True then return nilmtk.Results subclass
         instance otherwise return nilmtk.Results.simple().
         """
+        full_results = loader_kwargs.pop('full_results', False)
         node = self.get_source_node(**loader_kwargs)
         for n in nodes:
             node = n(node)
         node.run()
-        full_results = loader_kwargs.get('full_results')
         return node.results if full_results else node.results.simple()
 
     def key_for_cached_stat(self, stat_name):
