@@ -110,6 +110,12 @@ class Results(object):
                                    " do not have the same end times so we"
                                    " cannot merge them.")
 
+    def import_from_cache(self, dataframe):
+        self._data = dataframe
+
+    def export_to_cache(self):
+        return self._data
+
     def _columns_with_end_removed(self):
         cols = set(self._data.columns)
         cols.remove('end')

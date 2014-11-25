@@ -3,7 +3,7 @@ from datetime import timedelta
 import matplotlib.pyplot as plt
 from ..results import Results
 from ..consts import SECS_PER_DAY
-
+from nilmtk import TimeFrame
 
 class GoodSectionsResults(Results):
     """
@@ -31,9 +31,6 @@ class GoodSectionsResults(Results):
         new_results : {'sections': list of TimeFrame objects}
         """
         super(GoodSectionsResults, self).append(timeframe, new_results)
-
-    def last_results(self):
-        return self._data['sections'][-1]
 
     def combined(self):
         """Merges together any good sections which span multiple segments,
@@ -108,3 +105,31 @@ class GoodSectionsResults(Results):
             ax.add_patch(rect)            
 
         ax.autoscale_view()
+
+    def import_from_cache(self, dataframe):
+        grouped_by_index = dataframe.groupby(level=0)
+        for name, group in grouped_by_index:
+            assert group['end'].unique().size == 1
+            timeframes = [TimeFrame(row['section_start'], row['section_end'])
+                          for _, row in group.iterrows()]
+            timeframe = TimeFrame(name, group['end'].iloc[0])
+            self.append(timeframe, {'sections': [timeframes]})
+
+    def export_to_cache(self):
+        """
+        Returns
+        -------
+        DataFrame with three columns: 'end', 'section_end', 'section_start'.
+            Instead of storing a list of TimeFrames on each row,
+            we store one TimeFrame per row.  This is because pd.HDFStore cannot
+            save a DataFrame where one column is a list if using 'table' format'
+        """
+        index_for_cache = []
+        data_for_cache = [] # list of dicts with keys 'end', 'section_end', 'section_start'
+        for index, row in self._data.iterrows():
+            for section in row['sections']:
+                index_for_cache.append(index)
+                data_for_cache.append({'end': row['end'], 
+                                       'section_start': section.start,
+                                       'section_end': section.end})
+        return pd.DataFrame(data_for_cache, index=index_for_cache)

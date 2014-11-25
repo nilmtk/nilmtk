@@ -405,17 +405,12 @@ class ElecMeter(Hashable, Electric):
         -------
         if `full_results` is True then return nilmtk.stats.GoodSectionsResults 
         object otherwise return list of TimeFrame objects.
-
-        Notes
-        -----
-        good_sections are not cached because the list of TimeFrame objects is 
-        non-trivial to write to a DataStore.  Could be implemented though.
         """
         loader_kwargs.setdefault('n_look_ahead_rows', 10)
         nodes = [GoodSections]
-        full_results = loader_kwargs.get('full_results')
-        results = self._compute_stat(nodes, loader_kwargs)
-        return results.results if full_results else results.results.simple()
+        results_obj = GoodSections.results_class(self.device['max_sample_period'])
+        return self._get_stat_from_cache_or_compute(
+            nodes, results_obj, loader_kwargs)        
 
     def _get_stat_from_cache_or_compute(self, nodes, results_obj, loader_kwargs):
         """General function for computing statistics.
@@ -465,7 +460,7 @@ class ElecMeter(Hashable, Electric):
 
         if not sections_to_compute:
             print("Using cached result from metadata.")
-            results_obj._data = usable_sections_from_cache
+            results_obj.import_from_cache(usable_sections_from_cache)
             return results_obj if full_results else results_obj.simple()
 
         # If we get to here then we have to compute some stats
@@ -473,7 +468,8 @@ class ElecMeter(Hashable, Electric):
         computed_result = self._compute_stat(nodes, loader_kwargs)
 
         # Save to disk newly computed stats
-        self.store.append(key_for_cached_stat, computed_result.results._data)
+        self.store.append(key_for_cached_stat, 
+                          computed_result.results.export_to_cache())
 
         # Merge cached results with newly computed
         computed_result.results._data = computed_result.results._data.append(
