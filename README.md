@@ -1,3 +1,7 @@
+### nilmtk survey
+
+Please fill in our [NILMTK survey](https://docs.google.com/forms/d/1JlGn0pRgAIj152PJtVsGEUe9OVv2naWbdDHosJ3sHko/viewform?c=0&w=1) to help us get a better idea of who's using NILMTK and what's important to you.
+
 [![Build Status](https://travis-ci.org/nilmtk/nilmtk.svg?branch=master)](https://travis-ci.org/nilmtk/nilmtk) 
 
 [![Coverage Status](https://coveralls.io/repos/nilmtk/nilmtk/badge.png)](https://coveralls.io/r/nilmtk/nilmtk)
