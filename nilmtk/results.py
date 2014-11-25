@@ -18,6 +18,11 @@ class Results(object):
     _data : DataFrame
         Index is period start.  
         Columns are: `end` and any columns for internal storage of stats.
+
+    Static Attributes
+    -----------------
+    name : str
+        The string used to cache this results object.
     """
     __metaclass__ = abc.ABCMeta
 

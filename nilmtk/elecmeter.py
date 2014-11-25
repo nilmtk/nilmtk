@@ -374,63 +374,9 @@ class ElecMeter(Hashable, Electric):
         if `full_results` is True then return TotalEnergyResults object
         else returns a pd.Series with a row for each AC type.
         """
-        # TODO: refactor this.  This code should probably be in 
-        # ElecMeter.get_cached_stat or perhaps in Results.
-        full_results = loader_kwargs.pop('full_results', False)
-
-        # Prepare `sections` list
-        sections = loader_kwargs.get('sections')
-        if sections is None:
-            tf = self.get_timeframe()
-            tf.include_end = True
-            sections = [tf]
-
-        # TODO: check sections do not overlap
-
-        sections_to_compute = []
-        usable_sections_from_cache = pd.DataFrame()
-        key_for_cached_stat = self.key_for_cached_stat('total_energy')
-        if loader_kwargs.get('preprocessing') is None:
-            cached_total_energy = self.get_cached_stat(key_for_cached_stat)
-            for section in sections:
-                try:
-                    row = cached_total_energy.loc[section.start]
-                except KeyError:
-                    sections_to_compute.append(section)
-                else:
-                    end_time = row['end']
-                    if end_time == section.end:
-                        usable_sections_from_cache = (
-                            usable_sections_from_cache.append(row))
-                    else:
-                        sections_to_compute.append(section)
-        else:
-            sections_to_compute = sections
-
-        if not sections_to_compute:
-            print("Using cached result from metadata.")
-            cached_results = TotalEnergyResults()
-            cached_results._data = usable_sections_from_cache
-            return (cached_results if full_results 
-                    else cached_results.simple())
-
-        # If we get to here then we have to compute some stats
-        loader_kwargs['sections'] = sections_to_compute
-        source_node = self.get_source_node(**loader_kwargs)
-        clipped = Clip(source_node)
-        total_energy = TotalEnergy(clipped)
-        total_energy.run()
-
-        # Save to disk newly computed stats
-        self.store.append(key_for_cached_stat, total_energy.results._data)
-
-        # Merge cached results with newly computed
-        total_energy.results._data = total_energy.results._data.append(
-            usable_sections_from_cache)
-        total_energy.results._data.sort_index(inplace=True)
-
-        return (total_energy.results if full_results 
-                else total_energy.results.simple())
+        nodes = [Clip, TotalEnergy]
+        return self._get_stat_from_cache_or_compute(
+            nodes, TotalEnergy.results_class(), loader_kwargs)
 
     def dropout_rate(self, **loader_kwargs):
         """
@@ -445,7 +391,8 @@ class ElecMeter(Hashable, Electric):
         else float
         """
         nodes = [DropoutRate]
-        return self._compute_stat(nodes, loader_kwargs)
+        return self._get_stat_from_cache_or_compute(
+            nodes, DropoutRate.results_class(), loader_kwargs)
 
     def good_sections(self, **loader_kwargs):
         """
@@ -458,17 +405,26 @@ class ElecMeter(Hashable, Electric):
         -------
         if `full_results` is True then return nilmtk.stats.GoodSectionsResults 
         object otherwise return list of TimeFrame objects.
+
+        Notes
+        -----
+        good_sections are not cached because the list of TimeFrame objects is 
+        non-trivial to write to a DataStore.  Could be implemented though.
         """
         loader_kwargs.setdefault('n_look_ahead_rows', 10)
         nodes = [GoodSections]
-        return self._compute_stat(nodes, loader_kwargs)
+        full_results = loader_kwargs.get('full_results')
+        results = self._compute_stat(nodes, loader_kwargs)
+        return results.results if full_results else results.results.simple()
 
-    def _compute_stat(self, nodes, loader_kwargs):
+    def _get_stat_from_cache_or_compute(self, nodes, results_obj, loader_kwargs):
         """General function for computing statistics.
 
         Parameters
         ----------
         nodes : list of nilmtk.Node classes
+        results_obj : instance of nilmtk.Results subclass
+        loader_kwargs : dict
 
         Returns
         -------
@@ -476,11 +432,72 @@ class ElecMeter(Hashable, Electric):
         instance otherwise return nilmtk.Results.simple().
         """
         full_results = loader_kwargs.pop('full_results', False)
-        node = self.get_source_node(**loader_kwargs)
-        for n in nodes:
-            node = n(node)
-        node.run()
-        return node.results if full_results else node.results.simple()
+
+        # Prepare `sections` list
+        sections = loader_kwargs.get('sections')
+        if sections is None:
+            tf = self.get_timeframe()
+            tf.include_end = True
+            sections = [tf]
+
+        # TODO: check sections do not overlap
+
+        # Retrieve usable stats from cache
+        sections_to_compute = []
+        usable_sections_from_cache = pd.DataFrame()
+        key_for_cached_stat = self.key_for_cached_stat(results_obj.name)
+        if loader_kwargs.get('preprocessing') is None:
+            cached_stat = self.get_cached_stat(key_for_cached_stat)
+            for section in sections:
+                try:
+                    row = cached_stat.loc[section.start]
+                except KeyError:
+                    sections_to_compute.append(section)
+                else:
+                    end_time = row['end']
+                    if end_time == section.end:
+                        usable_sections_from_cache = (
+                            usable_sections_from_cache.append(row))
+                    else:
+                        sections_to_compute.append(section)
+        else:
+            sections_to_compute = sections
+
+        if not sections_to_compute:
+            print("Using cached result from metadata.")
+            results_obj._data = usable_sections_from_cache
+            return results_obj if full_results else results_obj.simple()
+
+        # If we get to here then we have to compute some stats
+        loader_kwargs['sections'] = sections_to_compute
+        computed_result = self._compute_stat(nodes, loader_kwargs)
+
+        # Save to disk newly computed stats
+        self.store.append(key_for_cached_stat, computed_result.results._data)
+
+        # Merge cached results with newly computed
+        computed_result.results._data = computed_result.results._data.append(
+            usable_sections_from_cache)
+        computed_result.results._data.sort_index(inplace=True)
+
+        return computed_result.results if full_results else computed_result.results.simple()
+
+    def _compute_stat(self, nodes, loader_kwargs):
+        """
+        Parameters
+        ----------
+        nodes : list of nilmtk.Node subclass objects
+        loader_kwargs : dict
+
+        Returns
+        -------
+        Node subclass object
+        """
+        results = self.get_source_node(**loader_kwargs)
+        for node in nodes:
+            results = node(results)
+        results.run()
+        return results
 
     def key_for_cached_stat(self, stat_name):
         return ("building{:d}/elec/cache/meter{:d}/{:s}"

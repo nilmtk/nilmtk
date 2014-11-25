@@ -13,6 +13,8 @@ class TotalEnergyResults(Results):
         `apparent` is (optional) energy in kVAh
     """
     
+    name = "total_energy"
+
     def append(self, timeframe, new_results):
         """Append a single result.
         e.g. append(TimeFrame(start, end), {'apparent': 34, 'active': 43})

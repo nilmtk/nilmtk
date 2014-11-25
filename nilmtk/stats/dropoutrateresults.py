@@ -12,6 +12,7 @@ class DropoutRateResults(Results):
         `dropout_rate` is float [0,1]
         `n_samples` is int, used for calculating weighted mean
     """
+    name = "dropout_rate"
     
     def combined(self):
         """Calculates weighted average.

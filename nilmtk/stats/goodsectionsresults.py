@@ -16,6 +16,8 @@ class GoodSectionsResults(Results):
         `sections` is a list of nilmtk.TimeFrame objects
     """
     
+    name = "good_sections"
+
     def __init__(self, max_sample_period):
         self.max_sample_period_td = timedelta(seconds=max_sample_period)
         super(GoodSectionsResults, self).__init__()

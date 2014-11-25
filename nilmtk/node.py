@@ -9,6 +9,7 @@ class Node(object):
 
     requirements = {}
     postconditions = {}
+    results_class = None
 
     def __init__(self, upstream=None, generator=None):
         """
@@ -29,7 +30,8 @@ class Node(object):
         self.reset()
 
     def reset(self):
-        pass # Overridden by each subclass that needs reset logic
+        if self.results_class is not None:
+            self.results = self.results_class()
 
     def process(self):
         return self.generator # usually overridden by subclass

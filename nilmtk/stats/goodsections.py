@@ -18,6 +18,7 @@ class GoodSections(Node):
 
     requirements = {'device': {'max_sample_period': 'ANY VALUE'}}
     postconditions =  {'statistics': {'good_sections': []}}
+    results_class = GoodSectionsResults
         
     def reset(self):
         self.previous_chunk_ended_with_open_ended_good_section = False

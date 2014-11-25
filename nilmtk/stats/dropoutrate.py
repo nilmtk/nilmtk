@@ -8,10 +8,10 @@ class DropoutRate(Node):
 
     requirements = {'device': {'sample_period': 'ANY VALUE'}}
     postconditions =  {'statistics': {'dropout_rate': None}}
+    results_class = DropoutRateResults
 
     def process(self):
         self.check_requirements()
-        self.results = DropoutRateResults()
         metadata = self.upstream.get_metadata()
         sample_period = metadata['device']['sample_period']
         for chunk in self.upstream.process():
