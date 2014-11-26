@@ -123,6 +123,13 @@ class Results(object):
                                    " cannot merge them.")
 
     def import_from_cache(self, cached_stat, sections):
+        """
+        Parameters
+        ----------
+        cached_stat : DataFrame of cached data
+        sections : list of nilmtk.TimeFrame objects
+            describing the sections we want to load stats for.
+        """
         usable_sections_from_cache = pd.DataFrame()
         for section in sections:
             try:
