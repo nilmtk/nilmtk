@@ -61,6 +61,7 @@ class TimeFrame(object):
           
     @start.setter
     def start(self, new_start):
+        new_start = convert_nat_to_none(new_start)
         if new_start is None:
             self._start = None
             return
@@ -72,6 +73,7 @@ class TimeFrame(object):
 
     @end.setter
     def end(self, new_end):
+        new_end = convert_nat_to_none(new_end)
         if new_end is None:
             self._end = None
             return
@@ -310,3 +312,6 @@ def timeframes_from_periodindex(periods):
 
 def convert_none_to_nat(timestamp):
     return pd.NaT if timestamp is None else timestamp
+
+def convert_nat_to_none(timestamp):
+    return None if timestamp == pd.NaT else timestamp

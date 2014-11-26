@@ -130,7 +130,7 @@ class Results(object):
         sections : list of nilmtk.TimeFrame objects
             describing the sections we want to load stats for.
         """
-        usable_sections_from_cache = pd.DataFrame()
+        usable_sections_from_cache = []
         for section in sections:
             try:
                 row = cached_stat.loc[section.start]
@@ -139,10 +139,9 @@ class Results(object):
             else:
                 end_time = row['end']
                 if end_time == section.end:
-                    usable_sections_from_cache = (
-                        usable_sections_from_cache.append(row))
+                    usable_sections_from_cache.append(row)
 
-        self._data = usable_sections_from_cache
+        self._data = pd.DataFrame(usable_sections_from_cache)
         self._data.sort_index(inplace=True)
 
     def export_to_cache(self):

@@ -135,4 +135,5 @@ class GoodSectionsResults(Results):
                     {'end': row['end'], 
                      'section_start': convert_none_to_nat(section.start),
                      'section_end': convert_none_to_nat(section.end)})
-        return pd.DataFrame(data_for_cache, index=index_for_cache)
+        df = pd.DataFrame(data_for_cache, index=index_for_cache)
+        return df

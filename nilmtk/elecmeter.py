@@ -442,7 +442,8 @@ class ElecMeter(Hashable, Electric):
             results_obj.import_from_cache(cached_stat, sections)
             
             # Get sections_to_compute
-            sections_to_compute = set(sections) - set(results_obj.timeframes())
+            results_obj_timeframes = results_obj.timeframes()
+            sections_to_compute = set(sections) - set(results_obj_timeframes)
             sections_to_compute = list(sections_to_compute)
             sections_to_compute.sort()
         else:
