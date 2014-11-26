@@ -13,20 +13,24 @@ elec_meters:
     device_model: smart_meter
   2: *smart_meter
   3: *smart_meter
-  4: &plug
+  4: &plug_phase1
+    submeter_of: 1
+    device_model: plug
+  5: *plug_phase1
+  6: &plug_phase2
+    submeter_of: 2
+    device_model: plug
+  7: *plug_phase1
+  8: *plug_phase2
+  9: *plug_phase1
+  10: *plug_phase1
+  11: *plug_phase1
+  12: *plug_phase1
+  13: 
     submeter_of: 0
     device_model: plug
-  5: *plug
-  6: *plug
-  7: *plug
-  8: *plug
-  9: *plug
-  10: *plug
-  11: *plug
-  12: *plug
-  13: *plug
-  14: *plug
-  15: *plug
+  14: *plug_phase2
+  15: *plug_phase2
 
 appliances:
 - original_name: Tablet

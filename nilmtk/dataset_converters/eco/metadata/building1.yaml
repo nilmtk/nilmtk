@@ -13,15 +13,19 @@ elec_meters:
     site_meter: true
   2: *smart_meter
   3: *smart_meter
-  4: &plug
-    submeter_of: 0
+  4: &plug_phase2
+    submeter_of: 2
     device_model: plug
-  5: *plug
-  6: *plug
-  7: *plug
-  8: *plug
-  9: *plug
-  10: *plug
+  5: &plug_phase3
+    submeter_of: 3
+    device_model: plug
+  6: *plug_phase2
+  7: *plug_phase2
+  8: &plug_phase1
+    submeter_of: 1
+    device_model: plug
+  9: *plug_phase1
+  10: *plug_phase1
 
 appliances:
 - original_name: fridge
