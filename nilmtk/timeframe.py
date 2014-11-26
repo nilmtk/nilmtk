@@ -299,3 +299,7 @@ def timeframes_from_periodindex(periods):
         timeframe = TimeFrame(period.start_time, period.end_time)
         timeframes.append(timeframe)
     return timeframes
+
+
+def convert_none_to_nat(timestamp):
+    return pd.NaT if timestamp is None else timestamp

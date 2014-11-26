@@ -231,7 +231,10 @@ class HDFDataStore(DataStore):
         Append does *not* check if data being appended overlaps with existing
         data in the table, so be careful.
         """
-        self.store.append(key=key, value=value)
+        try:
+            self.store.append(key=key, value=value)
+        except:
+            import ipdb; ipdb.set_trace()
         self.store.flush()
 
     def put(self, key, value):

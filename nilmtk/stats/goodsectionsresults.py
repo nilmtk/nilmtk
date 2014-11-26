@@ -3,7 +3,7 @@ from datetime import timedelta
 import matplotlib.pyplot as plt
 from ..results import Results
 from ..consts import SECS_PER_DAY
-from nilmtk import TimeFrame
+from nilmtk.timeframe import TimeFrame, convert_none_to_nat
 
 class GoodSectionsResults(Results):
     """
@@ -129,7 +129,8 @@ class GoodSectionsResults(Results):
         for index, row in self._data.iterrows():
             for section in row['sections']:
                 index_for_cache.append(index)
-                data_for_cache.append({'end': row['end'], 
-                                       'section_start': section.start,
-                                       'section_end': section.end})
+                data_for_cache.append(
+                    {'end': row['end'], 
+                     'section_start': convert_none_to_nat(section.start),
+                     'section_end': convert_none_to_nat(section.end)})
         return pd.DataFrame(data_for_cache, index=index_for_cache)
