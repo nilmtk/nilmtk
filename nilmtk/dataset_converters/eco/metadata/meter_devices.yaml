@@ -24,7 +24,7 @@ smart_meter:
   - physical_quantity: power
     type: reactive
     upper_limit: 100000
-	lower_limit: -100000
+    lower_limit: -100000
   wireless: false
 
 plug:
