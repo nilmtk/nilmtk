@@ -252,3 +252,21 @@ def offset_alias_to_seconds(alias):
 def check_directory_exists(d):
     if not isdir(d):
         raise IOError("Directory '{}' does not exist.".format(d))
+
+
+def tz_localize_naive(timestamp, tz):
+    if tz is None:
+        return timestamp
+    elif pd.isnull(timestamp):
+        return pd.NaT
+    else:
+        return timestamp.tz_localize('UTC').tz_convert(tz)
+
+
+def get_tz(df):
+    index = df.index
+    try:
+        tz = index.tz
+    except AttributeError:
+        tz = None
+    return tz

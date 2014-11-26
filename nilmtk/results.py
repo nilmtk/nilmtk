@@ -2,6 +2,7 @@ import abc
 import pandas as pd
 import copy
 from .timeframe import TimeFrame
+from nilmtk.utils import get_tz, tz_localize_naive
 
 class Results(object):
     """Stats results from each node need to be assigned to a specific
@@ -130,6 +131,7 @@ class Results(object):
         sections : list of nilmtk.TimeFrame objects
             describing the sections we want to load stats for.
         """
+        tz = get_tz(cached_stat)
         usable_sections_from_cache = []
         for section in sections:
             try:
@@ -137,15 +139,29 @@ class Results(object):
             except KeyError:
                 pass
             else:
-                end_time = row['end']
-                if end_time == section.end:
+                row['end'] = tz_localize_naive(row['end'], tz)
+                if row['end'] == section.end:
                     usable_sections_from_cache.append(row)
 
         self._data = pd.DataFrame(usable_sections_from_cache)
         self._data.sort_index(inplace=True)
 
     def export_to_cache(self):
-        return self._data
+        """
+        Returns
+        -------
+        pd.DataFrame
+
+        Notes
+        -----
+        Objects are converted using `DataFrame.convert_objects()`.
+        The reason for doing this is to strip out the timezone
+        information from data columns.  We have to do this otherwise
+        Pandas complains if we try to put a column with multiple
+        timezones (e.g. Europe/London across a daylight saving
+        boundary).
+        """
+        return self._data.convert_objects()
 
     def timeframes(self):
         """Returns a list of timeframes covered by this Result."""
