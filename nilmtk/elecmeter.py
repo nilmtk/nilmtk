@@ -499,13 +499,14 @@ class ElecMeter(Hashable, Electric):
         return ("building{:d}/elec/cache/meter{:d}/{:s}"
                 .format(self.building(), self.instance(), stat_name))
 
-    def clear_cache(self):
+    def clear_cache(self, verbose=False):
         if self.store is not None:
             key_for_cache = self.key_for_cached_stat('')
             try:
                 self.store.remove(key_for_cache)
-            except KeyError as e:
-                print(e)
+            except KeyError:
+                if verbose:
+                    print("No existing cache for", key_for_cache)
             else:
                 print("Removed", key_for_cache)
 

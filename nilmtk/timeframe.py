@@ -1,7 +1,9 @@
 from __future__ import print_function, division
 import pandas as pd
+import pytz
 from datetime import timedelta
 from copy import deepcopy
+from warnings import warn
 
 class TimeFrame(object):
     """A TimeFrame is a single time span or period,
@@ -221,6 +223,15 @@ class TimeFrame(object):
             dct['end'] = self.end.isoformat()
         return dct
 
+    def check_tz(self):
+        if any([isinstance(tf.tz, pytz._FixedOffset) 
+                for tf in [self.start, self.end]
+                if tf is not None]):
+            warn("Using a pytz._FixedOffset timezone may cause issues"
+                 " (e.g. might cause Pandas to raise 'TypeError: too many"
+                 " timezones in this block, create separate data columns'). "
+                 " It is better to set the timezone to a geographical location"
+                 " e.g. 'Europe/London'.")
 
 def merge_timeframes(timeframes, gap=0):
     """
