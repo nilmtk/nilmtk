@@ -106,8 +106,20 @@ class GoodSectionsResults(Results):
 
         ax.autoscale_view()
 
-    def import_from_cache(self, dataframe):
-        grouped_by_index = dataframe.groupby(level=0)
+    def import_from_cache(self, cached_stat, sections):
+        usable_sections_from_cache = pd.DataFrame()
+        for section in sections:
+            try:
+                row = cached_stat.loc[section.start]
+            except KeyError:
+                pass
+            else:
+                end_time = row['end']
+                if end_time == section.end:
+                    usable_sections_from_cache = (
+                        usable_sections_from_cache.append(row))
+
+        grouped_by_index = usable_sections_from_cache.groupby(level=0)
         for name, group in grouped_by_index:
             assert group['end'].unique().size == 1
             timeframes = [TimeFrame(row['section_start'], row['section_end'])

@@ -56,17 +56,17 @@ class Results(object):
         timeframe : nilmtk.TimeFrame
         new_results : dict
         """
-        assert isinstance(timeframe, TimeFrame), type(timeframe)
-        assert isinstance(new_results, dict), type(new_results)
+        if not isinstance(timeframe, TimeFrame):
+            raise TypeError("`timeframe` must be of type 'nilmtk.TimeFrame',"
+                            " not '{}' type.".format(type(timeframe)))
+        if not isinstance(new_results, dict):
+            raise TypeError("`new_results` must of a dict, not '{}' type."
+                            .format(type(new_results)))
         
         # check that there is no overlap
         for index, series in self._data.iterrows():
             tf = TimeFrame(index, series['end'])
-            intersect = tf.intersect(timeframe)
-         
-            if not intersect.empty:
-                raise ValueError("Periods overlap: " + str(tf) + 
-                                 " " + str(timeframe))
+            tf.check_for_overlap(timeframe)
 
         row = pd.DataFrame(index=[timeframe.start],
                            columns=['end'] + new_results.keys())
@@ -75,6 +75,17 @@ class Results(object):
             row[key] = val
         self._data = self._data.append(row, verify_integrity=True)
         self._data.sort_index(inplace=True)
+
+    def check_for_overlap(self):
+        n = len(self._data)
+        index = self._data.index
+        for i in range(n):
+            row1 = self._data.iloc[i]
+            tf1 = TimeFrame(index[i], row1['end'])
+            for j in range(i+1, n):
+                row2 = self._data.iloc[j]
+                tf2 = TimeFrame(index[j], row2['end'])
+                tf1.check_for_overlap(tf2)
 
     def update(self, new_result):
         """Add results from a new chunk.
@@ -91,6 +102,7 @@ class Results(object):
 
         self._data = self._data.append(new_result._data, verify_integrity=True)
         self._data.sort_index(inplace=True)
+        self.check_for_overlap()
 
     def unify(self, other):
         """Take results from another table of data (another physical meter)
@@ -110,11 +122,29 @@ class Results(object):
                                    " do not have the same end times so we"
                                    " cannot merge them.")
 
-    def import_from_cache(self, dataframe):
-        self._data = dataframe
+    def import_from_cache(self, cached_stat, sections):
+        usable_sections_from_cache = pd.DataFrame()
+        for section in sections:
+            try:
+                row = cached_stat.loc[section.start]
+            except KeyError:
+                pass
+            else:
+                end_time = row['end']
+                if end_time == section.end:
+                    usable_sections_from_cache = (
+                        usable_sections_from_cache.append(row))
+
+        self._data = usable_sections_from_cache
+        self._data.sort_index(inplace=True)
 
     def export_to_cache(self):
         return self._data
+
+    def timeframes(self):
+        """Returns a list of timeframes covered by this Result."""
+        return [TimeFrame(index, row['end']) 
+                for index, row in self._data.iterrows()]
 
     def _columns_with_end_removed(self):
         cols = set(self._data.columns)

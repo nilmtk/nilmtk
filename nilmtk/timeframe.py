@@ -233,6 +233,13 @@ class TimeFrame(object):
                  " It is better to set the timezone to a geographical location"
                  " e.g. 'Europe/London'.")
 
+    def check_for_overlap(self, other):
+        intersect = self.intersect(other)
+        if not intersect.empty:
+            raise ValueError("Periods overlap: " + str(self) + 
+                             " " + str(other))
+
+
 def merge_timeframes(timeframes, gap=0):
     """
     Parameters

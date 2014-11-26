@@ -435,48 +435,35 @@ class ElecMeter(Hashable, Electric):
             tf.include_end = True
             sections = [tf]
 
-        # TODO: check sections do not overlap
-
         # Retrieve usable stats from cache
-        sections_to_compute = []
-        usable_sections_from_cache = pd.DataFrame()
         key_for_cached_stat = self.key_for_cached_stat(results_obj.name)
         if loader_kwargs.get('preprocessing') is None:
             cached_stat = self.get_cached_stat(key_for_cached_stat)
-            for section in sections:
-                try:
-                    row = cached_stat.loc[section.start]
-                except KeyError:
-                    sections_to_compute.append(section)
-                else:
-                    end_time = row['end']
-                    if end_time == section.end:
-                        usable_sections_from_cache = (
-                            usable_sections_from_cache.append(row))
-                    else:
-                        sections_to_compute.append(section)
+            results_obj.import_from_cache(cached_stat, sections)
+            
+            # Get sections_to_compute
+            sections_to_compute = set(sections) - set(results_obj.timeframes())
+            sections_to_compute = list(sections_to_compute)
+            sections_to_compute.sort()
         else:
             sections_to_compute = sections
 
-        if not sections_to_compute:
+        if not results_obj._data.empty:
             print("Using cached result from metadata.")
-            results_obj.import_from_cache(usable_sections_from_cache)
-            return results_obj if full_results else results_obj.simple()
 
         # If we get to here then we have to compute some stats
-        loader_kwargs['sections'] = sections_to_compute
-        computed_result = self._compute_stat(nodes, loader_kwargs)
+        if sections_to_compute:
+            loader_kwargs['sections'] = sections_to_compute
+            computed_result = self._compute_stat(nodes, loader_kwargs)
 
-        # Save to disk newly computed stats
-        self.store.append(key_for_cached_stat, 
-                          computed_result.results.export_to_cache())
+            # Merge cached results with newly computed
+            results_obj.update(computed_result.results)
 
-        # Merge cached results with newly computed
-        computed_result.results._data = computed_result.results._data.append(
-            usable_sections_from_cache)
-        computed_result.results._data.sort_index(inplace=True)
+            # Save to disk newly computed stats
+            self.store.append(key_for_cached_stat,
+                              computed_result.results.export_to_cache())
 
-        return computed_result.results if full_results else computed_result.results.simple()
+        return results_obj if full_results else results_obj.simple()
 
     def _compute_stat(self, nodes, loader_kwargs):
         """
