@@ -103,10 +103,14 @@ class Electric(object):
 
     def switch_continuity_violations(self, threshold=40):
         """
+        Parameters
+        ----------
+        threshold: int, threshold in Watts 
+
         Returns
         -------
-        num_violations: number of times more than one appliance 
-        changes state at a given time
+        switch_continuity: pd.Series of type {timestamp: number of 
+        simultaneous switches}
         """
         submeters = self.submeters().meters
         first_meter = submeters[0]
@@ -123,7 +127,7 @@ class Electric(object):
             delta_power = power.diff()
             delta_power_absolute = delta_power.abs()
             index_change = delta_power_absolute[(delta_power_absolute>threshold)].index
-            print("Number of edges for {} is {}".format(meter, len(index_change)))
+            #print("Number of edges for {} is {}".format(meter, len(index_change)))
             for timestamp in index_change:
                 count[timestamp]+=1
         switch_continuity = pd.Series(count)
