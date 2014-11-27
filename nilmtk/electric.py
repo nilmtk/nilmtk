@@ -126,7 +126,10 @@ class Electric(object):
             print("Number of edges for {} is {}".format(meter, len(index_change)))
             for timestamp in index_change:
                 count[timestamp]+=1
-        return pd.Series(count)
+        switch_continuity = pd.Series(count)
+        # Should be 2 or more appliances changing state at the same time
+        switch_continuity = switch_continuity[switch_continuity>=2]
+        return switch_continuity
 
 
     def uptime(self, **load_kwargs):
