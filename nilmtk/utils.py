@@ -20,35 +20,21 @@ def dependencies_diagnostics():
     import platform
     output["Platform"] = str(platform.platform())
     system_information = sys.version_info
-    output["System version"] = str(system_information.major) + "." +  str(system_information.minor)
-    import nilmtk
-    output["nilmtk version"] = nilmtk.__version__
-    try:
-        import nilm_metadata
-        output["nilm_metadata version"] = nilm_metadata.__version__
-    except ImportError:
-        output["nilm_metadata version"] = "Not found"
-    try:
-        import numpy as np
-        output["Numpy version"] = np.version.version
-    except ImportError:
-        output["Numpy version"] = "Not found"
-    try:
-        import matplotlib
-        output["Matplotlib version"] = matplotlib.__version__
-    except ImportError:
-        output["Matplotlib version"] = "Not found"
-    try:
-        import pandas as pd 
-        output["Pandas version"] = pd.__version__
-    except ImportError:
-        output["Pandas version"] = "Not found"
-    try:
-        import sklearn as sklearn
-        output["Scikit-learn version"] = sklearn.__version__
-    except ImportError:
-        output["Scikit-learn version"] = "Not found"
+    output["System version"] = "{}.{}".format(system_information.major,
+                                              system_information.minor)
+
+    PACKAGES = ["nilmtk", "nilm_metadata", "numpy", "matplotlib", "pandas", "sklearn"]
+    for package_name in PACKAGES:
+        key = package_name + " version"
+        try:
+            exec("import " + package_name)
+        except ImportError:
+            output[key] = "Not found"
+        else:
+            output[key] = eval(package_name + ".__version__")
+
     return output
+
 
 def timedelta64_to_secs(timedelta):
     """Convert `timedelta` to seconds.
@@ -252,3 +238,21 @@ def offset_alias_to_seconds(alias):
 def check_directory_exists(d):
     if not isdir(d):
         raise IOError("Directory '{}' does not exist.".format(d))
+
+
+def tz_localize_naive(timestamp, tz):
+    if tz is None:
+        return timestamp
+    elif pd.isnull(timestamp):
+        return pd.NaT
+    else:
+        return timestamp.tz_localize('UTC').tz_convert(tz)
+
+
+def get_tz(df):
+    index = df.index
+    try:
+        tz = index.tz
+    except AttributeError:
+        tz = None
+    return tz

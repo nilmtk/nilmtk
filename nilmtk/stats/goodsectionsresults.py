@@ -3,7 +3,8 @@ from datetime import timedelta
 import matplotlib.pyplot as plt
 from ..results import Results
 from ..consts import SECS_PER_DAY
-
+from nilmtk.timeframe import TimeFrame, convert_none_to_nat
+from nilmtk.utils import get_tz, tz_localize_naive
 
 class GoodSectionsResults(Results):
     """
@@ -31,9 +32,6 @@ class GoodSectionsResults(Results):
         new_results : {'sections': list of TimeFrame objects}
         """
         super(GoodSectionsResults, self).append(timeframe, new_results)
-
-    def last_results(self):
-        return self._data['sections'][-1]
 
     def combined(self):
         """Merges together any good sections which span multiple segments,
@@ -108,3 +106,44 @@ class GoodSectionsResults(Results):
             ax.add_patch(rect)            
 
         ax.autoscale_view()
+
+    def import_from_cache(self, cached_stat, sections):
+        # we (deliberately) use duplicate indices to cache GoodSectionResults
+        grouped_by_index = cached_stat.groupby(level=0)
+        tz = get_tz(cached_stat)
+
+        for name, group in grouped_by_index:
+            assert group['end'].unique().size == 1
+            end = tz_localize_naive(group['end'].iloc[0], tz)
+            timeframe = TimeFrame(name, end)
+            if timeframe in sections:
+                timeframes = []
+                for _, row in group.iterrows():
+                    section_start = tz_localize_naive(row['section_start'], tz)
+                    section_end = tz_localize_naive(row['section_end'], tz)
+                    timeframes.append(TimeFrame(section_start, section_end))
+                self.append(timeframe, {'sections': [timeframes]})
+
+    def export_to_cache(self):
+        """
+        Returns
+        -------
+        DataFrame with three columns: 'end', 'section_end', 'section_start'.
+            Instead of storing a list of TimeFrames on each row,
+            we store one TimeFrame per row.  This is because pd.HDFStore cannot
+            save a DataFrame where one column is a list if using 'table' format'.
+            We also need to strip the timezone information from the data columns.
+            When we import from cache, we assume the timezone for the data 
+            columns is the same as the tz for the index.
+        """
+        index_for_cache = []
+        data_for_cache = [] # list of dicts with keys 'end', 'section_end', 'section_start'
+        for index, row in self._data.iterrows():
+            for section in row['sections']:
+                index_for_cache.append(index)
+                data_for_cache.append(
+                    {'end': row['end'], 
+                     'section_start': convert_none_to_nat(section.start),
+                     'section_end': convert_none_to_nat(section.end)})
+        df = pd.DataFrame(data_for_cache, index=index_for_cache)
+        return df.convert_objects()

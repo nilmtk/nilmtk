@@ -36,13 +36,18 @@ class TestLocateGoodSections(unittest.TestCase):
         print(dropout_rate.results)
         print(meter.power_series().next())
 
-    
         # Now test metergroup
         meter2 = ElecMeter(store=self.datastore, metadata=self.meter_meta, 
                            meter_id=METER_ID2)
         metergroup = MeterGroup([meter, meter2])
         dr = metergroup.dropout_rate()        
         print("dr =", dr) # dr = 0.861386138614
+
+        # Test a second time to make sure cache works
+        dr_from_cache = metergroup.dropout_rate()
+        self.assertEqual(dr, dr_from_cache)
+
+        metergroup.clear_cache()
 
 if __name__ == '__main__':
     unittest.main()

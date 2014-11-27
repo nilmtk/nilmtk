@@ -81,12 +81,20 @@ def convert_eco(dataset_loc, hdf_filename, timezone):
                     for phase in range(1,4):
                         key = str(Key(building=building_no, meter=phase))
                         df_phase = df.ix[:,[1+phase, 5+phase, 8+phase, 13+phase]]
+
+                        # get reactive power
+                        power = df_phase.as_matrix([1+phase, 13+phase])
+                        reactive = power[:,0] * np.tan(power[:,1] * np.pi / 180)
+                        df_phase['Q'] = reactive
+                        
                         df_phase.index = pd.DatetimeIndex(start=fi[:-4], freq='s', periods=86400, tz='GMT')
                         df_phase = df_phase.tz_convert(timezone)
+                        
                         sm_column_name = {1+phase:('power', 'active'),
                                             5+phase:('current', ''),
                                             8+phase:('voltage', ''),
                                             13+phase:('phase_angle', ''),
+                                            'Q': ('power', 'reactive'),
                                             };
                         df_phase.rename(columns=sm_column_name, inplace=True)
                         

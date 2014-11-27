@@ -48,6 +48,15 @@ class DataStore(object):
     def __init__(self):
         self.window = TimeFrame()
 
+    @property
+    def window(self):
+        return self._window
+
+    @window.setter
+    def window(self, window):
+        window.check_tz()
+        self._window = window
+
 class HDFDataStore(DataStore):
     def __init__(self, filename, mode='a'):
         """

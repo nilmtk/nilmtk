@@ -51,24 +51,30 @@ def get_total_energy(df, max_sample_period):
         Values are energy in kWh (or equivalent for reactive and apparent power).
     """
 
+    # Select a column based on ordered preferences
+    PHYSICAL_QUANTITY_PREFS = ["cumulative energy", "energy", "power"]
+    selected_columns = []
+    for ac_type in AC_TYPES:
+        physical_quantities = [physical_quantity 
+                               for (physical_quantity, col_ac_type) in df.keys()
+                               if col_ac_type == ac_type]
+        for pq in PHYSICAL_QUANTITY_PREFS:
+            if pq in physical_quantities:
+                selected_columns.append((pq, ac_type))
+                break
+
     energy = {}
-    data_source_rank = {} # overwrite Power with Energy with Energy(cumulative)
-    for (physical_quantity, ac_type), series in df.iteritems():
+    for col in selected_columns:
+        print("Calculating energy for column", col)
+        (physical_quantity, ac_type) = col
+        series = df[col]
         if physical_quantity == 'power':
-            # Preference is to calculate energy from 
-            # native Energy data rather than Power data
-            # so don't overwrite with Power data.
-            if not energy.has_key(ac_type):
-                energy[ac_type] = _energy_for_power_series(
-                    series, max_sample_period)
-                data_source_rank[ac_type] = 3 # least favourite
+            energy[ac_type] = _energy_for_power_series(series, max_sample_period)
         elif physical_quantity == 'cumulative energy':
             energy[ac_type] = series.iloc[-1] - series.iloc[0]
-            data_source_rank[ac_type] = 1 # favourite
-        elif (physical_quantity == 'energy' and 
-              data_source_rank.get(ac_type, 3) > 2):
+        elif physical_quantity == 'energy':
             energy[ac_type] = series.sum()
-            data_source_rank[ac_type] = 2
+
     return energy
 
 
