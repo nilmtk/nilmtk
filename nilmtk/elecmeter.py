@@ -405,20 +405,25 @@ class ElecMeter(Hashable, Electric):
         -------
         if `full_results` is True then return nilmtk.stats.GoodSectionsResults 
         object otherwise return list of TimeFrame objects.
-
-        Notes
-        -----
-        good_sections are not cached because the list of TimeFrame objects is 
-        non-trivial to write to a DataStore.  Could be implemented though.
         """
         loader_kwargs.setdefault('n_look_ahead_rows', 10)
         nodes = [GoodSections]
-        full_results = loader_kwargs.get('full_results')
-        results = self._compute_stat(nodes, loader_kwargs)
-        return results.results if full_results else results.results.simple()
+        results_obj = GoodSections.results_class(self.device['max_sample_period'])
+        return self._get_stat_from_cache_or_compute(
+            nodes, results_obj, loader_kwargs)        
 
     def _get_stat_from_cache_or_compute(self, nodes, results_obj, loader_kwargs):
-        """General function for computing statistics.
+        """General function for computing statistics and/or loading them from 
+        cache.
+
+        Cached statistics lives in the DataStore at 
+        'building<I>/elec/cache/meter<K>/<statistic_name>' e.g.
+        'building1/elec/cache/meter1/total_energy'.  We store the 
+        'full' statistic... i.e we store a representation of the `Results._data`
+        DataFrame. Some times we need to do some conversion to store 
+        `Results._data` on disk.  The logic for doing this conversion lives
+        in the `Results` class or subclass.  The cache can be cleared by calling
+        `ElecMeter.clear_cache()`.
 
         Parameters
         ----------
@@ -430,6 +435,13 @@ class ElecMeter(Hashable, Electric):
         -------
         if `full_results` is True then return nilmtk.Results subclass
         instance otherwise return nilmtk.Results.simple().
+
+        See Also
+        --------
+        clear_cache
+        _compute_stat
+        key_for_cached_stat
+        get_cached_stat
         """
         full_results = loader_kwargs.pop('full_results', False)
 
@@ -440,47 +452,36 @@ class ElecMeter(Hashable, Electric):
             tf.include_end = True
             sections = [tf]
 
-        # TODO: check sections do not overlap
-
         # Retrieve usable stats from cache
-        sections_to_compute = []
-        usable_sections_from_cache = pd.DataFrame()
         key_for_cached_stat = self.key_for_cached_stat(results_obj.name)
         if loader_kwargs.get('preprocessing') is None:
             cached_stat = self.get_cached_stat(key_for_cached_stat)
-            for section in sections:
-                try:
-                    row = cached_stat.loc[section.start]
-                except KeyError:
-                    sections_to_compute.append(section)
-                else:
-                    end_time = row['end']
-                    if end_time == section.end:
-                        usable_sections_from_cache = (
-                            usable_sections_from_cache.append(row))
-                    else:
-                        sections_to_compute.append(section)
+            results_obj.import_from_cache(cached_stat, sections)
+            
+            # Get sections_to_compute
+            results_obj_timeframes = results_obj.timeframes()
+            sections_to_compute = set(sections) - set(results_obj_timeframes)
+            sections_to_compute = list(sections_to_compute)
+            sections_to_compute.sort()
         else:
             sections_to_compute = sections
 
-        if not sections_to_compute:
+        if not results_obj._data.empty:
             print("Using cached result from metadata.")
-            results_obj._data = usable_sections_from_cache
-            return results_obj if full_results else results_obj.simple()
 
         # If we get to here then we have to compute some stats
-        loader_kwargs['sections'] = sections_to_compute
-        computed_result = self._compute_stat(nodes, loader_kwargs)
+        if sections_to_compute:
+            loader_kwargs['sections'] = sections_to_compute
+            computed_result = self._compute_stat(nodes, loader_kwargs)
 
-        # Save to disk newly computed stats
-        self.store.append(key_for_cached_stat, computed_result.results._data)
+            # Merge cached results with newly computed
+            results_obj.update(computed_result.results)
 
-        # Merge cached results with newly computed
-        computed_result.results._data = computed_result.results._data.append(
-            usable_sections_from_cache)
-        computed_result.results._data.sort_index(inplace=True)
+            # Save to disk newly computed stats
+            self.store.append(key_for_cached_stat,
+                              computed_result.results.export_to_cache())
 
-        return computed_result.results if full_results else computed_result.results.simple()
+        return results_obj if full_results else results_obj.simple()
 
     def _compute_stat(self, nodes, loader_kwargs):
         """
@@ -492,6 +493,13 @@ class ElecMeter(Hashable, Electric):
         Returns
         -------
         Node subclass object
+
+        See Also
+        --------
+        clear_cache
+        _get_stat_from_cache_or_compute
+        key_for_cached_stat
+        get_cached_stat
         """
         results = self.get_source_node(**loader_kwargs)
         for node in nodes:
@@ -500,20 +508,61 @@ class ElecMeter(Hashable, Electric):
         return results
 
     def key_for_cached_stat(self, stat_name):
+        """
+        Parameters
+        ----------
+        stat_name : str
+
+        Returns
+        -------
+        key : str
+
+        See Also
+        --------
+        clear_cache
+        _compute_stat
+        _get_stat_from_cache_or_compute
+        get_cached_stat
+        """
         return ("building{:d}/elec/cache/meter{:d}/{:s}"
                 .format(self.building(), self.instance(), stat_name))
 
-    def clear_cache(self):
+    def clear_cache(self, verbose=False):
+        """
+        See Also
+        --------
+        _compute_stat
+        _get_stat_from_cache_or_compute
+        key_for_cached_stat        
+        get_cached_stat
+        """
         if self.store is not None:
             key_for_cache = self.key_for_cached_stat('')
             try:
                 self.store.remove(key_for_cache)
-            except KeyError as e:
-                print(e)
+            except KeyError:
+                if verbose:
+                    print("No existing cache for", key_for_cache)
             else:
                 print("Removed", key_for_cache)
 
     def get_cached_stat(self, key_for_stat):
+        """
+        Parameters
+        ----------
+        key_for_stat : str
+
+        Returns
+        -------
+        pd.DataFrame
+
+        See Also
+        --------
+        _compute_stat
+        _get_stat_from_cache_or_compute
+        key_for_cached_stat        
+        clear_cache
+        """
         if self.store is None:
             return pd.DataFrame()
         try:

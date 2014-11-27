@@ -2,6 +2,7 @@ import abc
 import pandas as pd
 import copy
 from .timeframe import TimeFrame
+from nilmtk.utils import get_tz, tz_localize_naive
 
 class Results(object):
     """Stats results from each node need to be assigned to a specific
@@ -56,17 +57,17 @@ class Results(object):
         timeframe : nilmtk.TimeFrame
         new_results : dict
         """
-        assert isinstance(timeframe, TimeFrame), type(timeframe)
-        assert isinstance(new_results, dict), type(new_results)
+        if not isinstance(timeframe, TimeFrame):
+            raise TypeError("`timeframe` must be of type 'nilmtk.TimeFrame',"
+                            " not '{}' type.".format(type(timeframe)))
+        if not isinstance(new_results, dict):
+            raise TypeError("`new_results` must of a dict, not '{}' type."
+                            .format(type(new_results)))
         
         # check that there is no overlap
         for index, series in self._data.iterrows():
             tf = TimeFrame(index, series['end'])
-            intersect = tf.intersect(timeframe)
-         
-            if not intersect.empty:
-                raise ValueError("Periods overlap: " + str(tf) + 
-                                 " " + str(timeframe))
+            tf.check_for_overlap(timeframe)
 
         row = pd.DataFrame(index=[timeframe.start],
                            columns=['end'] + new_results.keys())
@@ -75,6 +76,17 @@ class Results(object):
             row[key] = val
         self._data = self._data.append(row, verify_integrity=True)
         self._data.sort_index(inplace=True)
+
+    def check_for_overlap(self):
+        n = len(self._data)
+        index = self._data.index
+        for i in range(n):
+            row1 = self._data.iloc[i]
+            tf1 = TimeFrame(index[i], row1['end'])
+            for j in range(i+1, n):
+                row2 = self._data.iloc[j]
+                tf2 = TimeFrame(index[j], row2['end'])
+                tf1.check_for_overlap(tf2)
 
     def update(self, new_result):
         """Add results from a new chunk.
@@ -91,6 +103,7 @@ class Results(object):
 
         self._data = self._data.append(new_result._data, verify_integrity=True)
         self._data.sort_index(inplace=True)
+        self.check_for_overlap()
 
     def unify(self, other):
         """Take results from another table of data (another physical meter)
@@ -109,6 +122,60 @@ class Results(object):
                 raise RuntimeError("The sections we are trying to merge"
                                    " do not have the same end times so we"
                                    " cannot merge them.")
+
+    def import_from_cache(self, cached_stat, sections):
+        """
+        Parameters
+        ----------
+        cached_stat : DataFrame of cached data
+        sections : list of nilmtk.TimeFrame objects
+            describing the sections we want to load stats for.
+        """
+        tz = get_tz(cached_stat)
+        usable_sections_from_cache = []
+        for section in sections:
+            try:
+                row = cached_stat.loc[section.start]
+            except KeyError:
+                pass
+            else:
+                # Save, disable, then re-enable `pd.SettingWithCopyWarning`
+                # from http://stackoverflow.com/a/20627316/732596
+                chained_assignment = pd.options.mode.chained_assignment
+                pd.options.mode.chained_assignment = None
+
+                # We stripped off the timezone when exporting to cache
+                # so now we must put the timezone back.
+                row['end'] = tz_localize_naive(row['end'], tz)
+                pd.options.mode.chained_assignment = chained_assignment
+
+                if row['end'] == section.end:
+                    usable_sections_from_cache.append(row)
+
+        self._data = pd.DataFrame(usable_sections_from_cache)
+        self._data.sort_index(inplace=True)
+
+    def export_to_cache(self):
+        """
+        Returns
+        -------
+        pd.DataFrame
+
+        Notes
+        -----
+        Objects are converted using `DataFrame.convert_objects()`.
+        The reason for doing this is to strip out the timezone
+        information from data columns.  We have to do this otherwise
+        Pandas complains if we try to put a column with multiple
+        timezones (e.g. Europe/London across a daylight saving
+        boundary).
+        """
+        return self._data.convert_objects()
+
+    def timeframes(self):
+        """Returns a list of timeframes covered by this Result."""
+        return [TimeFrame(index, row['end']) 
+                for index, row in self._data.iterrows()]
 
     def _columns_with_end_removed(self):
         cols = set(self._data.columns)

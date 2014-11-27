@@ -1,7 +1,9 @@
 from __future__ import print_function, division
 import pandas as pd
+import pytz
 from datetime import timedelta
 from copy import deepcopy
+from warnings import warn
 
 class TimeFrame(object):
     """A TimeFrame is a single time span or period,
@@ -59,6 +61,7 @@ class TimeFrame(object):
           
     @start.setter
     def start(self, new_start):
+        new_start = convert_nat_to_none(new_start)
         if new_start is None:
             self._start = None
             return
@@ -70,6 +73,7 @@ class TimeFrame(object):
 
     @end.setter
     def end(self, new_end):
+        new_end = convert_nat_to_none(new_end)
         if new_end is None:
             self._end = None
             return
@@ -221,6 +225,22 @@ class TimeFrame(object):
             dct['end'] = self.end.isoformat()
         return dct
 
+    def check_tz(self):
+        if any([isinstance(tf.tz, pytz._FixedOffset) 
+                for tf in [self.start, self.end]
+                if tf is not None]):
+            warn("Using a pytz._FixedOffset timezone may cause issues"
+                 " (e.g. might cause Pandas to raise 'TypeError: too many"
+                 " timezones in this block, create separate data columns'). "
+                 " It is better to set the timezone to a geographical location"
+                 " e.g. 'Europe/London'.")
+
+    def check_for_overlap(self, other):
+        intersect = self.intersect(other)
+        if not intersect.empty:
+            raise ValueError("Periods overlap: " + str(self) + 
+                             " " + str(other))
+
 
 def merge_timeframes(timeframes, gap=0):
     """
@@ -288,3 +308,10 @@ def timeframes_from_periodindex(periods):
         timeframe = TimeFrame(period.start_time, period.end_time)
         timeframes.append(timeframe)
     return timeframes
+
+
+def convert_none_to_nat(timestamp):
+    return pd.NaT if timestamp is None else timestamp
+
+def convert_nat_to_none(timestamp):
+    return None if timestamp == pd.NaT else timestamp
