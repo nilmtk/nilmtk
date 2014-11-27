@@ -139,7 +139,13 @@ class Results(object):
             except KeyError:
                 pass
             else:
+                # Save, disable, then re-enable `pd.SettingWithCopyWarning`
+                # from http://stackoverflow.com/a/20627316/732596
+                chained_assignment = pd.options.mode.chained_assignment
+                pd.options.mode.chained_assignment = None
                 row['end'] = tz_localize_naive(row['end'], tz)
+                pd.options.mode.chained_assignment = chained_assignment
+
                 if row['end'] == section.end:
                     usable_sections_from_cache.append(row)
 
