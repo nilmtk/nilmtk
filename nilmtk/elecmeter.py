@@ -413,7 +413,17 @@ class ElecMeter(Hashable, Electric):
             nodes, results_obj, loader_kwargs)        
 
     def _get_stat_from_cache_or_compute(self, nodes, results_obj, loader_kwargs):
-        """General function for computing statistics.
+        """General function for computing statistics and/or loading them from 
+        cache.
+
+        Cached statistics lives in the DataStore at 
+        'building<I>/elec/cache/meter<K>/<statistic_name>' e.g.
+        'building1/elec/cache/meter1/total_energy'.  We store the 
+        'full' statistic... i.e we store a representation of the `Results._data`
+        DataFrame. Some times we need to do some conversion to store 
+        `Results._data` on disk.  The logic for doing this conversion lives
+        in the `Results` class or subclass.  The cache can be cleared by calling
+        `ElecMeter.clear_cache()`.
 
         Parameters
         ----------
@@ -425,6 +435,13 @@ class ElecMeter(Hashable, Electric):
         -------
         if `full_results` is True then return nilmtk.Results subclass
         instance otherwise return nilmtk.Results.simple().
+
+        See Also
+        --------
+        clear_cache
+        _compute_stat
+        key_for_cached_stat
+        get_cached_stat
         """
         full_results = loader_kwargs.pop('full_results', False)
 
@@ -476,6 +493,13 @@ class ElecMeter(Hashable, Electric):
         Returns
         -------
         Node subclass object
+
+        See Also
+        --------
+        clear_cache
+        _get_stat_from_cache_or_compute
+        key_for_cached_stat
+        get_cached_stat
         """
         results = self.get_source_node(**loader_kwargs)
         for node in nodes:
@@ -484,10 +508,34 @@ class ElecMeter(Hashable, Electric):
         return results
 
     def key_for_cached_stat(self, stat_name):
+        """
+        Parameters
+        ----------
+        stat_name : str
+
+        Returns
+        -------
+        key : str
+
+        See Also
+        --------
+        clear_cache
+        _compute_stat
+        _get_stat_from_cache_or_compute
+        get_cached_stat
+        """
         return ("building{:d}/elec/cache/meter{:d}/{:s}"
                 .format(self.building(), self.instance(), stat_name))
 
     def clear_cache(self, verbose=False):
+        """
+        See Also
+        --------
+        _compute_stat
+        _get_stat_from_cache_or_compute
+        key_for_cached_stat        
+        get_cached_stat
+        """
         if self.store is not None:
             key_for_cache = self.key_for_cached_stat('')
             try:
@@ -499,6 +547,22 @@ class ElecMeter(Hashable, Electric):
                 print("Removed", key_for_cache)
 
     def get_cached_stat(self, key_for_stat):
+        """
+        Parameters
+        ----------
+        key_for_stat : str
+
+        Returns
+        -------
+        pd.DataFrame
+
+        See Also
+        --------
+        _compute_stat
+        _get_stat_from_cache_or_compute
+        key_for_cached_stat        
+        clear_cache
+        """
         if self.store is None:
             return pd.DataFrame()
         try:

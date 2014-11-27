@@ -143,6 +143,9 @@ class Results(object):
                 # from http://stackoverflow.com/a/20627316/732596
                 chained_assignment = pd.options.mode.chained_assignment
                 pd.options.mode.chained_assignment = None
+
+                # We stripped off the timezone when exporting to cache
+                # so now we must put the timezone back.
                 row['end'] = tz_localize_naive(row['end'], tz)
                 pd.options.mode.chained_assignment = chained_assignment
 
