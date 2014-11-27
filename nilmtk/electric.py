@@ -1,4 +1,6 @@
 import pandas as pd
+import numpy as np
+from collections import Counter
 from .timeframe import TimeFrame
 from .measurement import select_best_ac_type
 from nilmtk.utils import offset_alias_to_seconds
@@ -98,6 +100,35 @@ class Electric(object):
     def vampire_power(self, **load_kwargs):
         # TODO: this might be a naive approach to calculating vampire power.
         return self.power_series_all_data(**load_kwargs).min()
+
+    def switch_continuity_violations(self, threshold=40):
+        """
+        Returns
+        -------
+        num_violations: number of times more than one appliance 
+        changes state at a given time
+        """
+        submeters = self.submeters().meters
+        first_meter = submeters[0]
+        power = first_meter.power_series_all_data()
+        delta_power = power.diff()
+        delta_power_absolute = delta_power.abs()
+        index_change = pd.delta_power_absolute[(delta_power_absolute>threshold)].index)
+        print(len(index_change))
+
+        for meter in submeters[1:]:
+            print(meter)
+            power = meter.power_series_all_data()
+            delta_power = power.diff()
+            delta_power_absolute = delta_power.abs()
+            index_change_local = pd.Series(delta_power_absolute[(delta_power_absolute>threshold)].index)
+            index_change = pd.Series(np.concatenate([index_change, index_change_local]))
+            #index_change = index_change.append(index_change_local).reset_index().squeeze()
+            a = len(index_change)
+            b = len(index_change.unique())
+            print (a,b,a-b)
+        return [index_change.unique(), a-b]
+
 
     def uptime(self, **load_kwargs):
         """
