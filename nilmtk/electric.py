@@ -113,21 +113,20 @@ class Electric(object):
         power = first_meter.power_series_all_data()
         delta_power = power.diff()
         delta_power_absolute = delta_power.abs()
-        index_change = pd.delta_power_absolute[(delta_power_absolute>threshold)].index)
-        print(len(index_change))
+        count = Counter()
+        index_change = delta_power_absolute[(delta_power_absolute>threshold)].index
+        for timestamp in index_change:
+            count[timestamp]+=1
 
         for meter in submeters[1:]:
-            print(meter)
             power = meter.power_series_all_data()
             delta_power = power.diff()
             delta_power_absolute = delta_power.abs()
-            index_change_local = pd.Series(delta_power_absolute[(delta_power_absolute>threshold)].index)
-            index_change = pd.Series(np.concatenate([index_change, index_change_local]))
-            #index_change = index_change.append(index_change_local).reset_index().squeeze()
-            a = len(index_change)
-            b = len(index_change.unique())
-            print (a,b,a-b)
-        return [index_change.unique(), a-b]
+            index_change = delta_power_absolute[(delta_power_absolute>threshold)].index
+            print("Number of edges for {} is {}".format(meter, len(index_change)))
+            for timestamp in index_change:
+                count[timestamp]+=1
+        return pd.Series(count)
 
 
     def uptime(self, **load_kwargs):
