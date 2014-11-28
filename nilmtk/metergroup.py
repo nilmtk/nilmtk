@@ -591,9 +591,6 @@ class MeterGroup(Electric):
         are all aligned.  If they are not then you should align the
         meters, e.g. by using an `Apply` node with `resample`.
 
-        Also note that this function eagerly loads all the data
-        from each submeter at a time and so might be quite
-        memory hungry.
         """
         submeters = self.submeters().meters
         count = Counter()
