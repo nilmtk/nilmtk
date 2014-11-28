@@ -804,8 +804,6 @@ class MeterGroup(Electric):
         float [0,1]
         """
 
-        #TODO: maybe change energy_per_meter to transpose it?
-
         mains = self.mains()
         good_mains_sections = mains.good_sections()
         downsteam_meters = MeterGroup(self.meters_directly_downstream_of_mains())
