@@ -804,40 +804,21 @@ class MeterGroup(Electric):
         float [0,1]
         """
 
+        #TODO: maybe change energy_per_meter to transpose it?
+
+        mains = self.mains()
+        good_mains_sections = mains.good_sections()
+        downsteam_meters = MeterGroup(self.meters_directly_downstream_of_mains())
+        energy_per_meter = downstream_meters.energy_per_meter(
+            sections=good_mains_sections)
+        mains_energy = mains.total_energy(sections=good_mains_sections) # TODO test effect of setting `sections`
         """
-        Alternative approach:
-        * get mains good sections
-        * then use a 3-column matrix (columns=AC_TYPES) to store energy for each submeter
-        * drop any columns with all NaNs
-        * then get mains energy.
+        TODO:
         * Loop through matrix columns.  If ac_type is in mains_ac_types then
           just take the proportion (sum col and divide by mains col) and then add all the proportions.  Otherwise
           select the 'best' ac type from mains which most closely 'matches' the 
           ac type from the matrix.
-        """
-
-        mains = self.mains()
-        good_mains_sections = mains.good_sections()
-        submetered_energy = 0.0
-        common_ac_types = None
-        for meter in self.meters_directly_downstream_of_mains():
-            print("Getting total energy for", meter.appliance_label())
-            energy = meter.total_energy(sections=good_mains_sections)
-            print("  total energy =", energy)
-            if energy.empty:
-                continue
-            ac_types = set(energy.keys())
-            ac_type = select_best_ac_type(ac_types,
-                                          mains.available_power_ac_types())
-            submetered_energy += energy[ac_type]
-            if common_ac_types is None:
-                common_ac_types = ac_types
-            else:
-                common_ac_types = common_ac_types.intersection(ac_types)
-        mains_energy = mains.total_energy()
-        ac_type = select_best_ac_type(mains_energy.keys(), common_ac_types)
-        print("Using AC type '{}' from mains.".format(ac_type))
-        return submetered_energy / mains_energy[ac_type]
+        """        
 
     def available_power_ac_types(self):
         """Returns set of all AC types recorded by all meters"""
