@@ -116,6 +116,8 @@ class Electric(object):
             uptime += good_section.timedelta
         return uptime
 
+  
+
     def average_energy_per_period(self, offset_alias='D', **load_kwargs):
         """Calculate the average energy per period.  e.g. the average 
         energy per day.
