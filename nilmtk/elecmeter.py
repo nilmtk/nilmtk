@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 from warnings import warn
 from collections import namedtuple
+from compiler.ast import flatten
 from copy import deepcopy
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -357,9 +358,8 @@ class ElecMeter(Hashable, Electric):
         for power in self.power_series():
             delta_power = power.diff()
             delta_power_absolute = delta_power.abs()
-            datetime_switches.append(delta_power_absolute[(delta_power_absolute>threshold)].index.values)
-        return datetime_switches
-
+            datetime_switches.append(delta_power_absolute[(delta_power_absolute>threshold)].index.values.tolist())
+        return flatten(datetime_switches)
     def dry_run_metadata(self):
         return self.metadata
 

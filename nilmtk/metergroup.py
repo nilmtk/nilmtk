@@ -6,6 +6,7 @@ from compiler.ast import flatten
 from datetime import timedelta
 from warnings import warn
 from sys import stdout
+from collections import Counter
 import matplotlib.pyplot as plt
 from .elecmeter import ElecMeter, ElecMeterID
 from .appliance import Appliance
