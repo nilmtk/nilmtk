@@ -466,15 +466,33 @@ class CSVDataStore(DataStore):
         """
         
         file_path = self._key_to_abs_path(key)
-        text_file_reader = pd.read_csv(file_path, 
-                                        index_col=0, 
-                                        header=[0,1], 
-                                        parse_dates=True, 
-                                        #usecols=cols,
-                                        chunksize=chunksize)
-        for data in text_file_reader:
-            data.timeframe = TimeFrame(data.index[0], data.index[-1])
-            yield data
+        
+        # Set `sections` variable
+        sections = [TimeFrame()] if sections is None else sections
+        if isinstance(sections, pd.PeriodIndex):
+            sections = timeframes_from_periodindex(sections)
+
+        self.all_sections_smaller_than_chunksize = True
+        
+        # iterate through parameter sections
+        for section in sections:
+            window_intersect = self.window.intersect(section)
+            text_file_reader = pd.read_csv(file_path, 
+                                            index_col=0, 
+                                            header=[0,1], 
+                                            parse_dates=True, 
+                                            #usecols=cols,
+                                            chunksize=chunksize)
+            # iterate through all chunks in file
+            for chunk in text_file_reader:
+                chunk.timeframe = TimeFrame(chunk.index[0], chunk.index[-1])
+                chunk_intersect = window_intersect.intersect(chunk.timeframe)
+                # if chunk intersects with section
+                if not chunk_intersect.empty:
+                    subchunk = chunk[(chunk.index>chunk_intersect.start) & 
+                                    (chunk.index<chunk_intersect.end)]
+                    subchunk.timeframe = TimeFrame(subchunk.index[0], subchunk.index[-1])
+                    yield subchunk
 
     def append(self, key, value):
         """
