@@ -348,6 +348,18 @@ class ElecMeter(Hashable, Electric):
             series.look_ahead = getattr(chunk, 'look_ahead', None)
             yield series
 
+    def switch_times(self, threshold=40):
+        """
+        Returns an array of pd.DateTime when a switch occurs as defined by threshold
+
+        """
+        datetime_switches = []
+        for power in self.power_series():
+            delta_power = power.diff()
+            delta_power_absolute = delta_power.abs()
+            datetime_switches.append(delta_power_absolute[(delta_power_absolute>threshold)].index.values)
+        return datetime_switches
+
     def dry_run_metadata(self):
         return self.metadata
 

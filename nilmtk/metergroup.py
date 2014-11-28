@@ -597,12 +597,8 @@ class MeterGroup(Electric):
         submeters = self.submeters().meters
         count = Counter()
         for meter in submeters:
-            power = meter.power_series_all_data()
-            delta_power = power.diff()
-            delta_power_absolute = delta_power.abs()
-            index_change = delta_power_absolute[(delta_power_absolute>threshold)].index
-            #print("Number of edges for {} is {}".format(meter, len(index_change)))
-            for timestamp in index_change:
+            switch_time_meter = meter.switch_times()
+            for timestamp in switch_time_meter:
                 count[timestamp]+=1
         sim_switches = pd.Series(count)
         # Should be 2 or more appliances changing state at the same time
