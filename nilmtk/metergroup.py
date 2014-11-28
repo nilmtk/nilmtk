@@ -803,6 +803,19 @@ class MeterGroup(Electric):
         -------
         float [0,1]
         """
+
+        """
+        Alternative approach:
+        * get mains good sections
+        * then use a 3-column matrix (columns=AC_TYPES) to store energy for each submeter
+        * drop any columns with all NaNs
+        * then get mains energy.
+        * Loop through matrix columns.  If ac_type is in mains_ac_types then
+          just take the proportion (sum col and divide by mains col) and then add all the proportions.  Otherwise
+          select the 'best' ac type from mains which most closely 'matches' the 
+          ac type from the matrix.
+        """
+
         mains = self.mains()
         good_mains_sections = mains.good_sections()
         submetered_energy = 0.0
