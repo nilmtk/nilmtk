@@ -573,6 +573,42 @@ class MeterGroup(Electric):
             chunk.timeframe = timeframe
             yield chunk
 
+    def simultaneous_switches(self, threshold=40):
+        """
+        Parameters
+        ----------
+        threshold: int, threshold in Watts 
+
+        Returns
+        -------
+        sim_switches: pd.Series of type {timestamp: number of 
+        simultaneous switches}
+
+        Notes
+        -----
+        This function assumes that the submeters in this MeterGroup
+        are all aligned.  If they are not then you should align the
+        meters, e.g. by using an `Apply` node with `resample`.
+
+        Also note that this function eagerly loads all the data
+        from each submeter at a time and so might be quite
+        memory hungry.
+        """
+        submeters = self.submeters().meters
+        count = Counter()
+        for meter in submeters:
+            power = meter.power_series_all_data()
+            delta_power = power.diff()
+            delta_power_absolute = delta_power.abs()
+            index_change = delta_power_absolute[(delta_power_absolute>threshold)].index
+            #print("Number of edges for {} is {}".format(meter, len(index_change)))
+            for timestamp in index_change:
+                count[timestamp]+=1
+        sim_switches = pd.Series(count)
+        # Should be 2 or more appliances changing state at the same time
+        sim_switches = sim_switches[sim_switches>=2]
+        return sim_switches
+
     def mains(self):
         """
         Returns
