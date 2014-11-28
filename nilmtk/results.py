@@ -133,24 +133,33 @@ class Results(object):
         """
         tz = get_tz(cached_stat)
         usable_sections_from_cache = []
+
+        def append_row(row, section):
+            # Save, disable, then re-enable `pd.SettingWithCopyWarning`
+            # from http://stackoverflow.com/a/20627316/732596
+            chained_assignment = pd.options.mode.chained_assignment
+            pd.options.mode.chained_assignment = None
+
+            # We stripped off the timezone when exporting to cache
+            # so now we must put the timezone back.
+            row['end'] = tz_localize_naive(row['end'], tz)
+            pd.options.mode.chained_assignment = chained_assignment
+
+            if row['end'] == section.end:
+                usable_sections_from_cache.append(row)
+
         for section in sections:
             try:
-                row = cached_stat.loc[section.start]
+                rows_matching_start = cached_stat.loc[section.start]
             except KeyError:
                 pass
             else:
-                # Save, disable, then re-enable `pd.SettingWithCopyWarning`
-                # from http://stackoverflow.com/a/20627316/732596
-                chained_assignment = pd.options.mode.chained_assignment
-                pd.options.mode.chained_assignment = None
-
-                # We stripped off the timezone when exporting to cache
-                # so now we must put the timezone back.
-                row['end'] = tz_localize_naive(row['end'], tz)
-                pd.options.mode.chained_assignment = chained_assignment
-
-                if row['end'] == section.end:
-                    usable_sections_from_cache.append(row)
+                if isinstance(rows_matching_start, pd.Series):
+                    append_row(rows_matching_start, section)
+                else:
+                    for row_i in range(rows_matching_start.shape[0]):
+                        row = rows_matching_start.iloc[row_i]
+                        append_row(row, section)
 
         self._data = pd.DataFrame(usable_sections_from_cache)
         self._data.sort_index(inplace=True)
