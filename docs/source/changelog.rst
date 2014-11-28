@@ -11,6 +11,7 @@ New features
 ^^^^^^^^^^^^
 
 * ``MeterGroup.plot()``
+* Correlation between different Elecmeters and corresponding plot
 * ``CSVDataStore``
 
 New dataset converters
