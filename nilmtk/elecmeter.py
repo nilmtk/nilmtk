@@ -353,13 +353,20 @@ class ElecMeter(Hashable, Electric):
         """
         Returns an array of pd.DateTime when a switch occurs as defined by threshold
 
+        Parameters
+        ----------
+        threshold: int, threshold in Watts between succcessive readings 
+        to amount for an appliance state change
         """
+
         datetime_switches = []
         for power in self.power_series():
             delta_power = power.diff()
             delta_power_absolute = delta_power.abs()
             datetime_switches.append(delta_power_absolute[(delta_power_absolute>threshold)].index.values.tolist())
         return flatten(datetime_switches)
+
+        
     def dry_run_metadata(self):
         return self.metadata
 
