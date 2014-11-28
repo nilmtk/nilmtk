@@ -808,7 +808,7 @@ class MeterGroup(Electric):
         proportion = 0.0
         for m in downstream_meters:
             print("Calculating proportion for", m)
-            prop = m.proportion_of_mains_energy(mains, **loader_kwargs)
+            prop = m.proportion_of_energy(mains, **loader_kwargs)
             proportion += prop
             print("   {:.2%}".format(prop))
             
