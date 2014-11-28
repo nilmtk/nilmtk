@@ -831,13 +831,21 @@ class MeterGroup(Electric):
     def meters_correlation(self):
         """
         Finds the correlation among different meters in a MeterGroup
+
+        Returns
+        -------
+        pd.DataFrame of correlation between pair of ElecMeters
+        
         """
         num_meters = len(self.meters)
         out = np.zeros((num_meters, num_meters))
         for i, m_i in enumerate(self.meters):
             for j, m_j in enumerate(self.meters):
-                out[i,j] = m_i.correlation_with(m_j)
-        return out
+                if i>j:
+                    out[i, j] = out[j, i]
+                else:
+                    out[i,j] = m_i.correlation_with(m_j)
+        return pd.DataFrame(out)
 
 
 

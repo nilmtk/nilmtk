@@ -47,6 +47,33 @@ def plot_series(series, **kwargs):
     fig.autofmt_xdate()
     return ax
 
+def plot_correlation_heatmap(df,
+            edgecolors='w',
+            cmap=matplotlib.cm.RdYlBu_r,
+            log=False):    
+    width = len(df.columns)/4
+    height = len(df.index)/4
+    
+    fig, ax = plt.subplots(figsize=(width,height))
+      
+    heatmap = ax.pcolor(df,
+                        edgecolors=edgecolors,  # put white lines between squares in heatmap
+                        cmap=cmap,
+                        norm=matplotlib.colors.LogNorm() if log else None)
+    
+    ax.autoscale(tight=True)  # get rid of whitespace in margins of heatmap
+    ax.set_aspect('equal')  # ensure heatmap cells are square
+    ax.xaxis.set_ticks_position('top')  # put column labels at the top
+    ax.tick_params(bottom='off', top='off', left='off', right='off')  # turn off ticks
+    
+    plt.yticks(np.arange(len(df.index)) + 0.5, df.index)
+    plt.xticks(np.arange(len(df.columns)) + 0.5, df.columns, rotation=90)
+    
+    # ugliness from http://matplotlib.org/users/tight_layout_guide.html
+    from mpl_toolkits.axes_grid1 import make_axes_locatable
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes("right", "3%", pad="1%")
+    plt.colorbar(heatmap, cax=cax)
 
 def latexify(fig_width=None, fig_height=None, columns=1):
     """Set up matplotlib's RC params for LaTeX plotting.
