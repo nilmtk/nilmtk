@@ -595,7 +595,7 @@ class MeterGroup(Electric):
         submeters = self.submeters().meters
         count = Counter()
         for meter in submeters:
-            switch_time_meter = meter.switch_times()
+            switch_time_meter = meter.switch_times(threshold)
             for timestamp in switch_time_meter:
                 count[timestamp]+=1
         sim_switches = pd.Series(count)
