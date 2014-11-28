@@ -366,8 +366,7 @@ class ElecMeter(Hashable, Electric):
             datetime_switches.append(delta_power_absolute[(delta_power_absolute>threshold)].index.values.tolist())
         return flatten(datetime_switches)
 
-
-      def correlation_with(self, elec):
+    def correlation_with(self, elec):
         """
         Finds the correlation between the two ElecMeters. Both the ElecMeters 
         should be perfectly aligned
@@ -397,8 +396,6 @@ class ElecMeter(Hashable, Electric):
             x_s_square_sum = x_s_square_sum + ((x_power-x_bar)*(x_power-x_bar)).sum()
 
         x_s_square = x_s_square_sum*1.0/(n-1)
-
-
 
     def dry_run_metadata(self):
         return self.metadata
