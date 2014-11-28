@@ -827,6 +827,20 @@ class MeterGroup(Electric):
             submeters_dict[meter.identifier] = power_series
         return pd.DataFrame(submeters_dict)
 
+
+    def meters_correlation(self):
+        """
+        Finds the correlation among different meters in a MeterGroup
+        """
+        num_meters = len(self.meters)
+        out = np.zeros((num_meters, num_meters))
+        for i, m_i in enumerate(self.meters):
+            for j, m_j in enumerate(self.meters):
+                out[i,j] = m_i.correlation_with(m_j)
+        return out
+
+
+
     def proportion_of_energy_submetered(self, **loader_kwargs):
         """
         Returns
