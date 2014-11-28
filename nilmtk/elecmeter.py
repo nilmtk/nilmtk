@@ -366,7 +366,37 @@ class ElecMeter(Hashable, Electric):
             datetime_switches.append(delta_power_absolute[(delta_power_absolute>threshold)].index.values.tolist())
         return flatten(datetime_switches)
 
-        
+    def correlation_with(self, elec):
+        """
+        Finds the correlation between the two ElecMeters. Both the ElecMeters 
+        should be perfectly aligned
+        Adapted from: 
+        http://www.johndcook.com/blog/2008/11/05/how-to-calculate-pearson-correlation-accurately/
+        """
+        n = 0
+        x_sum = 0
+        y_sum = 0
+
+        # First pass is used to find x_bar and y_bar
+        for x_power in self.power_series():
+            n = n+len(x_power.index)
+            x_sum = x_power.sum()
+
+        for y_power in elec.power_series():
+            y_sum = y_power.sum()
+
+        x_bar = x_sum*1.0/n
+        y_bar = y_sum*1.0/n
+
+        # Second pass is used to find x_s and x_y (std.devs)
+        x_s_square_sum = 0
+        x_y_square_sum = 0
+
+        for x_power in self.power_series():
+            x_s_square_sum = x_s_square_sum + ((x_power-x_bar)*(x_power-x_bar)).sum()
+
+        x_s_square = x_s_square_sum*1.0/(n-1)
+
     def dry_run_metadata(self):
         return self.metadata
 
@@ -486,7 +516,7 @@ class ElecMeter(Hashable, Electric):
             sections_to_compute = sections
 
         if not results_obj._data.empty:
-            print("Using cached result from metadata.")
+            print("Using cached result.")
 
         # If we get to here then we have to compute some stats
         if sections_to_compute:

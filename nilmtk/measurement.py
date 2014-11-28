@@ -21,7 +21,8 @@ def check_physical_quantity(physical_quantity):
         raise ValueError(msg)
 
 def select_best_ac_type(available_ac_types, mains_ac_types=None):
-    """Selects the 'best' alternating current measurement type from `available_ac_types`.
+    """Selects the 'best' alternating current measurement type from 
+    `available_ac_types`.
 
     Parameters
     ----------

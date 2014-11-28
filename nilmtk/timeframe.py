@@ -314,4 +314,4 @@ def convert_none_to_nat(timestamp):
     return pd.NaT if timestamp is None else timestamp
 
 def convert_nat_to_none(timestamp):
-    return None if timestamp == pd.NaT else timestamp
+    return None if timestamp is pd.NaT else timestamp

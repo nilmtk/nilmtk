@@ -55,5 +55,10 @@ class TestElecMeter(WarningTestMixin, unittest.TestCase):
         meter3 = ElecMeter(metadata={'submeter_of': 2}, meter_id=METER_ID3)
         self.assertEquals(meter3.upstream_meter(), meter2)
 
+    def test_proportion_of_energy(self):
+        meter = ElecMeter(store=self.datastore, metadata=self.meter_meta, 
+                          meter_id=METER_ID)
+        self.assertEquals(meter.proportion_of_energy(meter), 1.0)
+
 if __name__ == '__main__':
     unittest.main()

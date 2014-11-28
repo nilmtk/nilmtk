@@ -243,7 +243,10 @@ def check_directory_exists(d):
 def tz_localize_naive(timestamp, tz):
     if tz is None:
         return timestamp
-    elif pd.isnull(timestamp):
+    if timestamp is None:
+        return pd.NaT
+
+    if pd.isnull(timestamp):
         return pd.NaT
     else:
         return timestamp.tz_localize('UTC').tz_convert(tz)

@@ -595,7 +595,7 @@ class MeterGroup(Electric):
         submeters = self.submeters().meters
         count = Counter()
         for meter in submeters:
-            switch_time_meter = meter.switch_times()
+            switch_time_meter = meter.switch_times(threshold)
             for timestamp in switch_time_meter:
                 count[timestamp]+=1
         sim_switches = pd.Series(count)
@@ -827,47 +827,22 @@ class MeterGroup(Electric):
             submeters_dict[meter.identifier] = power_series
         return pd.DataFrame(submeters_dict)
 
-    def proportion_of_energy_submetered(self):
+    def proportion_of_energy_submetered(self, **loader_kwargs):
         """
         Returns
         -------
         float [0,1]
         """
-
-        """
-        Alternative approach:
-        * get mains good sections
-        * then use a 3-column matrix (columns=AC_TYPES) to store energy for each submeter
-        * drop any columns with all NaNs
-        * then get mains energy.
-        * Loop through matrix columns.  If ac_type is in mains_ac_types then
-          just take the proportion (sum col and divide by mains col) and then add all the proportions.  Otherwise
-          select the 'best' ac type from mains which most closely 'matches' the 
-          ac type from the matrix.
-        """
-
         mains = self.mains()
-        good_mains_sections = mains.good_sections()
-        submetered_energy = 0.0
-        common_ac_types = None
-        for meter in self.meters_directly_downstream_of_mains():
-            print("Getting total energy for", meter.appliance_label())
-            energy = meter.total_energy(sections=good_mains_sections)
-            print("  total energy =", energy)
-            if energy.empty:
-                continue
-            ac_types = set(energy.keys())
-            ac_type = select_best_ac_type(ac_types,
-                                          mains.available_power_ac_types())
-            submetered_energy += energy[ac_type]
-            if common_ac_types is None:
-                common_ac_types = ac_types
-            else:
-                common_ac_types = common_ac_types.intersection(ac_types)
-        mains_energy = mains.total_energy()
-        ac_type = select_best_ac_type(mains_energy.keys(), common_ac_types)
-        print("Using AC type '{}' from mains.".format(ac_type))
-        return submetered_energy / mains_energy[ac_type]
+        downstream_meters = self.meters_directly_downstream_of_mains()
+        proportion = 0.0
+        for m in downstream_meters:
+            print("Calculating proportion for", m)
+            prop = m.proportion_of_energy(mains, **loader_kwargs)
+            proportion += prop
+            print("   {:.2%}".format(prop))
+            
+        return proportion
 
     def available_power_ac_types(self):
         """Returns set of all AC types recorded by all meters"""
