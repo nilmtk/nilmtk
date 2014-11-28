@@ -516,7 +516,7 @@ class ElecMeter(Hashable, Electric):
             sections_to_compute = sections
 
         if not results_obj._data.empty:
-            print("Using cached result from metadata.")
+            print("Using cached result.")
 
         # If we get to here then we have to compute some stats
         if sections_to_compute:

@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from collections import Counter
+from warnings import warn
 from .timeframe import TimeFrame
 from .measurement import select_best_ac_type
 from nilmtk.utils import offset_alias_to_seconds
@@ -139,6 +140,41 @@ class Electric(object):
         energy = self.total_energy(**load_kwargs)
         return energy / periods
         
+    def proportion_of_energy(self, other, **loader_kwargs):
+        """
+        Parameters
+        ----------
+        other : nilmtk.MeteGroup or ElecMeter
+            Typically this will be mains.
+
+        Returns
+        -------
+        float [0,1]
+        """
+        good_other_sections = other.good_sections(**loader_kwargs)
+        loader_kwargs['sections'] = good_other_sections
+        total_energy = self.total_energy(**loader_kwargs)
+        if total_energy.empty:
+            return 0.0
+
+        # TODO test effect of setting `sections` for other
+        other_total_energy = other.total_energy(**loader_kwargs)
+        other_ac_types = other_total_energy.keys()
+        self_ac_types = total_energy.keys()
+        shared_ac_types = set(other_ac_types).intersection(self_ac_types)
+        n_shared_ac_types = len(shared_ac_types)
+        if n_shared_ac_types > 1:
+            return (total_energy[shared_ac_types] / 
+                    other_total_energy[shared_ac_types]).mean()
+        elif n_shared_ac_types == 0:
+            ac_type = select_best_ac_type(self_ac_types)
+            other_ac_type = select_best_ac_type(other_ac_types)
+            warn("No shared AC types.  Using '{:s}' for submeter"
+                 " and '{:s}' for other.".format(ac_type, other_ac_type))
+        elif n_shared_ac_types == 1:
+            ac_type = list(shared_ac_types)[0]
+            other_ac_type = ac_type
+        return total_energy[ac_type] / other_total_energy[other_ac_type]
 
   #   def activity_distribution(self):
   # * activity distribution:
