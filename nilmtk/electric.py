@@ -101,7 +101,7 @@ class Electric(object):
         # TODO: this might be a naive approach to calculating vampire power.
         return self.power_series_all_data(**load_kwargs).min()
 
-    def switch_continuity_violations(self, threshold=40):
+    def simultaneous_switches(self, threshold=40):
         """
         Parameters
         ----------
@@ -109,7 +109,7 @@ class Electric(object):
 
         Returns
         -------
-        switch_continuity: pd.Series of type {timestamp: number of 
+        sim_switches: pd.Series of type {timestamp: number of 
         simultaneous switches}
 
         Notes
@@ -123,16 +123,8 @@ class Electric(object):
         memory hungry.
         """
         submeters = self.submeters().meters
-        first_meter = submeters[0]
-        power = first_meter.power_series_all_data()
-        delta_power = power.diff()
-        delta_power_absolute = delta_power.abs()
         count = Counter()
-        index_change = delta_power_absolute[(delta_power_absolute>threshold)].index
-        for timestamp in index_change:
-            count[timestamp]+=1
-
-        for meter in submeters[1:]:
+        for meter in submeters:
             power = meter.power_series_all_data()
             delta_power = power.diff()
             delta_power_absolute = delta_power.abs()
@@ -140,10 +132,10 @@ class Electric(object):
             #print("Number of edges for {} is {}".format(meter, len(index_change)))
             for timestamp in index_change:
                 count[timestamp]+=1
-        switch_continuity = pd.Series(count)
+        sim_switches = pd.Series(count)
         # Should be 2 or more appliances changing state at the same time
-        switch_continuity = switch_continuity[switch_continuity>=2]
-        return switch_continuity
+        sim_switches = sim_switches[sim_switches>=2]
+        return sim_switches
 
 
     def uptime(self, **load_kwargs):
