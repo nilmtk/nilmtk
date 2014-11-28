@@ -3,6 +3,8 @@ from warnings import warn
 from collections import namedtuple
 from compiler.ast import flatten
 from copy import deepcopy
+from itertools import izip
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from .preprocessing import Clip
@@ -390,12 +392,30 @@ class ElecMeter(Hashable, Electric):
 
         # Second pass is used to find x_s and x_y (std.devs)
         x_s_square_sum = 0
-        x_y_square_sum = 0
+        y_s_square_sum = 0
 
         for x_power in self.power_series():
             x_s_square_sum = x_s_square_sum + ((x_power-x_bar)*(x_power-x_bar)).sum()
 
+        for y_power in elec.power_series():
+            y_s_square_sum = y_s_square_sum + ((y_power-y_bar)*(y_power-y_bar)).sum()
+
         x_s_square = x_s_square_sum*1.0/(n-1)
+        y_s_square = y_s_square_sum*1.0/(n-1)
+
+        x_s = np.sqrt(x_s_square)
+        y_s = np.sqrt(y_s_square)
+
+        numerator = 0
+        for (x_power, y_power) in izip(self.power_series(), elec.power_series()):
+            xi_minus_xbar = x_power-x_bar
+            yi_minus_ybar = y_power-y_bar
+            numerator = numerator + (xi_minus_xbar*yi_minus_ybar).sum()
+        denominator = (n-1)*x_s*y_s
+        corr = numerator*1.0/denominator
+        return corr
+
+
 
     def dry_run_metadata(self):
         return self.metadata
