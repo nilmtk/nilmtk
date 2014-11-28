@@ -806,17 +806,42 @@ class MeterGroup(Electric):
 
         mains = self.mains()
         good_mains_sections = mains.good_sections()
-        downsteam_meters = MeterGroup(self.meters_directly_downstream_of_mains())
+        downstream_meters = MeterGroup(self.meters_directly_downstream_of_mains())
         energy_per_meter = downstream_meters.energy_per_meter(
             sections=good_mains_sections)
-        mains_energy = mains.total_energy(sections=good_mains_sections) # TODO test effect of setting `sections`
-        """
-        TODO:
-        * Loop through matrix columns.  If ac_type is in mains_ac_types then
-          just take the proportion (sum col and divide by mains col) and then add all the proportions.  Otherwise
-          select the 'best' ac type from mains which most closely 'matches' the 
-          ac type from the matrix.
-        """        
+        # TODO test effect of setting `sections`
+        mains_energy = mains.total_energy(sections=good_mains_sections)
+        mains_ac_types = mains_energy.keys()
+
+        # Check that no submeters have multiple AC types
+        for submeter_id in energy_per_meter.columns:
+            submeter_energy = energy_per_meter[submeter_id].dropna()
+            if len(submeter_energy) > 1:
+                submeter_ac_types = submeter_energy.keys()
+                shared_ac_types = set(submeter_ac_types).intersection(mains_ac_types)
+                n_shared_ac_types = len(shared_ac_types)
+                if n_shared_ac_types == 0:
+                    submeter_ac_type = select_best_ac_type(submeter_ac_types)
+                elif n_shared_ac_types == 1:
+                    submeter_ac_type = list(shared_ac_types)[0]
+                else:
+                    submeter_ac_type = select_best_ac_type(shared_ac_types)
+                for ac_type in submeter_ac_types:
+                    if ac_type != submeter_ac_type:
+                        energy_per_meter[submeter_id][ac_type] = 0
+        
+        total_proportion = 0.0
+        for ac_type in energy_per_meter.index:
+            total_submeter_energy = energy_per_meter.loc[ac_type].sum()
+            if ac_type in mains_ac_types:
+                mains_ac_type = ac_type
+            else:
+                mains_ac_type = select_best_ac_type(mains_ac_types)
+                warn("At least one submeter has an AC type of '{:s}',"
+                     " which is not in mains.  So will use '{:s}' instead."
+                     .format(ac_type, mains_ac_type), RuntimeWarning)
+            total_proportion += total_submeter_energy / mains_energy[mains_ac_type]
+        return total_proportion
 
     def available_power_ac_types(self):
         """Returns set of all AC types recorded by all meters"""
