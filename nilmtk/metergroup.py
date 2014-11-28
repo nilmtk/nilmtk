@@ -810,7 +810,7 @@ class MeterGroup(Electric):
             print("Calculating proportion for", m)
             prop = m.proportion_of_mains_energy(mains, **loader_kwargs)
             proportion += prop
-            print("   ", prop, "kWh")
+            print("   {:.2%}".format(prop))
             
         return proportion
 
