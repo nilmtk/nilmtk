@@ -379,16 +379,24 @@ class ElecMeter(Hashable, Electric):
         y_sum = 0
 
         # First pass is used to find x_bar and y_bar
-        for power in self.power_series():
-            n = n+len(power.index)
-            x_sum = power.sum()
+        for x_power in self.power_series():
+            n = n+len(x_power.index)
+            x_sum = x_power.sum()
 
-        for power in elec.power_series():
-            y_sum = power.sum()
+        for y_power in elec.power_series():
+            y_sum = y_power.sum()
 
         x_bar = x_sum*1.0/n
         y_bar = y_sum*1.0/n
 
+        # Second pass is used to find x_s and x_y (std.devs)
+        x_s_square_sum = 0
+        x_y_square_sum = 0
+
+        for x_power in self.power_series():
+            x_s_square_sum = x_s_square_sum + ((x_power-x_bar)*(x_power-x_bar)).sum()
+
+        x_s_square = x_s_square_sum*1.0/(n-1)
 
 
 
