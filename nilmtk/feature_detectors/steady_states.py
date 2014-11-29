@@ -31,7 +31,8 @@ def find_steady_states_transients(metergroup):
 
 def find_steady_states(dataframe, min_n_samples=2, stateThreshold=15,
                        noise_level=70):
-    """Finds steady states given a datafram of power
+    """
+    Finds steady states given a DataFrame of power
 
     Parameters
     ----------

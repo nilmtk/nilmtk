@@ -2,6 +2,7 @@ from __future__ import print_function, division
 import pandas as pd
 import numpy as np
 import json
+from collections import OrderedDict
 from datetime import datetime
 from ..appliance import ApplianceID
 from ..utils import find_nearest, container_to_string
@@ -242,8 +243,116 @@ class Hart85(object):
        
         return buffer.matchedPairs
 
+  
+
+    def hart85_disaggregate_single_chunk(self, chunk, prev, transients):
+        """
+
+        """
+        
+
+        states = pd.DataFrame(-1, index = chunk.index, columns = self.centroids.index.values)
+        for transient_tuple in transients.itertuples():
+            if transient_tuple[0]<chunk.index[0]:
+                # Transient occurs before chunk has started; do nothing
+                pass 
+            elif transient_tuple[0]>chunk.index[-1]:
+                # Transient occurs after chunk has ended; do nothing
+                pass
+            else:
+                # Absolute value of transient
+                abs_value = np.abs(transient_tuple[1:])
+                positive = transient_tuple[1]>0
+                absolute_value_transient_minus_centroid = pd.DataFrame((self.centroids - abs_value).abs())
+                if len(transient_tuple)==2:
+                    # 1d data
+                    index_least_delta = absolute_value_transient_minus_centroid.idxmin().values[0]
+                else:
+                    # 2d data. Need to find absolute value before computing minimum
+                    columns = absolute_value_transient_minus_centroid.columns
+                    absolute_value_transient_minus_centroid["multidim"] = absolute_value_transient_minus_centroid[[columns[0]]]*absolute_value_transient_minus_centroid[[columns[0]]] + absolute_value_transient_minus_centroid[[columns[1]]]*absolute_value_transient_minus_centroid[[columns[1]]]
+                    index_least_delta = absolute_value_transient_minus_centroid["multidim"].argmin()
+                #print("Index_least",index_least_delta)
+                if positive:
+                    # Turned on
+                    states.loc[transient_tuple[0]][index_least_delta] = 1
+                else:
+                    # Turned off
+                    states.loc[transient_tuple[0]][index_least_delta] = 0
+
+        return states
+
+    def assign_power_from_states(self, states_chunk, prev):
+        """
+
+        """
+        self.schunk = states_chunk
+        di = {}
+        ndim = len(self.centroids.columns)
+        for appliance in states_chunk.columns:
+            df = pd.DataFrame(index = states_chunk.index)
+            values = states_chunk[[appliance]].values.flatten()
+            if ndim==1:
+                power = np.zeros(len(values), dtype=int)
+            else:
+                power = np.zeros((len(values), 2), dtype=int)
+            on = False
+            i = 0
+            while i <len(values)-1:                     
+                if values[i] == 1:
+                    #print("A", values[i], i)
+                    on = True
+                    i = i +1 
+                    power[i] = self.centroids.ix[appliance].values
+                    while values[i]!=0 and i<len(values)-1:
+                        #print("B", values[i], i)
+                        power[i] = self.centroids.ix[appliance].values
+                        i = i + 1
+                elif values[i] == 0:
+                    #print("C", values[i], i)
+                    on = False
+                    i = i +1 
+                    power[i] = 0
+                    while values[i]!=1 and i<len(values)-1:
+                        #print("D", values[i], i)
+                        if ndim==1:
+                            power[i] = 0
+                        else:
+                            power[i] = [0, 0]
+                        i = i + 1
+                else:
+                    #print("E", values[i], i)
+                    # Unknown state. If previously we know about this appliance's state, we can 
+                    # use that. Else, it defaults to 0
+                    if prev[appliance]==-1 or prev[appliance]==0:
+                        #print("F", values[i], i)
+                        on = False
+                        power[i] = 0
+                        while values[i]!=1 and i<len(values)-1:
+                            #print("G", values[i], i)
+                            if ndim==1:
+                                power[i] = 0
+                            else:
+                                power[i] = [0, 0]
+                            i = i + 1
+                    else:
+                        #print("H", values[i], i)
+                        on = True
+                        power[i] = self.centroids.ix[appliance].values
+                        while values[i]!=0 and i<len(values)-1:
+                            #print("I", values[i], i)
+                            power[i] = self.centroids.ix[appliance].values
+                            i = i + 1
+                    
+
+            di[appliance] = power
+            print(power.sum())
+        return di          
+
+
     def disaggregate(self, mains, output_datastore, **load_kwargs):
-        '''Disaggregate mains according to the model learnt previously.
+        '''
+        Disaggregate mains according to the model learnt previously.
 
         Parameters
         ----------
@@ -253,7 +362,7 @@ class Hart85(object):
         output_name : string, optional
             The `name` to use in the metadata for the `output_datastore`.
             e.g. some sort of name for this experiment.  Defaults to 
-            "NILMTK_CO_<date>"
+            "NILMTK_Hart85_<date>"
         resample_seconds : number, optional
             The desired sample period in seconds.
         **load_kwargs : key word arguments
@@ -271,76 +380,33 @@ class Hart85(object):
 
         # For now ignoring the first transient
         transients = transients[1:]
-        states = pd.DataFrame(-1, index = mains.power_series_all_data().index, columns = self.centroids.index.values)
-        for transient_tuple in transients.itertuples():
-            
-            # Absolute value of transient
-            abs_value = np.abs(transient_tuple[1])
-            #print(abs_value)
-            positive = transient_tuple[1]>0
 
-            absolute_value_transient_minus_centroid = pd.Series((self.centroids - abs_value).abs().active)
-            index_least_delta = absolute_value_transient_minus_centroid.argmin()
-            #print(abs_value, index_least_delta)
-            if positive:
-                # Turned on
-                states.loc[transient_tuple[0]][index_least_delta] = 1
-            else:
-                
-                # Turned off
-                states.loc[transient_tuple[0]][index_least_delta] = 0
+        # Initially all appliances/meters are in unknown state (denoted by -1)
+        prev = OrderedDict()
+        learnt_meters = self.centroids.index.values
+        for meter in learnt_meters:
+            prev[meter] = -1
 
-        self.states = states
-
-        print("States done")
-
-        di = {}
-        chunk = mains.power_series().next()
+        states_total = [] 
         timeframes=[]
-        timeframes.append(chunk.timeframe)
-        measurement = chunk.name
-        cols = pd.MultiIndex.from_tuples([chunk.name])
-
-        for column in self.states.columns:
-            print(column)
-            df = pd.DataFrame(index = self.states.index)
-            values = self.states[[column]].values.flatten()
-            power = np.zeros(len(values), dtype=int)
-            on = False
-            i = 0
-            while i <len(values)-1:
-                     
-                if values[i] == 1:
-                    on = True
-                    i = i +1 
-                    power[i] = self.centroids.ix[column].active
-                    while values[i]!=0 and i<len(values)-1:
-                        power[i] = self.centroids.ix[column].active
-                        i = i + 1
-                elif values[i] == 0:
-                    on = False
-                    i = i +1 
-                    power[i] = 0
-                    while values[i]!=1 and i<len(values)-1:
-                        power[i] = 0
-                        i = i + 1
-                else:
-                    on =False
-                    i =i+1
-                    power[i] = 0
-                    while values[i]!=1 and i<len(values)-1:
-                        power[i] = 0
-                        i = i + 1
-            di[column] = power
-            output_datastore.append('{}/elec/meter{:d}'
-                                        .format(building_path, column+2),
-                                        pd.DataFrame(power,
-                                                     index=df.index,
+        # Now iterating over mains data and disaggregating chunk by chunk
+        for chunk in mains.power_series():
+            # Record metadata
+            timeframes.append(chunk.timeframe)
+            measurement = chunk.name
+            states_chunk = self.hart85_disaggregate_single_chunk(chunk, prev, transients)
+            prev = states_chunk.iloc[-1].to_dict()
+            power_chunk_dict = self.assign_power_from_states(states_chunk, prev)
+            self.po = power_chunk_dict
+            cols = pd.MultiIndex.from_tuples([chunk.name])
+            for meter in power_chunk_dict.keys():
+                output_datastore.append('{}/elec/meter{:d}'
+                                        .format(building_path, meter+2),
+                                        pd.DataFrame(power_chunk_dict[meter],
+                                                     index=states_chunk.index,
                                                      columns=cols))
-        self.di = di
-
-        
-        output_datastore.append(key=mains_data_location,
+       
+            output_datastore.append(key=mains_data_location,
                                     value=pd.DataFrame(chunk, columns=cols))
 
         # DataSet and MeterDevice metadata:

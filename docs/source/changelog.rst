@@ -11,7 +11,8 @@ New features
 ^^^^^^^^^^^^
 
 * ``MeterGroup.plot()``
-* Correlation between different Elecmeters and corresponding plot
+* Correlation between different Elecmeters and corresponding plot; Issue #160
+* Finding number of simultaneous appliance switches; Issue #163
 * ``CSVDataStore``
 
 New dataset converters
