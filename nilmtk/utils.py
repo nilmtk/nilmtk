@@ -12,6 +12,7 @@ from collections import OrderedDict
 import datetime
 
 
+
 def dependencies_diagnostics():
     """Prints versions of various dependencies"""
     output= OrderedDict()
