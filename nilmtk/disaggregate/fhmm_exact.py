@@ -224,7 +224,6 @@ class FHMM(object):
             length = len(meter_data.index)
             X = meter_data.values.reshape(length, 1)
             self.X = X
-            print(X)
             learnt_model[meter].fit([X])
 
         # Combining to make a AFHMM
@@ -374,16 +373,11 @@ class FHMM(object):
             # Start disaggregation
             predictions = self.disaggregate_chunk(chunk)
             for meter in predictions.columns:
-                print("Writing")
-                print("Wrote")
+            
                 meter_instance = meter.instance()
-                print(meter_instance)
-
-
                 cols = pd.MultiIndex.from_tuples([chunk.name])
 
                 predicted_power = predictions[[meter]].values
-                print(predicted_power[:10])
                 output_datastore.append('{}/elec/meter{}'
                                         .format(building_path, meter_instance),
                                         pd.DataFrame(predicted_power,
