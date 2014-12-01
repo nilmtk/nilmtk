@@ -34,6 +34,11 @@ def dependencies_diagnostics():
         else:
             output[key] = eval(package_name + ".__version__")
 
+    try:
+        print(pd.show_versions())
+    except:
+        pass
+
     return output
 
 
