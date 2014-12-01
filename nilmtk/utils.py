@@ -244,13 +244,13 @@ def check_directory_exists(d):
 def tz_localize_naive(timestamp, tz):
     if tz is None:
         return timestamp
-    if timestamp is None:
+    if timestamp is None or pd.isnull(timestamp):
         return pd.NaT
 
-    if pd.isnull(timestamp):
-        return pd.NaT
-    else:
-        return timestamp.tz_localize('UTC').tz_convert(tz)
+    if timestamp_is_naive(timestamp):
+        timestamp = timestamp.tz_localize('UTC')
+
+    return timestamp.tz_convert(tz)
 
 
 def get_tz(df):
@@ -260,3 +260,23 @@ def get_tz(df):
     except AttributeError:
         tz = None
     return tz
+
+
+def timestamp_is_naive(timestamp):
+    """
+    Parameters
+    ----------
+    timestamp : pd.Timestamp or datetime.datetime
+
+    Returns
+    -------
+    True if `timestamp` is naive (i.e. if it does not have a
+    timezone associated with it).  See:
+    https://docs.python.org/2/library/datetime.html#available-types
+    """
+    if timestamp.tzinfo is None:
+        return True
+    elif timestamp.tzinfo.utcoffset(timestamp) is None:
+        return True
+    else:
+        return False
