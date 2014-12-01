@@ -47,10 +47,8 @@ def plot_series(series, **kwargs):
     fig.autofmt_xdate()
     return ax
 
-def plot_correlation_heatmap(df,
-            edgecolors='w',
-            cmap=matplotlib.cm.RdYlBu_r,
-            log=False):    
+def plot_correlation_heatmap(df, labels, edgecolors='w', 
+                             cmap=matplotlib.cm.RdYlBu_r, log=False):
     width = len(df.columns)/4
     height = len(df.index)/4
     
@@ -66,8 +64,8 @@ def plot_correlation_heatmap(df,
     ax.xaxis.set_ticks_position('top')  # put column labels at the top
     ax.tick_params(bottom='off', top='off', left='off', right='off')  # turn off ticks
     
-    plt.yticks(np.arange(len(df.index)) + 0.5, df.index)
-    plt.xticks(np.arange(len(df.columns)) + 0.5, df.columns, rotation=90)
+    plt.yticks(np.arange(len(df.index)) + 0.5, labels)
+    plt.xticks(np.arange(len(df.columns)) + 0.5, labels, rotation=90)
     
     # ugliness from http://matplotlib.org/users/tight_layout_guide.html
     from mpl_toolkits.axes_grid1 import make_axes_locatable

@@ -189,6 +189,8 @@ class ElecMeter(Hashable, Electric):
         string : A label listing all the appliance types.
         """
         appliance_names = []
+        if self.is_site_meter():
+            appliance_names.append('SITE METER')
         for appliance in self.appliances:
             appliance_name = appliance.label()
             if appliance.metadata.get('dominant_appliance'):
