@@ -183,8 +183,11 @@ class Results(object):
 
     def timeframes(self):
         """Returns a list of timeframes covered by this Result."""
-        return [TimeFrame(index, row['end']) 
-                for index, row in self._data.iterrows()]
+        # For some reason, using `iterrows()` messes with the 
+        # timezone of the index, hence we need to 'manually' iterate
+        # over the rows.
+        return [TimeFrame(self._data.index[i], self._data.iloc[i]['end'])
+                for i in range(len(self._data))]
 
     def _columns_with_end_removed(self):
         cols = set(self._data.columns)
