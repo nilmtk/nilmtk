@@ -827,6 +827,22 @@ class MeterGroup(Electric):
             submeters_dict[meter.identifier] = power_series
         return pd.DataFrame(submeters_dict)
 
+
+    def entropy(self):
+        """
+        Finds the entropy of different meters in this MeterGroup
+        Returns
+        -------
+        pd.Series of entropy
+        """
+        meter_identifiers = list(self.identifier)
+        entropy = pd.Series(index=meter_identifiers)
+        for meter in self.meters:
+            id_meter  = meter.identifier
+            entropy[id_meter] = meter.entropy()
+        return entropy
+
+
     def correlation(self):
         """
         Finds the correlation among different meters in a MeterGroup.

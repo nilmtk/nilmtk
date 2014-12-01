@@ -422,36 +422,44 @@ class ElecMeter(Hashable, Electric):
         corr = numerator*1.0/denominator
         return corr
 
-    def entropy(self,k=3,base=2):
-      """ 
-      This implementation is provided courtesy NPEET toolbox,
-      the authors kindly allowed us to directly use their code.
-      As a courtesy procedure, you may wish to cite their paper, 
-      in case you use this function.
-      This fails if there is a large number of records. Need to
-      ask the authors what to do about the same! 
-      The classic K-L k-nearest neighbor continuous entropy estimator
-      x should be a list of vectors, e.g. x = [[1.3],[3.7],[5.1],[2.4]]
-      if x is a one-dimensional scalar and we have four samples
-      """
-      y = self.power_series_all_data().values
-      print(len(y))
-      x = y[:1000000]
-      num_elements = len(x)
-      x = x.reshape((num_elements, 1))
-      assert k <= len(x)-1, "Set k smaller than num. samples - 1"
-      d = len(x[0])
-      N = len(x)
-      intens = 1e-10 #small noise to break degeneracy, see doc.
-      x = [list(p + intens*nr.rand(len(x[0]))) for p in x]
-      tree = ss.cKDTree(x)
-      nn = [tree.query(point,k+1,p=float('inf'))[0][k] for point in x]
-      const = digamma(N)-digamma(k) + d*log(2)
-      return (const + d*np.mean(map(log,nn)))/log(base)
+    def entropy(self, k=3, base=2):
+        """ 
+        This implementation is provided courtesy NPEET toolbox,
+        the authors kindly allowed us to directly use their code.
+        As a courtesy procedure, you may wish to cite their paper, 
+        in case you use this function.
+        This fails if there is a large number of records. Need to
+        ask the authors what to do about the same! 
+        The classic K-L k-nearest neighbor continuous entropy estimator
+        x should be a list of vectors, e.g. x = [[1.3],[3.7],[5.1],[2.4]]
+        if x is a one-dimensional scalar and we have four samples
+        """
+        def kdtree_entropy(z):
+            assert k <= len(z)-1, "Set k smaller than num. samples - 1"
+            d = len(z[0])
+            N = len(z)
+            intens = 1e-10 #small noise to break degeneracy, see doc.
+            z = [list(p + intens*nr.rand(len(z[0]))) for p in z]
+            tree = ss.cKDTree(z)
+            nn = [tree.query(point,k+1,p=float('inf'))[0][k] for point in z]
+            const = digamma(N)-digamma(k) + d*log(2)
+            return (const + d*np.mean(map(log,nn)))/log(base)
 
-    def mutual_information(self, elec):
-        return None
+        out = []
+        MAX_SIZE_ENTROPY = 10000
+        for power in self.power_series():
+            x = power.values
+            num_elements = len(x)
+            x = x.reshape((num_elements, 1))            
+            if num_elements>MAX_SIZE_ENTROPY:
 
+                splits = num_elements/MAX_SIZE_ENTROPY + 1
+                y = np.array_split(x, splits)
+                for z in y:            
+                    out.append(kdtree_entropy(z))                    
+            else:
+                out.append(kdtree_entropy(x))
+        return sum(out)/len(out)
 
     def dry_run_metadata(self):
         return self.metadata
