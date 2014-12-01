@@ -584,7 +584,7 @@ class MeterGroup(Electric):
             for chunk_when_on in meter.when_on(**load_kwargs):
                 series_to_plot = chunk_when_on[chunk_when_on==True]
                 if len(series_to_plot.index):
-                    (series_to_plot+i-1).plot(ax=ax, style='.')
+                    (series_to_plot+i-1).plot(ax=ax, style='k.')
         labels = self.get_appliance_labels(meter_identifiers)
         plt.yticks(range(len(self.meters)), labels)
         plt.ylim((-0.5, len(self.meters)+0.5))

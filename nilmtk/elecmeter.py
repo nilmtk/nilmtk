@@ -8,6 +8,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import scipy.spatial as ss
+from scipy import fft
+from pandas.tools.plotting import lag_plot, autocorrelation_plot
 from scipy.special import digamma,gamma
 from math import log,pi
 import numpy.random as nr
@@ -357,6 +359,38 @@ class ElecMeter(Hashable, Electric):
             series.timeframe = getattr(chunk, 'timeframe', None)
             series.look_ahead = getattr(chunk, 'look_ahead', None)
             yield series
+
+    def plot_lag(self, lag=1):
+        fig, ax = plt.subplots()
+        for power in self.power_series():
+            lag_plot(power, lag, ax = ax)
+        return ax
+
+    def plot_spectrum(self):
+        fig, ax = plt.subplots()
+        Fs = 1.0/self.device.get('sample_period')
+        for power in self.power_series():
+            n = len(power.values) # length of the signal
+            k = np.arange(n)            
+            T = n/Fs
+            frq = k/T # two sides frequency range
+            frq = frq[range(n//2)] # one side frequency range
+
+            Y = fft(power)/n # fft computing and normalization
+            Y = Y[range(n//2)]
+
+            ax.plot(frq,abs(Y)) # plotting the spectrum
+        ax.set_xlabel('Freq (Hz)')
+        ax.set_ylabel('|Y(freq)|')
+        return ax
+          
+
+    def plot_autocorrelation(self):
+        fig, ax = plt.subplots()
+        for power in self.power_series():
+            autocorrelation_plot(power, ax = ax)
+        return ax
+
 
     def switch_times(self, threshold=40):
         """
