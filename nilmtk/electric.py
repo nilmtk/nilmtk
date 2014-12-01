@@ -31,7 +31,8 @@ class Electric(object):
                                              self.min_on_power_threshold())
         for chunk in self.power_series(**load_kwargs):
             yield chunk > on_power_threshold
-        
+
+            
     def min_on_power_threshold(self):
         """Returns the minimum `on_power_threshold` across all appliances 
         immediately downstream of this meter.  If any appliance 

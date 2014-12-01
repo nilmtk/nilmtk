@@ -333,7 +333,7 @@ class FHMM(object):
             Passed to `mains.power_series(**kwargs)`
         '''
         import warnings
-        warnings.filterwarnings("ignore", category=DeprecationWarning)
+        warnings.filterwarnings("ignore", category=Warning)
         MIN_CHUNK_LENGTH =100
         if not self.model:
             raise RuntimeError("The model needs to be instantiated before"
