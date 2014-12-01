@@ -12,10 +12,9 @@ from collections import OrderedDict
 import datetime
 
 
-
 def dependencies_diagnostics():
     """Prints versions of various dependencies"""
-    output= OrderedDict()
+    output = OrderedDict()
     output["Date"] = str(datetime.datetime.now())
     import sys 
     import platform
@@ -38,6 +37,11 @@ def dependencies_diagnostics():
         print(pd.show_versions())
     except:
         pass
+    else:
+        print("")
+
+    for k, v in output.iteritems():
+        print("{}: {}".format(k, v))
 
     return output
 
