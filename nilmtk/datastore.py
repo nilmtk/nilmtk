@@ -18,7 +18,8 @@ from .node import Node
 from pdb import set_trace as _breakpoint
 
 
-MAX_MEM_ALLOWANCE_IN_BYTES = 2**29 # 512 MBytes
+#MAX_MEM_ALLOWANCE_IN_BYTES = 2**29 # 512 MBytes
+MAX_MEM_ALLOWANCE_IN_BYTES = 2**10 # 1 MBytes
 
 class DataStore(object):
     """
@@ -477,21 +478,41 @@ class CSVDataStore(DataStore):
         # iterate through parameter sections
         for section in sections:
             window_intersect = self.window.intersect(section)
+            header_rows = [0,1]
             text_file_reader = pd.read_csv(file_path, 
                                             index_col=0, 
-                                            header=[0,1], 
+                                            header=header_rows, 
                                             parse_dates=True, 
                                             #usecols=cols,
                                             chunksize=chunksize)
             # iterate through all chunks in file
-            for chunk in text_file_reader:
+            for chunk_idx, chunk in enumerate(text_file_reader):
                 chunk.timeframe = TimeFrame(chunk.index[0], chunk.index[-1])
                 chunk_intersect = window_intersect.intersect(chunk.timeframe)
                 # if chunk intersects with section
                 if not chunk_intersect.empty:
-                    subchunk = chunk[(chunk.index>chunk_intersect.start) & 
-                                    (chunk.index<chunk_intersect.end)]
+                    subchunk = chunk[(chunk.index>=chunk_intersect.start) & 
+                                    (chunk.index<=chunk_intersect.end)]
                     subchunk.timeframe = TimeFrame(subchunk.index[0], subchunk.index[-1])
+                    
+                    # Load look ahead if necessary
+                    if n_look_ahead_rows > 0:
+                        if len(subchunk.index) > 0:
+                            rows_to_skip = (chunk_idx+1)*MAX_MEM_ALLOWANCE_IN_BYTES+len(header_rows)+1
+                            subchunk.look_ahead = pd.read_csv(file_path, 
+                                            index_col=0, 
+                                            header=None, 
+                                            parse_dates=True,
+                                            skiprows=rows_to_skip,
+                                            nrows=n_look_ahead_rows)
+                        else:
+                            subchunk.look_ahead = pd.DataFrame()
+
+                    print(subchunk)
+                    print(subchunk.look_ahead)
+                    import ipdb
+                    ipdb.set_trace()
+                    
                     yield subchunk
 
     def append(self, key, value):
