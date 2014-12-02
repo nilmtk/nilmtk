@@ -14,7 +14,7 @@ from .stats.totalenergyresults import TotalEnergyResults
 from .hashable import Hashable
 from .appliance import Appliance
 from .datastore import Key
-from .measurement import select_best_ac_type
+from .measurement import select_best_ac_type, AC_TYPES
 from .node import Node
 from .electric import Electric
 from .timeframe import TimeFrame, list_of_timeframe_dicts
@@ -272,28 +272,6 @@ class ElecMeter(Hashable, Electric):
 
         return match
 
-    def power_series_all_columns(self, **kwargs):
-        """Get all power parameters available"""
-
-        preprocessing = kwargs.pop('preprocessing', [])
-
-        # Get source node
-        last_node = self.get_source_node(**kwargs)
-        generator = last_node.generator
-
-        # Connect together all preprocessing nodes
-        for node in preprocessing:
-            node.upstream = last_node
-            last_node = node
-            generator = last_node.process()
-
-        # Pull data through preprocessing pipeline
-        for chunk in generator:            
-            series = chunk['power'].fillna(0)
-            series.timeframe = getattr(chunk, 'timeframe', None)
-            series.look_ahead = getattr(chunk, 'look_ahead', None)
-            yield series
-
     def power_series(self, **kwargs):
         """Get power Series.
 
@@ -302,9 +280,12 @@ class ElecMeter(Hashable, Electric):
         measurement_ac_type_prefs : list of strings, optional
             if provided then will try to select the best AC type from 
             self.available_ac_types which is also in measurement_ac_type_prefs.
-            If none of the measurements from measurement_ac_type_prefs are 
+            If no measurement from measurement_ac_type_prefs is
             available then will raise a warning and will select another ac type.
         preprocessing : list of Node subclass instances
+        load_all_power_columns : bool, default False
+            If True then will return a generator of DataFrames of all the 
+            power AC types.
         **kwargs :
             Any other key word arguments are passed to self.store.load()
 
@@ -328,12 +309,26 @@ class ElecMeter(Hashable, Electric):
             then will attempt to use voltage data from this meter.
         nominal_voltage : float
         """
+        # Extract key word arguments
         measurement_ac_type_prefs = kwargs.pop(
             'measurement_ac_type_prefs', None)
         preprocessing = kwargs.pop('preprocessing', [])
+        load_all_power_columns = kwargs.pop('load_all_power_columns', False)
+        if load_all_power_columns:
+            if measurement_ac_type_prefs:
+                raise ValueError("Cannot specify `load_all_power_columns` and"
+                                 " `measurement_ac_type_prefs` together.")
+            if kwargs.has_key('cols'):
+                raise ValueError("Cannot specify `load_all_power_columns` and"
+                                 " `cols` together.")
+        if kwargs.has_key('cols') and measurement_ac_type_prefs:
+            raise ValueError("Cannot specify `cols` and"
+                             " `measurement_ac_type_prefs` together.")
 
         # Select power column:
-        if not kwargs.has_key('cols'):
+        if load_all_power_columns:
+            kwargs['cols'] = [('power', ac_type) for ac_type in AC_TYPES]
+        elif measurement_ac_type_prefs:
             best_ac_type = select_best_ac_type(self.available_power_ac_types(),
                                                measurement_ac_type_prefs)
             kwargs['cols'] = [('power', best_ac_type)]
@@ -350,10 +345,13 @@ class ElecMeter(Hashable, Electric):
 
         # Pull data through preprocessing pipeline
         for chunk in generator:
-            series = chunk.icol(0).dropna()
-            series.timeframe = getattr(chunk, 'timeframe', None)
-            series.look_ahead = getattr(chunk, 'look_ahead', None)
-            yield series        
+            if len(chunk.columns) == 1:
+                chunk_to_yield = chunk.icol(0).dropna()
+                chunk_to_yield.timeframe = getattr(chunk, 'timeframe', None)
+                chunk_to_yield.look_ahead = getattr(chunk, 'look_ahead', None)
+            else:
+                chunk_to_yield = chunk
+            yield chunk_to_yield
 
     def dry_run_metadata(self):
         return self.metadata
