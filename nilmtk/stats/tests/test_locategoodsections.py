@@ -8,7 +8,7 @@ from datetime import timedelta
 from .. import TotalEnergy, GoodSections
 from ..goodsectionsresults import GoodSectionsResults
 from ..totalenergy import _energy_for_power_series
-from ... import TimeFrame, ElecMeter, HDFDataStore
+from ... import TimeFrame, ElecMeter, HDFDataStore, DataSet
 from ...elecmeter import ElecMeterID
 from ...consts import JOULES_PER_KWH
 from ...tests.testingtools import data_dir
@@ -25,11 +25,29 @@ class TestLocateGoodSections(unittest.TestCase):
         cls.meter_meta = cls.datastore.load_metadata('building1')['elec_meters'][METER_ID.instance]
 
     def test_pipeline(self):
-        meter = ElecMeter(store=self.datastore, metadata=self.meter_meta, 
-                          meter_id=METER_ID)
-        source_node = meter.get_source_node()
-        good_sections = GoodSections(source_node)
-        good_sections.run()
+        meter1 = ElecMeter(store=self.datastore, metadata=self.meter_meta, 
+                           meter_id=METER_ID)
+        
+        # load co_test.h5
+        dataset = DataSet(join(data_dir(), 'co_test.h5'))
+        meter2 = dataset.buildings[1].elec.mains()
+
+        for meter in [meter1, meter2]:
+            for chunksize in [None, 2**10, 2**29]:
+                if chunksize is None:
+                    kwargs = {}
+                else:
+                    kwargs = {'chunksize': chunksize}
+                source_node = meter.get_source_node(**kwargs)
+                good_sections = GoodSections(source_node)
+                good_sections.run()
+                combined = good_sections.results.simple()
+                meter.clear_cache()
+                meter.good_sections(**kwargs)
+                meter.good_sections(**kwargs)
+                meter.clear_cache()
+
+        dataset.store.close()
 
     def test_process_chunk(self):
         MAX_SAMPLE_PERIOD = 10

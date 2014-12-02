@@ -31,7 +31,6 @@ class Electric(object):
                                              self.min_on_power_threshold())
         for chunk in self.power_series(**load_kwargs):
             yield chunk > on_power_threshold
-
             
     def min_on_power_threshold(self):
         """Returns the minimum `on_power_threshold` across all appliances 
@@ -103,7 +102,6 @@ class Electric(object):
         # TODO: this might be a naive approach to calculating vampire power.
         return self.power_series_all_data(**load_kwargs).min()
 
-    
     def uptime(self, **load_kwargs):
         """
         Returns
@@ -117,8 +115,6 @@ class Electric(object):
         for good_section in good_sections[1:]:
             uptime += good_section.timedelta
         return uptime
-
-  
 
     def average_energy_per_period(self, offset_alias='D', **load_kwargs):
         """Calculate the average energy per period.  e.g. the average 
@@ -176,6 +172,58 @@ class Electric(object):
             ac_type = list(shared_ac_types)[0]
             other_ac_type = ac_type
         return total_energy[ac_type] / other_total_energy[other_ac_type]
+
+    def correlation(self, other):
+        """
+        Finds the correlation between the two ElecMeters. Both the ElecMeters 
+        should be perfectly aligned
+        Adapted from: 
+        http://www.johndcook.com/blog/2008/11/05/how-to-calculate-pearson-correlation-accurately/
+
+        Parameters
+        ----------
+        other : an ElecMeter or MeterGroup object
+        """
+        n = 0
+        x_sum = 0
+        y_sum = 0
+
+        # First pass is used to find x_bar and y_bar
+        for x_power in self.power_series():
+            n = n+len(x_power.index)
+            x_sum = x_power.sum()
+
+        for y_power in other.power_series():
+            y_sum = y_power.sum()
+
+        x_bar = x_sum*1.0/n
+        y_bar = y_sum*1.0/n
+
+        # Second pass is used to find x_s and x_y (std.devs)
+        x_s_square_sum = 0
+        y_s_square_sum = 0
+
+        for x_power in self.power_series():
+            x_s_square_sum = x_s_square_sum + ((x_power-x_bar)*(x_power-x_bar)).sum()
+
+        for y_power in other.power_series():
+            y_s_square_sum = y_s_square_sum + ((y_power-y_bar)*(y_power-y_bar)).sum()
+
+        x_s_square = x_s_square_sum*1.0/(n-1)
+        y_s_square = y_s_square_sum*1.0/(n-1)
+
+        x_s = np.sqrt(x_s_square)
+        y_s = np.sqrt(y_s_square)
+
+        numerator = 0
+        for (x_power, y_power) in izip(self.power_series(), other.power_series()):
+            xi_minus_xbar = x_power-x_bar
+            yi_minus_ybar = y_power-y_bar
+            numerator = numerator + (xi_minus_xbar*yi_minus_ybar).sum()
+        denominator = (n-1)*x_s*y_s
+        corr = numerator*1.0/denominator
+        return corr
+
 
   #   def activity_distribution(self):
   # * activity distribution:

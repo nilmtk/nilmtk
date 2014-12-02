@@ -12,7 +12,7 @@ from collections import OrderedDict
 import datetime
 
 
-def dependencies_diagnostics():
+def show_versions():
     """Prints versions of various dependencies"""
     output = OrderedDict()
     output["Date"] = str(datetime.datetime.now())
@@ -42,8 +42,6 @@ def dependencies_diagnostics():
 
     for k, v in output.iteritems():
         print("{}: {}".format(k, v))
-
-    return output
 
 
 def timedelta64_to_secs(timedelta):

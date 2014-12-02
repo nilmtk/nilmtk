@@ -18,8 +18,8 @@ from .node import Node
 from pdb import set_trace as _breakpoint
 
 
-#MAX_MEM_ALLOWANCE_IN_BYTES = 2**29 # 512 MBytes
-MAX_MEM_ALLOWANCE_IN_BYTES = 2**10 # 1 MBytes
+MAX_MEM_ALLOWANCE_IN_BYTES = 2**29 # 512 MBytes
+
 
 class DataStore(object):
     """
