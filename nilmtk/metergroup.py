@@ -575,7 +575,6 @@ class MeterGroup(Electric):
             chunk.timeframe = timeframe
             yield chunk
 
-
     def plot_when_on(self, **load_kwargs):
         meter_identifiers = list(self.identifier)
         fig, ax = plt.subplots()
@@ -589,17 +588,16 @@ class MeterGroup(Electric):
         plt.yticks(range(len(self.meters)), labels)
         plt.ylim((-0.5, len(self.meters)+0.5))
         return ax
-            
 
     def simultaneous_switches(self, threshold=40):
         """
         Parameters
         ----------
-        threshold: int, threshold in Watts 
+        threshold : number, threshold in Watts 
 
         Returns
         -------
-        sim_switches: pd.Series of type {timestamp: number of 
+        sim_switches : pd.Series of type {timestamp: number of 
         simultaneous switches}
 
         Notes
@@ -607,7 +605,6 @@ class MeterGroup(Electric):
         This function assumes that the submeters in this MeterGroup
         are all aligned.  If they are not then you should align the
         meters, e.g. by using an `Apply` node with `resample`.
-
         """
         submeters = self.submeters().meters
         count = Counter()
@@ -844,20 +841,61 @@ class MeterGroup(Electric):
             submeters_dict[meter.identifier] = power_series
         return pd.DataFrame(submeters_dict)
 
-    def entropy(self):
-        """
-        Finds the entropy of each meter in this MeterGroup.
+    def entropy_per_meter(self):
+        """Finds the entropy of each meter in this MeterGroup.
 
         Returns
         -------
         pd.Series of entropy
         """
+        return self.call_method_on_all_meters('entropy')
+
+    def call_method_on_all_meters(self, method):
+        """Calls `method` on each element in `self.meters`.
+
+        Parameters
+        ----------
+        method : str
+            Name of a stats method in `ElecMeter`.  e.g. 'correlation'.
+
+        Returns
+        -------
+        pd.Series of result of `method` called on each element in `self.meters`.
+        """
         meter_identifiers = list(self.identifier)
-        entropy = pd.Series(index=meter_identifiers)
+        result = pd.Series(index=meter_identifiers)
         for meter in self.meters:
-            id_meter  = meter.identifier
-            entropy[id_meter] = meter.entropy()
-        return entropy
+            id_meter = meter.identifier
+            result[id_meter] = getattr(meter, method)()
+        return result
+
+    def pairwise(self, method):
+        """
+        Calls `method` on all pairs in `self.meters`.
+
+        Assumes `method` is symmetrical.
+
+        Parameters
+        ----------
+        method : str
+            Name of a stats method in `ElecMeter`.  e.g. 'correlation'.
+
+        Returns
+        -------
+        pd.DataFrame of the result of `method` called on each 
+        pair in `self.meters`.
+        """
+        meter_identifiers = list(self.identifier)
+        result = pd.DataFrame(index=meter_identifiers, columns=meter_identifiers)
+        for i, m_i in enumerate(self.meters):
+            for j, m_j in enumerate(self.meters):
+                id_i = m_i.identifier
+                id_j = m_j.identifier
+                if i > j:
+                    result[id_i][id_j] = result[id_j][id_i]
+                else:
+                    result[id_i][id_j] = getattr(m_i, method)(m_j)
+        return result
 
     def pairwise_mutual_information(self):
         """
@@ -869,17 +907,7 @@ class MeterGroup(Electric):
         pd.DataFrame of mutual information between
         pair of ElecMeters.
         """
-        meter_identifiers = list(self.identifier)
-        mutual_inf = pd.DataFrame(index=meter_identifiers, columns=meter_identifiers)
-        for i, m_i in enumerate(self.meters):
-            for j, m_j in enumerate(self.meters):
-                id_i = m_i.identifier
-                id_j = m_j.identifier
-                if i > j:
-                    mutual_inf[id_i][id_j] = mutual_inf[id_j][id_i]
-                else:
-                    mutual_inf[id_i][id_j] = m_i.mutual_information(m_j)
-        return mutual_inf
+        return self.pairwise('mutual_information')
 
     def pairwise_correlation(self):
         """
@@ -890,17 +918,7 @@ class MeterGroup(Electric):
         -------
         pd.DataFrame of correlation between pair of ElecMeters.
         """
-        meter_identifiers = list(self.identifier)
-        corr = pd.DataFrame(index=meter_identifiers, columns=meter_identifiers)
-        for i, m_i in enumerate(self.meters):
-            for j, m_j in enumerate(self.meters):
-                id_i = m_i.identifier
-                id_j = m_j.identifier
-                if i > j:
-                    corr[id_i][id_j] = corr[id_j][id_i]
-                else:
-                    corr[id_i][id_j] = m_i.correlation(m_j)
-        return corr
+        return self.pairwise('correlation')
 
     def proportion_of_energy_submetered(self, **loader_kwargs):
         """
