@@ -860,9 +860,32 @@ class MeterGroup(Electric):
         return entropy
 
 
-    def correlation(self):
+    def pairwise_mutual_information(self):
         """
-        Finds the correlation among different meters in a MeterGroup.
+        Finds the pairwise mutual information among different 
+        meters in a MeterGroup.
+
+        Returns
+        -------
+        pd.DataFrame of mutual information between
+        pair of ElecMeters.
+        """
+        meter_identifiers = list(self.identifier)
+        mutual_inf = pd.DataFrame(index=meter_identifiers, columns=meter_identifiers)
+        for i, m_i in enumerate(self.meters):
+            for j, m_j in enumerate(self.meters):
+                id_i = m_i.identifier
+                id_j = m_j.identifier
+                if i > j:
+                    mutual_inf[id_i][id_j] = mutual_inf[id_j][id_i]
+                else:
+                    mutual_inf[id_i][id_j] = m_i.mutual_information(m_j)
+        return mutual_inf
+
+    def pairwise_correlation(self):
+        """
+        Finds the pairwise correlation among different 
+        meters in a MeterGroup.
 
         Returns
         -------

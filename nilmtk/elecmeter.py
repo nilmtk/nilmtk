@@ -26,6 +26,7 @@ from .electric import Electric
 from .timeframe import TimeFrame, list_of_timeframe_dicts
 import nilmtk
 
+MAX_SIZE_ENTROPY = 10000
 ElecMeterID = namedtuple('ElecMeterID', ['instance', 'building', 'dataset'])
 
 
@@ -509,7 +510,6 @@ class ElecMeter(Hashable, Electric):
             return (const + d*np.mean(map(log,nn)))/log(base)
 
         out = []
-        MAX_SIZE_ENTROPY = 10000
         for power in self.power_series():
             x = power.values
             num_elements = len(x)
@@ -523,6 +523,60 @@ class ElecMeter(Hashable, Electric):
             else:
                 out.append(kdtree_entropy(x))
         return sum(out)/len(out)
+
+    def mutual_information(self, elec, k=3, base=2):
+        """ 
+        Mutual information of two ElecMeters
+        x,y should be a list of vectors, e.g. x = [[1.3],[3.7],[5.1],[2.4]]
+        if x is a one-dimensional scalar and we have four samples
+        """
+        def kdtree_mi(x, y, k, base):
+            intens = 1e-10 #small noise to break degeneracy, see doc.
+            x = [list(p + intens*nr.rand(len(x[0]))) for p in x]
+            y = [list(p + intens*nr.rand(len(y[0]))) for p in y]
+            points = zip2(x,y)
+            #Find nearest neighbors in joint space, p=inf means max-norm
+            tree = ss.cKDTree(points)
+            dvec = [tree.query(point,k+1,p=float('inf'))[0][k] for point in points]
+            a,b,c,d = avgdigamma(x,dvec), avgdigamma(y,dvec), digamma(k), digamma(len(x)) 
+            return (-a-b+c+d)/log(base)
+            
+        def zip2(*args):
+            #zip2(x,y) takes the lists of vectors and makes it a list of vectors in a joint space
+            #E.g. zip2([[1],[2],[3]],[[4],[5],[6]]) = [[1,4],[2,5],[3,6]]
+            return [sum(sublist,[]) for sublist in zip(*args)]
+
+        def avgdigamma(points,dvec):
+            #This part finds number of neighbors in some radius in the marginal space
+            #returns expectation value of <psi(nx)>
+            N = len(points)
+            tree = ss.cKDTree(points)
+            avg = 0.
+            for i in range(N):
+                dist = dvec[i]
+                #subtlety, we don't include the boundary point, 
+                #but we are implicitly adding 1 to kraskov def bc center point is included
+                num_points = len(tree.query_ball_point(points[i],dist-1e-15,p=float('inf'))) 
+                avg += digamma(num_points)/N
+            return avg
+
+        out = []
+        for power_x, power_y in izip(self.power_series(), elec.power_series()):
+            power_x_val = power_x.values
+            power_y_val = power_y.values 
+            num_elements = len(power_x_val)
+            power_x_val = power_x_val.reshape((num_elements, 1))
+            power_y_val = power_y_val.reshape((num_elements, 1))            
+            if num_elements>MAX_SIZE_ENTROPY:
+                splits = num_elements/MAX_SIZE_ENTROPY + 1
+                x_split = np.array_split(power_x_val, splits)
+                y_split = np.array_split(power_y_val, splits)
+                for x, y  in izip(x_split, y_split):            
+                    out.append(kdtree_mi(x, y, k, base))                    
+            else:
+                out.append(kdtree_mi(power_x_val, power_y_val, k, base))
+        return sum(out)/len(out)
+        
 
     def dry_run_metadata(self):
         return self.metadata
