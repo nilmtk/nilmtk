@@ -477,11 +477,15 @@ class ElecMeter(Hashable, Electric):
                 out.append(kdtree_entropy(x))
         return sum(out)/len(out)
 
-    def mutual_information(self, elec, k=3, base=2):
+    def mutual_information(self, other, k=3, base=2):
         """ 
         Mutual information of two ElecMeters
         x,y should be a list of vectors, e.g. x = [[1.3],[3.7],[5.1],[2.4]]
         if x is a one-dimensional scalar and we have four samples
+
+        Parameters
+        ----------
+        other : ElecMeter or MeterGroup
         """
         def kdtree_mi(x, y, k, base):
             intens = 1e-10 #small noise to break degeneracy, see doc.
@@ -514,7 +518,7 @@ class ElecMeter(Hashable, Electric):
             return avg
 
         out = []
-        for power_x, power_y in izip(self.power_series(), elec.power_series()):
+        for power_x, power_y in izip(self.power_series(), other.power_series()):
             power_x_val = power_x.values
             power_y_val = power_y.values 
             num_elements = len(power_x_val)
