@@ -514,26 +514,6 @@ class MeterGroup(Electric):
                 labels[meter] = meter_instances
         nx.draw(graph, labels=labels)
 
-    def power_series_all_columns(self, **kwargs):
-        generators = []
-        for meter in self.meters:
-            generators.append(meter.power_series_all_columns(**kwargs))
-        # Now load each generator and yield the sum
-        while True:
-            try:
-                chunk = next(generators[0])
-            except StopIteration:
-                break
-
-            timeframe = chunk.timeframe
-            for generator in generators[1:]:
-                another_chunk = next(generator)
-                timeframe = timeframe.intersect(another_chunk.timeframe)
-                chunk += another_chunk
-
-            chunk.timeframe = timeframe
-            yield chunk
-
     def power_series(self, **kwargs):
         """Sum together all meters and return power Series.
 
@@ -544,6 +524,8 @@ class MeterGroup(Electric):
             self.available_ac_types which is also in measurement_ac_type_prefs.
             If none of the measurements from measurement_ac_type_prefs are 
             available then will raise a warning and will select another ac type.
+
+        See ElecMeter.power_series() docs for more parameters.
 
         Returns
         -------

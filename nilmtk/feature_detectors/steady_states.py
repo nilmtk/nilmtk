@@ -13,7 +13,7 @@ def find_steady_states_transients(metergroup):
     steady_states_list = []
     transients_list = []
 
-    for power_df in metergroup.power_series_all_columns():
+    for power_df in metergroup.power_series(load_all_power_columns=True):
         if len(power_df.columns) <= 2:
             # Use whatever is available
             power_dataframe = power_df
@@ -51,9 +51,7 @@ def find_steady_states(dataframe, min_n_samples=2, stateThreshold=15,
     -------
 
     """
-
-
-      # Tells whether we have both real and reactive power or only real power
+    # Tells whether we have both real and reactive power or only real power
     num_measurements = len(dataframe.columns)
     estimatedSteadyPower = np.array([0] * num_measurements)
     lastSteadyPower = np.array([0] * num_measurements)
