@@ -47,8 +47,16 @@ def plot_series(series, **kwargs):
     fig.autofmt_xdate()
     return ax
 
-def plot_correlation_heatmap(df, labels, edgecolors='w', 
+def plot_pairwise_heatmap(df, labels, edgecolors='w', 
                              cmap=matplotlib.cm.RdYlBu_r, log=False):
+    """
+    Plots a heatmap of a 'square' df
+    Rows and columns are same and the values in this dataframe
+    correspond to the computation b/w row,column.
+    This plot can be used for plotting pairwise_correlation
+    or pairwise_mutual_information or any method which works 
+    similarly
+    """
     width = len(df.columns)/4
     height = len(df.index)/4
     
