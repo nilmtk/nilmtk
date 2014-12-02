@@ -361,12 +361,31 @@ class ElecMeter(Hashable, Electric):
             yield series
 
     def plot_lag(self, lag=1):
+        """
+        Plots a lag plot of power data
+        http://www.itl.nist.gov/div898/handbook/eda/section3/lagplot.htm
+
+        Returns
+        -------
+        matplotlib.axis
+        """
         fig, ax = plt.subplots()
         for power in self.power_series():
             lag_plot(power, lag, ax = ax)
         return ax
 
     def plot_spectrum(self):
+        """
+        Plots spectral plot of power data
+        http://www.itl.nist.gov/div898/handbook/eda/section3/spectrum.htm
+
+        Code borrowed from:
+        http://glowingpython.blogspot.com/2011/08/how-to-plot-frequency-spectrum-with.html
+
+        Returns
+        -------
+        matplotlib.axis
+        """ 
         fig, ax = plt.subplots()
         Fs = 1.0/self.device.get('sample_period')
         for power in self.power_series():
@@ -380,12 +399,22 @@ class ElecMeter(Hashable, Electric):
             Y = Y[range(n//2)]
 
             ax.plot(frq,abs(Y)) # plotting the spectrum
+
         ax.set_xlabel('Freq (Hz)')
         ax.set_ylabel('|Y(freq)|')
         return ax
           
 
     def plot_autocorrelation(self):
+        """
+        Plots autocorrelation of power data 
+        Reference: 
+        http://www.itl.nist.gov/div898/handbook/eda/section3/autocopl.htm
+
+        Returns
+        -------
+        matplotlib.axis 
+        """
         fig, ax = plt.subplots()
         for power in self.power_series():
             autocorrelation_plot(power, ax = ax)
