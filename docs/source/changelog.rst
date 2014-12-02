@@ -14,6 +14,12 @@ New features
 * Correlation between different Elecmeters and corresponding plot; Issue #160
 * Finding number of simultaneous appliance switches; Issue #163
 * ``CSVDataStore``
+* Finding entropy of an ElecMeter. Issue #250
+* ``ElecMeter.plot_lag()``.  Issue #255.  See `Nipun's blog post`_.
+* ``ElecMeter.plot_autocorrelation()``.  See `Nipun's blog post`_.
+* ``ElecMeter.plot_spectrum()``.  See `Nipun's blog post`_.
+
+.. _`Nipun's blog post`: http://nipunbatra.github.io/2014/12/nilmtk-new-plots/
 
 New dataset converters
 **********************
@@ -53,7 +59,16 @@ API changes
   returns a ``pd.Series`` if ``full_results=False`` (it used to return a
   scalar if the meter only had a single AC type, or a Series if there
   were multiple AC types).
+* ``HDFDataStore.append()`` actually appends now!  (It used to
+  ``put``).  We now have separate ``DataStore.append`` and
+  ``DataStore.put`` methods.
 
+
+Statistics
+^^^^^^^^^^
+
+* ``MeterGroup.proportion_of_energy_submetered()`` does a better job
+  of comparing AC types.
 
 
 Bug fixes
