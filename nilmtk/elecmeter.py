@@ -439,53 +439,6 @@ class ElecMeter(Hashable, Electric):
             datetime_switches.append(delta_power_absolute[(delta_power_absolute>threshold)].index.values.tolist())
         return flatten(datetime_switches)
 
-    def correlation(self, elec):
-        """
-        Finds the correlation between the two ElecMeters. Both the ElecMeters 
-        should be perfectly aligned
-        Adapted from: 
-        http://www.johndcook.com/blog/2008/11/05/how-to-calculate-pearson-correlation-accurately/
-        """
-        n = 0
-        x_sum = 0
-        y_sum = 0
-
-        # First pass is used to find x_bar and y_bar
-        for x_power in self.power_series():
-            n = n+len(x_power.index)
-            x_sum = x_power.sum()
-
-        for y_power in elec.power_series():
-            y_sum = y_power.sum()
-
-        x_bar = x_sum*1.0/n
-        y_bar = y_sum*1.0/n
-
-        # Second pass is used to find x_s and x_y (std.devs)
-        x_s_square_sum = 0
-        y_s_square_sum = 0
-
-        for x_power in self.power_series():
-            x_s_square_sum = x_s_square_sum + ((x_power-x_bar)*(x_power-x_bar)).sum()
-
-        for y_power in elec.power_series():
-            y_s_square_sum = y_s_square_sum + ((y_power-y_bar)*(y_power-y_bar)).sum()
-
-        x_s_square = x_s_square_sum*1.0/(n-1)
-        y_s_square = y_s_square_sum*1.0/(n-1)
-
-        x_s = np.sqrt(x_s_square)
-        y_s = np.sqrt(y_s_square)
-
-        numerator = 0
-        for (x_power, y_power) in izip(self.power_series(), elec.power_series()):
-            xi_minus_xbar = x_power-x_bar
-            yi_minus_ybar = y_power-y_bar
-            numerator = numerator + (xi_minus_xbar*yi_minus_ybar).sum()
-        denominator = (n-1)*x_s*y_s
-        corr = numerator*1.0/denominator
-        return corr
-
     def entropy(self, k=3, base=2):
         """ 
         This implementation is provided courtesy NPEET toolbox,

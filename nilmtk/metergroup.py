@@ -844,10 +844,10 @@ class MeterGroup(Electric):
             submeters_dict[meter.identifier] = power_series
         return pd.DataFrame(submeters_dict)
 
-
     def entropy(self):
         """
-        Finds the entropy of different meters in this MeterGroup
+        Finds the entropy of each meter in this MeterGroup.
+
         Returns
         -------
         pd.Series of entropy
@@ -858,7 +858,6 @@ class MeterGroup(Electric):
             id_meter  = meter.identifier
             entropy[id_meter] = meter.entropy()
         return entropy
-
 
     def pairwise_mutual_information(self):
         """
