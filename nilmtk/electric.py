@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from collections import Counter
+from itertools import izip
 from warnings import warn
 import scipy.spatial as ss
 from scipy import fft
@@ -13,6 +14,7 @@ from .timeframe import TimeFrame
 from .measurement import select_best_ac_type
 from nilmtk.utils import offset_alias_to_seconds
 
+MAX_SIZE_ENTROPY = 10000
 
 class Electric(object):
     """Common implementations of methods shared by ElecMeter and MeterGroup.
