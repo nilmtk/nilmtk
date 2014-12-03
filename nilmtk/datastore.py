@@ -487,19 +487,24 @@ class CSVDataStore(DataStore):
                                             chunksize=chunksize)
             # iterate through all chunks in file
             for chunk_idx, chunk in enumerate(text_file_reader):
-                chunk.timeframe = TimeFrame(chunk.index[0], chunk.index[-1])
-                chunk_intersect = window_intersect.intersect(chunk.timeframe)
                 
-                # if chunk intersects with section
-                if not chunk_intersect.empty:
-                    subchunk = chunk[(chunk.index>=chunk_intersect.start) & 
-                                    (chunk.index<=chunk_intersect.end)]
+                # mask chunk by window and section intersect
+                subchunk_idx = [True]*len(chunk)
+                if window_intersect.start:
+                    subchunk_idx = np.logical_and(subchunk_idx, (chunk.index>=window_intersect.start))
+                if window_intersect.end:
+                    subchunk_idx = np.logical_and(subchunk_idx, (chunk.index<window_intersect.end))
+                if window_intersect.empty:
+                    subchunk_idx = [False]*len(chunk)
+                subchunk = chunk[subchunk_idx]
+                
+                if len(subchunk)>0:
+                    subchunk_end = np.max(np.nonzero(subchunk_idx))
                     subchunk.timeframe = TimeFrame(subchunk.index[0], subchunk.index[-1])
-                    
                     # Load look ahead if necessary
                     if n_look_ahead_rows > 0:
                         if len(subchunk.index) > 0:
-                            rows_to_skip = (chunk_idx+1)*MAX_MEM_ALLOWANCE_IN_BYTES+len(header_rows)+1
+                            rows_to_skip = (len(header_rows)+1)+(chunk_idx*chunksize)+subchunk_end+1
                             try:
                                 subchunk.look_ahead = pd.read_csv(file_path, 
                                                 index_col=0, 
@@ -649,13 +654,19 @@ class CSVDataStore(DataStore):
         -------
         nilmtk.TimeFrame of entire table after intersecting with self.window.
         """
-        generator = self.load(key)
+        
+        file_path = self._key_to_abs_path(key)
+        text_file_reader = pd.read_csv(file_path, 
+                                        index_col=0, 
+                                        header=[0,1], 
+                                        parse_dates=True,
+                                        chunksize=MAX_MEM_ALLOWANCE_IN_BYTES)
         start = None
         end = None
-        for df in generator:
+        for df in text_file_reader:
             if start is None:
-                start = df.timeframe.start
-            end = df.timeframe.end
+                start = df.index[0]
+            end = df.index[-1]
         timeframe = TimeFrame(start, end)
         return self.window.intersect(timeframe)
         
