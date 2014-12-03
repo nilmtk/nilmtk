@@ -33,7 +33,8 @@ class DataSet(object):
         """
         self.buildings = OrderedDict()
         self.metadata = {}
-        self.load(get_datastore(filename, format))
+        if filename is not None:
+            self.load(get_datastore(filename, format))
         
     def load(self, store):
         """
