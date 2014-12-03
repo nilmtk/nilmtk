@@ -100,8 +100,8 @@ class ElecMeter(Hashable, Electric):
         ElecMeterID of upstream meter or None if is site meter.
         """
         if self.is_site_meter():
-            warn("{} is a site meter so there is no meter upstream."
-                 .format(self))
+            warn("There is no meter upstream because '{}' is a site meter."
+                 .format(self.identifier))
             return
 
         submeter_of = self.metadata.get('submeter_of')
@@ -125,7 +125,7 @@ class ElecMeter(Hashable, Electric):
 
         upstream_meter = nilmtk.global_meter_group[id_of_upstream]
         if upstream_meter is None:
-            warn("No upstream meter found for {}.".format(self))
+            warn("No upstream meter found for '{}'.".format(self.identifier))
         return upstream_meter
 
     @classmethod
