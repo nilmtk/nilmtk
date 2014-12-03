@@ -20,7 +20,6 @@ from pdb import set_trace as _breakpoint
 
 MAX_MEM_ALLOWANCE_IN_BYTES = 2**29 # 512 MBytes
 
-
 class DataStore(object):
     """
     Provides a common interface to all physical data stores.  
@@ -476,6 +475,7 @@ class CSVDataStore(DataStore):
         self.all_sections_smaller_than_chunksize = True
         
         # iterate through parameter sections
+        # requires 1 pass through file for each section
         for section in sections:
             window_intersect = self.window.intersect(section)
             header_rows = [0,1]
@@ -489,6 +489,7 @@ class CSVDataStore(DataStore):
             for chunk_idx, chunk in enumerate(text_file_reader):
                 chunk.timeframe = TimeFrame(chunk.index[0], chunk.index[-1])
                 chunk_intersect = window_intersect.intersect(chunk.timeframe)
+                
                 # if chunk intersects with section
                 if not chunk_intersect.empty:
                     subchunk = chunk[(chunk.index>=chunk_intersect.start) & 
@@ -499,19 +500,17 @@ class CSVDataStore(DataStore):
                     if n_look_ahead_rows > 0:
                         if len(subchunk.index) > 0:
                             rows_to_skip = (chunk_idx+1)*MAX_MEM_ALLOWANCE_IN_BYTES+len(header_rows)+1
-                            subchunk.look_ahead = pd.read_csv(file_path, 
-                                            index_col=0, 
-                                            header=None, 
-                                            parse_dates=True,
-                                            skiprows=rows_to_skip,
-                                            nrows=n_look_ahead_rows)
+                            try:
+                                subchunk.look_ahead = pd.read_csv(file_path, 
+                                                index_col=0, 
+                                                header=None, 
+                                                parse_dates=True,
+                                                skiprows=rows_to_skip,
+                                                nrows=n_look_ahead_rows)
+                            except ValueError:
+                                subchunk.look_ahead = pd.DataFrame()
                         else:
                             subchunk.look_ahead = pd.DataFrame()
-
-                    print(subchunk)
-                    print(subchunk.look_ahead)
-                    import ipdb
-                    ipdb.set_trace()
                     
                     yield subchunk
 
@@ -522,7 +521,6 @@ class CSVDataStore(DataStore):
         key : str
         value : pd.DataFrame
         """
-        print(key)
         file_path = self._key_to_abs_path(key)
         path = dirname(file_path)
         if not exists(path):
@@ -532,7 +530,6 @@ class CSVDataStore(DataStore):
                     header=True)
                     
     def put(self, key, value):
-        print(key)
         """
         Parameters
         ----------
@@ -705,6 +702,17 @@ def join_key(*args):
     return key
     
 def get_datastore(filename, format, mode='a'):
+    """
+    Parameters
+    ----------
+    filename : string
+    format : 'CSV' or 'HDF'
+    mode : 'a' (append) or 'w' (write), optional
+
+    Returns
+    -------
+    metadata : dict
+    """
     if filename is not None:
         if format == 'HDF':
             return HDFDataStore(filename, mode)
@@ -714,6 +722,32 @@ def get_datastore(filename, format, mode='a'):
             raise ValueError('format not recognised')
     else:
         ValueError('filename is None')
+        
+def convert_datastore(input_store, output_store):
+    """
+    Parameters
+    ----------
+    input_store : nilmtk.DataStore
+    output_store : nilmtk.DataStore
+    """
+    # dataset metadata
+    metadata = input_store.load_metadata()
+    output_store.save_metadata('/', metadata)
+    for building in input_store.elements_below_key():
+        building_key = '/'+building
+        # building metadata
+        metadata = input_store.load_metadata(building_key)
+        output_store.save_metadata(building_key, metadata)
+        for utility in input_store.elements_below_key(building):
+            utility_key = building_key+'/'+utility
+            for meter in input_store.elements_below_key(utility_key):
+                # ignore cache (should this appear as an element below key?)
+                if meter == 'cache':
+                    continue
+                meter_key = utility_key+'/'+meter
+                # store meter data
+                for df in input_store.load(meter_key):
+                    output_store.append(meter_key, df)
 
 class Key(object):
     """A location of data or metadata within NILMTK.
