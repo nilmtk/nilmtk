@@ -456,15 +456,30 @@ class CSVDataStore(DataStore):
         cols : list of Measurements, optional
             e.g. [('power', 'active'), ('power', 'reactive'), ('voltage')]
             if not provided then will return all columns from the table.
-        n_look_ahead_rows : not used yet
+        sections : list of nilmtk.TimeFrame objects or a pd.PeriodIndex, optional
+            defines the time sections to load.  If `self.window` is enabled
+            then each `section` will be intersected with `self.window`.
+        n_look_ahead_rows : int, optional, defaults to 0
+            If >0 then each returned DataFrame will have a `look_ahead`
+            property which will be a DataFrame of length `n_look_ahead_rows`
+            of the data immediately in front of the data in the main DataFrame.
         chunksize : int, optional
 
         Returns
         ------- 
-        TextFileReader of DataFrame objects
-        TODO: do something with args: sections and n_look_ahead_rows
+        generator of DataFrame objects
+            Each DataFrame is has extra attributes:
+                - timeframe : TimeFrame of section intersected with self.window
+                - look_ahead : pd.DataFrame:
+                    with `n_look_ahead_rows` rows.  The first row will be for
+                    `section.end`.  `look_ahead` stores data which appears on 
+                    disk immediately after `section.end`; i.e. it ignores
+                    the next `section.start`.
+
+            Returns an empty DataFrame if no data is available for the
+            specified section (or if the section.intersect(self.window)
+            is empty).
         """
-        
         file_path = self._key_to_abs_path(key)
         
         # Set `sections` variable
@@ -482,11 +497,15 @@ class CSVDataStore(DataStore):
             text_file_reader = pd.read_csv(file_path, 
                                             index_col=0, 
                                             header=header_rows, 
-                                            parse_dates=True, 
-                                            #usecols=cols,
+                                            parse_dates=True,
                                             chunksize=chunksize)
+                                            
             # iterate through all chunks in file
             for chunk_idx, chunk in enumerate(text_file_reader):
+                
+                # filter dataframe by specified columns
+                if cols:
+                    chunk = chunk[cols]
                 
                 # mask chunk by window and section intersect
                 subchunk_idx = [True]*len(chunk)
