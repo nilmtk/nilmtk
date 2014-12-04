@@ -14,6 +14,8 @@ class Bar(Foo):
         pass 
 
 Now, Bar.foo.__doc__ == Bar().foo.__doc__ == Foo.foo.__doc__ == "Frobber"
+
+from: http://code.activestate.com/recipes/576862-docstring-inheritance-decorator/
 """
 
 from functools import wraps
