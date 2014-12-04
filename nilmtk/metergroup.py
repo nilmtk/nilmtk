@@ -11,7 +11,7 @@ from collections import Counter
 import matplotlib.pyplot as plt
 from .elecmeter import ElecMeter, ElecMeterID
 from .appliance import Appliance
-from .datastore import join_key
+from .datastore.datastore import join_key
 from .utils import (tree_root, nodes_adjacent_to_root, simplest_type_for,
                     flatten_2d_list, convert_to_timestamp)
 from .plots import plot_series

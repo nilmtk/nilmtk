@@ -8,7 +8,8 @@ from datetime import timedelta
 from .. import TotalEnergy, GoodSections
 from ..goodsectionsresults import GoodSectionsResults
 from ..totalenergy import _energy_for_power_series
-from ... import TimeFrame, ElecMeter, HDFDataStore, DataSet
+from ... import TimeFrame, ElecMeter, DataSet
+from ...datastore import HDFDataStore
 from ...elecmeter import ElecMeterID
 from ...consts import JOULES_PER_KWH
 from ...tests.testingtools import data_dir

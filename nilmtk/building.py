@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 from collections import namedtuple, OrderedDict
 from .metergroup import MeterGroup
-from .datastore import join_key
+from .datastore.datastore import join_key
 from .hashable import Hashable
 
 BuildingID = namedtuple('BuildingID', ['instance', 'dataset'])

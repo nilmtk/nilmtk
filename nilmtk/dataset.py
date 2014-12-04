@@ -2,7 +2,8 @@ from __future__ import print_function, division
 import os
 from collections import OrderedDict
 from .building import Building
-from .datastore import join_key, get_datastore
+from .datastore.datastore import join_key
+from .utils import get_datastore
 
 class DataSet(object):
     """

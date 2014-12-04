@@ -5,7 +5,8 @@ import pandas as pd
 from nilmtk.dataset_converters.redd.convert_redd import (_convert, _load_csv)
 from nilmtk.utils import get_module_directory
 from nilmtk import DataSet
-from nilmtk.datastore import Key, get_datastore
+from nilmtk.utils import get_datastore
+from nilmtk.datastore import Key
 from nilm_metadata import convert_yaml_to_hdf5
 
 
