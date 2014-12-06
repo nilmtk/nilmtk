@@ -955,7 +955,6 @@ class MeterGroup(Electric):
         prop_per_meter = pd.Series(index=self.identifier)
         n_meters = len(self.meters)
         for i, meter in enumerate(self.meters):
-            print("COMPUTING FOR", meter)
             proportion = meter.proportion_of_upstream(**load_kwargs)
             print('\r{:d}/{:d} {} = {:.3f}'
                   .format(i+1, n_meters, meter, proportion), end='')

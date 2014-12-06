@@ -9,6 +9,7 @@ from pandas.tools.plotting import lag_plot, autocorrelation_plot
 from scipy.special import digamma,gamma
 from math import log,pi
 import numpy.random as nr
+import matplotlib.pyplot as plt
 
 from .timeframe import TimeFrame
 from .measurement import select_best_ac_type
@@ -234,7 +235,7 @@ class Electric(object):
         corr = numerator*1.0/denominator
         return corr
 
-    def plot_lag(self, lag=1):
+    def plot_lag(self, lag=1, ax = None):
         """
         Plots a lag plot of power data
         http://www.itl.nist.gov/div898/handbook/eda/section3/lagplot.htm
@@ -243,7 +244,8 @@ class Electric(object):
         -------
         matplotlib.axis
         """
-        fig, ax = plt.subplots()
+        if ax is None:
+            fig, ax = plt.subplots()
         for power in self.power_series():
             lag_plot(power, lag, ax = ax)
         return ax
