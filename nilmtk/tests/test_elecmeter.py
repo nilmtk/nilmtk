@@ -60,7 +60,7 @@ class TestElecMeter(WarningTestMixin, unittest.TestCase):
                           meter_id=METER_ID)
         self.assertEquals(meter.proportion_of_energy(meter), 1.0)
 
-    def test_correlation(self):
+    def correlation(self):
         meter_1 = ElecMeter(store=self.datastore, metadata=self.meter_meta, 
                           meter_id=METER_ID)
         meter_2 = ElecMeter(store=self.datastore, metadata=self.meter_meta, 
