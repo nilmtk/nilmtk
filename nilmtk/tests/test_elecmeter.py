@@ -60,7 +60,7 @@ class TestElecMeter(WarningTestMixin, unittest.TestCase):
                           meter_id=METER_ID)
         self.assertEquals(meter.proportion_of_energy(meter), 1.0)
 
-    def correlation(self):
+    def test_correlation(self):
         meter_1 = ElecMeter(store=self.datastore, metadata=self.meter_meta, 
                           meter_id=METER_ID)
         meter_2 = ElecMeter(store=self.datastore, metadata=self.meter_meta, 
@@ -71,12 +71,18 @@ class TestElecMeter(WarningTestMixin, unittest.TestCase):
         df2 = self.datastore.store.get('/building1/elec/meter2')
 
         # Let us compute the value using nilmtk
-        corr12_nilmtk = meter_1.correlation(meter2)
+        corr12_nilmtk = meter_1.correlation(meter_2)
+        print("Correlation using nilmtk:", corr12_nilmtk)
 
         # Let us now compute the value using Pandas functions
-        corr12_pandas = df1.corrwith(df2)
+        corr12_pandas = df1.corr(df2)
+        print("Correlation using pandas:", corr12_pandas)
+        from pandas.util.testing import assert_frame_equal
+        assert_frame_equal(corr12_nilmtk, corr12_pandas)
 
-        self.assertEqual(corr12_nilmtk, corr12_pandas)
+        #self.assertEqual(corr12_nilmtk, corr12_pandas)
+        #print("Correlation using pandas:", corr12_pandas)
+
 
 
 if __name__ == '__main__':

@@ -337,6 +337,10 @@ class ElecMeter(Hashable, Electric):
             best_ac_type = select_best_ac_type(self.available_power_ac_types(),
                                                measurement_ac_type_prefs)
             kwargs['cols'] = [('power', best_ac_type)]
+        else:
+            best_ac_type = select_best_ac_type(self.available_power_ac_types(),
+                                               measurement_ac_type_prefs)
+            kwargs['cols'] = [('power', best_ac_type)]
 
         # Get source node
         last_node = self.get_source_node(**kwargs)
