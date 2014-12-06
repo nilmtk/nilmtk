@@ -6,7 +6,8 @@ from os.path import join, isdir, isfile
 from os import listdir
 import re
 from sys import stdout
-from nilmtk.datastore import Key, get_datastore
+from nilmtk.utils import get_datastore
+from nilmtk.datastore import Key
 from nilmtk.timeframe import TimeFrame
 from nilmtk.measurement import LEVEL_NAMES
 from nilmtk.utils import get_module_directory, check_directory_exists

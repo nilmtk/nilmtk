@@ -5,7 +5,7 @@ from os.path import join
 import pandas as pd
 from datetime import timedelta
 from testingtools import data_dir
-from nilmtk.datastore import HDFDataStore
+from nilmtk.datastore import HDFDataStore, CSVDataStore
 from nilmtk import TimeFrame
 
 class TestHDFDataStore(unittest.TestCase):
@@ -18,6 +18,8 @@ class TestHDFDataStore(unittest.TestCase):
     def setUpClass(cls):
         filename = join(data_dir(), 'random.h5')
         cls.datastore = HDFDataStore(filename)
+        #filename = join(data_dir(), 'random_csv')
+        #cls.datastore = CSVDataStore(filename)
         cls.keys = ['/building1/elec/meter{:d}'.format(i) for i in range(1,6)]
 
     @classmethod

@@ -10,7 +10,7 @@ from sys import getfilesystemencoding
 from IPython.core.display import HTML, display
 from collections import OrderedDict
 import datetime
-
+from nilmtk.datastore import DataStore, HDFDataStore, CSVDataStore, Key
 
 def show_versions():
     """Prints versions of various dependencies"""
@@ -287,3 +287,27 @@ def timestamp_is_naive(timestamp):
         return True
     else:
         return False
+
+
+def get_datastore(filename, format, mode='a'):
+    """
+    Parameters
+    ----------
+    filename : string
+    format : 'CSV' or 'HDF'
+    mode : 'a' (append) or 'w' (write), optional
+
+    Returns
+    -------
+    metadata : dict
+    """
+    if filename is not None:
+        if format == 'HDF':
+            return HDFDataStore(filename, mode)
+        elif format == 'CSV':
+            return CSVDataStore(filename)
+        else:
+            raise ValueError('format not recognised')
+    else:
+        ValueError('filename is None')
+        
