@@ -98,6 +98,12 @@ def convert_eco(dataset_loc, hdf_filename, timezone):
                                             };
                         df_phase.rename(columns=sm_column_name, inplace=True)
                         
+                        tmp_before = np.size(df_phase.power.active)
+                        df_phase = df_phase[df_phase.power.active != -1]
+                        tmp_after = np.size(df_phase.power.active)
+                        if (tmp_before != tmp_after):
+                            print('Removed missing measurements - Size before: ' + str(tmp_before) + ', size after: ' + str(tmp_after))
+                        
                         if not key in store:
                             store.put(key, df_phase, format='Table')
                         else:
@@ -118,6 +124,12 @@ def convert_eco(dataset_loc, hdf_filename, timezone):
                     df.rename(columns=plugs_column_name, inplace=True)
                     df = df.tz_convert(timezone)
 
+                    tmp_before = np.size(df.power.active)
+                    df = df[df.power.active != -1]
+                    tmp_after = np.size(df.power.active)
+                    if (tmp_before != tmp_after):
+                        print('Removed missing measurements - Size before: ' + str(tmp_before) + ', size after: ' + str(tmp_after))
+                    
                     # If table not present in hdf5, create or else append to existing data
                     if not key in store:
                         store.put(key, df, format='Table')
