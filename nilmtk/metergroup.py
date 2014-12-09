@@ -533,29 +533,39 @@ class MeterGroup(Electric):
 
         Note
         ----
-        If meters do not align then resample (by passing in 
-        `preprocessing=[Resample()]`) to get multiple meters to align.
+        If meters do not align then resample to get multiple meters to align.
         """
 
         # Get a list of generators
         generators = []
         for meter in self.meters:
             generators.append(meter.power_series(**kwargs))
+
         # Now load each generator and yield the sum
         while True:
-            try:
-                chunk = next(generators[0])
-            except StopIteration:
+            chunk = None
+            for generator in generators:
+                try:
+                    another_chunk = next(generator)
+                except StopIteration:
+                    pass
+                else:
+                    if chunk is None:
+                        chunk = another_chunk
+                        timeframe = chunk.timeframe
+                    else:
+                        n = len(chunk)
+                        timeframe = timeframe.intersect(another_chunk.timeframe)
+                        chunk += another_chunk
+                        chunk = chunk.dropna()
+                        if len(chunk) < n:
+                            warn("Meters are not perfectly aligned.")
+
+            if chunk is None:
                 break
-
-            timeframe = chunk.timeframe
-            for generator in generators[1:]:
-                another_chunk = next(generator)
-                timeframe = timeframe.intersect(another_chunk.timeframe)
-                chunk += another_chunk
-
-            chunk.timeframe = timeframe
-            yield chunk
+            else:
+                chunk.timeframe = timeframe
+                yield chunk
 
     def plot_when_on(self, **load_kwargs):
         meter_identifiers = list(self.identifier)
@@ -1129,7 +1139,7 @@ class MeterGroup(Electric):
                 timeframe = timeframe.union(meter.get_timeframe())
         return timeframe
 
-    def plot(self, start=None, end=None, width=800, ax=None, plot_legend=True):
+    def plot(self, **kwargs):
         """
         Parameters
         ----------
@@ -1139,34 +1149,43 @@ class MeterGroup(Electric):
         ax : matplotlib.axes, optional
         plot_legend : boolean, optional
             Defaults to True.  Set to False to not plot legend.
+        kind : {'separate lines', 'summed'}
         """
-        # Get start and end times for the plot
-        start = convert_to_timestamp(start)
-        end = convert_to_timestamp(end)
-        if start is None or end is None:
-            timeframe_for_group = self.get_timeframe()
-            if start is None:
-                start = timeframe_for_group.start
-            if end is None:
-                end = timeframe_for_group.end
-        timeframe = TimeFrame(start, end)
 
-        # Calculate the resolution for the x axis
-        duration = (end - start).total_seconds()
-        secs_per_pixel = int(round(duration / width))
+        """
+        TODO: 
+        Params
+        ------
+        kind : {'stacked', 'heatmap', 'lines', 'snakey'}
 
-        # Define a resample function
-        resample_func = lambda df: pd.DataFrame.resample(
-            df, rule='{:d}S'.format(secs_per_pixel))
-
+        pretty snakey:
+        http://www.cl.cam.ac.uk/research/srg/netos/c-aware/joule/V4.00/
+        """
         # Load data and plot each meter
-        for meter in self.meters:
-            power_series = meter.power_series_all_data(
-                sections=[timeframe], preprocessing=[Apply(func=resample_func)])
-            ax = plot_series(power_series, ax=ax, label=meter.appliance_label())
+        kind = kwargs.pop('kind', 'separate lines')
+        if kind == 'separate lines':
 
-        if plot_legend:
-            plt.legend()
+            # Get start and end times for the plot
+            start = convert_to_timestamp(kwargs.pop('start', None))
+            end = convert_to_timestamp(kwargs.pop('end', None))
+            if start is None or end is None:
+                timeframe_for_group = self.get_timeframe()
+                if start is None:
+                    start = timeframe_for_group.start
+                if end is None:
+                    end = timeframe_for_group.end
+
+            ax = kwargs.pop('ax', None)
+            for meter in self.meters:
+                ax = meter.plot(start=start, end=end, ax=ax, plot_legend=False, 
+                                **kwargs)
+
+            if kwargs.pop('plot_legend', True):
+                plt.legend()
+
+        elif kind == 'summed':
+            ax = super(MeterGroup, self).plot(**kwargs)
+
         return ax
 
     def appliance_label(self):
@@ -1181,6 +1200,10 @@ class MeterGroup(Electric):
         for meter in self.meters:
             meter.clear_cache()
         
+    def correlation_of_sum_of_submeters_with_mains(self, **load_kwargs):
+        submeters = self.meters_directly_downstream_of_mains()
+        submeters = MeterGroup(submeters)
+        return self.mains().correlation(submeters, **load_kwargs)
 
 def iterate_through_submeters_of_two_metergroups(master, slave):
     """

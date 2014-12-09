@@ -26,9 +26,16 @@ class TimeFrame(object):
 
     def __init__(self, start=None, end=None):
         self.clear()
-        self.start = start
-        self.end = end
-        self.include_end = False
+        if isinstance(start, TimeFrame):
+            self.copy_constructor(start)
+        else:
+            self.start = start
+            self.end = end
+            self.include_end = False
+
+    def copy_constructor(self, other):
+        for key, value in other.__dict__.iteritems():
+            setattr(self, key, value)
 
     def clear(self):
         self.enabled = True

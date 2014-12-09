@@ -13,7 +13,10 @@ import matplotlib.pyplot as plt
 
 from .timeframe import TimeFrame
 from .measurement import select_best_ac_type
-from nilmtk.utils import offset_alias_to_seconds
+from .utils import offset_alias_to_seconds, convert_to_timestamp
+from .plots import plot_series
+from .preprocessing import Apply
+
 
 MAX_SIZE_ENTROPY = 10000
 
@@ -83,17 +86,48 @@ class Electric(object):
             all_data = None
         return all_data
 
-    def plot(self, **loader_kwargs):
-        all_data = self.power_series_all_data(**loader_kwargs)
-        return all_data.plot()
-        """ TODO:
+    def plot(self, start=None, end=None, width=800, ax=None, plot_legend=True, 
+             **loader_kwargs):
+        """
         Parameters
         ----------
-        stacked : {'stacked', 'heatmap', 'lines', 'snakey'}
-
-        pretty snakey:
-        http://www.cl.cam.ac.uk/research/srg/netos/c-aware/joule/V4.00/
+        start, end : str or pd.Timestamp or datetime or None, optional
+        width : int, optional
+            Number of points on the x axis required
+        ax : matplotlib.axes, optional
+        plot_legend : boolean, optional
+            Defaults to True.  Set to False to not plot legend.
+        **loader_kwargs
         """
+        # Get start and end times for the plot
+        start = convert_to_timestamp(start)
+        end = convert_to_timestamp(end)
+        if start is None or end is None:
+            timeframe_for_meter = self.get_timeframe()
+            if start is None:
+                start = timeframe_for_meter.start
+            if end is None:
+                end = timeframe_for_meter.end
+        timeframe = TimeFrame(start, end)
+
+        # Calculate the resolution for the x axis
+        duration = (end - start).total_seconds()
+        secs_per_pixel = int(round(duration / width))
+
+        # Define a resample function
+        resample_func = lambda df: pd.DataFrame.resample(
+            df, rule='{:d}S'.format(secs_per_pixel))
+
+        # Load data and plot
+        power_series = self.power_series_all_data(
+            sections=[timeframe], preprocessing=[Apply(func=resample_func)],
+            **loader_kwargs)
+        ax = plot_series(power_series, ax=ax, label=self.appliance_label())
+
+        if plot_legend:
+            plt.legend()
+
+        return ax
 
     def proportion_of_upstream(self, **load_kwargs):
         """Returns a value in the range [0,1] specifying the proportion of
@@ -184,7 +218,7 @@ class Electric(object):
             other_ac_type = ac_type
         return total_energy[ac_type] / other_total_energy[other_ac_type]
 
-    def correlation(self, other):
+    def correlation(self, other, **load_kwargs):
         """
         Finds the correlation between the two ElecMeters. Both the ElecMeters 
         should be perfectly aligned
@@ -194,18 +228,25 @@ class Electric(object):
         Parameters
         ----------
         other : an ElecMeter or MeterGroup object
+
+        Returns
+        -------
+        float : [-1, 1]
         """
         n = 0
         x_sum = 0
         y_sum = 0
 
         # First pass is used to find x_bar and y_bar
-        for x_power in self.power_series():
-            n = n+len(x_power.index)
+        for x_power in self.power_series(**load_kwargs):
+            n += len(x_power.index)
             x_sum = x_power.sum()
 
-        for y_power in other.power_series():
+        for y_power in other.power_series(**load_kwargs):
             y_sum = y_power.sum()
+
+        if n == 0:
+            raise RuntimeError("There are no samples in `self.power_series()`.")
 
         x_bar = x_sum*1.0/n
         y_bar = y_sum*1.0/n
@@ -214,10 +255,10 @@ class Electric(object):
         x_s_square_sum = 0
         y_s_square_sum = 0
 
-        for x_power in self.power_series():
+        for x_power in self.power_series(**load_kwargs):
             x_s_square_sum = x_s_square_sum + ((x_power-x_bar)*(x_power-x_bar)).sum()
 
-        for y_power in other.power_series():
+        for y_power in other.power_series(**load_kwargs):
             y_s_square_sum = y_s_square_sum + ((y_power-y_bar)*(y_power-y_bar)).sum()
 
         x_s_square = x_s_square_sum*1.0/(n-1)
@@ -227,7 +268,8 @@ class Electric(object):
         y_s = np.sqrt(y_s_square)
 
         numerator = 0
-        for (x_power, y_power) in izip(self.power_series(), other.power_series()):
+        for (x_power, y_power) in izip(self.power_series(**load_kwargs), 
+                                       other.power_series(**load_kwargs)):
             xi_minus_xbar = x_power-x_bar
             yi_minus_ybar = y_power-y_bar
             numerator = numerator + (xi_minus_xbar*yi_minus_ybar).sum()

@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import random
-from .preprocessing import Clip
+from .preprocessing import Clip, Apply
 from .stats import TotalEnergy, GoodSections, DropoutRate
 from .stats.totalenergyresults import TotalEnergyResults
 from .hashable import Hashable
@@ -585,7 +585,6 @@ class ElecMeter(Hashable, Electric):
             return pd.DataFrame()
         else:
             return stat_from_cache
-
 
     # def total_on_duration(self):
     #     """Return timedelta"""
