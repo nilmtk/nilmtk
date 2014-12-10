@@ -1,3 +1,7 @@
+# re-enable deprecation warnings
+import warnings
+warnings.simplefilter('default')
+
 from nilmtk import *
 from nilmtk.version import version as __version__
 from nilmtk.timeframe import TimeFrame
