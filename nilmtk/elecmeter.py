@@ -353,17 +353,19 @@ class ElecMeter(Hashable, Electric):
                 raise ValueError("Cannot use `ac_types` and/or `physical_quantities`"
                                  " with `cols` parameter.")
 
-            if physical_quantities is None:
-                physical_quantities = self.available_physical_quantities()
-            elif isinstance(physical_quantities, basestring):
-                physical_quantities = [physical_quantities]
-
             if isinstance(ac_types, basestring):
                 ac_types = [ac_types]
 
-            if ac_types:
-                physical_quantities = [pq for pq in physical_quantities
-                                       if pq in PHYSICAL_QUANTITIES_WITH_AC_TYPES]
+            if physical_quantities is None:
+                physical_quantities = self.available_physical_quantities()
+                if ac_types:
+                    physical_quantities = [
+                        pq for pq in physical_quantities
+                        if pq in PHYSICAL_QUANTITIES_WITH_AC_TYPES
+                        and set(ac_types).issubset(self.available_ac_types(pq))]
+                    
+            elif isinstance(physical_quantities, basestring):
+                physical_quantities = [physical_quantities]
 
             cols = []
             available_physical_quantities = self.available_physical_quantities()
