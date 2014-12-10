@@ -13,7 +13,7 @@ def find_steady_states_transients(metergroup):
     steady_states_list = []
     transients_list = []
 
-    for power_df in metergroup.power_series(load_all_power_columns=True):
+    for power_df in metergroup.load(physical_quantity='power'):
         if len(power_df.columns) <= 2:
             # Use whatever is available
             power_dataframe = power_df
