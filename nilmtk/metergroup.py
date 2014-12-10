@@ -514,49 +514,74 @@ class MeterGroup(Electric):
                 labels[meter] = meter_instances
         nx.draw(graph, labels=labels)
 
-    def power_series(self, **kwargs):
-        """Sum together all meters and return power Series.
+    def load(self, **kwargs):
+        """Returns a generator of DataFrames loaded from the DataStore.
+
+        By default, `load` will load all available columns from the DataStore.  
+        Specific columns can be selected in one or two mutually exclusive ways:
+
+        1. specify a list of column names using the `cols` parameter.
+        2. specify a `physical_quantity` and/or an `ac_type` parameter to ask 
+           `load` to automatically select columns.
 
         Parameters
-        ----------
-        measurement_ac_type_prefs : list of strings, optional
-            if provided then will try to select the best AC type from 
-            self.available_ac_types which is also in measurement_ac_type_prefs.
-            If none of the measurements from measurement_ac_type_prefs are 
-            available then will raise a warning and will select another ac type.
+        ---------------
+        physical_quantities : string or list of strings
+            e.g. 'power' or 'voltage' or 'energy' or ['power', 'energy'].
+            If a single string then load columns only for that physical quantity.
+            If a list of strings then load columns for all those physical 
+            quantities.
 
-        See ElecMeter.load() docs for more parameters.
+        ac_types : string or list of strings, defaults to None
+            Where 'ac_type' is short for 'alternating current type'.  e.g. 
+            'reactive' or 'active' or 'apparent'.
+            If set to None then will load all AC types per physical quantity.
+            If set to 'best' then load the single best AC type per 
+            physical quantity.
+            If set to a single AC type then load just that single AC type per 
+            physical quantity, else raise an Exception.
+            If set to a list of AC type strings then will load all those 
+            AC types and will raise an Exception if any cannot be found.
+
+        cols : list of tuples, using NILMTK's vocabulary for measurements.
+            e.g. [('power', 'active'), ('voltage', ''), ('energy', 'reactive')]
+            `cols` can't be used if `ac_type` and/or `physical_quantity` are set.
+
+        preprocessing : list of Node subclass instances
+            e.g. [Clip()]
+
+        **kwargs : any other key word arguments to pass to `self.store.load()`
 
         Returns
-        -------
-        generator of pd.Series of power measurements.
+        ---------
+        Always return a generator of DataFrames (even if it only has a single 
+        column).
 
-        Note
-        ----
-        If meters do not align then resample to get multiple meters to align.
+        .. note:: If meters do not align then resample first by passing in
+                  `preprocessing=[Apply(func=lambda df: 
+                  pd.DataFrame.resample(df, rule='T', fill_method='ffill')]`
+
+        .. note:: Different AC types will be treated separately.
         """
-
         # Get a list of generators
-        generators = []
-        for meter in self.meters:
-            generators.append(meter.power_series(**kwargs))
+        generators = [meter.load(**kwargs) for meter in self.meters]
 
-        # Now load each generator and yield the sum
+        # Load each generator and yield the sum
         while True:
             chunk = None
             for generator in generators:
                 try:
-                    another_chunk = next(generator)
+                    chunk_from_next_meter = next(generator)
                 except StopIteration:
                     pass
                 else:
                     if chunk is None:
-                        chunk = another_chunk
+                        chunk = chunk_from_next_meter
                         timeframe = chunk.timeframe
                     else:
                         n = len(chunk)
-                        timeframe = timeframe.intersect(another_chunk.timeframe)
-                        chunk += another_chunk
+                        timeframe = timeframe.intersect(chunk_from_next_meter.timeframe)
+                        chunk += chunk_from_next_meter
                         chunk = chunk.dropna()
                         if len(chunk) < n:
                             warn("Meters are not perfectly aligned.")
@@ -929,11 +954,31 @@ class MeterGroup(Electric):
             
         return proportion
 
-    def available_power_ac_types(self):
-        """Returns set of all AC types recorded by all meters"""
-        all_ac_types = [meter.available_power_ac_types()
+    def available_ac_types(self, physical_quantity):
+        """Returns set of all available alternating current types for a 
+        specific physical quantity.
+
+        Parameters
+        ----------
+        physical_quantity : str
+
+        Returns
+        -------
+        list of strings e.g. ['apparent', 'active']
+        """
+        all_ac_types = [meter.available_ac_types(physical_quantity)
                         for meter in self.meters]
-        return set(flatten_2d_list(all_ac_types))
+        return list(set(flatten_2d_list(all_ac_types)))
+
+    def available_physical_quantities(self):
+        """
+        Returns
+        -------
+        list of strings e.g. ['power', 'energy']
+        """
+        all_physical_quants = [meter.available_physical_quantities()
+                               for meter in self.meters]
+        return list(set(flatten_2d_list(all_physical_quants)))
 
     def energy_per_meter(self, **load_kwargs):
         """Returns pd.DataFrame where columns is meter.identifier and 

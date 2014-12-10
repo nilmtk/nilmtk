@@ -337,7 +337,6 @@ class Electric(object):
             autocorrelation_plot(power, ax = ax)
         return ax
 
-
     def switch_times(self, threshold=40):
         """
         Returns an array of pd.DateTime when a switch occurs as defined by threshold
@@ -449,6 +448,53 @@ class Electric(object):
             else:
                 out.append(kdtree_mi(power_x_val, power_y_val, k, base))
         return sum(out)/len(out)
+
+    def available_power_ac_types(self):
+        """Finds available alternating current types from power measurements.
+
+        Returns
+        -------
+        list of strings e.g. ['apparent', 'active']
+
+        .. note:: Deprecated in NILMTK v0.3
+                  `available_power_ac_types` should not be used.  Instead please
+                  use `available_ac_types('power').`
+        """
+        warn("`available_power_ac_types` is deprecated.  Please use"
+             " `available_ac_types('power')` instead.", DeprecationWarning)
+        return self.available_ac_types('power')
+
+    def power_series(self, **kwargs):
+        """Get power Series.
+
+        Parameters
+        ----------
+        **kwargs :
+            Any other key word arguments are passed to self.load()
+
+        Returns
+        -------
+        generator of pd.Series of power measurements.
+
+        .. note:: Deprecated in NILMTK v0.3
+                  `power_series` should not be used.  Instead, please use
+                  `load` instead because it is more general purpose.
+        """
+        warn("`power_series` should not be used and is deprecated in"
+             " NILMTK v0.3.  Instead, please use `load` instead because it is"
+             " more general purpose.", DeprecationWarning)
+
+        # Select power column:
+        kwargs['physical_quantity'] = 'power'
+        kwargs['ac_type'] = 'best'
+
+        # Pull data through preprocessing pipeline
+        generator = self.load(**kwargs)
+        for chunk in generator:
+            chunk_to_yield = chunk.icol(0).dropna()
+            chunk_to_yield.timeframe = getattr(chunk, 'timeframe', None)
+            chunk_to_yield.look_ahead = getattr(chunk, 'look_ahead', None)
+            yield chunk_to_yield
 
 
   #   def activity_distribution(self):

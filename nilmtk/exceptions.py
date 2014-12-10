@@ -6,3 +6,6 @@ class TooFewSamplesError(Exception):
 
 class PerformanceWarning(RuntimeWarning):
     pass
+
+class MeasurementError(Exception):
+    pass

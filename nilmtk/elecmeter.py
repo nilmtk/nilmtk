@@ -18,6 +18,7 @@ from .measurement import select_best_ac_type, AC_TYPES, PHYSICAL_QUANTITIES
 from .node import Node
 from .electric import Electric
 from .timeframe import TimeFrame, list_of_timeframe_dicts
+from .exceptions import MeasurementError
 import nilmtk
 
 MAX_SIZE_ENTROPY = 10000
@@ -218,22 +219,8 @@ class ElecMeter(Hashable, Electric):
 
         measurements = self.device['measurements']
         return [m['type'] for m in measurements
-                if m['physical_quantity'] == physical_quantity]
-
-    def available_power_ac_types(self):
-        """Finds available alternating current types from power measurements.
-
-        Returns
-        -------
-        list of strings e.g. ['apparent', 'active']
-
-        .. note:: Deprecated in NILMTK v0.3
-                  `available_power_ac_types` should not be used.  Instead please
-                  use `available_ac_types('power').`
-        """
-        warn("`available_power_ac_types` is deprecated.  Please use"
-             " `available_ac_types('power')` instead.", DeprecationWarning)
-        return self.available_ac_types('power')
+                if m['physical_quantity'] == physical_quantity
+                and m.has_key('type')]
 
     def available_physical_quantities(self):
         """
@@ -349,17 +336,18 @@ class ElecMeter(Hashable, Electric):
 
         Returns
         ---------
-        Always return a generator of DataFrames (even if it only has a single columns).
+        Always return a generator of DataFrames (even if it only has a single 
+        column).
         """
 
         # Extract kwargs for this function
         physical_quantities = kwargs.pop('physical_quantity', None)
         ac_types = kwargs.pop('ac_type', None)
-        if (ac_types or physical_quantities) and kwargs.has_key('cols'):
-            raise ValueError("Cannot use `ac_types` and/or `physical_quantities`"
-                             " with `cols` parameter.")
+        if ac_types or physical_quantities:
+            if kwargs.has_key('cols'):
+                raise ValueError("Cannot use `ac_types` and/or `physical_quantities`"
+                                 " with `cols` parameter.")
 
-        if not kwargs.has_key('cols'):
             if physical_quantities is None:
                 physical_quantities = self.available_physical_quantities()
             elif isinstance(physical_quantities, basestring):
@@ -371,12 +359,23 @@ class ElecMeter(Hashable, Electric):
             cols = []
             for physical_quantity in physical_quantities:
                 available_ac_types = self.available_ac_types(physical_quantity)
+                if not available_ac_types:
+                    # then this is probably a physical quantity like 'voltage'
+                    cols.append((physical_quantity, ''))
+                    continue
+
                 if ac_types is None:
                     ac_types = available_ac_types
                 elif ac_types == ['best']:
                     ac_types = [select_best_ac_type(available_ac_types)]
 
                 for ac_type in ac_types:
+                    if ac_type not in available_ac_types:
+                        error_msg = ("AC type '{}' not available."
+                                     " only {} are available"
+                                     .format(ac_type, available_ac_types))
+                        raise MeasurementError(error_msg)
+
                     cols.append((physical_quantity, ac_type))
 
             kwargs['cols'] = cols
@@ -393,38 +392,6 @@ class ElecMeter(Hashable, Electric):
             generator = last_node.process()
 
         return generator
-
-    def power_series(self, **kwargs):
-        """Get power Series.
-
-        Parameters
-        ----------
-        **kwargs :
-            Any other key word arguments are passed to self.load()
-
-        Returns
-        -------
-        generator of pd.Series of power measurements.
-
-        .. note:: Deprecated in NILMTK v0.3
-                  `power_series` should not be used.  Instead, please use
-                  `load` instead because it is more general purpose.
-        """
-        warn("`power_series` should not be used and is deprecated in"
-             " NILMTK v0.3.  Instead, please use `load` instead because it is"
-             " more general purpose.", DeprecationWarning)
-
-        # Select power column:
-        kwargs['physical_quantity'] = 'power'
-        kwargs['ac_type'] = 'best'
-
-        # Pull data through preprocessing pipeline
-        generator = self.load(**kwargs)
-        for chunk in generator:
-            chunk_to_yield = chunk.icol(0).dropna()
-            chunk_to_yield.timeframe = getattr(chunk, 'timeframe', None)
-            chunk_to_yield.look_ahead = getattr(chunk, 'look_ahead', None)
-            yield chunk_to_yield
 
     def dry_run_metadata(self):
         return self.metadata
