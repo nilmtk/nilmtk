@@ -344,7 +344,7 @@ class ElecMeter(Hashable, Electric):
         nilmtk.exceptions.MeasurementError if a measurement is specified
         which is not available.
         """
-
+        
         # Extract kwargs for this function
         physical_quantities = kwargs.pop('physical_quantity', None)
         ac_types = kwargs.pop('ac_type', None)
