@@ -525,7 +525,7 @@ class MeterGroup(Electric):
             If none of the measurements from measurement_ac_type_prefs are 
             available then will raise a warning and will select another ac type.
 
-        See ElecMeter.power_series() docs for more parameters.
+        See ElecMeter.load() docs for more parameters.
 
         Returns
         -------

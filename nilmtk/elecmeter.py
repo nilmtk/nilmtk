@@ -14,7 +14,7 @@ from .stats.totalenergyresults import TotalEnergyResults
 from .hashable import Hashable
 from .appliance import Appliance
 from .datastore import Key
-from .measurement import select_best_ac_type, AC_TYPES
+from .measurement import select_best_ac_type, AC_TYPES, PHYSICAL_QUANTITIES
 from .node import Node
 from .electric import Electric
 from .timeframe import TimeFrame, list_of_timeframe_dicts
@@ -201,16 +201,48 @@ class ElecMeter(Hashable, Electric):
         label = ", ".join(appliance_names)
         return label
 
+    def available_ac_types(self, physical_quantity):
+        """Finds available alternating current types for a specific physical quantity.
+
+        Parameters
+        ----------
+        physical_quantity : str
+
+        Returns
+        -------
+        list of strings e.g. ['apparent', 'active']
+        """
+        if physical_quantity not in PHYSICAL_QUANTITIES:
+            raise ValueError("`physical_quantity` must by one of '{}', not '{}'"
+                             .format(PHYSICAL_QUANTITIES, physical_quantity))
+
+        measurements = self.device['measurements']
+        return [m['type'] for m in measurements
+                if m['physical_quantity'] == physical_quantity]
+
     def available_power_ac_types(self):
         """Finds available alternating current types from power measurements.
 
         Returns
         -------
         list of strings e.g. ['apparent', 'active']
+
+        .. note:: Deprecated in NILMTK v0.3
+                  `available_power_ac_types` should not be used.  Instead please
+                  use `available_ac_types('power').`
+        """
+        warn("`available_power_ac_types` is deprecated.  Please use"
+             " `available_ac_types('power')` instead.", DeprecationWarning)
+        return self.available_ac_types('power')
+
+    def available_physical_quantities(self):
+        """
+        Returns
+        -------
+        list of strings e.g. ['power', 'energy']
         """
         measurements = self.device['measurements']
-        return [m['type'] for m in measurements
-                if m['physical_quantity'] == 'power']
+        return list(set([m['physical_quantity'] for m in measurements]))
 
     def __repr__(self):
         string = super(ElecMeter, self).__repr__()
@@ -277,72 +309,80 @@ class ElecMeter(Hashable, Electric):
 
         return match
 
-    def power_series(self, **kwargs):
-        """Get power Series.
+    def load(self, **kwargs):
+        """Returns a generator of DataFrames loaded from the DataStore.
+
+        By default, `load` will load all available columns from the DataStore.  
+        Specific columns can be selected in one or two mutually exclusive ways:
+
+        1. specify a list of column names using the `cols` parameter.
+        2. specify a `physical_quantity` and/or an `ac_type` parameter to ask 
+           `load` to automatically select columns.
 
         Parameters
-        ----------
-        measurement_ac_type_prefs : list of strings, optional
-            if provided then will try to select the best AC type from 
-            self.available_ac_types which is also in measurement_ac_type_prefs.
-            If no measurement from measurement_ac_type_prefs is
-            available then will raise a warning and will select another ac type.
+        ---------------
+        physical_quantities : string or list of strings
+            e.g. 'power' or 'voltage' or 'energy' or ['power', 'energy'].
+            If a single string then load columns only for that physical quantity.
+            If a list of strings then load columns for all those physical 
+            quantities.
+
+        ac_types : string or list of strings, defaults to None
+            Where 'ac_type' is short for 'alternating current type'.  e.g. 
+            'reactive' or 'active' or 'apparent'.
+            If set to None then will load all AC types per physical quantity.
+            If set to 'best' then load the single best AC type per 
+            physical quantity.
+            If set to a single AC type then load just that single AC type per 
+            physical quantity, else raise an Exception.
+            If set to a list of AC type strings then will load all those 
+            AC types and will raise an Exception if any cannot be found.
+
+        cols : list of tuples, using NILMTK's vocabulary for measurements.
+            e.g. [('power', 'active'), ('voltage', ''), ('energy', 'reactive')]
+            `cols` can't be used if `ac_type` and/or `physical_quantity` are set.
+
         preprocessing : list of Node subclass instances
-        load_all_power_columns : bool, default False
-            If True then will return a generator of DataFrames of all the 
-            power AC types.
-        **kwargs :
-            Any other key word arguments are passed to self.store.load()
+            e.g. [Clip()]
+
+        **kwargs : any other key word arguments to pass to `self.store.load()`
 
         Returns
-        -------
-        generator of pd.Series of power measurements.
-
-        TODO
-        -----
-        The following cleaning steps will be run if the relevant entries
-        in meter.cleaning are True:
-
-        * remove implausable values
-        * gaps will be bookended with zeros
-
-        required_measurements : Measurement, optional.  
-            Raises MeasurementError if not available.
-        normalise : boolean, optional, defaults to False
-        voltage_series : ElecMeter object with voltage measurements available.
-            If not supplied and if normalise is True
-            then will attempt to use voltage data from this meter.
-        nominal_voltage : float
+        ---------
+        Always return a generator of DataFrames (even if it only has a single columns).
         """
-        # Extract key word arguments
-        measurement_ac_type_prefs = kwargs.pop(
-            'measurement_ac_type_prefs', None)
-        preprocessing = kwargs.pop('preprocessing', [])
-        load_all_power_columns = kwargs.pop('load_all_power_columns', False)
-        if load_all_power_columns:
-            if measurement_ac_type_prefs:
-                raise ValueError("Cannot specify `load_all_power_columns` and"
-                                 " `measurement_ac_type_prefs` together.")
-            if kwargs.has_key('cols'):
-                raise ValueError("Cannot specify `load_all_power_columns` and"
-                                 " `cols` together.")
-        if kwargs.has_key('cols') and measurement_ac_type_prefs:
-            raise ValueError("Cannot specify `cols` and"
-                             " `measurement_ac_type_prefs` together.")
 
-        # Select power column:
-        if load_all_power_columns:
-            kwargs['cols'] = [('power', ac_type) for ac_type in AC_TYPES]
-        elif measurement_ac_type_prefs:
-            best_ac_type = select_best_ac_type(self.available_power_ac_types(),
-                                               measurement_ac_type_prefs)
-            kwargs['cols'] = [('power', best_ac_type)]
-        else:
-            best_ac_type = select_best_ac_type(self.available_power_ac_types(),
-                                               measurement_ac_type_prefs)
-            kwargs['cols'] = [('power', best_ac_type)]
+        # Extract kwargs for this function
+        physical_quantities = kwargs.pop('physical_quantity', None)
+        ac_types = kwargs.pop('ac_type', None)
+        if (ac_types or physical_quantities) and kwargs.has_key('cols'):
+            raise ValueError("Cannot use `ac_types` and/or `physical_quantities`"
+                             " with `cols` parameter.")
+
+        if not kwargs.has_key('cols'):
+            if physical_quantities is None:
+                physical_quantities = self.available_physical_quantities()
+            elif isinstance(physical_quantities, basestring):
+                physical_quantities = [physical_quantities]
+
+            if isinstance(ac_types, basestring):
+                ac_types = [ac_types]
+
+            cols = []
+            for physical_quantity in physical_quantities:
+                available_ac_types = self.available_ac_types(physical_quantity)
+                if ac_types is None:
+                    ac_types = available_ac_types
+                elif ac_types == ['best']:
+                    ac_types = [select_best_ac_type(available_ac_types)]
+
+                for ac_type in ac_types:
+                    cols.append((physical_quantity, ac_type))
+
+            kwargs['cols'] = cols
 
         # Get source node
+        preprocessing = kwargs.pop('preprocessing', [])
         last_node = self.get_source_node(**kwargs)
         generator = last_node.generator
 
@@ -352,14 +392,38 @@ class ElecMeter(Hashable, Electric):
             last_node = node
             generator = last_node.process()
 
+        return generator
+
+    def power_series(self, **kwargs):
+        """Get power Series.
+
+        Parameters
+        ----------
+        **kwargs :
+            Any other key word arguments are passed to self.load()
+
+        Returns
+        -------
+        generator of pd.Series of power measurements.
+
+        .. note:: Deprecated in NILMTK v0.3
+                  `power_series` should not be used.  Instead, please use
+                  `load` instead because it is more general purpose.
+        """
+        warn("`power_series` should not be used and is deprecated in"
+             " NILMTK v0.3.  Instead, please use `load` instead because it is"
+             " more general purpose.", DeprecationWarning)
+
+        # Select power column:
+        kwargs['physical_quantity'] = 'power'
+        kwargs['ac_type'] = 'best'
+
         # Pull data through preprocessing pipeline
+        generator = self.load(**kwargs)
         for chunk in generator:
-            if len(chunk.columns) == 1:
-                chunk_to_yield = chunk.icol(0).dropna()
-                chunk_to_yield.timeframe = getattr(chunk, 'timeframe', None)
-                chunk_to_yield.look_ahead = getattr(chunk, 'look_ahead', None)
-            else:
-                chunk_to_yield = chunk
+            chunk_to_yield = chunk.icol(0).dropna()
+            chunk_to_yield.timeframe = getattr(chunk, 'timeframe', None)
+            chunk_to_yield.look_ahead = getattr(chunk, 'look_ahead', None)
             yield chunk_to_yield
 
     def dry_run_metadata(self):
