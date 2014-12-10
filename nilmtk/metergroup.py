@@ -16,6 +16,7 @@ from .utils import (tree_root, nodes_adjacent_to_root, simplest_type_for,
                     flatten_2d_list, convert_to_timestamp)
 from .plots import plot_series
 from .measurement import select_best_ac_type, AC_TYPES
+from .exceptions import MeasurementError
 from .electric import Electric
 from .timeframe import TimeFrame
 from .preprocessing import Apply
@@ -564,7 +565,16 @@ class MeterGroup(Electric):
         .. note:: Different AC types will be treated separately.
         """
         # Get a list of generators
-        generators = [meter.load(**kwargs) for meter in self.meters]
+        generators = []
+        for meter in self.meters:
+            try:
+                generator = meter.load(**kwargs)
+            except MeasurementError as e:
+                warn("Ignoring meter '{}' because it does not have the correct"
+                     " measurements.  The MeasurementError was: '{}'"
+                     .format(meter.identifier, e))
+            else:
+                generators.append(generator)
 
         # Load each generator and yield the sum
         while True:
