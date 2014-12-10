@@ -7,6 +7,7 @@ AC_TYPES = ['active', 'apparent', 'reactive']
 # AC_TYPES is in order of preference (favourite first).
 PHYSICAL_QUANTITIES = ['power', 'energy', 'cumulative energy', 
                        'voltage', 'current']
+PHYSICAL_QUANTITIES_WITH_AC_TYPES = ['power', 'energy', 'cumulative energy']
 LEVEL_NAMES = ['physical_quantity', 'type']
 
 def check_ac_type(ac_type):

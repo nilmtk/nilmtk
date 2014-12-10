@@ -526,13 +526,13 @@ class MeterGroup(Electric):
 
         Parameters
         ---------------
-        physical_quantities : string or list of strings
+        physical_quantity : string or list of strings
             e.g. 'power' or 'voltage' or 'energy' or ['power', 'energy'].
             If a single string then load columns only for that physical quantity.
             If a list of strings then load columns for all those physical 
             quantities.
 
-        ac_types : string or list of strings, defaults to None
+        ac_type : string or list of strings, defaults to None
             Where 'ac_type' is short for 'alternating current type'.  e.g. 
             'reactive' or 'active' or 'apparent'.
             If set to None then will load all AC types per physical quantity.

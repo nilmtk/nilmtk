@@ -14,14 +14,14 @@ from .stats.totalenergyresults import TotalEnergyResults
 from .hashable import Hashable
 from .appliance import Appliance
 from .datastore import Key
-from .measurement import select_best_ac_type, AC_TYPES, PHYSICAL_QUANTITIES
+from .measurement import (select_best_ac_type, AC_TYPES, PHYSICAL_QUANTITIES, 
+                          PHYSICAL_QUANTITIES_WITH_AC_TYPES)
 from .node import Node
 from .electric import Electric
 from .timeframe import TimeFrame, list_of_timeframe_dicts
 from .exceptions import MeasurementError
 import nilmtk
 
-MAX_SIZE_ENTROPY = 10000
 ElecMeterID = namedtuple('ElecMeterID', ['instance', 'building', 'dataset'])
 
 
@@ -308,13 +308,13 @@ class ElecMeter(Hashable, Electric):
 
         Parameters
         ---------------
-        physical_quantities : string or list of strings
+        physical_quantity : string or list of strings
             e.g. 'power' or 'voltage' or 'energy' or ['power', 'energy'].
             If a single string then load columns only for that physical quantity.
             If a list of strings then load columns for all those physical 
             quantities.
 
-        ac_types : string or list of strings, defaults to None
+        ac_type : string or list of strings, defaults to None
             Where 'ac_type' is short for 'alternating current type'.  e.g. 
             'reactive' or 'active' or 'apparent'.
             If set to None then will load all AC types per physical quantity.
@@ -335,9 +335,14 @@ class ElecMeter(Hashable, Electric):
         **kwargs : any other key word arguments to pass to `self.store.load()`
 
         Returns
-        ---------
+        -------
         Always return a generator of DataFrames (even if it only has a single 
         column).
+
+        Raises
+        ------
+        nilmtk.exceptions.MeasurementError if a measurement is specified
+        which is not available.
         """
 
         # Extract kwargs for this function
@@ -356,8 +361,20 @@ class ElecMeter(Hashable, Electric):
             if isinstance(ac_types, basestring):
                 ac_types = [ac_types]
 
+            if ac_types:
+                physical_quantities = [pq for pq in physical_quantities
+                                       if pq in PHYSICAL_QUANTITIES_WITH_AC_TYPES]
+
             cols = []
+            available_physical_quantities = self.available_physical_quantities()
             for physical_quantity in physical_quantities:
+                if physical_quantity not in available_physical_quantities:
+                    error_msg = ("Physical quantity '{}' not available."
+                                 " Only {} are available"
+                                 .format(physical_quantity, 
+                                         available_physical_quantities))
+                    raise MeasurementError(error_msg)
+
                 available_ac_types = self.available_ac_types(physical_quantity)
                 if not available_ac_types:
                     # then this is probably a physical quantity like 'voltage'
