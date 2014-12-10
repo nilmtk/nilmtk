@@ -87,7 +87,7 @@ class TestMeterGroup(unittest.TestCase):
         appliances = [{'type': 'washer dryer', 'instance': 1, 'meters': [1,2]},
                       {'type': 'fridge', 'instance': 1, 'meters': [3]}]
         mg = MeterGroup()
-        mg.load(self.datastore, elec_meters, appliances, BuildingID(1, 'REDD'))
+        mg.import_metadata(self.datastore, elec_meters, appliances, BuildingID(1, 'REDD'))
         self.assertEqual(mg['washer dryer'].total_energy()['active'], 
                          mg['fridge'].total_energy()['active'] * 2)
 

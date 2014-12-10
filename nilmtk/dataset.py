@@ -35,9 +35,9 @@ class DataSet(object):
         self.buildings = OrderedDict()
         self.metadata = {}
         if filename is not None:
-            self.load(get_datastore(filename, format))
+            self.import_metadata(get_datastore(filename, format))
         
-    def load(self, store):
+    def import_metadata(self, store):
         """
         Parameters
         ----------
@@ -57,5 +57,5 @@ class DataSet(object):
 
         for b_key in buildings:
             building = Building()
-            building.load(store, '/'+b_key, self.metadata.get('name'))
+            building.import_metadata(store, '/'+b_key, self.metadata.get('name'))
             self.buildings[building.identifier.instance] = building

@@ -22,13 +22,13 @@ class Building(Hashable):
         self.elec = MeterGroup()
         self.metadata = {}
     
-    def load(self, store, key, dataset_name):
+    def import_metadata(self, store, key, dataset_name):
         self.metadata = store.load_metadata(key)
         if not self.metadata.has_key('dataset'):
             self.metadata['dataset'] = dataset_name
         elec_meters = self.metadata.pop('elec_meters', {})
         appliances = self.metadata.pop('appliances', [])
-        self.elec.load(store, elec_meters, appliances, self.identifier)
+        self.elec.import_metadata(store, elec_meters, appliances, self.identifier)
                 
     def save(self, destination, key):
         destination.write_metadata(key, self.metadata)

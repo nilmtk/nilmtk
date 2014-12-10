@@ -38,7 +38,7 @@ class MeterGroup(Electric):
         self.meters = _convert_to_list(meters)
         self.disabled_meters = _convert_to_list(disabled_meters)
 
-    def load(self, store, elec_meters, appliances, building_id):
+    def import_metadata(self, store, elec_meters, appliances, building_id):
         """
         Parameters
         ----------
