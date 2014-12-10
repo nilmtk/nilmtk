@@ -588,7 +588,7 @@ class MeterGroup(Electric):
                     if chunk is None:
                         chunk = chunk_from_next_meter
                         timeframe = chunk.timeframe
-                    else:
+                    elif len(chunk_from_next_meter) > 0:
                         n = len(chunk)
                         timeframe = timeframe.intersect(chunk_from_next_meter.timeframe)
                         chunk += chunk_from_next_meter
