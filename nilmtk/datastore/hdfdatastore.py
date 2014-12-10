@@ -85,7 +85,7 @@ class HDFDataStore(DataStore):
                     chunk_end_i = section_end_i
                 chunk_end_i += 1
 
-                data = self.store.select(key=key, cols=cols, 
+                data = self.store.select(key=key, columns=cols, 
                                          start=chunk_start_i, stop=chunk_end_i)
 
                 if len(data) <= 2:
@@ -101,7 +101,7 @@ class HDFDataStore(DataStore):
                         look_ahead_end_i = look_ahead_start_i + n_look_ahead_rows
                         try:
                             data.look_ahead = self.store.select(
-                                key=key, cols=cols, 
+                                key=key, columns=cols, 
                                 start=look_ahead_start_i,
                                 stop=look_ahead_end_i)
                         except ValueError:
