@@ -3,7 +3,6 @@ import networkx as nx
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from compiler.ast import flatten
 from datetime import timedelta
 from warnings import warn
 from sys import stdout
@@ -1162,7 +1161,7 @@ class MeterGroup(Electric):
             temp.sort()
             measurement = temp.head(1).index[0]
         print(measurement)
-        top_k_appliance_index = flatten(appliance_energy_per_meter.T.sort(
+        top_k_appliance_index = flatten_2d_list(appliance_energy_per_meter.T.sort(
             columns=[measurement], ascending=False).head(k).index.tolist())
         meters_top_k = []
         for meter in self.meters:

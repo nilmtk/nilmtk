@@ -1,7 +1,6 @@
 from __future__ import print_function, division
 from warnings import warn
 from collections import namedtuple
-from compiler.ast import flatten
 from copy import deepcopy
 from itertools import izip
 import numpy as np
