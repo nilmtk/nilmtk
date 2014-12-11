@@ -116,7 +116,7 @@ def add_building_metadata(store, elec_meters, key='building1', appliances=[]):
 
 
 def create_co_test_hdf5():
-    FILENAME = join(data_dir(), 'co_test.h5')
+    FILENAME = join(data_dir(), 'read_only', 'co_test.h5')
     N_METERS = 3
     chunk = 1000
     N_PERIODS = 4 * chunk
@@ -169,7 +169,7 @@ def create_co_test_hdf5():
 
 
 def create_random_hdf5():
-    FILENAME = join(data_dir(), 'random.h5')
+    FILENAME = join(data_dir(), 'read_only', 'random.h5')
     N_METERS = 5
 
     store = pd.HDFStore(FILENAME, 'w', complevel=9, complib='zlib')
@@ -198,7 +198,7 @@ def create_random_hdf5():
 
 def create_energy_hdf5(simple=True):
     fname = 'energy.h5' if simple else 'energy_complex.h5'
-    FILENAME = join(data_dir(), fname)
+    FILENAME = join(data_dir(), 'read_only', fname)
 
     df = power_data(simple=simple)
 
