@@ -14,6 +14,7 @@ from nilmtk.dataset import DataSet
 
 global_meter_group = MeterGroup()
 
+
 def teardown_package():
     """Nosetests package teardown function (run when tests are done).
     See http://nose.readthedocs.org/en/latest/writing_tests.html#test-packages
@@ -23,18 +24,11 @@ def teardown_package():
     from nilmtk.tests.testingtools import data_dir
     import subprocess
     
-    cmd = "cd {data_dir}".format(data_dir=data_dir())
-    output = subprocess.check_output(cmd, shell=True)
-    if output:
-        raise RuntimeError("Attempt to run '{}' failed with this output: '{}'"
-                           .format(cmd, output))
-    else:
-        print "Succeeded in running '{}'".format(cmd)
-    
     cmd = "git checkout -- {data_dir}".format(data_dir=data_dir())
-    output = subprocess.check_output(cmd, shell=True)
-    if output:
-        raise RuntimeError("Attempt to run '{}' failed with this output: '{}'"
-                           .format(cmd, output))
+    try:
+        output = subprocess.check_output(cmd, shell=True, cwd=data_dir())
+    except Exception:
+        print "Attempt to run '{}' failed with this output: '{}'".format(cmd, output)
+        raise
     else:
         print "Succeeded in running '{}'".format(cmd)
