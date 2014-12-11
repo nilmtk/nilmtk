@@ -24,11 +24,11 @@ def teardown_package():
     from nilmtk.tests.testingtools import data_dir
     import subprocess
     
-    cmd = "git checkout -- {data_dir}".format(data_dir=data_dir())
+    cmd = "git checkout -- {}".format(data_dir())
     try:
         output = subprocess.check_output(cmd, shell=True, cwd=data_dir())
     except Exception:
-        print "Attempt to run '{}' failed with this output: '{}'".format(cmd, output)
+        print "Failed to run '{}'".format(cmd)
         raise
     else:
         print "Succeeded in running '{}'".format(cmd)
