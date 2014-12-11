@@ -16,7 +16,7 @@ from inspect import currentframe, getfile, getsourcefile
 """
 MANUAL:
 
-WikiEnergy is a large dataset hosted in a remote SQL database. This
+dataport is a large dataset hosted in a remote SQL database. This
 file provides a function to download the dataset and save it to disk
 as NILMTK-DF. Since downloading the entire dataset will likely take >
 24 hours, this function provides some options to allow you to download
@@ -24,7 +24,7 @@ only a subset of the data.
 
 For example, to only load house 26 for April 2014:
 
-wikienergy.download_dataset(
+dataport.download_dataset(
            'username',
            'password',
            '/path/output_filename.h5'
@@ -120,10 +120,10 @@ feed_mapping = {
 feed_ignore = ['gen', 'grid']
 
 
-def download_wikienergy(database_username, database_password, 
+def download_dataport(database_username, database_password, 
                      hdf_filename, periods_to_load=None):
     """
-    Downloads data from WikiEnergy database into an HDF5 file.
+    Downloads data from dataport database into an HDF5 file.
 
     Parameters
     ----------
@@ -137,14 +137,16 @@ def download_wikienergy(database_username, database_password,
        defaults to all buildings and all date ranges
     """
 
-    # wiki-energy database settings
-    database_host = 'db.wiki-energy.org'
+    # dataport database settings
+    database_host = 'dataport.pecanstreet.org'
+    database_port = '5434'
     database_name = 'postgres'
-    database_schema = 'PecanStreet_SharedData'
+    database_schema = 'university'
 
     # try to connect to database
     try:
         conn = db.connect('host=' + database_host + 
+                          ' port=' + database_port + 
                           ' dbname=' + database_name + 
                           ' user=' + database_username + 
                           ' password=' + database_password)
@@ -167,6 +169,7 @@ def download_wikienergy(database_username, database_password,
                  " AND TABLE_SCHEMA='" + database_schema + "'" + 
                  " ORDER BY TABLE_NAME")
     database_tables = pd.read_sql(sql_query, conn)['table_name'].tolist()
+    database_tables = [t for t in database_tables if 'electricity_egauge_minutes' in t]
 
     # if user has specified buildings
     if periods_to_load:
@@ -241,7 +244,7 @@ def download_wikienergy(database_username, database_password,
 
                     # download data in chunks
                     chunk_start = start
-                    chunk_size = datetime.timedelta(1)  # 1 day
+                    chunk_size = datetime.timedelta(10)  # 1 day
                     while chunk_start < end:
                         chunk_end = chunk_start + chunk_size 
                         if chunk_end > end:
@@ -257,14 +260,13 @@ def download_wikienergy(database_username, database_password,
                                      'and localminute between ' + 
                                      "'" + chunk_start.strftime(format) + "'" + 
                                      " and " + 
-                                     "'" + chunk_end.strftime(format) + "'" + 
-                                     ' LIMIT 2000')
+                                     "'" + chunk_end.strftime(format) + "'")
                         chunk_dataframe = pd.read_sql(sql_query, conn)
                         
                         # nilmtk requires building indices to start at 1
                         nilmtk_building_id = buildings_to_load.index(building_id) + 1
                         # convert to nilmtk-df and save to disk
-                        nilmtk_dataframe = _wikienergy_dataframe_to_hdf(chunk_dataframe, store,
+                        nilmtk_dataframe = _dataport_dataframe_to_hdf(chunk_dataframe, store,
                                                                          nilmtk_building_id,
                                                                          building_id)
 
@@ -294,11 +296,11 @@ def download_wikienergy(database_username, database_password,
                          hdf_filename)
                          
 
-def _wikienergy_dataframe_to_hdf(wikienergy_dataframe, 
+def _dataport_dataframe_to_hdf(dataport_dataframe, 
                                  store, 
                                  nilmtk_building_id,
-                                 wikienergy_building_id):
-    local_dataframe = wikienergy_dataframe.copy()
+                                 dataport_building_id):
+    local_dataframe = dataport_dataframe.copy()
     
     # remove timezone information to avoid append errors
     local_dataframe['localminute'] = pd.DatetimeIndex([i.replace(tzinfo=None) 
@@ -322,7 +324,7 @@ def _wikienergy_dataframe_to_hdf(wikienergy_dataframe,
     # building metadata
     building_metadata = {}
     building_metadata['instance'] = nilmtk_building_id
-    building_metadata['original_name'] = int(wikienergy_building_id) # use python int
+    building_metadata['original_name'] = int(dataport_building_id) # use python int
     building_metadata['elec_meters'] = {}
     building_metadata['appliances'] = []
     

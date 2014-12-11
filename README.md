@@ -189,6 +189,10 @@ $ python setup.py develop
 $ cd ..
 ```
 
+-  Installing postgresql support (currently needed for WikiEnergy converter)
+Download release for your python environment:
+http://www.stickpeople.com/projects/python/win-psycopg/
+
 - Misc. pip installs
 ```bash
 $ pip install nose pbs coveralls coverage
