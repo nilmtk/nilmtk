@@ -22,7 +22,16 @@ def teardown_package():
     """
     from nilmtk.tests.testingtools import data_dir
     import subprocess
-    cmd = "cd {data_dir};git checkout -- {data_dir}".format(data_dir=data_dir())
+    
+    cmd = "cd {data_dir}".format(data_dir=data_dir())
+    output = subprocess.check_output(cmd, shell=True)
+    if output:
+        raise RuntimeError("Attempt to run '{}' failed with this output: '{}'"
+                           .format(cmd, output))
+    else:
+        print "Succeeded in running '{}'".format(cmd)
+    
+    cmd = "git checkout -- {data_dir}".format(data_dir=data_dir())
     output = subprocess.check_output(cmd, shell=True)
     if output:
         raise RuntimeError("Attempt to run '{}' failed with this output: '{}'"

@@ -24,6 +24,10 @@ class TestLocateGoodSections(unittest.TestCase):
         cls.datastore = HDFDataStore(filename)
         ElecMeter.load_meter_devices(cls.datastore)
         cls.meter_meta = cls.datastore.load_metadata('building1')['elec_meters'][METER_ID.instance]
+        
+    @classmethod
+    def tearDownClass(cls):
+        cls.datastore.close()
 
     def test_pipeline(self):
         meter1 = ElecMeter(store=self.datastore, metadata=self.meter_meta, 

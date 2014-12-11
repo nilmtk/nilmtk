@@ -15,6 +15,10 @@ class TestMeterGroup(unittest.TestCase):
         filename = join(data_dir(), 'energy.h5')
         cls.datastore = HDFDataStore(filename)
         ElecMeter.load_meter_devices(cls.datastore)
+        
+    @classmethod
+    def tearDownClass(cls):
+        cls.datastore.close()
 
     def test_getitem(self):
         fridge_meter = ElecMeter()
@@ -128,7 +132,7 @@ class TestMeterGroup(unittest.TestCase):
         ds.buildings[1].elec.total_energy()
         ds.buildings[1].elec.total_energy() # test cache
         ds.buildings[1].elec.clear_cache()
-        
+        ds.store.close()
 
 if __name__ == '__main__':
     unittest.main()

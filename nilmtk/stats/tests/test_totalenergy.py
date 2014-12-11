@@ -30,6 +30,10 @@ class TestEnergy(unittest.TestCase):
         cls.datastore = HDFDataStore(filename)
         ElecMeter.load_meter_devices(cls.datastore)
         cls.meter_meta = cls.datastore.load_metadata('building1')['elec_meters'][METER_ID.instance]
+        
+    @classmethod
+    def tearDownClass(cls):
+        cls.datastore.close()
 
     def test_energy_per_power_series(self):
         data = np.array([0,  0,  0, 100, 100, 100, 150, 150, 200,   0,   0, 100, 5000,    0])
