@@ -6,8 +6,9 @@ AC_TYPES = ['active', 'apparent', 'reactive']
 # AC is short for 'Alternating Current'.
 # AC_TYPES is in order of preference (favourite first).
 PHYSICAL_QUANTITIES = ['power', 'energy', 'cumulative energy', 
-                       'voltage', 'current']
+                       'voltage', 'current', 'pf', 'frequency']
 PHYSICAL_QUANTITIES_WITH_AC_TYPES = ['power', 'energy', 'cumulative energy']
+PHYSICAL_QUANTITIES_TO_AVERAGE = ['voltage', 'pf', 'frequency']
 LEVEL_NAMES = ['physical_quantity', 'type']
 
 def check_ac_type(ac_type):

@@ -15,7 +15,8 @@ from .datastore.datastore import join_key
 from .utils import (tree_root, nodes_adjacent_to_root, simplest_type_for,
                     flatten_2d_list, convert_to_timestamp)
 from .plots import plot_series
-from .measurement import select_best_ac_type, AC_TYPES
+from .measurement import (select_best_ac_type, AC_TYPES,
+                          PHYSICAL_QUANTITIES_TO_AVERAGE)
 from .exceptions import MeasurementError
 from .electric import Electric
 from .timeframe import TimeFrame
@@ -578,29 +579,41 @@ class MeterGroup(Electric):
 
         # Load each generator and yield the sum
         while True:
-            chunk = None
+            chunk = pd.DataFrame()
+            columns_to_average_counter = pd.DataFrame()
+            timeframe = TimeFrame()
+
+            # Go through each generator to try sum values together
             for generator in generators:
                 try:
                     chunk_from_next_meter = next(generator)
                 except StopIteration:
                     continue
 
-                if chunk is None:
-                    chunk = chunk_from_next_meter
-                    timeframe = chunk.timeframe
-                elif len(chunk_from_next_meter) > 0:
-                    n = len(chunk)
-                    timeframe = timeframe.intersect(chunk_from_next_meter.timeframe)
-                    chunk += chunk_from_next_meter
-                    chunk = chunk.dropna()
-                    if len(chunk) < n:
-                        warn("Meters are not perfectly aligned.")
+                timeframe = timeframe.intersect(chunk_from_next_meter.timeframe)
+                chunk = chunk.add(chunk_from_next_meter, fill_value=0, level='physical_quantity')
 
-            if chunk is None:
+                if len(chunk) != len(chunk_from_next_meter):
+                    warn("Meters are not perfectly aligned.")
+
+                # Update columns_to_average_counter
+                physical_quantities = chunk_from_next_meter.columns.get_level_values('physical_quantity')
+                columns_to_average = (set(PHYSICAL_QUANTITIES_TO_AVERAGE)
+                                      .intersection(physical_quantities))
+                counter_increment = pd.DataFrame(1, columns=columns_to_average, 
+                                                 index=chunk_from_next_meter.index)
+                columns_to_average_counter = columns_to_average_counter.add(
+                    counter_increment, fill_value=0)
+
+            if chunk.empty:
                 break
-            else:
-                chunk.timeframe = timeframe
-                yield chunk
+
+            # Divide any columns which need dividing to create mean values
+            for column in columns_to_average_counter:
+                chunk[column] /= columns_to_average_counter[column]
+
+            chunk.timeframe = timeframe
+            yield chunk
 
     def plot_when_on(self, **load_kwargs):
         meter_identifiers = list(self.identifier)
