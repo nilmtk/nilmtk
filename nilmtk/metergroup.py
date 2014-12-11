@@ -583,18 +583,18 @@ class MeterGroup(Electric):
                 try:
                     chunk_from_next_meter = next(generator)
                 except StopIteration:
-                    pass
-                else:
-                    if chunk is None:
-                        chunk = chunk_from_next_meter
-                        timeframe = chunk.timeframe
-                    elif len(chunk_from_next_meter) > 0:
-                        n = len(chunk)
-                        timeframe = timeframe.intersect(chunk_from_next_meter.timeframe)
-                        chunk += chunk_from_next_meter
-                        chunk = chunk.dropna()
-                        if len(chunk) < n:
-                            warn("Meters are not perfectly aligned.")
+                    continue
+
+                if chunk is None:
+                    chunk = chunk_from_next_meter
+                    timeframe = chunk.timeframe
+                elif len(chunk_from_next_meter) > 0:
+                    n = len(chunk)
+                    timeframe = timeframe.intersect(chunk_from_next_meter.timeframe)
+                    chunk += chunk_from_next_meter
+                    chunk = chunk.dropna()
+                    if len(chunk) < n:
+                        warn("Meters are not perfectly aligned.")
 
             if chunk is None:
                 break
