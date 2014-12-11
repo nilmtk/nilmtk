@@ -13,4 +13,3 @@ dist/
 .ipynb_checkpoints/
 *.swp
 notebooks/*.h5
-data/*.h5

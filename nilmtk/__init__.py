@@ -14,32 +14,18 @@ from nilmtk.dataset import DataSet
 
 global_meter_group = MeterGroup()
 
-
-def setup_package():
-    """Nosetests package setup function (run before any tests are run).
-    See http://nose.readthedocs.org/en/latest/writing_tests.html#test-packages
-    """
-    from nilmtk.tests.testingtools import data_dir
-    from os.path import join
-    from glob import glob
-    import shutil
-
-    read_only_data = join(data_dir(), 'read_only', '*.h5')
-    for filename in glob(read_only_data):
-        print "copying", filename, "to", data_dir()
-        shutil.copy(filename, data_dir())
-
-
 def teardown_package():
     """Nosetests package teardown function (run when tests are done).
     See http://nose.readthedocs.org/en/latest/writing_tests.html#test-packages
+
+    Uses git to reset data_dir after tests have run.
     """
     from nilmtk.tests.testingtools import data_dir
-    from os.path import join
-    from glob import glob
-    import shutil, os
-
-    data = join(data_dir(), '*.h5')
-    for filename in glob(data):
-        print "removing", filename
-        os.remove(filename)
+    import subprocess
+    cmd = "cd {data_dir};git checkout -- {data_dir}".format(data_dir=data_dir())
+    output = subprocess.check_output(cmd, shell=True)
+    if output:
+        raise RuntimeError("Attempt to run '{}' failed with this output: '{}'"
+                           .format(cmd, output))
+    else:
+        print "Succeeded in running '{}'".format(cmd)
