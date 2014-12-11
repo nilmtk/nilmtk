@@ -579,40 +579,7 @@ class MeterGroup(Electric):
 
         # Load each generator and yield the sum
         while True:
-            chunk = pd.DataFrame()
-            columns_to_average_counter = pd.DataFrame()
-            timeframe = TimeFrame()
-
-            # Go through each generator to try sum values together
-            for generator in generators:
-                try:
-                    chunk_from_next_meter = next(generator)
-                except StopIteration:
-                    continue
-
-                timeframe = timeframe.intersect(chunk_from_next_meter.timeframe)
-                chunk = chunk.add(chunk_from_next_meter, fill_value=0, level='physical_quantity')
-
-                if len(chunk) != len(chunk_from_next_meter):
-                    warn("Meters are not perfectly aligned.")
-
-                # Update columns_to_average_counter
-                physical_quantities = chunk_from_next_meter.columns.get_level_values('physical_quantity')
-                columns_to_average = (set(PHYSICAL_QUANTITIES_TO_AVERAGE)
-                                      .intersection(physical_quantities))
-                counter_increment = pd.DataFrame(1, columns=columns_to_average, 
-                                                 index=chunk_from_next_meter.index)
-                columns_to_average_counter = columns_to_average_counter.add(
-                    counter_increment, fill_value=0)
-
-            if chunk.empty:
-                break
-
-            # Divide any columns which need dividing to create mean values
-            for column in columns_to_average_counter:
-                chunk[column] /= columns_to_average_counter[column]
-
-            chunk.timeframe = timeframe
+            chunk = combine_chunks_from_generators(generators)
             yield chunk
 
     def plot_when_on(self, **load_kwargs):
@@ -1273,6 +1240,7 @@ class MeterGroup(Electric):
         submeters = MeterGroup(submeters)
         return self.mains().correlation(submeters, **load_kwargs)
 
+
 def iterate_through_submeters_of_two_metergroups(master, slave):
     """
     Parameters
@@ -1290,3 +1258,57 @@ def iterate_through_submeters_of_two_metergroups(master, slave):
         slave_meter = slave[slave_identifier]
         zipped.append((master_meter, slave_meter))
     return zipped
+
+
+def combine_chunks_from_generators(generators):
+    """Combines chunks into a single DataFrame.
+
+    Adds or averages columns, depending on whether each column is in
+    PHYSICAL_QUANTITIES_TO_AVERAGE.
+
+    Parameters
+    ----------
+    generators : list of generators of nilmtk DataFrames
+
+    Returns
+    -------
+    DataFrame
+    """
+    # The approach is that we first add everything together
+    # in the first for-loop, whilst also keeping a 
+    # `columns_to_average_counter` DataFrame
+    # which tells us what to divide by in order to compute the 
+    # mean for PHYSICAL_QUANTITIES_TO_AVERAGE.
+
+    chunk = pd.DataFrame()
+    columns_to_average_counter = pd.DataFrame()
+    timeframe = TimeFrame()
+
+    # Go through each generator to try sum values together
+    for generator in generators:
+        try:
+            chunk_from_next_meter = next(generator)
+        except StopIteration:
+            continue
+
+        timeframe = timeframe.intersect(chunk_from_next_meter.timeframe)
+        chunk = chunk.add(chunk_from_next_meter, fill_value=0, level='physical_quantity')
+
+        if len(chunk) != len(chunk_from_next_meter):
+            warn("Meters are not perfectly aligned.")
+
+        # Update columns_to_average_counter
+        physical_quantities = chunk_from_next_meter.columns.get_level_values('physical_quantity')
+        columns_to_average = (set(PHYSICAL_QUANTITIES_TO_AVERAGE)
+                              .intersection(physical_quantities))
+        counter_increment = pd.DataFrame(1, columns=columns_to_average, 
+                                         index=chunk_from_next_meter.index)
+        columns_to_average_counter = columns_to_average_counter.add(
+            counter_increment, fill_value=0)
+
+    # Divide any columns which need dividing to create mean values
+    for column in columns_to_average_counter:
+        chunk[column] /= columns_to_average_counter[column]
+
+    chunk.timeframe = timeframe
+    return chunk
