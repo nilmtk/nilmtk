@@ -8,30 +8,17 @@ from testingtools import data_dir
 from nilmtk.datastore import HDFDataStore, CSVDataStore
 from nilmtk import TimeFrame
 
-class TestHDFDataStore(unittest.TestCase):
+# class name can't begin with test
+class SuperTestDataStore(object):
     START_DATE = pd.Timestamp('2012-01-01 00:00:00', tz=None)
     NROWS = 1E4
     END_DATE = START_DATE + timedelta(seconds=NROWS-1)
     TIMEFRAME = TimeFrame(START_DATE, END_DATE)
-
-    @classmethod
-    def setUpClass(cls):
-        filename = join(data_dir(), 'random.h5')
-        cls.datastore = HDFDataStore(filename)
-        #filename = join(data_dir(), 'random_csv')
-        #cls.datastore = CSVDataStore(filename)
-        cls.keys = ['/building1/elec/meter{:d}'.format(i) for i in range(1,6)]
-
+                                        
     @classmethod
     def tearDownClass(cls):
         cls.datastore.close()
-
-    def test_column_names(self):
-        for key in self.keys:
-            self.assertEqual(self.datastore._column_names(key), 
-                             [('power', 'active'), ('energy', 'reactive'),
-                              ('voltage', '')])
-
+        
     def test_timeframe(self):
         self.datastore.window.clear()
         for key in self.keys:
@@ -43,25 +30,7 @@ class TestHDFDataStore(unittest.TestCase):
             self.assertEqual(self.datastore.get_timeframe(key), self.TIMEFRAME)
             self.datastore.window.enabled = True
             self.assertEqual(self.datastore.get_timeframe(key), self.datastore.window)
-
-    def test_n_rows(self):
-        self._apply_mask()
-        for key in self.keys:
-            self.datastore.window.enabled = True
-            self.assertEqual(self.datastore._nrows(key), 10*60)
-            self.datastore.window.enabled = False
-            self.assertEqual(self.datastore._nrows(key), self.NROWS)
-
-    def test_estimate_memory_requirement(self):
-        self._apply_mask()
-        for key in self.keys:
-            self.datastore.window.enabled = True
-            mem = self.datastore._estimate_memory_requirement(key, self.datastore._nrows(key))
-            self.assertEqual(mem, 12000)
-            self.datastore.window.enabled = False
-            mem = self.datastore._estimate_memory_requirement(key, self.datastore._nrows(key))
-            self.assertEqual(mem, 200000)
-
+    
     def test_load(self):
         timeframe = TimeFrame('2012-01-01 00:00:00', '2012-01-01 00:00:05')
         self.datastore.window.clear()
@@ -128,6 +97,45 @@ class TestHDFDataStore(unittest.TestCase):
         self.datastore.window = TimeFrame('2012-01-01 00:10:00',
                                         '2012-01-01 00:20:00')
 
+class TestHDFDataStore(unittest.TestCase, SuperTestDataStore):
+
+    @classmethod
+    def setUpClass(cls):
+        filename = join(data_dir(), 'random.h5')
+        cls.datastore = HDFDataStore(filename)
+        cls.keys = ['/building1/elec/meter{:d}'.format(i) for i in range(1,6)]
+
+    def test_column_names(self):
+        for key in self.keys:
+            self.assertEqual(self.datastore._column_names(key), 
+                             [('power', 'active'), ('energy', 'reactive'),
+                              ('voltage', '')])
+
+    def test_n_rows(self):
+        self._apply_mask()
+        for key in self.keys:
+            self.datastore.window.enabled = True
+            self.assertEqual(self.datastore._nrows(key), 10*60)
+            self.datastore.window.enabled = False
+            self.assertEqual(self.datastore._nrows(key), self.NROWS)
+
+    def test_estimate_memory_requirement(self):
+        self._apply_mask()
+        for key in self.keys:
+            self.datastore.window.enabled = True
+            mem = self.datastore._estimate_memory_requirement(key, self.datastore._nrows(key))
+            self.assertEqual(mem, 12000)
+            self.datastore.window.enabled = False
+            mem = self.datastore._estimate_memory_requirement(key, self.datastore._nrows(key))
+            self.assertEqual(mem, 200000)
+
+class TestCSVDataStore(unittest.TestCase, SuperTestDataStore):
+
+    @classmethod
+    def setUpClass(cls):
+        filename = join(data_dir(), 'random_csv')
+        cls.datastore = CSVDataStore(filename)
+        cls.keys = ['/building1/elec/meter{:d}'.format(i) for i in range(1,6)]
     
 if __name__ == '__main__':
     unittest.main()
