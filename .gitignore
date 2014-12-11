@@ -13,3 +13,4 @@ dist/
 .ipynb_checkpoints/
 *.swp
 notebooks/*.h5
+.idea/*
