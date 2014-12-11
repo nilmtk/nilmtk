@@ -577,9 +577,11 @@ class MeterGroup(Electric):
             else:
                 generators.append(generator)
 
-        # Load each generator and yield the sum
+        # Load each generator and yield the sum or the mean
         while True:
             chunk = combine_chunks_from_generators(generators)
+            if chunk.empty:
+                break
             yield chunk
 
     def plot_when_on(self, **load_kwargs):
