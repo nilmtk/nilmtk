@@ -1,12 +1,12 @@
 from __future__ import print_function, division
-import pandas as pd
 import numpy as np
-from pandas import *
+import pandas as pd
 from os.path import *
+from os import getcwd
 from os import listdir
 from nilmtk.datastore import Key
 from nilmtk.measurement import LEVEL_NAMES
-from nilmtk.utils import check_directory_exists
+from nilmtk.utils import check_directory_exists, get_datastore
 from nilm_metadata import *
 from inspect import currentframe, getfile, getsourcefile
 from sys import getfilesystemencoding
@@ -24,6 +24,9 @@ columnNameMapping = {'V': ('voltage', ''),
                      'S': ('power', 'apparent'),
                      'St': ('energy', 'apparent')}
 
+TIMESTAMP_COLUMN_NAME = "TIMESTAMP"
+TIMEZONE = "America/Vancouver"
+
 
 def _get_module_directory():
     # Taken from http://stackoverflow.com/a/6098238/732596
@@ -39,7 +42,7 @@ def _get_module_directory():
     return path_to_this_file
 
 
-def convert_ampds(inputPath, hdfFilename):
+def convert_ampds(input_path, output_filename, format='HDF'):
     '''
     Parameters: 
     -----------
@@ -56,36 +59,34 @@ def convert_ampds(inputPath, hdfFilename):
     convert('/AMPds/electricity', 'store.h5')    
 
     '''
-    check_directory_exists(inputPath)
-    files = [f for f in listdir(inputPath) if isfile(join(inputPath, f)) and 
+    check_directory_exists(input_path)
+    files = [f for f in listdir(input_path) if isfile(join(input_path, f)) and
              '.csv' in f and '.swp' not in f]
     # Sorting Lexicographically
     files.sort()
-    print(files)
 
     # Remove Whole Home and put it at top
     files.remove("WHE.csv")
     files.insert(0, "WHE.csv")
-    assert isdir(inputPath)
-    store = HDFStore(hdfFilename)
-    for i, csv_file in enumerate(files):  
+    assert isdir(input_path)
+    store = get_datastore(output_filename, format, mode='w')
+    for i, csv_file in enumerate(files):
         key = Key(building=1, meter=(i + 1))
         print('Loading file #', (i + 1), ' : ', csv_file, '. Please wait...')
-        df = pd.read_csv(join(inputPath, csv_file))
+        df = pd.read_csv(join(input_path, csv_file))
         # Due to fixed width, column names have spaces :(
         df.columns = [x.replace(" ", "") for x in df.columns]
-        df.index = pd.to_datetime(df["TIMESTAMP"], unit='s', utc = True)
-        df = df.drop('TIMESTAMP', 1)
-        df = df.tz_localize('GMT').tz_convert('America/Vancouver')
+        df.index = pd.to_datetime(df[TIMESTAMP_COLUMN_NAME], unit='s', utc = True)
+        df = df.drop(TIMESTAMP_COLUMN_NAME, 1)
+        df = df.tz_localize('GMT').tz_convert(TIMEZONE)
         df.rename(columns=lambda x: columnNameMapping[x], inplace=True)
         df.columns.set_names(LEVEL_NAMES, inplace=True)
         df = df.convert_objects(convert_numeric=True)
         df = df.dropna()
         df = df.astype(np.float32)
-        store.put(str(key), df, format='Table')
-        store.flush()
+        store.put(str(key), df)
         print("Done with file #", (i + 1))
     store.close()
     metadataPath = join(_get_module_directory(), 'metadata')
     print('Processing metadata...')
-    convert_yaml_to_hdf5(metadataPath, hdfFilename)
+    convert_yaml_to_hdf5(metadataPath, output_filename)
