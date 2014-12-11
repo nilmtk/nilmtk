@@ -14,10 +14,6 @@ class SuperTestDataStore(object):
     NROWS = 1E4
     END_DATE = START_DATE + timedelta(seconds=NROWS-1)
     TIMEFRAME = TimeFrame(START_DATE, END_DATE)
-                                        
-    @classmethod
-    def tearDownClass(cls):
-        cls.datastore.close()
         
     def test_timeframe(self):
         self.datastore.window.clear()
@@ -104,6 +100,10 @@ class TestHDFDataStore(unittest.TestCase, SuperTestDataStore):
         filename = join(data_dir(), 'random.h5')
         cls.datastore = HDFDataStore(filename)
         cls.keys = ['/building1/elec/meter{:d}'.format(i) for i in range(1,6)]
+                                        
+    @classmethod
+    def tearDownClass(cls):
+        cls.datastore.close()
 
     def test_column_names(self):
         for key in self.keys:
@@ -136,6 +136,10 @@ class TestCSVDataStore(unittest.TestCase, SuperTestDataStore):
         filename = join(data_dir(), 'random_csv')
         cls.datastore = CSVDataStore(filename)
         cls.keys = ['/building1/elec/meter{:d}'.format(i) for i in range(1,6)]
+                                        
+    @classmethod
+    def tearDownClass(cls):
+        cls.datastore.close()
     
 if __name__ == '__main__':
     unittest.main()
