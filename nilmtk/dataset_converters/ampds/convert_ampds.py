@@ -46,14 +46,16 @@ def convert_ampds(input_path, output_filename, format='HDF'):
     """
     Parameters: 
     -----------
-    inputPath: str
+    input_path: str
             The path of the directory where all the csv 
             files are supposed to be stored
-    hdfFilename: str
+    output_filename: str
             The path of the h5 file where all the 
             standardized data is supposed to go. The path 
             should refer to a particular file and not just a
              random directory in order for this to work.
+    format: str
+        Defaults to HDF5
     Example usage:
     --------------
     convert('/AMPds/electricity', 'store.h5')    

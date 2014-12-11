@@ -1,15 +1,12 @@
 from __future__ import print_function, division
 import pandas as pd
 import numpy as np
-from copy import deepcopy
 from os.path import join, isdir, isfile, dirname, abspath
-from os import listdir, getcwd
-import re
-from sys import stdout, getfilesystemencoding
+from os import getcwd
+from sys import getfilesystemencoding
 from nilmtk.datastore import Key
-from nilmtk.timeframe import TimeFrame
 from nilmtk.measurement import LEVEL_NAMES
-from nilmtk.utils import check_directory_exists
+from nilmtk.utils import check_directory_exists, get_datastore
 from nilm_metadata import convert_yaml_to_hdf5
 from inspect import currentframe, getfile, getsourcefile
 
@@ -32,22 +29,23 @@ column_mapping = {
     'f': ('frequency', "")
 }
 
+TIMESTAMP_COLUMN_NAME = "timestamp"
+TIMEZONE = "Asia/Kolkata"
 
-def convert_iawe(iawe_path, hdf_filename):
+def convert_iawe(iawe_path, output_filename, format="HDF"):
     """
     Parameters
     ----------
     iawe_path : str
         The root path of the iawe dataset.
-    hdf_filename : str
-        The destination HDF5 filename (including path and suffix).
+    output_filename : str
+        The destination filename (including path and suffix).
     """
 
     check_directory_exists(iawe_path)
 
-    # Open HDF5 file
-    store = pd.HDFStore(hdf_filename, 'w', complevel=9, complib='zlib')
-
+    # Open data store
+    store = get_datastore(output_filename, format, mode='w')
     electricity_path = join(iawe_path, "electricity")
 
     # Mains data
@@ -56,21 +54,19 @@ def convert_iawe(iawe_path, hdf_filename):
         filename = join(electricity_path, "%d.csv" % chan)
         print('Loading ', chan)
         df = pd.read_csv(filename)
-        df.index = pd.to_datetime(
-            (df.timestamp.values * 1E9).astype(int), utc=True)
-        df = df.tz_convert('Asia/Kolkata')
-        df = df.drop('timestamp', 1)
+        df.index = pd.to_datetime(df.timestamp.values, units='s', utc=True)
+        df = df.tz_convert(TIMEZONE)
+        df = df.drop(TIMESTAMP_COLUMN_NAME, 1)
         df.rename(columns=lambda x: column_mapping[x], inplace=True)
         df.columns.set_names(LEVEL_NAMES, inplace=True)
         df = df.convert_objects(convert_numeric=True)
         df = df.dropna()
         df = df.astype(np.float32)
         df = df.sort_index()
-        store.put(str(key), df, format='table')
-        store.flush()
+        store.put(str(key), df)
     store.close()
     convert_yaml_to_hdf5(join(_get_module_directory(), 'metadata'),
-                         hdf_filename)
+                         output_filename)
 
     print("Done converting iAWE to HDF5!")
 
