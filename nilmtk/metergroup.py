@@ -516,7 +516,7 @@ class MeterGroup(Electric):
                 labels[meter] = meter_instances
         nx.draw(graph, labels=labels)
 
-    def load(self, **kwargs):
+    def load(self, sample_period=None, **kwargs):
         """Returns a generator of DataFrames loaded from the DataStore.
 
         By default, `load` will load all available columns from the DataStore.  
@@ -526,8 +526,23 @@ class MeterGroup(Electric):
         2. specify a `physical_quantity` and/or an `ac_type` parameter to ask 
            `load` to automatically select columns.
 
+        Each meter in the MeterGroup will first be reindexed before being added.
+
+        Note that we just use forward filling to reindex.
+
+        Also note that the timeframe will be the *union* of the timeframes of
+        all individual meters.
+
+        Also note that `chunksize` refers to the chunksize for each individual
+        meter.  If those chunks span a large timeframe then the timeframe of
+        the returned data will be large.
+
         Parameters
-        ---------------
+        ----------
+        sample_period : number, seconds, optional
+            The sample_period to reindex all meters to.  If not specified then
+            will use the max of all meters' sample_periods.
+
         physical_quantity : string or list of strings
             e.g. 'power' or 'voltage' or 'energy' or ['power', 'energy'].
             If a single string then load columns only for that physical quantity.
@@ -559,12 +574,12 @@ class MeterGroup(Electric):
         Always return a generator of DataFrames (even if it only has a single 
         column).
 
-        .. note:: If meters do not align then resample first by passing in
-                  `preprocessing=[Apply(func=lambda df: 
-                  pd.DataFrame.resample(df, rule='T', fill_method='ffill')]`
-
         .. note:: Different AC types will be treated separately.
         """
+        if kwargs.has_key('preprocessing'):
+            warn("If you are using `preprocessing` to resample then please"
+                 " do not!  Instead, please use the `sample_period` parameter.")
+
         # Get a list of generators
         generators = []
         for meter in self.meters:
@@ -577,9 +592,12 @@ class MeterGroup(Electric):
             else:
                 generators.append(generator)
 
+        if sample_period is None:
+            sample_period = self.sample_period()
+
         # Load each generator and yield the sum or the mean
         while True:
-            chunk = combine_chunks_from_generators(generators)
+            chunk = combine_chunks_from_generators(generators, sample_period)
             if chunk.empty:
                 break
             yield chunk
@@ -1201,7 +1219,6 @@ class MeterGroup(Electric):
         # Load data and plot each meter
         kind = kwargs.pop('kind', 'separate lines')
         if kind == 'separate lines':
-
             # Get start and end times for the plot
             start = convert_to_timestamp(kwargs.pop('start', None))
             end = convert_to_timestamp(kwargs.pop('end', None))
@@ -1262,7 +1279,7 @@ def iterate_through_submeters_of_two_metergroups(master, slave):
     return zipped
 
 
-def combine_chunks_from_generators(generators):
+def combine_chunks_from_generators(generators, sample_period):
     """Combines chunks into a single DataFrame.
 
     Adds or averages columns, depending on whether each column is in
@@ -1271,6 +1288,7 @@ def combine_chunks_from_generators(generators):
     Parameters
     ----------
     generators : list of generators of nilmtk DataFrames
+    sample_period : number, seconds
 
     Returns
     -------
@@ -1284,22 +1302,39 @@ def combine_chunks_from_generators(generators):
 
     chunk = pd.DataFrame()
     columns_to_average_counter = pd.DataFrame()
-    timeframe = TimeFrame()
+    timeframe = None
 
     # Go through each generator to try sum values together
+    index = None
     for generator in generators:
         try:
             chunk_from_next_meter = next(generator)
         except StopIteration:
             continue
 
-        timeframe = timeframe.intersect(chunk_from_next_meter.timeframe)
-        chunk = chunk.add(chunk_from_next_meter, fill_value=0, level='physical_quantity')
+        if timeframe is None:
+            timeframe = chunk_from_next_meter.timeframe
+        else:
+            timeframe = timeframe.union(chunk_from_next_meter.timeframe)
 
-        if len(chunk) != len(chunk_from_next_meter):
-            warn("Meters are not perfectly aligned.")
+        # Extend 'index' if necessary
+        index = extend_index(index, timeframe, sample_period)
 
-        # Update columns_to_average_counter
+        # Reindex chunk_from_next_meter
+        chunk_from_next_meter = chunk_from_next_meter.reindex(
+            index, method='ffill', limit=1, fill_value=0)
+
+        # Add
+        try:
+            chunk = chunk.add(chunk_from_next_meter, fill_value=0)
+        except ValueError as e:
+            if str(e) != "cannot join with no level specified and no overlapping names":
+                raise
+            chunk = chunk.add(chunk_from_next_meter, fill_value=0, 
+                              level='physical_quantity') 
+
+        # Update columns_to_average_counter - this is necessary so we do not
+        # add up columns like 'voltage' which should be averaged.
         physical_quantities = chunk_from_next_meter.columns.get_level_values('physical_quantity')
         columns_to_average = (set(PHYSICAL_QUANTITIES_TO_AVERAGE)
                               .intersection(physical_quantities))
@@ -1308,9 +1343,44 @@ def combine_chunks_from_generators(generators):
         columns_to_average_counter = columns_to_average_counter.add(
             counter_increment, fill_value=0)
 
-    # Divide any columns which need dividing to create mean values
+    # Create mean values by dividing any columns which need dividing
     for column in columns_to_average_counter:
         chunk[column] /= columns_to_average_counter[column]
 
     chunk.timeframe = timeframe
     return chunk
+
+
+def extend_index(index, timeframe, sample_period):
+    """Extends `index` to size of timeframe, ensuring that we maintain
+    a regular interval between each index element.
+
+    Parameters
+    ----------
+    index : pd.DatetimeIndex or None
+    timeframe : nilmtk.TimeFrame
+    sample_period : number, seconds
+
+    Returns
+    -------
+    pd.DatetimeIndex
+    """
+    freq = '{}S'.format(sample_period)
+    if index is None:
+        return pd.date_range(timeframe.start, timeframe.end, freq=freq)
+
+    # extend beginning of index if needs be
+    if index[0] > timeframe.start:
+        seconds = (index[0] - timeframe.start).total_seconds()
+        periods = int(np.ceil(seconds / sample_period))
+        new_index = pd.date_range(start=None, end=index[0], freq=freq, 
+                                  closed='right', periods=periods)
+        index = new_index[:-1] + index
+
+    # extend end of index if needs be
+    if index[-1] < timeframe.end: 
+        new_index = pd.date_range(start=index[-1], end=timeframe.end, 
+                                  freq=freq, closed='left')
+        index = index + new_index[1:]
+
+    return index
