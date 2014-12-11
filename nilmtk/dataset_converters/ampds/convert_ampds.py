@@ -43,7 +43,7 @@ def _get_module_directory():
 
 
 def convert_ampds(input_path, output_filename, format='HDF'):
-    '''
+    """
     Parameters: 
     -----------
     inputPath: str
@@ -58,7 +58,7 @@ def convert_ampds(input_path, output_filename, format='HDF'):
     --------------
     convert('/AMPds/electricity', 'store.h5')    
 
-    '''
+    """
     check_directory_exists(input_path)
     files = [f for f in listdir(input_path) if isfile(join(input_path, f)) and
              '.csv' in f and '.swp' not in f]
@@ -76,7 +76,7 @@ def convert_ampds(input_path, output_filename, format='HDF'):
         df = pd.read_csv(join(input_path, csv_file))
         # Due to fixed width, column names have spaces :(
         df.columns = [x.replace(" ", "") for x in df.columns]
-        df.index = pd.to_datetime(df[TIMESTAMP_COLUMN_NAME], unit='s', utc = True)
+        df.index = pd.to_datetime(df[TIMESTAMP_COLUMN_NAME], unit='s', utc=True)
         df = df.drop(TIMESTAMP_COLUMN_NAME, 1)
         df = df.tz_localize('GMT').tz_convert(TIMEZONE)
         df.rename(columns=lambda x: columnNameMapping[x], inplace=True)
@@ -87,6 +87,6 @@ def convert_ampds(input_path, output_filename, format='HDF'):
         store.put(str(key), df)
         print("Done with file #", (i + 1))
     store.close()
-    metadataPath = join(_get_module_directory(), 'metadata')
+    metadata_path = join(_get_module_directory(), 'metadata')
     print('Processing metadata...')
-    convert_yaml_to_hdf5(metadataPath, output_filename)
+    convert_yaml_to_hdf5(metadata_path, output_filename)
