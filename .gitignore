@@ -14,3 +14,4 @@ dist/
 *.swp
 notebooks/*.h5
 .idea/*
+.idea
