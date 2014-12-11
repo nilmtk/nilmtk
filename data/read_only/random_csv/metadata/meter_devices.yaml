@@ -1,0 +1,9 @@
+Random Meter:
+  manufacturer: Test Manufacturer
+  max_sample_period: 15
+  measurements:
+  - {lower_limit: 0, physical_quantity: power, type: active, upper_limit: 6000}
+  - {lower_limit: 0, physical_quantity: energy, type: reactive, upper_limit: 6000}
+  - {lower_limit: 0, physical_quantity: voltage, type: '', upper_limit: 6000}
+  model: Random Meter
+  sample_period: 10
