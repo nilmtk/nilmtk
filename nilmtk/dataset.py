@@ -1,9 +1,11 @@
 from __future__ import print_function, division
 import os
 from collections import OrderedDict
+import pandas as pd
 from .building import Building
 from .datastore.datastore import join_key
 from .utils import get_datastore
+from .timeframe import TimeFrame
 
 class DataSet(object):
     """
@@ -32,6 +34,7 @@ class DataSet(object):
         format : str
             format of output. Either 'HDF' or 'CSV'. Defaults to 'HDF'
         """
+        self.store = None
         self.buildings = OrderedDict()
         self.metadata = {}
         if filename is not None:
@@ -59,3 +62,22 @@ class DataSet(object):
             building = Building()
             building.import_metadata(store, '/'+b_key, self.metadata.get('name'))
             self.buildings[building.identifier.instance] = building
+
+    def set_window(self, start=None, end=None):
+        """Set the timeframe window on self.store. Used for setting the 
+        'region of interest' non-destructively for all processing.
+        
+        Parameters
+        ----------
+        start, end : str or pd.Timestamp or datetime or None
+        """
+        if self.store is None:
+            raise RuntimeError("You need to set self.store first!")
+
+        tz = self.metadata.get('timezone')
+        if tz is None:
+            raise RuntimeError("'timezone' is not set in dataset metadata.")
+
+        start_ts = pd.Timestamp(start).tz_localize(tz)
+        end_ts = pd.Timestamp(end).tz_localize(tz)
+        self.store.window = TimeFrame(start_ts, end_ts)
