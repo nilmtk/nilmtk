@@ -576,7 +576,7 @@ class MeterGroup(Electric):
         sample_period, kwargs = self._prep_kwargs_for_sample_period_and_resample(**kwargs)
 
         # Load each generator and yield the sum or the mean
-        identifiers, generators = self._meter_generators(**kwargs)
+        _, generators = self._meter_generators(**kwargs)
         while True:
             chunk = combine_chunks_from_generators(generators, sample_period)
             if chunk.empty:
@@ -786,7 +786,7 @@ class MeterGroup(Electric):
 
     def _check_kwargs_for_full_results_and_sections(self, load_kwargs):
         if (load_kwargs.get('full_results')
-                and not 'sections' in load_kwargs
+                and 'sections' not in load_kwargs
                 and len(self.meters) > 1):
             raise RuntimeError("MeterGroup stats can only return full results"
                                " objects if you specify 'sections' to load. If"
@@ -861,7 +861,7 @@ class MeterGroup(Electric):
             for meter_id, generator in zip(identifiers, generators):
                 try:
                     chunk_from_next_meter, timeframe, index = _load_and_reindex_chunk(
-                        generator, timeframe, index)
+                        generator, timeframe, index, sample_period)
                 except StopIteration:
                     continue
 
@@ -1319,7 +1319,7 @@ def combine_chunks_from_generators(generators, sample_period):
     for generator in generators:
         try:
             chunk_from_next_meter, timeframe, index = _load_and_reindex_chunk(
-                generator, timeframe, index)
+                generator, timeframe, index, sample_period)
         except StopIteration:
             continue
 
@@ -1350,7 +1350,7 @@ def combine_chunks_from_generators(generators, sample_period):
     return chunk
 
 
-def _load_and_reindex_chunk(generator, timeframe, index):
+def _load_and_reindex_chunk(generator, timeframe, index, sample_period):
     chunk_from_next_meter = next(generator)
 
     if timeframe is None:
