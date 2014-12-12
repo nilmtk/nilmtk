@@ -62,7 +62,7 @@ class TestMeterGroup(unittest.TestCase):
         wiring_graph = mg.wiring_graph()
         
         self.assertIs(mg.mains(), meter1)
-        self.assertEqual(mg.meters_directly_downstream_of_mains(), [meter2])
+        self.assertEqual(mg.meters_directly_downstream_of_mains().meters, [meter2])
         self.assertEqual(wiring_graph.nodes(), [meter2, meter3, meter1])
 
     def test_proportion_of_energy_submetered(self):

@@ -694,9 +694,10 @@ class MeterGroup(Electric):
         return unique_upstream_meters[0]
 
     def meters_directly_downstream_of_mains(self):
+        """Returns new MeterGroup."""
         meters = nodes_adjacent_to_root(self.wiring_graph())
         assert isinstance(meters, list)
-        return meters
+        return MeterGroup(meters)
 
     def submeters(self):
         """Returns new MeterGroup of all meters except site_meters"""
@@ -949,7 +950,7 @@ class MeterGroup(Electric):
         mains = self.mains()
         downstream_meters = self.meters_directly_downstream_of_mains()
         proportion = 0.0
-        for m in downstream_meters:
+        for m in downstream_meters.meters:
             print("Calculating proportion for", m)
             prop = m.proportion_of_energy(mains, **loader_kwargs)
             proportion += prop
@@ -1232,7 +1233,6 @@ class MeterGroup(Electric):
         
     def correlation_of_sum_of_submeters_with_mains(self, **load_kwargs):
         submeters = self.meters_directly_downstream_of_mains()
-        submeters = MeterGroup(submeters)
         return self.mains().correlation(submeters, **load_kwargs)
 
 
