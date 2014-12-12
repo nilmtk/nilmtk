@@ -32,11 +32,11 @@ class MyDeque(deque):
 
 class PairBuffer(object):
 
-    '''
+    """
     Attributes:
     * transitionList (list of tuples)
     * matchedPairs (dataframe containing matched pairs of transitions)
-    '''
+    """
 
     def __init__(self, bufferSize=20, minTolerance=35, percentTolerance=0.035, largeTransition=1000, num_measurements=3):
         # We use a deque here, because it allows us quick access to start and end popping
@@ -249,7 +249,6 @@ class Hart85(object):
         """
 
         """
-        
 
         states = pd.DataFrame(-1, index = chunk.index, columns = self.centroids.index.values)
         for transient_tuple in transients.itertuples():
@@ -315,7 +314,7 @@ class Hart85(object):
                     power[i] = 0
                     while values[i]!=1 and i<len(values)-1:
                         #print("D", values[i], i)
-                        if ndim==1:
+                        if ndim == 1:
                             power[i] = 0
                         else:
                             power[i] = [0, 0]

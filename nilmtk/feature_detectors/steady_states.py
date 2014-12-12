@@ -19,7 +19,7 @@ def find_steady_states_transients(metergroup):
             power_dataframe = power_df
         else:
             # Active, reactive and apparent are available
-            power_dataframe = power_df[['active', 'reactive']]
+            power_dataframe = power_df[[('power', 'active'), ('power', 'reactive')]]
 
         power_dataframe = power_dataframe.dropna()
 

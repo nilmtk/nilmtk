@@ -637,10 +637,10 @@ class MeterGroup(Electric):
         for meter in submeters:
             switch_time_meter = meter.switch_times(threshold)
             for timestamp in switch_time_meter:
-                count[timestamp]+=1
+                count[timestamp] += 1
         sim_switches = pd.Series(count)
         # Should be 2 or more appliances changing state at the same time
-        sim_switches = sim_switches[sim_switches>=2]
+        sim_switches = sim_switches[sim_switches >= 2]
         return sim_switches
 
     def mains(self):
@@ -1101,7 +1101,7 @@ class MeterGroup(Electric):
     # def on_off_events(self, minimum_state_duration):
     #     raise NotImplementedError
 
-    def select_top_k(self, k=5, group_remainder=False, **kwargs):
+    def select_top_k(self, k=5, by="energy", asc=False, group_remainder=False, **kwargs):
         """Only select the top K meters, according to energy.
 
         Functions on the entire MeterGroup.  So if you mean to select
@@ -1113,6 +1113,13 @@ class MeterGroup(Electric):
         Parameters
         ----------
         k : int, optional, defaults to 5
+        by: string, optional, defaults to energy
+            Can select top k by:
+                * energy
+                * entropy
+        asc: bool, optional, defaults to False
+            By default top_k is in descending order. To select top_k
+            by ascending order, use asc=True
         group_remainder : bool, optional, defaults to False
             If True then place all remaining meters into a 
             nested metergroup.
@@ -1122,12 +1129,16 @@ class MeterGroup(Electric):
         -------
         MeterGroup
         """
-        fraction = self.fraction_per_meter(**kwargs)
-        fraction.sort(ascending=False)
-        top_k_elec_meter_ids = fraction[:k].index
+        function_map = {
++            'energy': self.fraction_per_meter,
++            'entropy': self.entropy_per_meter
++        }
+        top_k_series = function_map[by](**kwargs)
+        top_k_series.sort(ascending=asc)
+        top_k_elec_meter_ids = top_k_series[:k].index
         top_k_metergroup = self.from_list(top_k_elec_meter_ids)
         if group_remainder:
-            remainder_ids = fraction[k:].index
+            remainder_ids = top_k_series[k:].index
             remainder_metergroup = self.from_list(remainder_ids)
             top_k_metergroup.meters.append(remainder_metergroup)
         return top_k_metergroup

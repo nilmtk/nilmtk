@@ -384,19 +384,20 @@ class Electric(object):
             assert k <= len(z)-1, "Set k smaller than num. samples - 1"
             d = len(z[0])
             N = len(z)
-            intens = 1e-10 #small noise to break degeneracy, see doc.
+            #small noise to break degeneracy, see doc.
+            intens = 1e-10
             z = [list(p + intens*nr.rand(len(z[0]))) for p in z]
             tree = ss.cKDTree(z)
-            nn = [tree.query(point,k+1,p=float('inf'))[0][k] for point in z]
+            nn = [tree.query(point, k+1, p=float('inf'))[0][k] for point in z]
             const = digamma(N)-digamma(k) + d*log(2)
-            return (const + d*np.mean(map(log,nn)))/log(base)
+            return (const + d*np.mean(map(log, nn)))/log(base)
 
         out = []
         for power in self.power_series():
             x = power.values
             num_elements = len(x)
             x = x.reshape((num_elements, 1))            
-            if num_elements>MAX_SIZE_ENTROPY:
+            if num_elements > MAX_SIZE_ENTROPY:
 
                 splits = num_elements/MAX_SIZE_ENTROPY + 1
                 y = np.array_split(x, splits)
@@ -423,16 +424,16 @@ class Electric(object):
             points = zip2(x,y)
             #Find nearest neighbors in joint space, p=inf means max-norm
             tree = ss.cKDTree(points)
-            dvec = [tree.query(point,k+1,p=float('inf'))[0][k] for point in points]
-            a,b,c,d = avgdigamma(x,dvec), avgdigamma(y,dvec), digamma(k), digamma(len(x)) 
+            dvec = [tree.query(point, k+1, p=float('inf'))[0][k] for point in points]
+            a, b, c, d = avgdigamma(x, dvec), avgdigamma(y, dvec), digamma(k), digamma(len(x))
             return (-a-b+c+d)/log(base)
             
         def zip2(*args):
             #zip2(x,y) takes the lists of vectors and makes it a list of vectors in a joint space
             #E.g. zip2([[1],[2],[3]],[[4],[5],[6]]) = [[1,4],[2,5],[3,6]]
-            return [sum(sublist,[]) for sublist in zip(*args)]
+            return [sum(sublist, []) for sublist in zip(*args)]
 
-        def avgdigamma(points,dvec):
+        def avgdigamma(points, dvec):
             #This part finds number of neighbors in some radius in the marginal space
             #returns expectation value of <psi(nx)>
             N = len(points)
@@ -533,7 +534,6 @@ class Electric(object):
   #   - answers = zeros(n_timeslices_per_chunk)
   #   - add each chunk to answers
   #   - answer is now the histogram!
-
 
 
 def align_two_meters(master, slave, func='power_series'):
