@@ -487,13 +487,18 @@ class Electric(object):
 
         Returns
         -------
-        generator of pd.Series
+        generator of pd.Series.  If a single ac_type is found for the 
+        physical_quantity then the series.name will be a normal tuple.
+        If more than 1 ac_type is found then the ac_type will be a string
+        of the ac_types with '+' in between.  e.g. 'active+apparent'.
         """
         # Pull data through preprocessing pipeline
         physical_quantity = kwargs['physical_quantity']
         generator = self.load(**kwargs)
         for chunk in generator:
             chunk_to_yield = chunk[physical_quantity].sum(axis=1)
+            ac_types = '+'.join(chunk[physical_quantity].columns)
+            chunk_to_yield.name = (physical_quantity, ac_types)
             chunk_to_yield.timeframe = getattr(chunk, 'timeframe', None)
             chunk_to_yield.look_ahead = getattr(chunk, 'look_ahead', None)
             yield chunk_to_yield
