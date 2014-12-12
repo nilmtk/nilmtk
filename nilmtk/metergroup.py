@@ -990,7 +990,8 @@ class MeterGroup(Electric):
         Does not care about wiring hierarchy.  Does not attempt to ensure all 
         channels share the same time sections.
         """
-        energy_per_meter = pd.DataFrame(columns=self.instance(), index=AC_TYPES)
+        meter_identifiers = list(self.identifier)
+        energy_per_meter = pd.DataFrame(columns=meter_identifiers, index=AC_TYPES)
         n_meters = len(self.meters)
         for i, meter in enumerate(self.meters):
             print('\r{:d}/{:d} {}'.format(i+1, n_meters, meter), end='')
