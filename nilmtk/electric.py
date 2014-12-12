@@ -476,11 +476,34 @@ class Electric(object):
              " `available_ac_types('power')` instead.", DeprecationWarning)
         return self.available_ac_types('power')
 
+    def load_series(self, **kwargs):
+        """
+        Parameters
+        ----------
+        ac_type : str
+        physical_quantity : str
+            We sum across ac_types of this physical quantity.
+        **kwargs : passed through to load().
+
+        Returns
+        -------
+        generator of pd.Series
+        """
+        # Pull data through preprocessing pipeline
+        physical_quantity = kwargs['physical_quantity']
+        generator = self.load(**kwargs)
+        for chunk in generator:
+            chunk_to_yield = chunk[physical_quantity].sum(axis=1)
+            chunk_to_yield.timeframe = getattr(chunk, 'timeframe', None)
+            chunk_to_yield.look_ahead = getattr(chunk, 'look_ahead', None)
+            yield chunk_to_yield
+
     def power_series(self, **kwargs):
         """Get power Series.
 
         Parameters
         ----------
+        ac_type : str, defaults to 'best'
         **kwargs :
             Any other key word arguments are passed to self.load()
 
@@ -489,16 +512,9 @@ class Electric(object):
         generator of pd.Series of power measurements.
         """
         # Select power column:
-        kwargs.update({'physical_quantity': 'power', 'ac_type': 'best'})
-
-        # Pull data through preprocessing pipeline
-        generator = self.load(**kwargs)
-        for chunk in generator:
-            chunk_to_yield = chunk.icol(0).dropna()
-            chunk_to_yield.timeframe = getattr(chunk, 'timeframe', None)
-            chunk_to_yield.look_ahead = getattr(chunk, 'look_ahead', None)
-            yield chunk_to_yield
-
+        kwargs['physical_quantity'] = 'power'
+        kwargs.setdefault('ac_type', 'best')
+        return self.load_series(**kwargs)
 
   #   def activity_distribution(self):
   # * activity distribution:

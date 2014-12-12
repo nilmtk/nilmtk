@@ -100,7 +100,7 @@ class ElecMeter(Hashable, Electric):
         ElecMeterID of upstream meter or None if is site meter.
         """
         if self.is_site_meter():
-            warn("There is no meter upstream because '{}' is a site meter."
+            warn("There is no meter upstream of this meter '{}' because it is a site meter."
                  .format(self.identifier))
             return
 
