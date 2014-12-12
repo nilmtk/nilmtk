@@ -7,7 +7,7 @@ from os import listdir
 from nilmtk.datastore import Key
 from nilmtk.measurement import LEVEL_NAMES
 from nilmtk.utils import check_directory_exists, get_datastore
-from nilm_metadata import *
+from nilm_metadata import convert_yaml_to_hdf5
 from inspect import currentframe, getfile, getsourcefile
 from sys import getfilesystemencoding
 
