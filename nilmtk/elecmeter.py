@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import random
-from .preprocessing import Clip, Apply
+from .preprocessing import Clip
 from .stats import TotalEnergy, GoodSections, DropoutRate
 from .stats.totalenergyresults import TotalEnergyResults
 from .hashable import Hashable
@@ -219,7 +219,7 @@ class ElecMeter(Hashable, Electric):
         measurements = self.device['measurements']
         return [m['type'] for m in measurements
                 if m['physical_quantity'] == physical_quantity
-                and m.has_key('type')]
+                and 'type' in m]
 
     def available_physical_quantities(self):
         """
@@ -277,11 +277,11 @@ class ElecMeter(Hashable, Electric):
                 if getattr(self.identifier, k) != v:
                     match = False
 
-            elif self.metadata.has_key(k):
+            elif k in self.metadata:
                 if self.metadata[k] != v:
                     match = False
 
-            elif self.device.has_key(k):
+            elif k in self.device:
                 metadata_value = self.device[k]
                 if (isinstance(metadata_value, list) and
                         not isinstance(v, list)):
@@ -328,8 +328,15 @@ class ElecMeter(Hashable, Electric):
             e.g. [('power', 'active'), ('voltage', ''), ('energy', 'reactive')]
             `cols` can't be used if `ac_type` and/or `physical_quantity` are set.
 
+        sample_period : int or float, defaults to None
+            Number of seconds to use as the new sample period for 'resampling'.
+            If None then will use self.sample_period()
+
+        resample : boolean, defaults to False
+            If True then will resample data using `sample_period`.o
+        
         preprocessing : list of Node subclass instances
-            e.g. [Clip()]
+            e.g. [Clip()].
 
         **kwargs : any other key word arguments to pass to `self.store.load()`
 
@@ -343,60 +350,8 @@ class ElecMeter(Hashable, Electric):
         nilmtk.exceptions.MeasurementError if a measurement is specified
         which is not available.
         """
-        
-        # Extract kwargs for this function
-        physical_quantities = kwargs.pop('physical_quantity', None)
-        ac_types = kwargs.pop('ac_type', None)
-        if ac_types or physical_quantities:
-            if kwargs.has_key('cols'):
-                raise ValueError("Cannot use `ac_types` and/or `physical_quantities`"
-                                 " with `cols` parameter.")
-
-            if isinstance(ac_types, basestring):
-                ac_types = [ac_types]
-
-            if physical_quantities is None:
-                physical_quantities = self.available_physical_quantities()
-                if ac_types:
-                    physical_quantities = [
-                        pq for pq in physical_quantities
-                        if pq in PHYSICAL_QUANTITIES_WITH_AC_TYPES
-                        and set(ac_types).issubset(self.available_ac_types(pq))]
-                    
-            elif isinstance(physical_quantities, basestring):
-                physical_quantities = [physical_quantities]
-
-            cols = []
-            available_physical_quantities = self.available_physical_quantities()
-            for physical_quantity in physical_quantities:
-                if physical_quantity not in available_physical_quantities:
-                    error_msg = ("Physical quantity '{}' not available."
-                                 " Only {} are available"
-                                 .format(physical_quantity, 
-                                         available_physical_quantities))
-                    raise MeasurementError(error_msg)
-
-                available_ac_types = self.available_ac_types(physical_quantity)
-                if not available_ac_types:
-                    # then this is probably a physical quantity like 'voltage'
-                    cols.append((physical_quantity, ''))
-                    continue
-
-                if ac_types is None:
-                    ac_types = available_ac_types
-                elif ac_types == ['best']:
-                    ac_types = [select_best_ac_type(available_ac_types)]
-
-                for ac_type in ac_types:
-                    if ac_type not in available_ac_types:
-                        error_msg = ("AC type '{}' not available."
-                                     " only {} are available"
-                                     .format(ac_type, available_ac_types))
-                        raise MeasurementError(error_msg)
-
-                    cols.append((physical_quantity, ac_type))
-
-            kwargs['cols'] = cols
+        kwargs = self._convert_physical_quantity_and_ac_type_to_cols(**kwargs)
+        kwargs = self._prep_kwargs_for_sample_period_and_resample(**kwargs)
 
         # Get source node
         preprocessing = kwargs.pop('preprocessing', [])
@@ -410,6 +365,64 @@ class ElecMeter(Hashable, Electric):
             generator = last_node.process()
 
         return generator
+
+    def _convert_physical_quantity_and_ac_type_to_cols(
+            self, physical_quantity=None, ac_type=None, **kwargs):
+        """Returns kwargs dict with physical_quantity and ac_type removed
+        and cols populated appropriately.
+        """
+        if not (ac_type or physical_quantity):
+            return kwargs
+
+        if 'cols' in kwargs:
+            raise ValueError("Cannot use `ac_type` and/or `physical_quantity`"
+                             " with `cols` parameter.")
+
+        if isinstance(ac_type, basestring):
+            ac_type = [ac_type]
+
+        if physical_quantity is None:
+            physical_quantity = self.available_physical_quantities()
+            if ac_type:
+                physical_quantity = [
+                    pq for pq in physical_quantity
+                    if pq in PHYSICAL_QUANTITIES_WITH_AC_TYPES
+                    and set(ac_type).issubset(self.available_ac_types(pq))]
+
+        elif isinstance(physical_quantity, basestring):
+            physical_quantity = [physical_quantity]
+
+        cols = []
+        available_physical_quantities = self.available_physical_quantities()
+        for pq in physical_quantity:
+            if pq not in available_physical_quantities:
+                error_msg = ("Physical quantity '{}' not available."
+                             " Only {} are available"
+                             .format(pq, available_physical_quantities))
+                raise MeasurementError(error_msg)
+
+            available_ac_types = self.available_ac_types(pq)
+            if not available_ac_types:
+                # then this is probably a physical quantity like 'voltage'
+                cols.append((pq, ''))
+                continue
+
+            if ac_type is None:
+                ac_type = available_ac_types
+            elif ac_type == ['best']:
+                ac_type = [select_best_ac_type(available_ac_types)]
+
+            for a_t in ac_type:
+                if a_t not in available_ac_types:
+                    error_msg = ("AC type '{}' not available."
+                                 " only {} are available"
+                                 .format(a_t, available_ac_types))
+                    raise MeasurementError(error_msg)
+
+                cols.append((pq, a_t))
+
+        kwargs['cols'] = cols
+        return kwargs
 
     def dry_run_metadata(self):
         return self.metadata

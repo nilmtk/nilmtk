@@ -573,7 +573,7 @@ class MeterGroup(Electric):
 
         .. note:: Different AC types will be treated separately.
         """
-        sample_period, kwargs = self._prep_kwargs_for_sample_period_and_resample(**kwargs)
+        sample_period = kwargs.get('sample_period', self.sample_period())
 
         # Load each generator and yield the sum or the mean
         _, generators = self._meter_generators(**kwargs)
@@ -810,24 +810,6 @@ class MeterGroup(Electric):
         else:
             return []
 
-    def _prep_kwargs_for_sample_period_and_resample(self, sample_period=None, 
-                                                    resample=False, **kwargs):
-        if 'preprocessing' in kwargs:
-            warn("If you are using `preprocessing` to resample then please"
-                 " do not!  Instead, please use the `sample_period` parameter"
-                 " and set `resample=True`.")
-
-        if sample_period is None:
-            sample_period = self.sample_period()
-
-        if resample:
-            resample_func = lambda df: df.resample(rule='{}S'.format(sample_period))
-            kwargs.setdefault('preprocessing', []).append(Apply(func=resample_func))
-            kwargs.setdefault('ac_type', 'best')
-            kwargs.setdefault('physical_quantity', 'power')
-
-        return sample_period, kwargs
-
     def dataframe_of_meters(self, **kwargs):
         """
         Parameters
@@ -850,7 +832,9 @@ class MeterGroup(Electric):
             representations of ElecMeterIDs (because 'pd.concat' tries to use
             tuples to construct a multiindex)
         """
-        sample_period, kwargs = self._prep_kwargs_for_sample_period_and_resample(**kwargs)
+        sample_period = kwargs.get('sample_period', self.sample_period())
+        kwargs.setdefault('ac_type', 'best')
+        kwargs.setdefault('physical_quantity', 'power')
         identifiers, generators = self._meter_generators(**kwargs)
         segments = []
         while True:
@@ -1203,52 +1187,32 @@ class MeterGroup(Electric):
                 timeframe = timeframe.union(meter.get_timeframe())
         return timeframe
 
-    def plot(self, **kwargs):
+    def plot(self, kind='separate lines', **kwargs):
         """
         Parameters
         ----------
-        start, end : str or pd.Timestamp or datetime or None, optional
         width : int, optional
             Number of points on the x axis required
         ax : matplotlib.axes, optional
         plot_legend : boolean, optional
             Defaults to True.  Set to False to not plot legend.
-        kind : {'separate lines', 'summed'}
-        """
-
-        """
-        TODO: 
-        Params
-        ------
-        kind : {'stacked', 'heatmap', 'lines', 'snakey'}
-
-        pretty snakey:
-        http://www.cl.cam.ac.uk/research/srg/netos/c-aware/joule/V4.00/
+        kind : {'separate lines', 'sum'}
         """
         # Load data and plot each meter
-        kind = kwargs.pop('kind', 'separate lines')
         if kind == 'separate lines':
-            # Get start and end times for the plot
-            start = convert_to_timestamp(kwargs.pop('start', None))
-            end = convert_to_timestamp(kwargs.pop('end', None))
-            if start is None or end is None:
-                timeframe_for_group = self.get_timeframe()
-                if start is None:
-                    start = timeframe_for_group.start
-                if end is None:
-                    end = timeframe_for_group.end
-
-            ax = kwargs.pop('ax', None)
-            for meter in self.meters:
-                ax = meter.plot(start=start, end=end, ax=ax, plot_legend=False, 
-                                **kwargs)
-
-            if kwargs.pop('plot_legend', True):
-                plt.legend()
-
-        elif kind == 'summed':
+            ax = self._plot_separate_lines(**kwargs)
+        elif kind == 'sum':
             ax = super(MeterGroup, self).plot(**kwargs)
+        else:
+            raise ValueError("'{}' not a valid setting for 'kind' parameter."
+                             .format(kind))
+        return ax
 
+    def _plot_separate_lines(self, ax=None, plot_legend=True,**kwargs):
+        for meter in self.meters:
+            ax = meter.plot(ax=ax, plot_legend=False, **kwargs)
+        if plot_legend:
+            plt.legend()
         return ax
 
     def appliance_label(self):

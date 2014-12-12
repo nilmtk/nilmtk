@@ -86,12 +86,35 @@ class Electric(object):
             all_data = None
         return all_data
 
-    def plot(self, start=None, end=None, width=800, ax=None, plot_legend=True, 
-             **loader_kwargs):
+    def _prep_kwargs_for_sample_period_and_resample(self, sample_period=None, 
+                                                    resample=False, **kwargs):
+        if 'preprocessing' in kwargs:
+            warn("If you are using `preprocessing` to resample then please"
+                 " do not!  Instead, please use the `sample_period` parameter"
+                 " and set `resample=True`.")
+
+        if sample_period is None:
+            sample_period = self.sample_period()
+
+        if resample:
+            resample_func = lambda df: df.resample(rule='{}S'.format(sample_period))
+            kwargs.setdefault('preprocessing', []).append(Apply(func=resample_func))
+
+        return kwargs
+
+    def _replace_none_with_meter_timeframe(self, start=None, end=None):
+        if start is None or end is None:
+            timeframe_for_meter = self.get_timeframe()
+            if start is None:
+                start = timeframe_for_meter.start
+            if end is None:
+                end = timeframe_for_meter.end
+        return start, end
+
+    def plot(self, width=800, ax=None, plot_legend=True, **loader_kwargs):
         """
         Parameters
         ----------
-        start, end : str or pd.Timestamp or datetime or None, optional
         width : int, optional
             Number of points on the x axis required
         ax : matplotlib.axes, optional
@@ -100,28 +123,17 @@ class Electric(object):
         **loader_kwargs
         """
         # Get start and end times for the plot
-        start = convert_to_timestamp(start)
-        end = convert_to_timestamp(end)
-        if start is None or end is None:
-            timeframe_for_meter = self.get_timeframe()
-            if start is None:
-                start = timeframe_for_meter.start
-            if end is None:
-                end = timeframe_for_meter.end
-        timeframe = TimeFrame(start, end)
+        timeframe = self.get_timeframe()
+        if not timeframe:
+            return ax
 
         # Calculate the resolution for the x axis
-        duration = (end - start).total_seconds()
+        duration = timeframe.timedelta.total_seconds()
         secs_per_pixel = int(round(duration / width))
 
-        # Define a resample function
-        resample_func = lambda df: pd.DataFrame.resample(
-            df, rule='{:d}S'.format(secs_per_pixel))
-
         # Load data and plot
-        power_series = self.power_series_all_data(
-            sections=[timeframe], preprocessing=[Apply(func=resample_func)],
-            **loader_kwargs)
+        loader_kwargs.update({'sample_period': secs_per_pixel, 'resample': True})
+        power_series = self.power_series_all_data(**loader_kwargs)
         ax = plot_series(power_series, ax=ax, label=self.appliance_label())
 
         if plot_legend:
@@ -475,18 +487,9 @@ class Electric(object):
         Returns
         -------
         generator of pd.Series of power measurements.
-
-        .. note:: Deprecated in NILMTK v0.3
-                  `power_series` should not be used.  Instead, please use
-                  `load` instead because it is more general purpose.
         """
-        warn("`power_series` should not be used and is deprecated in"
-             " NILMTK v0.3.  Instead, please use `load` instead because it is"
-             " more general purpose.", DeprecationWarning)
-
         # Select power column:
-        kwargs['physical_quantity'] = 'power'
-        kwargs['ac_type'] = 'best'
+        kwargs.update({'physical_quantity': 'power', 'ac_type': 'best'})
 
         # Pull data through preprocessing pipeline
         generator = self.load(**kwargs)
