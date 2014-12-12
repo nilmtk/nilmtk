@@ -7,7 +7,7 @@ from ..appliance import ApplianceID
 from ..utils import find_nearest, container_to_string
 from ..feature_detectors import cluster
 from ..timeframe import merge_timeframes, list_of_timeframe_dicts, TimeFrame
-from ..preprocessing import Apply, Clip
+from ..preprocessing import Clip
 
 # Fix the seed for repeatability of experiments
 SEED = 42
@@ -121,7 +121,8 @@ class CombinatorialOptimisation(object):
 
         load_kwargs['sections'] = load_kwargs.pop('sections',
                                                   mains.good_sections())
-        resample_rule = '{:d}S'.format(resample_seconds)
+        load_kwargs.setdefault('resample', True)
+        load_kwargs.setdefault('sample_period', resample_seconds)
         timeframes = []
         building_path = '/building{}'.format(mains.building())
         mains_data_location = '{}/elec/meter1'.format(building_path)
@@ -135,11 +136,6 @@ class CombinatorialOptimisation(object):
             # Record metadata
             timeframes.append(chunk.timeframe)
             measurement = chunk.name
-
-            chunk = chunk.resample(rule=resample_rule)
-            # Check chunk size *again* after resampling
-            if len(chunk) < MIN_CHUNK_LENGTH:
-                continue
 
             # Start disaggregation
             indices_of_state_combinations, residual_power = find_nearest(
