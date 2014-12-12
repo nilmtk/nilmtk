@@ -149,6 +149,9 @@ class Results(object):
                 usable_sections_from_cache.append(row)
 
         for section in sections:
+            if not section:
+                continue
+
             try:
                 rows_matching_start = cached_stat.loc[section.start]
             except KeyError:
