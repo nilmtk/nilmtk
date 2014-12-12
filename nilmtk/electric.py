@@ -111,7 +111,7 @@ class Electric(object):
                 end = timeframe_for_meter.end
         return start, end
 
-    def plot(self, width=800, ax=None, plot_legend=True, **loader_kwargs):
+    def plot(self, ax=None, plot_legend=True, **kwargs):
         """
         Parameters
         ----------
@@ -120,26 +120,28 @@ class Electric(object):
         ax : matplotlib.axes, optional
         plot_legend : boolean, optional
             Defaults to True.  Set to False to not plot legend.
-        **loader_kwargs
+        **kwargs
         """
         # Get start and end times for the plot
         timeframe = self.get_timeframe()
         if not timeframe:
             return ax
 
-        # Calculate the resolution for the x axis
-        duration = timeframe.timedelta.total_seconds()
-        secs_per_pixel = int(round(duration / width))
-
-        # Load data and plot
-        loader_kwargs.update({'sample_period': secs_per_pixel, 'resample': True})
-        power_series = self.power_series_all_data(**loader_kwargs)
+        kwargs = self._set_sample_period(timeframe, **kwargs)
+        power_series = self.power_series_all_data(**kwargs)
         ax = plot_series(power_series, ax=ax, label=self.appliance_label())
 
         if plot_legend:
             plt.legend()
 
         return ax
+
+    def _set_sample_period(self, timeframe, width=800, **kwargs):
+        # Calculate the resolution for the x axis
+        duration = timeframe.timedelta.total_seconds()
+        secs_per_pixel = int(round(duration / width))
+        kwargs.update({'sample_period': secs_per_pixel, 'resample': True})
+        return kwargs
 
     def proportion_of_upstream(self, **load_kwargs):
         """Returns a value in the range [0,1] specifying the proportion of

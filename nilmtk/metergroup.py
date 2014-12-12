@@ -1177,23 +1177,45 @@ class MeterGroup(Electric):
         ax : matplotlib.axes, optional
         plot_legend : boolean, optional
             Defaults to True.  Set to False to not plot legend.
-        kind : {'separate lines', 'sum'}
+        kind : {'separate lines', 'sum', 'area'}
         """
         # Load data and plot each meter
-        if kind == 'separate lines':
-            ax = self._plot_separate_lines(**kwargs)
-        elif kind == 'sum':
-            ax = super(MeterGroup, self).plot(**kwargs)
-        else:
+        function_map = {
+            'separate lines': self._plot_separate_lines,
+            'sum': super(MeterGroup, self).plot,
+            'area': self._plot_area
+        }
+        try:
+            ax = function_map[kind](**kwargs)
+        except KeyError:
             raise ValueError("'{}' not a valid setting for 'kind' parameter."
                              .format(kind))
         return ax
 
-    def _plot_separate_lines(self, ax=None, plot_legend=True,**kwargs):
+    def _plot_separate_lines(self, ax=None, plot_legend=True, **kwargs):
         for meter in self.meters:
             ax = meter.plot(ax=ax, plot_legend=False, **kwargs)
         if plot_legend:
             plt.legend()
+        return ax
+
+    def _plot_area(self, ax=None, plot_kwargs=None, **kwargs):
+        """
+        Parameters
+        ----------
+        plot_kwargs : dict of key word arguments for DataFrame.plot()
+        """
+        # Get start and end times for the plot
+        timeframe = self.get_timeframe()
+        if not timeframe:
+            return ax
+
+        kwargs = self._set_sample_period(timeframe, **kwargs)        
+        df = self.dataframe_of_meters(**kwargs)
+
+        if plot_kwargs is None:
+            plot_kwargs = {}
+        ax = df.plot(kind='area', **plot_kwargs)
         return ax
 
     def appliance_label(self):
