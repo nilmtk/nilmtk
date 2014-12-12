@@ -365,7 +365,7 @@ class MeterGroup(Electric):
         -------
         MeterGroup
         """
-        assert isinstance(meter_ids, (tuple, list))
+        meter_ids = list(meter_ids)
         meter_ids = list(set(meter_ids))  # make unique
         meters = []
         for meter_id in meter_ids:
@@ -1099,57 +1099,37 @@ class MeterGroup(Electric):
     #     raise NotImplementedError
     # def on_off_events(self, minimum_state_duration):
     #     raise NotImplementedError
-    def select_top_k(self, k=5):
-        """
+
+    def select_top_k(self, k=5, group_remainder=False, **kwargs):
+        """Only select the top K meters, according to energy.
+
+        Functions on the entire MeterGroup.  So if you mean to select
+        the top K from only the submeters, please do something like
+        this:
+
+        elec.submeters().select_top_k()
+
+        Parameters
+        ----------
+        k : int, optional, defaults to 5
+        group_remainder : bool, optional, defaults to False
+            If True then place all remaining meters into a 
+            nested metergroup.
+        **kwargs : key word arguments to pass to load()
+
         Returns
         -------
-        MeterGroup containing top k meters.
+        MeterGroup
         """
-        # Filtering out mains to create a meter group of appliances
-        appliance_meter_group = self.submeters()
-        # Energy per appliance
-        appliance_energy_per_meter = appliance_meter_group.energy_per_meter()
-
-        # Removing appliances which may have no energy!
-        # See https://github.com/nilmtk/nilmtk/issues/174
-        appliances_to_ignore = []
-        for appliance_id in appliance_energy_per_meter.columns:
-            num_non_null_entries = appliance_energy_per_meter[
-                appliance_id].isnull().sum()
-            print(appliance_id, num_non_null_entries)
-            if (num_non_null_entries == len(appliance_energy_per_meter[appliance_id].index)):
-                appliances_to_ignore.append(appliance_id)
-
-        print(appliances_to_ignore)
-
-        appliances_to_consider = list(
-            set(appliance_energy_per_meter.columns) - set(appliances_to_ignore))
-
-        appliance_energy_per_meter = appliance_energy_per_meter[appliances_to_consider]
-
-        # Finding the most relevant measurement to sort on. For now, this is a
-        # simple function which considers the measurement having the most records
-        # if there is only a single measurement, just take that
-        if len(appliance_energy_per_meter.T.columns) == 1:
-            measurement = appliance_energy_per_meter.T.columns[0]
-        else:
-            # temp find best measurement
-            temp = appliance_energy_per_meter.T.isnull().sum()
-            temp.sort()
-            measurement = temp.head(1).index[0]
-        print(measurement)
-        top_k_appliance_index = flatten_2d_list(appliance_energy_per_meter.T.sort(
-            columns=[measurement], ascending=False).head(k).index.tolist())
-        meters_top_k = []
-        for meter in self.meters:
-
-            if isinstance(meter, MeterGroup):
-                if meter.meters[0].instance() in top_k_appliance_index:
-                    meters_top_k.append(meter)
-            else:
-                if meter.instance() in top_k_appliance_index:
-                    meters_top_k.append(meter)
-        return MeterGroup(meters_top_k)
+        fraction = self.fraction_per_meter(**kwargs)
+        fraction.sort(ascending=False)
+        top_k_elec_meter_ids = fraction[:k].index
+        top_k_metergroup = self.from_list(top_k_elec_meter_ids)
+        if group_remainder:
+            remainder_ids = fraction[k:].index
+            remainder_metergroup = self.from_list(remainder_ids)
+            top_k_metergroup.meters.append(remainder_metergroup)
+        return top_k_metergroup
 
     # def select_meters_contributing_more_than(self, threshold_proportion):
     #     """Return new MeterGroup with all meters whose proportion of
