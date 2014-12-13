@@ -1335,7 +1335,6 @@ def _load_and_reindex_chunk(generator, timeframe, index, sample_period):
 
     # Extend 'index' if necessary
     index = extend_index(index, timeframe, sample_period)
-
     # Reindex chunk_from_next_meter
     chunk_from_next_meter = chunk_from_next_meter.reindex(
         index, method='ffill', limit=1, fill_value=0)
