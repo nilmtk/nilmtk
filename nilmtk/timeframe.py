@@ -24,7 +24,7 @@ class TimeFrame(object):
     include_end : boolean
     """
 
-    def __init__(self, start=None, end=None):
+    def __init__(self, start=None, end=None, tz=None):
         self.clear()
         if isinstance(start, TimeFrame):
             self.copy_constructor(start)
@@ -32,6 +32,11 @@ class TimeFrame(object):
             self.start = start
             self.end = end
             self.include_end = False
+            if tz is not None:
+                if self._start:
+                    self._start = self._start.tz_localize(tz)
+                if self._end:
+                    self._end = self._end.tz_localize(tz)
 
     def copy_constructor(self, other):
         for key, value in other.__dict__.iteritems():
