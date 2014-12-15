@@ -1,68 +1,74 @@
 from __future__ import print_function, division
-import pandas as pd
-import numpy as np
-from copy import deepcopy
-from os.path import join, isdir, isfile, dirname, abspath
-from os import listdir, getcwd
-import re
-from sys import stdout, getfilesystemencoding
-from nilmtk.datastore import Key
-from nilmtk.timeframe import TimeFrame
-from nilmtk.measurement import LEVEL_NAMES
-from nilmtk.utils import check_directory_exists
-from nilm_metadata import convert_yaml_to_hdf5
+from os.path import join, isdir, dirname, abspath
+from os import getcwd
+from sys import getfilesystemencoding
 from inspect import currentframe, getfile, getsourcefile
 from collections import OrderedDict
 
-PARAMS_TO_USE = ['Current', 'Energy', 'Power']
+import pandas as pd
+from nilm_metadata import convert_yaml_to_hdf5
 
-SUBMETER_PATHS = OrderedDict({
-    'Building Total Mains':[0],
-    'Lifts':[0],
-    'Floor Total':[1, 2, 5],
-    'AHU': [0, 1, 2, 5]})
+from nilmtk.datastore import Key
+from nilmtk.measurement import LEVEL_NAMES
+from nilmtk.utils import check_directory_exists, get_datastore
+
+#{"load_type": {"floor/wing":meter_number_in_nilmtk}
+acad_block_meter_mapping = {'Building Total Mains': {'0': 1},
+                            'Lifts': {'0': 2},
+                            'Floor Total': {'1': 3, '2': 4, '3': 5, '4': 6, '5': 7},
+                            'AHU': {'0': 8, '1': 9, '2': 10, '5': 11},
+                            'Lights': {'3': 12},
+                            'Power Sockets': {'3A': 13, '3B': 14},
+                            'UPS Sockets': {'3': 15}}
+
+lecture_block_meter_mapping = {'Building Total Mains': {'0': 1},
+                               'Floor Total': {'0': 2, '1': 3, '2': 4},
+                               'AHU': {'1': 5, '2': 6, '3': 7}}
+
+overall_dataset_mapping = OrderedDict({'Academic Block': acad_block_meter_mapping,
+                                       'Lecture Block': lecture_block_meter_mapping})
+
+building_number_mapping = {'Academic Block': 1, 'Lecture Block': 2}
 
 
 column_mapping = OrderedDict({
     'Power': ('power', 'active'),
     'Energy': ('energy', 'active'),
-    'Current': ('current', '')
-    })
+    'Current': ('current', '')})
 
 
-def convert_combed(combed_path, hdf_filename):
+def convert_combed(combed_path, output_filename, format='HDF'):
     """
     Parameters
     ----------
     combed_path : str
         The root path of the combed dataset.
-    hdf_filename : str
+    output_filename : str
         The destination HDF5 filename (including path and suffix).
     """
 
     check_directory_exists(combed_path)
 
-    # Open HDF5 file
-    store = pd.HDFStore(hdf_filename, 'w', complevel=9, complib='zlib')
-    chan = 1
-    for building, meter_array in SUBMETER_PATHS.iteritems():
-        for meter in meter_array:
-            key = Key(building=1, meter=chan)
-            dfs = []
-            total = pd.DataFrame()
-            for attribute in column_mapping.keys():
-                filename_attribute = join(combed_path, building, str(meter), "%s.csv" %attribute )
-                print(filename_attribute)
-                dfs.append(pd.read_csv(filename_attribute, parse_dates = True, index_col = 0, header = True, names=[attribute]))
-            total = pd.concat(dfs, axis = 1)
-                   
-            total.rename(columns=lambda x: column_mapping[x], inplace=True)
-            total.columns.set_names(LEVEL_NAMES, inplace=True)
-            store.put(str(key), total, format='table')
-            store.flush()
-            chan = chan+ 1
+    # Open store
+    store = get_datastore(output_filename, format, mode='w')
+
+    for building_name, building_mapping in overall_dataset_mapping.iteritems():
+        for load_name, load_mapping in building_mapping.iteritems():
+            for load_mapping_path, meter_number in load_mapping.iteritems():
+                building_number = building_number_mapping[building_name]
+                key = Key(building=building_number, meter=meter_number)
+                dfs = []
+                for attribute in column_mapping.keys():
+                    filename_attribute = join(combed_path, building_name, load_name, load_mapping_path, "%s.csv" %attribute)
+                    print(filename_attribute)
+                    dfs.append(pd.read_csv(filename_attribute, parse_dates=True, index_col=0, header=True, names=[attribute]))
+                total = pd.concat(dfs, axis=1)
+                total.rename(columns=lambda x: column_mapping[x], inplace=True)
+                total.columns.set_names(LEVEL_NAMES, inplace=True)
+                assert total.index.is_unique
+                store.put(str(key), total)
     convert_yaml_to_hdf5(join(_get_module_directory(), 'metadata'),
-                         hdf_filename)
+                         output_filename)
 
     print("Done converting COMBED to HDF5!")
 

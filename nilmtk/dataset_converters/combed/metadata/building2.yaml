@@ -1,0 +1,39 @@
+instance: 2
+original_name: lecture
+elec_meters:
+  1: &total_building
+     site_meter: true
+     device_model: EM6400
+  2: &floor_total
+     submeter_of: 0
+     device_model: EM6400
+  3: *floor_total
+  4: *floor_total
+  5: &AHU_lh1
+     submeter_of: 0
+     device_model: EM6400
+  6: &AHU_lh2
+     submeter_of: 0
+     device_model: EM6400
+  7: &AHU_lh3
+     submeter_of: 0
+     device_model: EM6400
+
+appliances:
+- original_name: AHU
+  type: AHU
+  instance: 1
+  #floor: 1
+  meters: [5]
+
+- original_name: AHU
+  type: AHU
+  instance: 2
+  #floor: 1
+  meters: [6]
+
+- original_name: AHU
+  type: AHU
+  instance: 3
+  #floor: 1
+  meters: [7]
