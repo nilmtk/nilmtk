@@ -78,4 +78,4 @@ class DataSet(object):
         if tz is None:
             raise RuntimeError("'timezone' is not set in dataset metadata.")
 
-        self.store.window = TimeFrame(start_ts, end_ts, tz)
+        self.store.window = TimeFrame(start, end, tz)
