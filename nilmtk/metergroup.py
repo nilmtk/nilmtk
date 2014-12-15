@@ -541,8 +541,8 @@ class MeterGroup(Electric):
         sample_period : int or float, optional
             Number of seconds to use as sample period when reindexing meters.
             If not specified then will use the max of all meters' sample_periods.
-        resample : bool, defaults to False
-            If True then resample to `sample_period` before reindexing.
+        resample_kwargs : dict of key word arguments (other than 'rule') to 
+            `pass to pd.DataFrame.resample()`
         **kwargs : 
             any other key word arguments to pass to `self.store.load()` including:
         physical_quantity : string or list of strings
@@ -573,12 +573,12 @@ class MeterGroup(Electric):
 
         .. note:: Different AC types will be treated separately.
         """
-        sample_period = kwargs.get('sample_period', self.sample_period())
-
         # Load each generator and yield the sum or the mean
+        kwargs['resample'] = True
+        kwargs.setdefault('sample_period', self.sample_period())
         _, generators = self._meter_generators(**kwargs)
         while True:
-            chunk = combine_chunks_from_generators(generators, sample_period)
+            chunk = combine_chunks_from_generators(generators)
             if chunk.empty:
                 break
             yield chunk
@@ -845,10 +845,14 @@ class MeterGroup(Electric):
             timeframe = None
             for meter_id, generator in zip(identifiers, generators):
                 try:
-                    chunk_from_next_meter, timeframe, index = _load_and_reindex_chunk(
-                        generator, timeframe, index, sample_period)
+                    chunk_from_next_meter = next(generator)
                 except StopIteration:
                     continue
+
+                if timeframe is None:
+                    timeframe = chunk_from_next_meter.timeframe
+                else:
+                    timeframe = timeframe.union(chunk_from_next_meter.timeframe)
 
                 ids.append(meter_id)
                 chunks.append(chunk_from_next_meter.icol(0))
@@ -1263,7 +1267,7 @@ def iterate_through_submeters_of_two_metergroups(master, slave):
     return zipped
 
 
-def combine_chunks_from_generators(generators, sample_period):
+def combine_chunks_from_generators(generators):
     """Combines chunks into a single DataFrame.
 
     Adds or averages columns, depending on whether each column is in
@@ -1272,8 +1276,6 @@ def combine_chunks_from_generators(generators, sample_period):
     Parameters
     ----------
     generators : list of generators of nilmtk DataFrames
-    sample_period : int or float
-        Number of seconds to use as sample period when reindexing meters.
 
     Returns
     -------
@@ -1293,10 +1295,14 @@ def combine_chunks_from_generators(generators, sample_period):
     index = None
     for generator in generators:
         try:
-            chunk_from_next_meter, timeframe, index = _load_and_reindex_chunk(
-                generator, timeframe, index, sample_period)
+            chunk_from_next_meter = next(generator) 
         except StopIteration:
             continue
+
+        if timeframe is None:
+            timeframe = chunk_from_next_meter.timeframe
+        else:
+            timeframe = timeframe.union(chunk_from_next_meter.timeframe)
 
         # Add
         try:
@@ -1323,62 +1329,3 @@ def combine_chunks_from_generators(generators, sample_period):
 
     chunk.timeframe = timeframe
     return chunk
-
-
-def _load_and_reindex_chunk(generator, timeframe, index, sample_period):
-    chunk_from_next_meter = next(generator)
-
-    if timeframe is None:
-        timeframe = chunk_from_next_meter.timeframe
-    else:
-        timeframe = timeframe.union(chunk_from_next_meter.timeframe)
-
-    # Extend 'index' if necessary
-    extended_index = extend_index(index, timeframe, sample_period)
-
-    # Reindex chunk_from_next_meter
-    chunk_from_next_meter = chunk_from_next_meter.reindex(
-        extended_index, method='ffill', limit=1, fill_value=0)
-
-    return chunk_from_next_meter, timeframe, extended_index
-
-
-def extend_index(index, timeframe, sample_period):
-    """Extends `index` to size of timeframe, ensuring that we maintain
-    a regular interval between each index element.
-
-    Parameters
-    ----------
-    index : pd.DatetimeIndex or None
-    timeframe : nilmtk.TimeFrame
-    sample_period : number, seconds
-
-    Returns
-    -------
-    pd.DatetimeIndex
-    """
-    freq = '{}S'.format(sample_period)
-    if index is None:
-        return pd.date_range(timeframe.start, timeframe.end, freq=freq)
-
-    # save timezone because the pandas operation of index + index
-    # can sometimes remove tz info.  See issue #294.
-    tz = deepcopy(index.tz)
-
-    # extend beginning of index if needs be
-    if index[0] > timeframe.start:
-        seconds = (index[0] - timeframe.start).total_seconds()
-        periods = int(np.ceil(seconds / sample_period))
-        new_index = pd.date_range(start=None, end=index[0], freq=freq, 
-                                  closed='right', periods=periods)
-        index = new_index[:-1] + index
-        index = index.tz_convert(tz)
-
-    # extend end of index if needs be
-    if index[-1] < timeframe.end: 
-        new_index = pd.date_range(start=index[-1], end=timeframe.end, 
-                                  freq=freq, closed='left')
-        index = index + new_index[1:]
-        index = index.tz_convert(tz)
-
-    return index

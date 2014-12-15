@@ -329,11 +329,14 @@ class ElecMeter(Hashable, Electric):
             `cols` can't be used if `ac_type` and/or `physical_quantity` are set.
 
         sample_period : int or float, defaults to None
-            Number of seconds to use as the new sample period for 'resampling'.
+            Number of seconds to use as the new sample period for resampling.
             If None then will use self.sample_period()
 
         resample : boolean, defaults to False
-            If True then will resample data using `sample_period`.o
+            If True then will resample data using `sample_period`.
+
+        resample_kwargs : dict of key word arguments (other than 'rule') to 
+            `pass to pd.DataFrame.resample()`
         
         preprocessing : list of Node subclass instances
             e.g. [Clip()].

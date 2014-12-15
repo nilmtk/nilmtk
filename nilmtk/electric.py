@@ -87,7 +87,9 @@ class Electric(object):
         return all_data
 
     def _prep_kwargs_for_sample_period_and_resample(self, sample_period=None, 
-                                                    resample=False, **kwargs):
+                                                    resample=False,
+                                                    resample_kwargs=None,
+                                                    **kwargs):
         if 'preprocessing' in kwargs:
             warn("If you are using `preprocessing` to resample then please"
                  " do not!  Instead, please use the `sample_period` parameter"
@@ -97,7 +99,10 @@ class Electric(object):
             sample_period = self.sample_period()
 
         if resample:
-            resample_func = lambda df: df.resample(rule='{}S'.format(sample_period))
+            if resample_kwargs is None:
+                resample_kwargs = {}
+            resample_func = lambda df: df.resample(rule='{}S'.format(sample_period),
+                                                   **resample_kwargs)
             kwargs.setdefault('preprocessing', []).append(Apply(func=resample_func))
 
         return kwargs
