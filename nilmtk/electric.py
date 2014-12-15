@@ -97,6 +97,8 @@ class Electric(object):
 
         if sample_period is None:
             sample_period = self.sample_period()
+        else:
+            resample = True
 
         if resample:
             if resample_kwargs is None:

@@ -337,6 +337,7 @@ class ElecMeter(Hashable, Electric):
 
         resample : boolean, defaults to False
             If True then will resample data using `sample_period`.
+            Defaults to True if `sample_period` is not None.
 
         resample_kwargs : dict of key word arguments (other than 'rule') to 
             `pass to pd.DataFrame.resample()`.  Defaults to set 'limit' to 
