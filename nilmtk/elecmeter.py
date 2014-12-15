@@ -305,6 +305,9 @@ class ElecMeter(Hashable, Electric):
         2. specify a `physical_quantity` and/or an `ac_type` parameter to ask 
            `load` to automatically select columns.
 
+        If 'resample' is set to 'True' then the default behaviour is for
+        gaps shorter than max_sample_period will be forward filled.
+
         Parameters
         ---------------
         physical_quantity : string or list of strings
@@ -336,7 +339,8 @@ class ElecMeter(Hashable, Electric):
             If True then will resample data using `sample_period`.
 
         resample_kwargs : dict of key word arguments (other than 'rule') to 
-            `pass to pd.DataFrame.resample()`
+            `pass to pd.DataFrame.resample()`.  Defaults to set 'limit' to 
+            `sample_period / max_sample_period` and sets 'fill_method' to ffill.
         
         preprocessing : list of Node subclass instances
             e.g. [Clip()].
@@ -353,6 +357,16 @@ class ElecMeter(Hashable, Electric):
         nilmtk.exceptions.MeasurementError if a measurement is specified
         which is not available.
         """
+        if kwargs.get('resample'):
+            # Set default key word arguments for resampling.
+            resample_kwargs = kwargs.setdefault('resample_kwargs', {})
+            resample_kwargs.setdefault('fill_method', 'ffill')
+            if 'limit' not in resample_kwargs:
+                sample_period = kwargs.get('sample_period', self.sample_period())
+                max_number_of_rows_to_ffill = int(
+                    np.ceil(self.device['max_sample_period'] / sample_period))
+                resample_kwargs.update({'limit': max_number_of_rows_to_ffill})
+
         kwargs = self._convert_physical_quantity_and_ac_type_to_cols(**kwargs)
         kwargs = self._prep_kwargs_for_sample_period_and_resample(**kwargs)
 
