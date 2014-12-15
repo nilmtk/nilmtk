@@ -63,6 +63,7 @@ def convert_combed(combed_path, output_filename, format='HDF'):
                     print(filename_attribute)
                     dfs.append(pd.read_csv(filename_attribute, parse_dates=True, index_col=0, header=True, names=[attribute]))
                 total = pd.concat(dfs, axis=1)
+                total = total.tz_localize('UTC').tz_convert('Asia/Kolkata')
                 total.rename(columns=lambda x: column_mapping[x], inplace=True)
                 total.columns.set_names(LEVEL_NAMES, inplace=True)
                 assert total.index.is_unique

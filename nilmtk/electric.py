@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 
 from .timeframe import TimeFrame
 from .measurement import select_best_ac_type
-from .utils import offset_alias_to_seconds, convert_to_timestamp
+from .utils import offset_alias_to_seconds, convert_to_timestamp, flatten_2d_list
 from .plots import plot_series
 from .preprocessing import Apply
 
@@ -373,7 +373,7 @@ class Electric(object):
             delta_power = power.diff()
             delta_power_absolute = delta_power.abs()
             datetime_switches.append(delta_power_absolute[(delta_power_absolute>threshold)].index.values.tolist())
-        return flatten(datetime_switches)
+        return flatten_2d_list(datetime_switches)
 
     def entropy(self, k=3, base=2):
         """ 
