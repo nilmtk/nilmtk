@@ -1334,12 +1334,13 @@ def _load_and_reindex_chunk(generator, timeframe, index, sample_period):
         timeframe = timeframe.union(chunk_from_next_meter.timeframe)
 
     # Extend 'index' if necessary
-    index = extend_index(index, timeframe, sample_period)
+    extended_index = extend_index(index, timeframe, sample_period)
+
     # Reindex chunk_from_next_meter
     chunk_from_next_meter = chunk_from_next_meter.reindex(
-        index, method='ffill', limit=1, fill_value=0)
+        extended_index, method='ffill', limit=1, fill_value=0)
 
-    return chunk_from_next_meter, timeframe, index
+    return chunk_from_next_meter, timeframe, extended_index
 
 
 def extend_index(index, timeframe, sample_period):
@@ -1360,6 +1361,10 @@ def extend_index(index, timeframe, sample_period):
     if index is None:
         return pd.date_range(timeframe.start, timeframe.end, freq=freq)
 
+    # save timezone because the pandas operation of index + index
+    # can sometimes remove tz info.  See issue #294.
+    tz = deepcopy(index.tz)
+
     # extend beginning of index if needs be
     if index[0] > timeframe.start:
         seconds = (index[0] - timeframe.start).total_seconds()
@@ -1367,11 +1372,13 @@ def extend_index(index, timeframe, sample_period):
         new_index = pd.date_range(start=None, end=index[0], freq=freq, 
                                   closed='right', periods=periods)
         index = new_index[:-1] + index
+        index = index.tz_convert(tz)
 
     # extend end of index if needs be
     if index[-1] < timeframe.end: 
         new_index = pd.date_range(start=index[-1], end=timeframe.end, 
                                   freq=freq, closed='left')
         index = index + new_index[1:]
+        index = index.tz_convert(tz)
 
     return index
