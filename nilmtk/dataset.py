@@ -78,6 +78,4 @@ class DataSet(object):
         if tz is None:
             raise RuntimeError("'timezone' is not set in dataset metadata.")
 
-        start_ts = pd.Timestamp(start).tz_localize(tz)
-        end_ts = pd.Timestamp(end).tz_localize(tz)
-        self.store.window = TimeFrame(start_ts, end_ts)
+        self.store.window = TimeFrame(start_ts, end_ts, tz)
