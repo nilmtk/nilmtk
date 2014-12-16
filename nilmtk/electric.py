@@ -1,3 +1,4 @@
+from __future__ import print_function, division
 import pandas as pd
 import numpy as np
 from collections import Counter
@@ -255,48 +256,45 @@ class Electric(object):
         -------
         float : [-1, 1]
         """
-        n = 0
-        x_sum = 0
-        y_sum = 0
+        def sum_and_count(electric):
+            n = 0.0
+            cumulator = 0.0
+            for power in electric.power_series(**load_kwargs):
+                n += len(power.index)
+                cumulator += power.sum()
+            return n, cumulator
 
-        # First pass is used to find x_bar and y_bar
-        for x_power in self.power_series(**load_kwargs):
-            n += len(x_power.index)
-            x_sum = x_power.sum()
-
-        for y_power in other.power_series(**load_kwargs):
-            y_sum = y_power.sum()
-
-        if n == 0:
+        x_n, x_sum = sum_and_count(self)
+        if x_n <= 1:
             return np.NaN
 
-        x_bar = x_sum*1.0/n
-        y_bar = y_sum*1.0/n
+        y_n, y_sum = sum_and_count(other)
+        if y_n <= 1:
+            return np.NaN
 
-        # Second pass is used to find x_s and x_y (std.devs)
-        x_s_square_sum = 0
-        y_s_square_sum = 0
+        # we're using Python 3's division (which returns a float)
+        x_bar = x_sum / x_n 
+        y_bar = y_sum / y_n
 
-        for x_power in self.power_series(**load_kwargs):
-            x_s_square_sum = x_s_square_sum + ((x_power-x_bar)*(x_power-x_bar)).sum()
+        # Second pass is used to find x_s and y_s (std.devs)
+        def stdev(electric, mean, n):
+            s_square_sum = 0
+            for power in electric.power_series(**load_kwargs):
+                s_square_sum += ((power - mean) * (power - mean)).sum()
+            s_square = s_square_sum / (n - 1)
+            return np.sqrt(s_square)
 
-        for y_power in other.power_series(**load_kwargs):
-            y_s_square_sum = y_s_square_sum + ((y_power-y_bar)*(y_power-y_bar)).sum()
+        x_s = stdev(self, x_bar, x_n)
+        y_s = stdev(self, y_bar, y_n)
 
-        x_s_square = x_s_square_sum*1.0/(n-1)
-        y_s_square = y_s_square_sum*1.0/(n-1)
-
-        x_s = np.sqrt(x_s_square)
-        y_s = np.sqrt(y_s_square)
-
-        numerator = 0
+        numerator = 0.0
         for (x_power, y_power) in izip(self.power_series(**load_kwargs), 
                                        other.power_series(**load_kwargs)):
-            xi_minus_xbar = x_power-x_bar
-            yi_minus_ybar = y_power-y_bar
-            numerator = numerator + (xi_minus_xbar*yi_minus_ybar).sum()
-        denominator = (n-1)*x_s*y_s
-        corr = numerator*1.0/denominator
+            xi_minus_xbar = x_power - x_bar
+            yi_minus_ybar = y_power - y_bar
+            numerator += (xi_minus_xbar * yi_minus_ybar).sum()
+        denominator = (x_n - 1) * x_s * y_s
+        corr = numerator / denominator
         return corr
 
     def plot_lag(self, lag=1, ax = None):
