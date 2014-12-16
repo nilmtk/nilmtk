@@ -1306,12 +1306,11 @@ def combine_chunks_from_generators(generators):
     # which tells us what to divide by in order to compute the 
     # mean for PHYSICAL_QUANTITIES_TO_AVERAGE.
 
-    chunk = pd.DataFrame()
+    chunk = pd.DataFrame(dtype=np.float32)
     columns_to_average_counter = pd.DataFrame()
     timeframe = None
 
     # Go through each generator to try sum values together
-    index = None
     for generator in generators:
         try:
             chunk_from_next_meter = next(generator) 
@@ -1331,7 +1330,6 @@ def combine_chunks_from_generators(generators):
                 raise
             chunk = chunk.add(chunk_from_next_meter, fill_value=0, 
                               level='physical_quantity') 
-
         # Update columns_to_average_counter - this is necessary so we do not
         # add up columns like 'voltage' which should be averaged.
         physical_quantities = chunk_from_next_meter.columns.get_level_values('physical_quantity')
@@ -1341,6 +1339,7 @@ def combine_chunks_from_generators(generators):
                                          index=chunk_from_next_meter.index)
         columns_to_average_counter = columns_to_average_counter.add(
             counter_increment, fill_value=0)
+        del chunk_from_next_meter
 
     # Create mean values by dividing any columns which need dividing
     for column in columns_to_average_counter:

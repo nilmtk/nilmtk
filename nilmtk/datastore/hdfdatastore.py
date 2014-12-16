@@ -82,8 +82,13 @@ class HDFDataStore(DataStore):
             section_start_i = coords[0]
             section_end_i   = coords[-1]
             del coords
-            slice_starts = range(section_start_i, section_end_i, chunksize)
-            n_chunks = len(slice_starts)
+            slice_starts = xrange(section_start_i, section_end_i, chunksize)
+            n_chunks = int(np.ceil((section_end_i - section_start_i) / chunksize))
+
+            if n_chunks > 1:
+                self.all_sections_smaller_than_chunksize = False
+                
+            print("n_chunks", n_chunks)
             for chunk_i, chunk_start_i in enumerate(slice_starts):
                 chunk_end_i = chunk_start_i + chunksize
                 if chunk_end_i > section_end_i:
@@ -95,9 +100,6 @@ class HDFDataStore(DataStore):
 
                 if len(data) <= 2:
                     continue
-
-                if chunk_i > 0:
-                    self.all_sections_smaller_than_chunksize = False
 
                 # Load look ahead if necessary
                 if n_look_ahead_rows > 0:
