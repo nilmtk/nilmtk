@@ -1115,9 +1115,6 @@ class MeterGroup(Electric):
     #     raise NotImplementedError
     # def activity_distribution(self, bin_size, timespan):
     #     raise NotImplementedError
-    # def cross_correlation(self):
-    #     """Correlation between items."""
-    #     raise NotImplementedError
     # def on_off_events(self, minimum_state_duration):
     #     raise NotImplementedError
 
@@ -1263,9 +1260,6 @@ class MeterGroup(Electric):
         if load_kwargs.get('verbose'):
             print("Running MeterGroup.correlation_of_sum_of_submeters_with_mains()")
         submeters = self.meters_directly_downstream_of_mains()
-        mains = self.mains()
-        sample_period = max(submeters.sample_period(), mains.sample_period())
-        load_kwargs.setdefault('sample_period', sample_period)
         return self.mains().correlation(submeters, **load_kwargs)
 
     def describe(self, compute_expensive_stats=True, **kwargs):
