@@ -37,7 +37,7 @@ class HDFDataStore(DataStore):
 
     @doc_inherit
     def load(self, key, cols=None, sections=None, n_look_ahead_rows=0,
-             chunksize=MAX_MEM_ALLOWANCE_IN_BYTES):
+             chunksize=MAX_MEM_ALLOWANCE_IN_BYTES, verbose=False):
         
         # TODO: calculate chunksize default based on physical 
         # memory installed and number of columns
@@ -56,9 +56,14 @@ class HDFDataStore(DataStore):
         if isinstance(sections, pd.PeriodIndex):
             sections = timeframes_from_periodindex(sections)
 
+        if verbose:
+            print("HDFDataStore.load. key='{}'".format(key))
+
         self.all_sections_smaller_than_chunksize = True
 
         for section in sections:
+            if verbose:
+                print("   ", section)
             window_intersect = self.window.intersect(section)
             if window_intersect.empty:
                 continue

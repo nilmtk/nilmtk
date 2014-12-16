@@ -1244,13 +1244,15 @@ class MeterGroup(Electric):
             meter.clear_cache()
         
     def correlation_of_sum_of_submeters_with_mains(self, **load_kwargs):
+        if load_kwargs.get('verbose'):
+            print("Running MeterGroup.correlation_of_sum_of_submeters_with_mains()")
         submeters = self.meters_directly_downstream_of_mains()
         mains = self.mains()
         sample_period = max(submeters.sample_period(), mains.sample_period())
         load_kwargs.setdefault('sample_period', sample_period)
         return self.mains().correlation(submeters, **load_kwargs)
 
-    def describe(self, compute_expensive_stats=True):
+    def describe(self, compute_expensive_stats=True, **kwargs):
         """Returns pd.Series describing this MeterGroup."""
         series = pd.Series()
 
@@ -1260,7 +1262,7 @@ class MeterGroup(Electric):
         series['total_n_site_meters'] = len(site_meters)
         if compute_expensive_stats:
             series['correlation_of_sum_of_submeters_with_mains'] = (
-                self.correlation_of_sum_of_submeters_with_mains())
+                self.correlation_of_sum_of_submeters_with_mains(**kwargs))
 
         return series
 
