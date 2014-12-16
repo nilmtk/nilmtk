@@ -81,12 +81,12 @@ class DataSet(object):
 
         self.store.window = TimeFrame(start, end, tz)
 
-    def describe(self):
+    def describe(self, **kwargs):
         """Returns a DataFrame describing this dataset.  
         Each column is a building.  Each row is a feature."""
         keys = self.buildings.keys()
         keys.sort()
         results = pd.DataFrame(columns=keys)
         for i, building in self.buildings.iteritems():
-            results[i] = building.describe()
+            results[i] = building.describe(**kwargs)
         return results

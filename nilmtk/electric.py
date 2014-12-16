@@ -10,6 +10,7 @@ from scipy.special import digamma,gamma
 from math import log,pi
 import numpy.random as nr
 import matplotlib.pyplot as plt
+import numpy as np
 
 from .timeframe import TimeFrame
 from .measurement import select_best_ac_type
@@ -267,7 +268,7 @@ class Electric(object):
             y_sum = y_power.sum()
 
         if n == 0:
-            raise RuntimeError("There are no samples in `self.power_series()`.")
+            return np.NaN
 
         x_bar = x_sum*1.0/n
         y_bar = y_sum*1.0/n

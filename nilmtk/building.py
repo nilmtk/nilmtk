@@ -41,16 +41,16 @@ class Building(Hashable):
         return BuildingID(instance=md.get('instance'), 
                           dataset=md.get('dataset'))
 
-    def describe(self):
+    def describe(self, **kwargs):
         """Returns a Series describing this building."""
         md = self.metadata
         series = pd.Series(name=self.identifier.instance)
-        def copy_from_metadata_to_dict(key):
-            series[key] = md.get(key)
 
         for key in ['instance', 'building_type',
                     'construction_year', 'energy_improvements', 'heating', 
                     'ownership', 'n_occupants', 'description_of_occupants']:
-            copy_from_metadata_to_dict(key)
+            series[key] = md.get(key)
+
+        series = pd.concat([series, self.elec.describe(**kwargs)])
 
         return series
