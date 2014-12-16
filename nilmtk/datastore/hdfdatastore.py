@@ -63,6 +63,7 @@ class HDFDataStore(DataStore):
             if verbose:
                 print("   ", section)
             window_intersect = self.window.intersect(section)
+
             if window_intersect.empty:
                 data = pd.DataFrame()
                 data.timeframe = section
@@ -70,24 +71,33 @@ class HDFDataStore(DataStore):
                 continue
 
             terms = window_intersect.query_terms('window_intersect')
-            try:
-                coords = self.store.select_as_coordinates(key=key, where=terms)
-            except AttributeError as e:
-                if str(e) == ("'NoneType' object has no attribute "
-                              "'read_coordinates'"):
-                    raise KeyError("key '{}' not found".format(key))
-                else:
-                    raise
-            n_coords = len(coords)
-            if n_coords == 0:
-                data = pd.DataFrame()
-                data.timeframe = window_intersect
-                yield data
-                continue
+            if terms is None:
+                section_start_i = 0
+                section_end_i = self.store.get_storer(key).nrows
+                if section_end_i <= 1:
+                    data = pd.DataFrame()
+                    data.timeframe = section
+                    yield data
+                    continue
+            else:
+                try:
+                    coords = self.store.select_as_coordinates(key=key, where=terms)
+                except AttributeError as e:
+                    if str(e) == ("'NoneType' object has no attribute "
+                                  "'read_coordinates'"):
+                        raise KeyError("key '{}' not found".format(key))
+                    else:
+                        raise
+                n_coords = len(coords)
+                if n_coords == 0:
+                    data = pd.DataFrame()
+                    data.timeframe = window_intersect
+                    yield data
+                    continue
 
-            section_start_i = coords[0]
-            section_end_i   = coords[-1]
-            del coords
+                section_start_i = coords[0]
+                section_end_i   = coords[-1]
+                del coords
             slice_starts = xrange(section_start_i, section_end_i, chunksize)
             n_chunks = int(np.ceil((section_end_i - section_start_i) / chunksize))
 
@@ -198,7 +208,7 @@ class HDFDataStore(DataStore):
 
     @doc_inherit
     def open(self):
-        self.store.close()
+        pass
         
     @doc_inherit
     def get_timeframe(self, key):
@@ -304,6 +314,7 @@ class HDFDataStore(DataStore):
         """
         if key not in self._keys():
             raise KeyError(key + ' not in store')
+        
 
 def _timeframe_for_chunk(there_are_more_subchunks, chunk_i, window_intersect, index):
     start = None
