@@ -20,6 +20,7 @@ from .exceptions import MeasurementError
 from .electric import Electric
 from .timeframe import TimeFrame
 from .preprocessing import Apply
+from .datastore import MAX_MEM_ALLOWANCE_IN_BYTES
 
 class MeterGroup(Electric):
 
@@ -576,6 +577,20 @@ class MeterGroup(Electric):
         # Load each generator and yield the sum or the mean
         kwargs['resample'] = True
         kwargs.setdefault('sample_period', self.sample_period())
+
+        # Make sure sections are sensible sizes
+        sections = kwargs.pop('sections', [self.get_timeframe()])
+        chunksize = kwargs.get('chunksize', MAX_MEM_ALLOWANCE_IN_BYTES)
+        smaller_sections = []
+        min_sample_period = min([meter.sample_period() for meter in self.meters])
+        duration_threshold = min_sample_period * chunksize
+        for section in sections:
+            if section.timedelta.total_seconds() > duration_threshold:
+                smaller_sections.extend(section.split(duration_threshold))
+            else:
+                smaller_sections.append(section)
+        kwargs['sections'] = smaller_sections
+
         _, generators = self._meter_generators(**kwargs)
         while True:
             chunk = combine_chunks_from_generators(generators)
@@ -1307,7 +1322,7 @@ def combine_chunks_from_generators(generators):
     # mean for PHYSICAL_QUANTITIES_TO_AVERAGE.
 
     chunk = pd.DataFrame(dtype=np.float32)
-    columns_to_average_counter = pd.DataFrame()
+    columns_to_average_counter = pd.DataFrame(dtype=np.uint16)
     timeframe = None
 
     # Go through each generator to try sum values together
@@ -1315,6 +1330,9 @@ def combine_chunks_from_generators(generators):
         try:
             chunk_from_next_meter = next(generator) 
         except StopIteration:
+            continue
+
+        if chunk_from_next_meter.empty:
             continue
 
         if timeframe is None:
@@ -1335,10 +1353,14 @@ def combine_chunks_from_generators(generators):
         physical_quantities = chunk_from_next_meter.columns.get_level_values('physical_quantity')
         columns_to_average = (set(PHYSICAL_QUANTITIES_TO_AVERAGE)
                               .intersection(physical_quantities))
-        counter_increment = pd.DataFrame(1, columns=columns_to_average, 
-                                         index=chunk_from_next_meter.index)
-        columns_to_average_counter = columns_to_average_counter.add(
-            counter_increment, fill_value=0)
+        if columns_to_average:
+            counter_increment = pd.DataFrame(1, columns=columns_to_average, 
+                                             dtype=np.uint16,
+                                             index=chunk_from_next_meter.index)
+            columns_to_average_counter = columns_to_average_counter.add(
+                counter_increment, fill_value=0)
+            del counter_increment
+
         del chunk_from_next_meter
 
     # Create mean values by dividing any columns which need dividing

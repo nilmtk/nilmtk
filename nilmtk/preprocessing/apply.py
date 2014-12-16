@@ -16,4 +16,5 @@ class Apply(Node):
             new_chunk.timeframe = chunk.timeframe
             if hasattr(chunk, 'look_ahead'):
                 new_chunk.look_ahead = chunk.look_ahead
+            del chunk
             yield new_chunk

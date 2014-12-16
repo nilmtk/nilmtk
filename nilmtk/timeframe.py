@@ -253,6 +253,30 @@ class TimeFrame(object):
             raise ValueError("Periods overlap: " + str(self) + 
                              " " + str(other))
 
+    def split(self, duration_threshold):
+        """Splits this TimeFrame into smaller adjacent TimeFrames no
+        longer in duration than duration_threshold.
+
+        Parameters
+        ----------
+        duration_threshold : int, seconds
+
+        Returns
+        -------
+        list of new TimeFrame objects
+        """
+        duration_threshold_td = timedelta(seconds=duration_threshold)
+        def _split(timeframe, allowed_end):
+            if timeframe.end <= allowed_end:
+                return [timeframe]
+            else:
+                tf = TimeFrame(start=timeframe.start, end=allowed_end)
+                remainder = TimeFrame(start=allowed_end, end=timeframe.end)
+                return [tf] + _split(remainder, allowed_end + duration_threshold_td)
+
+        allowed_end = self.start + duration_threshold_td
+        return _split(self, allowed_end)
+
 
 def merge_timeframes(timeframes, gap=0):
     """

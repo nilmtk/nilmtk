@@ -13,14 +13,12 @@ import re
 from nilm_metadata.convert_yaml_to_hdf5 import _load_file
 from nilmtk.timeframe import TimeFrame, timeframes_from_periodindex
 from nilmtk.node import Node
-from .datastore import DataStore
+from .datastore import DataStore, MAX_MEM_ALLOWANCE_IN_BYTES
 from nilmtk.docinherit import doc_inherit
 
 # do not edit! added by PythonBreakpoints
 from pdb import set_trace as _breakpoint
 
-
-MAX_MEM_ALLOWANCE_IN_BYTES = 2**29 # 512 MBytes
 
 class HDFDataStore(DataStore):
 
@@ -66,7 +64,11 @@ class HDFDataStore(DataStore):
                 print("   ", section)
             window_intersect = self.window.intersect(section)
             if window_intersect.empty:
+                data = pd.DataFrame()
+                data.timeframe = section
+                yield data
                 continue
+
             terms = window_intersect.query_terms('window_intersect')
             try:
                 coords = self.store.select_as_coordinates(key=key, where=terms)
@@ -78,7 +80,11 @@ class HDFDataStore(DataStore):
                     raise
             n_coords = len(coords)
             if n_coords == 0:
+                data = pd.DataFrame()
+                data.timeframe = window_intersect
+                yield data
                 continue
+
             section_start_i = coords[0]
             section_end_i   = coords[-1]
             del coords
@@ -91,6 +97,8 @@ class HDFDataStore(DataStore):
             print("n_chunks", n_chunks)
             for chunk_i, chunk_start_i in enumerate(slice_starts):
                 chunk_end_i = chunk_start_i + chunksize
+                there_are_more_subchunks = (chunk_i < n_chunks-1)
+
                 if chunk_end_i > section_end_i:
                     chunk_end_i = section_end_i
                 chunk_end_i += 1
@@ -98,8 +106,8 @@ class HDFDataStore(DataStore):
                 data = self.store.select(key=key, columns=cols, 
                                          start=chunk_start_i, stop=chunk_end_i)
 
-                if len(data) <= 2:
-                    continue
+                # if len(data) <= 2:
+                #     yield pd.DataFrame()
 
                 # Load look ahead if necessary
                 if n_look_ahead_rows > 0:
@@ -116,30 +124,11 @@ class HDFDataStore(DataStore):
                     else:
                         data.look_ahead = pd.DataFrame()
 
-                # Set timeframe
-                start = None
-                end = None
-
-                # Test if there are any more subchunks
-                there_are_more_subchunks = (chunk_i < n_chunks-1)
-                if there_are_more_subchunks:
-                    if chunk_i == 0:
-                        start = window_intersect.start
-                elif chunk_i > 0:
-                    # This is the last subchunk
-                    end = window_intersect.end
-                else:
-                    # Just a single 'subchunk'
-                    start = window_intersect.start
-                    end = window_intersect.end
-
-                if start is None:
-                    start = data.index[0]
-                if end is None:
-                    end = data.index[-1]
-
-                data.timeframe = TimeFrame(start, end)
+                data.timeframe = _timeframe_for_chunk(there_are_more_subchunks, 
+                                                      chunk_i, window_intersect,
+                                                      data.index)
                 yield data
+                del data
 
     @doc_inherit
     def append(self, key, value):
@@ -315,3 +304,26 @@ class HDFDataStore(DataStore):
         """
         if key not in self._keys():
             raise KeyError(key + ' not in store')
+
+def _timeframe_for_chunk(there_are_more_subchunks, chunk_i, window_intersect, index):
+    start = None
+    end = None
+
+    # Test if there are any more subchunks
+    if there_are_more_subchunks:
+        if chunk_i == 0:
+            start = window_intersect.start
+    elif chunk_i > 0:
+        # This is the last subchunk
+        end = window_intersect.end
+    else:
+        # Just a single 'subchunk'
+        start = window_intersect.start
+        end = window_intersect.end
+
+    if start is None:
+        start = index[0]
+    if end is None:
+        end = index[-1]
+
+    return TimeFrame(start, end)

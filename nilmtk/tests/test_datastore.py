@@ -67,6 +67,8 @@ class SuperTestDataStore(object):
         chunks = self.datastore.load(key=self.keys[0], sections=timeframes)
         i = 0
         for chunk in chunks:
+            if chunk.empty:
+                continue
             self.assertEqual(chunk.index[0], pd.Timestamp('2012-01-01 00:10:02'))
             self.assertEqual(chunk.index[-1], pd.Timestamp('2012-01-01 00:10:04'))
             self.assertEqual(len(chunk), 3)
