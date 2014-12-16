@@ -57,6 +57,7 @@ class DataSet(object):
 
     def _init_buildings(self, store):
         buildings = store.elements_below_key('/')
+        buildings.sort()
 
         for b_key in buildings:
             building = Building()
@@ -79,3 +80,13 @@ class DataSet(object):
             raise RuntimeError("'timezone' is not set in dataset metadata.")
 
         self.store.window = TimeFrame(start, end, tz)
+
+    def describe(self):
+        """Returns a DataFrame describing this dataset.  
+        Each column is a building.  Each row is a feature."""
+        keys = self.buildings.keys()
+        keys.sort()
+        results = pd.DataFrame(columns=keys)
+        for i, building in self.buildings.iteritems():
+            results[i] = building.describe()
+        return results

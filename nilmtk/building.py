@@ -1,5 +1,6 @@
 from __future__ import print_function, division
 from collections import namedtuple, OrderedDict
+import pandas as pd
 from .metergroup import MeterGroup
 from .datastore.datastore import join_key
 from .hashable import Hashable
@@ -41,15 +42,15 @@ class Building(Hashable):
                           dataset=md.get('dataset'))
 
     def describe(self):
-        """Returns a dict describing this building."""
+        """Returns a Series describing this building."""
         md = self.metadata
-        d = OrderedDict()
+        series = pd.Series(name=self.identifier.instance)
         def copy_from_metadata_to_dict(key):
-            d[key] = md.get(key)
+            series[key] = md.get(key)
 
         for key in ['instance', 'building_type',
                     'construction_year', 'energy_improvements', 'heating', 
                     'ownership', 'n_occupants', 'description_of_occupants']:
             copy_from_metadata_to_dict(key)
 
-        return d
+        return series
