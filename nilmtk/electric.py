@@ -256,7 +256,7 @@ class Electric(object):
         -------
         float : [-1, 1]
         """
-        sample_period = max(submeters.sample_period(), mains.sample_period())
+        sample_period = max(self.sample_period(), other.sample_period())
         load_kwargs.setdefault('sample_period', sample_period)
 
         def sum_and_count(electric):
