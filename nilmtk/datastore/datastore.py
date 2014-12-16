@@ -18,7 +18,7 @@ from nilmtk.node import Node
 from pdb import set_trace as _breakpoint
 
 
-MAX_MEM_ALLOWANCE_IN_BYTES = 2**24
+MAX_MEM_ALLOWANCE_IN_BYTES = 2**28
 
 class DataStore(object):
     """

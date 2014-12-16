@@ -8,6 +8,7 @@ from warnings import warn
 from sys import stdout
 from collections import Counter
 from copy import deepcopy
+import multiprocessing as mp
 from .elecmeter import ElecMeter, ElecMeterID
 from .appliance import Appliance
 from .datastore.datastore import join_key
@@ -1321,51 +1322,100 @@ def combine_chunks_from_generators(generators):
     # which tells us what to divide by in order to compute the 
     # mean for PHYSICAL_QUANTITIES_TO_AVERAGE.
 
-    chunk = pd.DataFrame(dtype=np.float32)
-    columns_to_average_counter = pd.DataFrame(dtype=np.uint16)
-    timeframe = None
+    def create_empty_store(filename, dtype):
+        chunk = pd.DataFrame(dtype=dtype)
+        chunk_store = pd.HDFStore(filename, mode='w', complib='blosc', complevel=5)
+        chunk_store.put('df', chunk)
+        chunk_store.close()
+        del chunk
+
+    create_empty_store('chunk.h5', np.float32)
+    create_empty_store('columns_to_average_counter.h5', np.uint16)
 
     # Go through each generator to try sum values together
     for generator in generators:
-        try:
-            chunk_from_next_meter = next(generator) 
-        except StopIteration:
-            continue
+        adding_process = mp.Process(target=add_hdf, args=[generator])
+        adding_process.start()
+        adding_process.join()
 
-        if chunk_from_next_meter.empty:
-            continue
-
-        if timeframe is None:
-            timeframe = chunk_from_next_meter.timeframe
-        else:
-            timeframe = timeframe.union(chunk_from_next_meter.timeframe)
-
-        # Add
-        try:
-            chunk = chunk.add(chunk_from_next_meter, fill_value=0)
-        except ValueError as e:
-            if str(e) != "cannot join with no level specified and no overlapping names":
-                raise
-            chunk = chunk.add(chunk_from_next_meter, fill_value=0, 
-                              level='physical_quantity') 
-        # Update columns_to_average_counter - this is necessary so we do not
-        # add up columns like 'voltage' which should be averaged.
-        physical_quantities = chunk_from_next_meter.columns.get_level_values('physical_quantity')
-        columns_to_average = (set(PHYSICAL_QUANTITIES_TO_AVERAGE)
-                              .intersection(physical_quantities))
-        if columns_to_average:
-            counter_increment = pd.DataFrame(1, columns=columns_to_average, 
-                                             dtype=np.uint16,
-                                             index=chunk_from_next_meter.index)
-            columns_to_average_counter = columns_to_average_counter.add(
-                counter_increment, fill_value=0)
-            del counter_increment
-
-        del chunk_from_next_meter
+    chunk_store = pd.HDFStore('chunk.h5', mode='r')
+    chunk = chunk_store['df']
+    timeframe = getattr(chunk_store.root._v_attrs, 'timeframe', None)
+    chunk_store.close()
+    # TODO : delete file from disk
 
     # Create mean values by dividing any columns which need dividing
+    columns_to_average_counter_store = pd.HDFStore('columns_to_average_counter.h5', mode='r')
+    columns_to_average_counter = columns_to_average_counter_store['df']
+    columns_to_average_counter_store.close()
+
     for column in columns_to_average_counter:
         chunk[column] /= columns_to_average_counter[column]
+    del columns_to_average_counter
 
     chunk.timeframe = timeframe
     return chunk
+
+
+def add_hdf(generator):
+    try:
+        chunk_from_next_meter = next(generator) 
+    except StopIteration:
+        return
+
+    if chunk_from_next_meter.empty:
+        return
+
+    chunk_store = pd.HDFStore('chunk.h5', mode='r')
+    chunk = chunk_store['df']
+    timeframe = getattr(chunk_store.root._v_attrs, 'timeframe', None)
+    chunk_store.close()
+
+    if timeframe is None:
+        timeframe = chunk_from_next_meter.timeframe
+    else:
+        timeframe = timeframe.union(chunk_from_next_meter.timeframe)
+
+    # Update columns_to_average_counter - this is necessary so we do not
+    # add up columns like 'voltage' which should be averaged.
+    columns_to_average_counter_store = pd.HDFStore('columns_to_average_counter.h5', mode='r')
+    columns_to_average_counter = columns_to_average_counter_store['df']
+    columns_to_average_counter_store.close()
+
+    physical_quantities = chunk_from_next_meter.columns.get_level_values('physical_quantity')
+    columns_to_average = (set(PHYSICAL_QUANTITIES_TO_AVERAGE)
+                          .intersection(physical_quantities))
+    if columns_to_average:
+        counter_increment = pd.DataFrame(1, columns=columns_to_average, dtype=np.uint16,
+                                         index=chunk_from_next_meter.index)
+        columns_to_average_counter = columns_to_average_counter.add(
+            counter_increment, fill_value=0)
+        del counter_increment
+
+        columns_to_average_counter_store = pd.HDFStore('columns_to_average_counter.h5', mode='w',
+                                                       complib='blosc', complevel=5)
+        columns_to_average_counter_store.put('df', columns_to_average_counter)
+        columns_to_average_counter_store.close()
+        del columns_to_average_counter
+
+    new_chunk = add(chunk, chunk_from_next_meter)
+    del chunk
+    del chunk_from_next_meter
+
+    chunk_store = pd.HDFStore('chunk.h5', mode='w', complib='blosc', complevel=5)
+    chunk_store.put('df', new_chunk)
+    chunk_store.root._v_attrs.timeframe = timeframe
+    chunk_store.close()
+    del new_chunk
+
+
+def add(chunk, chunk_from_next_meter):
+    try:
+        new_chunk = chunk.add(chunk_from_next_meter, fill_value=0)
+    except ValueError as e:
+        if str(e) != "cannot join with no level specified and no overlapping names":
+            raise
+        new_chunk = chunk.add(chunk_from_next_meter, fill_value=0, 
+                              level='physical_quantity') 
+    del chunk
+    return new_chunk
