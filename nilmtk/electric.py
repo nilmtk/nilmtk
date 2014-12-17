@@ -12,6 +12,7 @@ from math import log,pi
 import numpy.random as nr
 import matplotlib.pyplot as plt
 import numpy as np
+from datetime import timedelta
 
 from .timeframe import TimeFrame
 from .measurement import select_best_ac_type
@@ -177,10 +178,8 @@ class Electric(object):
         timedelta: total duration of all good sections.
         """
         good_sections = self.good_sections(**load_kwargs)
-        if not good_sections or len(good_sections) == 0:
-            return
-        uptime = good_sections[0].timedelta
-        for good_section in good_sections[1:]:
+        uptime = timedelta(seconds=0)
+        for good_section in good_sections:
             uptime += good_section.timedelta
         return uptime
 

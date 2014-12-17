@@ -8,7 +8,6 @@ from warnings import warn
 from sys import stdout
 from collections import Counter
 from copy import deepcopy
-import multiprocessing as mp
 import gc
 from .elecmeter import ElecMeter, ElecMeterID
 from .appliance import Appliance
@@ -965,11 +964,14 @@ class MeterGroup(Electric):
         mains = self.mains()
         downstream_meters = self.meters_directly_downstream_of_mains()
         proportion = 0.0
+        verbose = loader_kwargs.get('verbose')
         for m in downstream_meters.meters:
-            print("Calculating proportion for", m)
+            if verbose:
+                print("Calculating proportion for", m)
             prop = m.proportion_of_energy(mains, **loader_kwargs)
             proportion += prop
-            print("   {:.2%}".format(prop))
+            if verbose:
+                print("   {:.2%}".format(prop))
             
         return proportion
 
@@ -1268,6 +1270,13 @@ class MeterGroup(Electric):
         if compute_expensive_stats:
             series['correlation_of_sum_of_submeters_with_mains'] = (
                 self.correlation_of_sum_of_submeters_with_mains(**kwargs))
+            series['proportion_of_energy_submetered'] = (
+                self.proportion_of_energy_submetered(**kwargs))
+        series['mains_sample_period'] = self.mains().sample_period()
+        series['submeter_sample_period'] = self.submeters().sample_period()
+        timeframe = self.get_timeframe()
+        series['timeframe'] = "start={}, end={}".format(timeframe.start, timeframe.end)
+        series['mains_uptime'] = "{}".format(self.mains().uptime(**kwargs))
 
         return series
 
