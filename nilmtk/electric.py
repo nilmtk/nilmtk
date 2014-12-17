@@ -508,6 +508,9 @@ class Electric(object):
         physical_quantity = kwargs['physical_quantity']
         generator = self.load(**kwargs)
         for chunk in generator:
+            if chunk.empty:
+                yield chunk
+                continue
             chunk_to_yield = chunk[physical_quantity].sum(axis=1)
             ac_types = '+'.join(chunk[physical_quantity].columns)
             chunk_to_yield.name = (physical_quantity, ac_types)
