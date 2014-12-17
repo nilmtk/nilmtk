@@ -230,6 +230,16 @@ class ElecMeter(Hashable, Electric):
         measurements = self.device['measurements']
         return list(set([m['physical_quantity'] for m in measurements]))
 
+    def available_columns(self):
+        """
+        Returns
+        -------
+        list of 2-tuples of strings e.g. [('power', 'active')]
+        """
+        measurements = self.device['measurements']
+        return list(set([(m['physical_quantity'], m.get('type')) 
+                         for m in measurements]))
+
     def __repr__(self):
         string = super(ElecMeter, self).__repr__()
         # Now add list of appliances...
@@ -388,16 +398,27 @@ class ElecMeter(Hashable, Electric):
         return generator
 
     def _convert_physical_quantity_and_ac_type_to_cols(
-            self, physical_quantity=None, ac_type=None, **kwargs):
+            self, physical_quantity=None, ac_type=None, cols=None, 
+            raise_exceptions=True, **kwargs):
         """Returns kwargs dict with physical_quantity and ac_type removed
         and cols populated appropriately.
         """
-        if not (ac_type or physical_quantity):
-            return kwargs
-
-        if 'cols' in kwargs:
-            raise ValueError("Cannot use `ac_type` and/or `physical_quantity`"
-                             " with `cols` parameter.")
+        if cols:
+            if (ac_type or physical_quantity):
+                raise ValueError("Cannot use `ac_type` and/or `physical_quantity`"
+                                 " with `cols` parameter.")
+            else:
+                if set(cols).issubset(self.available_columns()):
+                    kwargs['cols'] = cols
+                    return kwargs
+                else:
+                    if raise_exceptions:
+                        msg = ("'{}' is not a subset of the available columns: '{}'"
+                               .format(cols, self.available_columns()))
+                        raise MeasurementError(msg)
+                    else:
+                        kwargs['cols'] = list(set(cols).intersection(self.available_columns()))
+                        return kwargs
 
         if isinstance(ac_type, basestring):
             ac_type = [ac_type]
@@ -405,10 +426,14 @@ class ElecMeter(Hashable, Electric):
         if physical_quantity is None:
             physical_quantity = self.available_physical_quantities()
             if ac_type:
-                physical_quantity = [
-                    pq for pq in physical_quantity
-                    if pq in PHYSICAL_QUANTITIES_WITH_AC_TYPES
-                    and set(ac_type).issubset(self.available_ac_types(pq))]
+                physical_quantities_filtered = set()
+                for pq in physical_quantity:
+                    if pq in PHYSICAL_QUANTITIES_WITH_AC_TYPES:
+                        available_ac_types = self.available_ac_types(pq)
+                        for a_t in ac_type:
+                            if a_t in available_ac_types:
+                                physical_quantities_filtered.add(pq)
+                physical_quantity = list(physical_quantities_filtered)
 
         elif isinstance(physical_quantity, basestring):
             physical_quantity = [physical_quantity]
@@ -417,10 +442,13 @@ class ElecMeter(Hashable, Electric):
         available_physical_quantities = self.available_physical_quantities()
         for pq in physical_quantity:
             if pq not in available_physical_quantities:
-                error_msg = ("Physical quantity '{}' not available."
-                             " Only {} are available"
-                             .format(pq, available_physical_quantities))
-                raise MeasurementError(error_msg)
+                if raise_exceptions:
+                    error_msg = ("Physical quantity '{}' not available."
+                                 " Only {} are available"
+                                 .format(pq, available_physical_quantities))
+                    raise MeasurementError(error_msg)
+                else:
+                    continue
 
             available_ac_types = self.available_ac_types(pq)
             if not available_ac_types:
@@ -435,10 +463,13 @@ class ElecMeter(Hashable, Electric):
 
             for a_t in ac_type:
                 if a_t not in available_ac_types:
-                    error_msg = ("AC type '{}' not available."
-                                 " only {} are available"
-                                 .format(a_t, available_ac_types))
-                    raise MeasurementError(error_msg)
+                    if raise_exceptions:
+                        error_msg = ("AC type '{}' not available."
+                                     " only {} are available"
+                                     .format(a_t, available_ac_types))
+                        raise MeasurementError(error_msg)
+                    else:
+                        continue
 
                 cols.append((pq, a_t))
 

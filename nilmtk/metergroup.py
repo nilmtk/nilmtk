@@ -575,15 +575,29 @@ class MeterGroup(Electric):
         sections = kwargs.pop('sections', [self.get_timeframe()])
         chunksize = kwargs.pop('chunksize', MAX_MEM_ALLOWANCE_IN_BYTES)
         duration_threshold = sample_period * chunksize
+        columns = pd.MultiIndex.from_tuples(self._all_columns_from_kwargs(**kwargs))
 
         # Loop through each section to load
         for section in split_timeframes(sections, duration_threshold):
             kwargs['sections'] = [section]
+            index = pd.date_range(section.start, section.end, closed='left',
+                                  freq='{:d}S'.format(sample_period))
             _, generators = self._meter_generators(**kwargs)
-            chunk = combine_chunks_from_generators(generators)
+            chunk = combine_chunks_from_generators(generators, index, columns)
             if chunk.empty:
                 break
             yield chunk
+
+    def _all_columns_from_kwargs(self, **kwargs):
+        all_columns = set()
+        for meter in self.meters:
+            kwargs_copy = deepcopy(kwargs)
+            kwargs_copy.setdefault('raise_exceptions', False)
+            new_kwargs = meter._convert_physical_quantity_and_ac_type_to_cols(**kwargs_copy)
+            cols = new_kwargs.get('cols', [])
+            for col in cols:
+                all_columns.add(col)
+        return list(all_columns)
 
     def _meter_generators(self, **kwargs):
         """Returns (list of identifiers, list of generators)."""
@@ -591,15 +605,9 @@ class MeterGroup(Electric):
         identifiers = []
         for meter in self.meters:
             kwargs_copy = deepcopy(kwargs)
-            try:
-                generator = meter.load(**kwargs_copy)
-            except MeasurementError as e:
-                warn("Ignoring meter '{}' because it does not have the correct"
-                     " measurements.  The MeasurementError was: '{}'"
-                     .format(meter.identifier, e))
-            else:
-                generators.append(generator)
-                identifiers.append(meter.identifier)
+            generator = meter.load(raise_exceptions=False, **kwargs_copy)
+            generators.append(generator)
+            identifiers.append(meter.identifier)
 
         return identifiers, generators
 
@@ -1282,7 +1290,7 @@ def iterate_through_submeters_of_two_metergroups(master, slave):
     return zipped
 
 
-def combine_chunks_from_generators(generators):
+def combine_chunks_from_generators(generators, index, columns):
     """Combines chunks into a single DataFrame.
 
     Adds or averages columns, depending on whether each column is in
@@ -1301,92 +1309,63 @@ def combine_chunks_from_generators(generators):
     # `columns_to_average_counter` DataFrame
     # which tells us what to divide by in order to compute the 
     # mean for PHYSICAL_QUANTITIES_TO_AVERAGE.
-
-    def create_empty_store(filename, dtype):
-        chunk = pd.DataFrame(dtype=dtype)
-        chunk_store = pd.HDFStore(filename, mode='w', complib='blosc', complevel=5)
-        chunk_store.put('df', chunk)
-        chunk_store.close()
-        del chunk
-
-    create_empty_store('chunk.h5', np.float32)
-    create_empty_store('columns_to_average_counter.h5', np.uint16)
+    DTYPE = np.float32
+    cumulator = pd.DataFrame(0, index=index, columns=columns, dtype=DTYPE)
+    cumulator_arr = cumulator.as_matrix()
+    columns_to_average_counter = pd.DataFrame(dtype=np.uint16)
+    timeframe = None
 
     # Go through each generator to try sum values together
     for generator in generators:
-        adding_process = mp.Process(target=add_hdf, args=[generator])
-        adding_process.start()
-        adding_process.join()
+        try:
+            chunk_from_next_meter = next(generator) 
+        except StopIteration:
+            continue
 
-    chunk_store = pd.HDFStore('chunk.h5', mode='r')
-    chunk = chunk_store['df']
-    timeframe = getattr(chunk_store.root._v_attrs, 'timeframe', None)
-    chunk_store.close()
-    # TODO : delete file from disk
+        if chunk_from_next_meter.empty:
+            continue
+
+        if timeframe is None:
+            timeframe = chunk_from_next_meter.timeframe
+        else:
+            timeframe = timeframe.union(chunk_from_next_meter.timeframe)
+
+        # Add
+        for i, column_name in enumerate(columns):
+            try:
+                column = chunk_from_next_meter[column_name]
+            except KeyError:
+                continue
+
+            column.fillna(0, inplace=True)
+            aligned = column.reindex(index, fill_value=0, copy=False).values
+            del column
+            np.add(cumulator_arr[:,i], aligned, cumulator_arr[:,i])
+            del aligned
+
+        # Update columns_to_average_counter - this is necessary so we do not
+        # add up columns like 'voltage' which should be averaged.
+        physical_quantities = chunk_from_next_meter.columns.get_level_values('physical_quantity')
+        columns_to_average = (set(PHYSICAL_QUANTITIES_TO_AVERAGE)
+                              .intersection(physical_quantities))
+        if columns_to_average:
+            counter_increment = pd.DataFrame(1, columns=columns_to_average, 
+                                             dtype=np.uint16,
+                                             index=chunk_from_next_meter.index)
+            columns_to_average_counter = columns_to_average_counter.add(
+                counter_increment, fill_value=0)
+            del counter_increment
+
+        del chunk_from_next_meter
+
+    del cumulator_arr
 
     # Create mean values by dividing any columns which need dividing
-    columns_to_average_counter_store = pd.HDFStore('columns_to_average_counter.h5', mode='r')
-    columns_to_average_counter = columns_to_average_counter_store['df']
-    columns_to_average_counter_store.close()
-
     for column in columns_to_average_counter:
-        chunk[column] /= columns_to_average_counter[column]
-    del columns_to_average_counter
+        cumulator[column] /= columns_to_average_counter[column]
 
-    chunk.timeframe = timeframe
-    return chunk
-
-
-def add_hdf(generator):
-    try:
-        chunk_from_next_meter = next(generator) 
-    except StopIteration:
-        return
-
-    if chunk_from_next_meter.empty:
-        return
-
-    chunk_store = pd.HDFStore('chunk.h5', mode='r')
-    chunk = chunk_store['df']
-    timeframe = getattr(chunk_store.root._v_attrs, 'timeframe', None)
-    chunk_store.close()
-
-    if timeframe is None:
-        timeframe = chunk_from_next_meter.timeframe
-    else:
-        timeframe = timeframe.union(chunk_from_next_meter.timeframe)
-
-    # Update columns_to_average_counter - this is necessary so we do not
-    # add up columns like 'voltage' which should be averaged.
-    columns_to_average_counter_store = pd.HDFStore('columns_to_average_counter.h5', mode='r')
-    columns_to_average_counter = columns_to_average_counter_store['df']
-    columns_to_average_counter_store.close()
-
-    physical_quantities = chunk_from_next_meter.columns.get_level_values('physical_quantity')
-    columns_to_average = (set(PHYSICAL_QUANTITIES_TO_AVERAGE)
-                          .intersection(physical_quantities))
-    if columns_to_average:
-        counter_increment = pd.DataFrame(1, columns=columns_to_average, dtype=np.uint16,
-                                         index=chunk_from_next_meter.index)
-        columns_to_average_counter = columns_to_average_counter.add(
-            counter_increment, fill_value=0)
-        del counter_increment
-
-        columns_to_average_counter_store = pd.HDFStore('columns_to_average_counter.h5', mode='w',
-                                                       complib='blosc', complevel=5)
-        columns_to_average_counter_store.put('df', columns_to_average_counter)
-        columns_to_average_counter_store.close()
-        del columns_to_average_counter
-
-    new_chunk = add(chunk, chunk_from_next_meter)
-    del chunk
-    del chunk_from_next_meter
-
-    chunk_store = pd.HDFStore('chunk.h5', mode='w', complib='blosc', complevel=5)
-    chunk_store.put('df', new_chunk)
-    chunk_store.root._v_attrs.timeframe = timeframe
-    chunk_store.close()
-    del new_chunk
+    cumulator.timeframe = timeframe
+    return cumulator
 
 
 def add(chunk, chunk_from_next_meter):
