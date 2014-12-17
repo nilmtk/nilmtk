@@ -188,7 +188,8 @@ class Results(object):
 
     def _columns_with_end_removed(self):
         cols = set(self._data.columns)
-        cols.remove('end')
+        if len(cols) > 0:
+            cols.remove('end')
         cols = list(cols)
         return cols
 

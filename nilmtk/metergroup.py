@@ -959,20 +959,25 @@ class MeterGroup(Electric):
         """
         Returns
         -------
-        float [0,1]
+        float [0,1] or NaN if mains total_energy == 0
         """
         mains = self.mains()
         downstream_meters = self.meters_directly_downstream_of_mains()
         proportion = 0.0
         verbose = loader_kwargs.get('verbose')
+        all_nan = True
         for m in downstream_meters.meters:
             if verbose:
                 print("Calculating proportion for", m)
             prop = m.proportion_of_energy(mains, **loader_kwargs)
-            proportion += prop
+            if not np.isnan(prop):
+                proportion += prop
+                all_nan = False
             if verbose:
                 print("   {:.2%}".format(prop))
-            
+        
+        if all_nan:
+            proportion = np.NaN
         return proportion
 
     def available_ac_types(self, physical_quantity):

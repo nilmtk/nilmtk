@@ -213,16 +213,20 @@ class Electric(object):
 
         Returns
         -------
-        float [0,1]
+        float [0,1] or NaN if other.total_energy == 0
         """
         good_other_sections = other.good_sections(**loader_kwargs)
         loader_kwargs['sections'] = good_other_sections
+
+        # TODO test effect of setting `sections` for other
+        other_total_energy = other.total_energy(**loader_kwargs)
+        if other_total_energy.sum() == 0:
+            return np.NaN
+
         total_energy = self.total_energy(**loader_kwargs)
         if total_energy.empty:
             return 0.0
 
-        # TODO test effect of setting `sections` for other
-        other_total_energy = other.total_energy(**loader_kwargs)
         other_ac_types = other_total_energy.keys()
         self_ac_types = total_energy.keys()
         shared_ac_types = set(other_ac_types).intersection(self_ac_types)
