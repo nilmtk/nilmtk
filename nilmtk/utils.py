@@ -254,6 +254,7 @@ def tz_localize_naive(timestamp, tz):
     if timestamp is None or pd.isnull(timestamp):
         return pd.NaT
 
+    timestamp = pd.Timestamp(timestamp)
     if timestamp_is_naive(timestamp):
         timestamp = timestamp.tz_localize('UTC')
 

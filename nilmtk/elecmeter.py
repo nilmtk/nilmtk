@@ -572,6 +572,7 @@ class ElecMeter(Hashable, Electric):
         get_cached_stat
         """
         full_results = loader_kwargs.pop('full_results', False)
+        verbose = loader_kwargs.get('verbose')
 
         # Prepare `sections` list
         sections = loader_kwargs.get('sections')
@@ -594,7 +595,7 @@ class ElecMeter(Hashable, Electric):
         else:
             sections_to_compute = sections
 
-        if not results_obj._data.empty:
+        if verbose and not results_obj._data.empty:
             print("Using cached result.")
 
         # If we get to here then we have to compute some stats

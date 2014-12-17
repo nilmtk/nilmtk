@@ -135,16 +135,10 @@ class Results(object):
         usable_sections_from_cache = []
 
         def append_row(row, section):
-            # Save, disable, then re-enable `pd.SettingWithCopyWarning`
-            # from http://stackoverflow.com/a/20627316/732596
-            chained_assignment = pd.options.mode.chained_assignment
-            pd.options.mode.chained_assignment = None
-
+            row = row.astype(object)
             # We stripped off the timezone when exporting to cache
             # so now we must put the timezone back.
             row['end'] = tz_localize_naive(row['end'], tz)
-            pd.options.mode.chained_assignment = chained_assignment
-
             if row['end'] == section.end:
                 usable_sections_from_cache.append(row)
 
