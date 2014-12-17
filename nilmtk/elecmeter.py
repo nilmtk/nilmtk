@@ -358,6 +358,9 @@ class ElecMeter(Hashable, Electric):
         nilmtk.exceptions.MeasurementError if a measurement is specified
         which is not available.
         """
+        if 'sample_period' is kwargs:
+            kwargs['resample'] = True
+
         if kwargs.get('resample'):
             # Set default key word arguments for resampling.
             resample_kwargs = kwargs.setdefault('resample_kwargs', {})
