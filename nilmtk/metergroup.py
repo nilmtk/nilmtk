@@ -16,7 +16,7 @@ from .datastore.datastore import join_key
 from .utils import (tree_root, nodes_adjacent_to_root, simplest_type_for,
                     flatten_2d_list, convert_to_timestamp)
 from .plots import plot_series
-from .measurement import (select_best_ac_type, AC_TYPES,
+from .measurement import (select_best_ac_type, AC_TYPES, LEVEL_NAMES,
                           PHYSICAL_QUANTITIES_TO_AVERAGE)
 from .exceptions import MeasurementError
 from .electric import Electric
@@ -576,7 +576,8 @@ class MeterGroup(Electric):
         sections = kwargs.pop('sections', [self.get_timeframe()])
         chunksize = kwargs.pop('chunksize', MAX_MEM_ALLOWANCE_IN_BYTES)
         duration_threshold = sample_period * chunksize
-        columns = pd.MultiIndex.from_tuples(self._all_columns_from_kwargs(**kwargs))
+        columns = pd.MultiIndex.from_tuples(
+            self._all_columns_from_kwargs(**kwargs), names=LEVEL_NAMES)
 
         # Loop through each section to load
         for section in split_timeframes(sections, duration_threshold):
@@ -1296,19 +1297,23 @@ def combine_chunks_from_generators(index, columns, meters, kwargs):
     Adds or averages columns, depending on whether each column is in
     PHYSICAL_QUANTITIES_TO_AVERAGE.
 
-    Parameters
-    ----------
-
-
     Returns
     -------
     DataFrame
     """
+    # Regarding columns (e.g. voltage) that we need to average:
     # The approach is that we first add everything together
     # in the first for-loop, whilst also keeping a 
     # `columns_to_average_counter` DataFrame
     # which tells us what to divide by in order to compute the 
     # mean for PHYSICAL_QUANTITIES_TO_AVERAGE.
+
+    # Regarding doing an in-place addition:
+    # We convert out cumulator dataframe to a numpy matrix.
+    # This allows us to use np.add to do an in-place add.
+    # If we didn't do this then we'd get horrible memory fragmentation.
+    # See http://stackoverflow.com/a/27526721/732596
+
     DTYPE = np.float32
     cumulator = pd.DataFrame(0, index=index, columns=columns, dtype=DTYPE)
     cumulator_arr = cumulator.as_matrix()
@@ -1336,7 +1341,7 @@ def combine_chunks_from_generators(index, columns, meters, kwargs):
         else:
             timeframe = timeframe.union(chunk_from_next_meter.timeframe)
 
-        # Add
+        # Add (in-place)
         for i, column_name in enumerate(columns):
             try:
                 column = chunk_from_next_meter[column_name]
@@ -1346,7 +1351,7 @@ def combine_chunks_from_generators(index, columns, meters, kwargs):
             column.fillna(0, inplace=True)
             aligned = column.reindex(index, fill_value=0, copy=False).values
             del column
-            np.add(cumulator_arr[:,i], aligned, cumulator_arr[:,i])
+            np.add(cumulator_arr[:,i], aligned, out=cumulator_arr[:,i])
             del aligned
             gc.collect()
 
