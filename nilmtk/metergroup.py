@@ -19,7 +19,7 @@ from .measurement import (select_best_ac_type, AC_TYPES,
                           PHYSICAL_QUANTITIES_TO_AVERAGE)
 from .exceptions import MeasurementError
 from .electric import Electric
-from .timeframe import TimeFrame
+from .timeframe import TimeFrame, split_timeframes
 from .preprocessing import Apply
 from .datastore import MAX_MEM_ALLOWANCE_IN_BYTES
 
@@ -527,16 +527,7 @@ class MeterGroup(Electric):
         2. specify a `physical_quantity` and/or an `ac_type` parameter to ask 
            `load` to automatically select columns.
 
-        Each meter in the MeterGroup will first be reindexed before being added.
-
-        Note that we just use forward filling to reindex.
-
-        Also note that the timeframe will be the *union* of the timeframes of
-        all individual meters.
-
-        Also note that `chunksize` refers to the chunksize for each individual
-        meter.  If those chunks span a large timeframe then the timeframe of
-        the returned data will be large.
+        Each meter in the MeterGroup will first be resampled before being added.
 
         Parameters
         ----------
@@ -545,6 +536,10 @@ class MeterGroup(Electric):
             If not specified then will use the max of all meters' sample_periods.
         resample_kwargs : dict of key word arguments (other than 'rule') to 
             `pass to pd.DataFrame.resample()`
+        chunksize : int, optional
+            the maximum number of rows per chunk. Note that each chunk is 
+            guaranteed to be of length <= chunksize.  Each chunk is *not*
+            guaranteed to be exactly of length == chunksize.
         **kwargs : 
             any other key word arguments to pass to `self.store.load()` including:
         physical_quantity : string or list of strings
@@ -575,25 +570,16 @@ class MeterGroup(Electric):
 
         .. note:: Different AC types will be treated separately.
         """
-        # Load each generator and yield the sum or the mean
-        kwargs['resample'] = True
-        kwargs.setdefault('sample_period', self.sample_period())
-
-        # Make sure sections are sensible sizes
+        # Handle kwargs
+        sample_period = kwargs.setdefault('sample_period', self.sample_period())
         sections = kwargs.pop('sections', [self.get_timeframe()])
-        chunksize = kwargs.get('chunksize', MAX_MEM_ALLOWANCE_IN_BYTES)
-        smaller_sections = []
-        min_sample_period = min([meter.sample_period() for meter in self.meters])
-        duration_threshold = min_sample_period * chunksize
-        for section in sections:
-            if section.timedelta.total_seconds() > duration_threshold:
-                smaller_sections.extend(section.split(duration_threshold))
-            else:
-                smaller_sections.append(section)
-        kwargs['sections'] = smaller_sections
+        chunksize = kwargs.pop('chunksize', MAX_MEM_ALLOWANCE_IN_BYTES)
+        duration_threshold = sample_period * chunksize
 
-        _, generators = self._meter_generators(**kwargs)
-        while True:
+        # Loop through each section to load
+        for section in split_timeframes(sections, duration_threshold):
+            kwargs['sections'] = [section]
+            _, generators = self._meter_generators(**kwargs)
             chunk = combine_chunks_from_generators(generators)
             if chunk.empty:
                 break

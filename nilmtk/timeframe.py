@@ -277,6 +277,12 @@ class TimeFrame(object):
                 timeframe = TimeFrame(start=allowed_end, end=timeframe.end)
 
 
+def split_timeframes(timeframes, duration_threshold):
+    for timeframe in timeframes:
+        for split in timeframe.split(duration_threshold):
+            yield split
+
+
 def merge_timeframes(timeframes, gap=0):
     """
     Parameters
