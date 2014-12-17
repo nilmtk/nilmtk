@@ -9,6 +9,7 @@ from sys import stdout
 from collections import Counter
 from copy import deepcopy
 import multiprocessing as mp
+import gc
 from .elecmeter import ElecMeter, ElecMeterID
 from .appliance import Appliance
 from .datastore.datastore import join_key
@@ -582,8 +583,7 @@ class MeterGroup(Electric):
             kwargs['sections'] = [section]
             index = pd.date_range(section.start, section.end, closed='left',
                                   freq='{:d}S'.format(sample_period))
-            _, generators = self._meter_generators(**kwargs)
-            chunk = combine_chunks_from_generators(generators, index, columns)
+            chunk = combine_chunks_from_generators(index, columns, self.meters, kwargs)
             if chunk.empty:
                 break
             yield chunk
@@ -1290,7 +1290,7 @@ def iterate_through_submeters_of_two_metergroups(master, slave):
     return zipped
 
 
-def combine_chunks_from_generators(generators, index, columns):
+def combine_chunks_from_generators(index, columns, meters, kwargs):
     """Combines chunks into a single DataFrame.
 
     Adds or averages columns, depending on whether each column is in
@@ -1298,7 +1298,7 @@ def combine_chunks_from_generators(generators, index, columns):
 
     Parameters
     ----------
-    generators : list of generators of nilmtk DataFrames
+
 
     Returns
     -------
@@ -1316,11 +1316,17 @@ def combine_chunks_from_generators(generators, index, columns):
     timeframe = None
 
     # Go through each generator to try sum values together
-    for generator in generators:
+    for meter in meters:
+        kwargs_copy = deepcopy(kwargs)
+        generator = meter.load(raise_exceptions=False, **kwargs_copy)
         try:
-            chunk_from_next_meter = next(generator) 
+            chunk_from_next_meter = generator.next()
         except StopIteration:
             continue
+
+        del generator
+        del kwargs_copy
+        gc.collect()
 
         if chunk_from_next_meter.empty:
             continue
@@ -1342,6 +1348,7 @@ def combine_chunks_from_generators(generators, index, columns):
             del column
             np.add(cumulator_arr[:,i], aligned, cumulator_arr[:,i])
             del aligned
+            gc.collect()
 
         # Update columns_to_average_counter - this is necessary so we do not
         # add up columns like 'voltage' which should be averaged.
@@ -1357,24 +1364,17 @@ def combine_chunks_from_generators(generators, index, columns):
             del counter_increment
 
         del chunk_from_next_meter
+        gc.collect()
 
     del cumulator_arr
+    gc.collect()
 
     # Create mean values by dividing any columns which need dividing
     for column in columns_to_average_counter:
         cumulator[column] /= columns_to_average_counter[column]
 
+    del columns_to_average
+    gc.collect()
+
     cumulator.timeframe = timeframe
     return cumulator
-
-
-def add(chunk, chunk_from_next_meter):
-    try:
-        new_chunk = chunk.add(chunk_from_next_meter, fill_value=0)
-    except ValueError as e:
-        if str(e) != "cannot join with no level specified and no overlapping names":
-            raise
-        new_chunk = chunk.add(chunk_from_next_meter, fill_value=0, 
-                              level='physical_quantity') 
-    del chunk
-    return new_chunk
