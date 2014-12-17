@@ -103,8 +103,7 @@ class HDFDataStore(DataStore):
 
             if n_chunks > 1:
                 self.all_sections_smaller_than_chunksize = False
-                
-            print("n_chunks", n_chunks)
+
             for chunk_i, chunk_start_i in enumerate(slice_starts):
                 chunk_end_i = chunk_start_i + chunksize
                 there_are_more_subchunks = (chunk_i < n_chunks-1)
