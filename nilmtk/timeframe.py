@@ -263,19 +263,18 @@ class TimeFrame(object):
 
         Returns
         -------
-        list of new TimeFrame objects
+        generator of new TimeFrame objects
         """
         duration_threshold_td = timedelta(seconds=duration_threshold)
-        def _split(timeframe, allowed_end):
+        timeframe = self
+        while True:
+            allowed_end = timeframe.start + duration_threshold_td
             if timeframe.end <= allowed_end:
-                return [timeframe]
+                yield timeframe
+                break
             else:
-                tf = TimeFrame(start=timeframe.start, end=allowed_end)
-                remainder = TimeFrame(start=allowed_end, end=timeframe.end)
-                return [tf] + _split(remainder, allowed_end + duration_threshold_td)
-
-        allowed_end = self.start + duration_threshold_td
-        return _split(self, allowed_end)
+                yield TimeFrame(start=timeframe.start, end=allowed_end)
+                timeframe = TimeFrame(start=allowed_end, end=timeframe.end)
 
 
 def merge_timeframes(timeframes, gap=0):
