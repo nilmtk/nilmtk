@@ -13,6 +13,7 @@ import numpy.random as nr
 import matplotlib.pyplot as plt
 import numpy as np
 from datetime import timedelta
+import gc
 
 from .timeframe import TimeFrame
 from .measurement import select_best_ac_type
@@ -263,7 +264,7 @@ class Electric(object):
         load_kwargs.setdefault('sample_period', sample_period)
 
         def sum_and_count(electric):
-            n = 0.0
+            n = 0
             cumulator = 0.0
             for power in electric.power_series(**load_kwargs):
                 n += len(power.index)
@@ -284,7 +285,7 @@ class Electric(object):
 
         # Second pass is used to find x_s and y_s (std.devs)
         def stdev(electric, mean, n):
-            s_square_sum = 0
+            s_square_sum = 0.0
             for power in electric.power_series(**load_kwargs):
                 s_square_sum += ((power - mean) * (power - mean)).sum()
             s_square = s_square_sum / (n - 1)
@@ -297,8 +298,15 @@ class Electric(object):
         for (x_power, y_power) in izip(self.power_series(**load_kwargs), 
                                        other.power_series(**load_kwargs)):
             xi_minus_xbar = x_power - x_bar
+            del x_power
+            gc.collect()
             yi_minus_ybar = y_power - y_bar
+            del y_power
+            gc.collect()
             numerator += (xi_minus_xbar * yi_minus_ybar).sum()
+            del xi_minus_xbar
+            del yi_minus_ybar
+            gc.collect()
         denominator = (x_n - 1) * x_s * y_s
         corr = numerator / denominator
         return corr
