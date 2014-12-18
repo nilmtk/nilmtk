@@ -49,7 +49,7 @@ def convert_ukdale(ukdale_path, output_filename, format='HDF'):
         convert_yaml_to_hdf5(join(ukdale_path, 'metadata'), output_filename)
 
     # Convert 1-second data
-    store.open()
+    store.open(mode='a')
     _convert_one_sec_data(ukdale_path, store, ac_type_map)
 
     store.close()
