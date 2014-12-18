@@ -368,6 +368,12 @@ class ElecMeter(Hashable, Electric):
         nilmtk.exceptions.MeasurementError if a measurement is specified
         which is not available.
         """
+        verbose = kwargs.get('verbose')
+        if verbose:
+            print()
+            print("ElecMeter.load")
+            print(self)
+
         if 'sample_period' is kwargs:
             kwargs['resample'] = True
 
@@ -381,12 +387,16 @@ class ElecMeter(Hashable, Electric):
                     np.ceil(self.device['max_sample_period'] / sample_period))
                 resample_kwargs.update({'limit': max_number_of_rows_to_ffill})
 
+        if verbose:
+            print("kwargs after setting resample setting:")
+            print(kwargs)
+
         kwargs = self._convert_physical_quantity_and_ac_type_to_cols(**kwargs)
         kwargs = self._prep_kwargs_for_sample_period_and_resample(**kwargs)
 
-        if kwargs.get('verbose'):
-            print("ElecMeter.load", self)
-            print("kwargs after processing =", kwargs)
+        if verbose:
+            print("kwargs after processing")
+            print(kwargs)
 
         # Get source node
         preprocessing = kwargs.pop('preprocessing', [])
