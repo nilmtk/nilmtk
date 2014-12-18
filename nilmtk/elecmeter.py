@@ -628,8 +628,13 @@ class ElecMeter(Hashable, Electric):
             results_obj.update(computed_result.results)
 
             # Save to disk newly computed stats
-            self.store.append(key_for_cached_stat,
-                              computed_result.results.export_to_cache())
+            stat_for_store = computed_result.results.export_to_cache()
+            try:
+                self.store.append(key_for_cached_stat, stat_for_store)
+            except ValueError:
+                # the old table probably had different columns
+                self.store.remove(key_for_cached_stat)
+                self.store.put(key_for_cached_stat, results_obj.export_to_cache())
 
         return results_obj if full_results else results_obj.simple()
 
