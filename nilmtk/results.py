@@ -135,6 +135,9 @@ class Results(object):
         sections : list of nilmtk.TimeFrame objects
             describing the sections we want to load stats for.
         """
+        if cached_stat.empty:
+            return
+
         tz = get_tz(cached_stat)
         usable_sections_from_cache = []
 

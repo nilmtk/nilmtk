@@ -600,6 +600,7 @@ class ElecMeter(Hashable, Electric):
             tf = self.get_timeframe()
             tf.include_end = True
             sections = [tf]
+        sections = [s for s in sections if not s.empty]
 
         # Retrieve usable stats from cache
         key_for_cached_stat = self.key_for_cached_stat(results_obj.name)
@@ -719,7 +720,7 @@ class ElecMeter(Hashable, Electric):
         except KeyError:
             return pd.DataFrame()
         else:
-            return stat_from_cache
+            return pd.DataFrame() if stat_from_cache is None else stat_from_cache
 
     # def total_on_duration(self):
     #     """Return timedelta"""
