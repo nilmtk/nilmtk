@@ -65,7 +65,6 @@ def get_total_energy(df, max_sample_period):
 
     energy = {}
     for col in selected_columns:
-        print("Calculating energy for column", col)
         (physical_quantity, ac_type) = col
         series = df[col]
         if physical_quantity == 'power':

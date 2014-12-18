@@ -767,6 +767,7 @@ class MeterGroup(Electric):
     def _collect_stats_on_all_meters(self, load_kwargs, func, full_results):
         collected_stats = []
         for meter in self.meters:
+            print_on_line("\rCalculating", func, "for", meter.identifier, "...   ")
             single_stat = getattr(meter, func)(full_results=full_results,
                                                **load_kwargs)
             collected_stats.append(single_stat)
