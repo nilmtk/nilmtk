@@ -913,6 +913,9 @@ class MeterGroup(Electric):
                 except StopIteration:
                     continue
 
+                if chunk_from_next_meter.empty or not chunk_from_next_meter.timeframe:
+                    continue
+
                 if timeframe is None:
                     timeframe = chunk_from_next_meter.timeframe
                 else:
