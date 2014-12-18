@@ -14,7 +14,7 @@ from .appliance import Appliance
 from .datastore.datastore import join_key
 from .utils import (tree_root, nodes_adjacent_to_root, simplest_type_for,
                     flatten_2d_list, convert_to_timestamp, normalise_timestamp,
-                    print_on_line)
+                    print_on_line, convert_to_list, append_or_extend_list)
 from .plots import plot_series
 from .measurement import (select_best_ac_type, AC_TYPES, LEVEL_NAMES,
                           PHYSICAL_QUANTITIES_TO_AVERAGE)
@@ -34,13 +34,13 @@ class MeterGroup(Electric):
     ----------
     meters : list of ElecMeters or nested MeterGroups
     disabled_meters : list of ElecMeters or nested MeterGroups
+    name : only set by functions like 'groupby' and 'select_top_k'
     """
 
     def __init__(self, meters=None, disabled_meters=None):
-        def _convert_to_list(list_like):
-            return [] if list_like is None else list(list_like)
-        self.meters = _convert_to_list(meters)
-        self.disabled_meters = _convert_to_list(disabled_meters)
+        self.meters = convert_to_list(meters)
+        self.disabled_meters = convert_to_list(disabled_meters)
+        self.name = ""
 
     def import_metadata(self, store, elec_meters, appliances, building_id):
         """
@@ -128,7 +128,8 @@ class MeterGroup(Electric):
     def dominant_appliance(self):
         dominant_appliances = [meter.dominant_appliance()
                                for meter in self.meters]
-        n_dominant_appliances = len(set(dominant_appliances))
+        dominant_appliances = list(set(dominant_appliances))
+        n_dominant_appliances = len(dominant_appliances)
         if n_dominant_appliances == 0:
             return
         elif n_dominant_appliances == 1:
@@ -159,7 +160,7 @@ class MeterGroup(Electric):
                 if none are found.  If meter instance 1 is in a nested MeterGroup
                 then retrieve the ElecMeter, not the MeterGroup.
         * `ElecMeterID(1, 1, 'REDD')` - retrieves meter with specified meter ID
-        * `[ElecMeterID(1, 1, 'REDD')], [ElecMeterID(2, 1, 'REDD')]` - retrieves
+        * `[ElecMeterID(1, 1, 'REDD'), ElecMeterID(2, 1, 'REDD')]` - retrieves
           existing nested MeterGroup containing exactly meter instances 1 and 2.
         * `ElecMeterID(0, 1, 'REDD')` - instance `0` means `mains`. This returns
            a new MeterGroup of all site_meters in building 1 in REDD.
@@ -179,6 +180,7 @@ class MeterGroup(Electric):
         -------
         ElecMeter or MeterGroup
         """
+
         if isinstance(key, str):
             # default to get first meter
             return self[(key, 1)]
@@ -375,7 +377,12 @@ class MeterGroup(Electric):
             if isinstance(meter_id, ElecMeterID):
                 meters.append(self[meter_id])
             elif isinstance(meter_id, tuple):
-                metergroup = self.from_list(meter_id)
+                try:
+                    # see if there is an existing MeterGroup
+                    metergroup = self[list(meter_id)]
+                except KeyError:
+                    # there is no existing MeterGroup so assemble one
+                    metergroup = self.from_list(meter_id)
                 meters.append(metergroup)
             else:
                 raise TypeError()
@@ -426,6 +433,37 @@ class MeterGroup(Electric):
         for meter in self.meters:
             appliances.update(meter.appliances)
         return list(appliances)
+
+    def dominant_appliances(self):
+        appliances = set()
+        for meter in self.meters:
+            appliances.add(meter.dominant_appliance())
+        return list(appliances)
+
+    def values_for_appliance_metadata_key(self, key, 
+                                          only_consider_dominant_appliance=True):
+        """
+        Parameters
+        ----------
+        key : str
+            e.g. 'type' or 'categories' or 'room'
+        
+        Returns
+        -------
+        list
+        """
+        values = []
+        if only_consider_dominant_appliance:
+            appliances = self.dominant_appliances()
+        else:
+            appliances = self.appliances
+
+        for appliance in appliances:
+            value = appliance.metadata.get(key)
+            append_or_extend_list(values, value)
+            value = appliance.type.get(key)
+            append_or_extend_list(values, value)
+        return list(set(values))
 
     def get_appliance_labels(self, meter_ids):
         """Create human-readable appliance labels.
@@ -493,7 +531,7 @@ class MeterGroup(Electric):
                     metergroup = meter
                     _build_wiring_graph(metergroup.meters)
                 else:
-                    upstream_meter = meter.upstream_meter(warn=False)
+                    upstream_meter = meter.upstream_meter(raise_warning=False)
                     # Need to ensure we use the same object
                     # if upstream meter already exists.
                     if upstream_meter is not None:
@@ -579,7 +617,8 @@ class MeterGroup(Electric):
         chunksize = kwargs.pop('chunksize', MAX_MEM_ALLOWANCE_IN_BYTES)
         duration_threshold = sample_period * chunksize
         columns = pd.MultiIndex.from_tuples(
-            self._all_columns_from_kwargs(**kwargs), names=LEVEL_NAMES)
+            self._convert_physical_quantity_and_ac_type_to_cols(**kwargs)['cols'],
+            names=LEVEL_NAMES)
         freq = '{:d}S'.format(sample_period)
         verbose = kwargs.get('verbose')
 
@@ -600,9 +639,9 @@ class MeterGroup(Electric):
                 break
             yield chunk
 
-
-    def _all_columns_from_kwargs(self, **kwargs):
+    def _convert_physical_quantity_and_ac_type_to_cols(self, **kwargs):
         all_columns = set()
+        kwargs = deepcopy(kwargs)
         for meter in self.meters:
             kwargs_copy = deepcopy(kwargs)
             kwargs_copy.setdefault('raise_exceptions', False)
@@ -610,7 +649,8 @@ class MeterGroup(Electric):
             cols = new_kwargs.get('cols', [])
             for col in cols:
                 all_columns.add(col)
-        return list(all_columns)
+        kwargs['cols'] = list(all_columns)
+        return kwargs
 
     def _meter_generators(self, **kwargs):
         """Returns (list of identifiers, list of generators)."""
@@ -1168,31 +1208,33 @@ class MeterGroup(Electric):
         top_k_series.sort(ascending=asc)
         top_k_elec_meter_ids = top_k_series[:k].index
         top_k_metergroup = self.from_list(top_k_elec_meter_ids)
+
         if group_remainder:
             remainder_ids = top_k_series[k:].index
             remainder_metergroup = self.from_list(remainder_ids)
+            remainder_metergroup.name = 'remainder'
             top_k_metergroup.meters.append(remainder_metergroup)
         return top_k_metergroup
 
-    # def select_meters_contributing_more_than(self, threshold_proportion):
-    #     """Return new MeterGroup with all meters whose proportion of
-    #     energy usage is above threshold percentage."""
-    # see prepb.filter_contribution_less_than_x(building, x)
-    #     raise NotImplementedError
+    def groupby(self, key, use_appliance_metadata=True, **kwargs):
+        """
+        e.g. groupby('category')
 
+        Returns
+        -------
+        MeterGroup of nested MeterGroups: one per group
+        """
+        if not use_appliance_metadata:
+            raise NotImplementedError()
 
-    # SELECTION FUNCTIONS NOT IMPLEMENTED YET
+        values = self.values_for_appliance_metadata_key(key)
+        groups = []
+        for value in values:
+            group = self.select_using_appliances(**{key: value})
+            group.name = value
+            groups.append(group)
 
-    # def groupby(self, **kwargs):
-    #     """
-    #     e.g. groupby('category')
-
-    #     Returns
-    #     -------
-    #     A dict of MeterGroup objects e.g.:
-    #       {'cold': MeterGroup, 'hot': MeterGroup}
-    #     """
-    #     raise NotImplementedError
+        return MeterGroup(groups)
 
     def get_timeframe(self):
         """
@@ -1253,11 +1295,12 @@ class MeterGroup(Electric):
         if not timeframe:
             return ax
 
-        kwargs = self._set_sample_period(timeframe, **kwargs)        
+        kwargs = self._set_sample_period(timeframe, **kwargs)
         df = self.dataframe_of_meters(**kwargs)
 
         if plot_kwargs is None:
             plot_kwargs = {}
+        df.columns = self.get_appliance_labels(df.columns)
         ax = df.plot(kind='area', **plot_kwargs)
         return ax
 
@@ -1267,6 +1310,8 @@ class MeterGroup(Electric):
         -------
         string : A label listing all the appliance types.
         """
+        if self.name:
+            return self.name
         return ", ".join(set([meter.appliance_label() for meter in self.meters]))
 
     def clear_cache(self):
@@ -1377,7 +1422,7 @@ def combine_chunks_from_generators(index, columns, meters, kwargs):
         del kwargs_copy
         gc.collect()
 
-        if chunk_from_next_meter.empty:
+        if chunk_from_next_meter.empty or not chunk_from_next_meter.timeframe:
             continue
 
         if timeframe is None:
@@ -1426,7 +1471,7 @@ def combine_chunks_from_generators(index, columns, meters, kwargs):
     for column in columns_to_average_counter:
         cumulator[column] /= columns_to_average_counter[column]
 
-    del columns_to_average
+    del columns_to_average_counter
     gc.collect()
     print()
     print("Done loading data all meters for this chunk.")

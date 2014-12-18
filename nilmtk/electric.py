@@ -17,7 +17,8 @@ import gc
 
 from .timeframe import TimeFrame
 from .measurement import select_best_ac_type
-from .utils import offset_alias_to_seconds, convert_to_timestamp, flatten_2d_list
+from .utils import (offset_alias_to_seconds, convert_to_timestamp, 
+                    flatten_2d_list, append_or_extend_list)
 from .plots import plot_series
 from .preprocessing import Apply
 
@@ -26,8 +27,7 @@ MAX_SIZE_ENTROPY = 10000
 
 class Electric(object):
     """Common implementations of methods shared by ElecMeter and MeterGroup.
-    """
-    
+    """   
     def when_on(self, **load_kwargs):
         """Are the connected appliances appliance is on (True) or off (False)?
 

@@ -93,14 +93,14 @@ class ElecMeter(Hashable, Electric):
             raise RuntimeError("ElecMeter needs `store` attribute set to an"
                                " instance of a `nilmtk.DataStore` subclass")
 
-    def upstream_meter(self, warn=True):
+    def upstream_meter(self, raise_warning=True):
         """
         Returns
         -------
         ElecMeterID of upstream meter or None if is site meter.
         """
         if self.is_site_meter():
-            if warn:
+            if raise_warning:
                 warn("There is no meter upstream of this meter '{}' because"
                      " it is a site meter.".format(self.identifier))
             return

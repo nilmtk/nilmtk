@@ -326,3 +326,15 @@ def normalise_timestamp(timestamp, freq):
 def print_on_line(*strings):
     print(*strings, end="")
     stdout.flush()
+
+
+def append_or_extend_list(lst, value):
+    if value is None:
+        return
+    elif isinstance(value, list):
+        lst.extend(value)
+    else:
+        lst.append(value)
+
+def convert_to_list(list_like):
+    return [] if list_like is None else list(list_like)
