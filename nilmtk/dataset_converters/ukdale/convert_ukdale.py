@@ -76,7 +76,7 @@ def _get_ac_type_map(ukdale_path):
     for building_i, building in ukdale_dataset.buildings.iteritems():
         for meter in building.elec.meters:
             key = (building_i, meter.instance())
-            ac_type_map[key] = meter.available_power_ac_types()
+            ac_type_map[key] = meter.available_ac_types('power')
     ukdale_dataset.store.close()
     remove(hdf5_just_metadata)
     return ac_type_map
