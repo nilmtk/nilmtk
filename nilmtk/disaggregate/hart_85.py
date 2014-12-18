@@ -1,28 +1,18 @@
 from __future__ import print_function, division
 import pandas as pd
-import numpy as np
-import json
-from collections import OrderedDict
+from collections import OrderedDict, deque
 from datetime import datetime
-from ..appliance import ApplianceID
-from ..utils import find_nearest, container_to_string
-from ..feature_detectors import cluster, steady_states
 from ..feature_detectors.cluster import hart85_means_shift_cluster
 from ..feature_detectors.steady_states import find_steady_states_transients
 from ..timeframe import merge_timeframes, list_of_timeframe_dicts, TimeFrame
-from ..preprocessing import Apply, Clip
 
 # Fix the seed for repeatability of experiments
 SEED = 42
+import numpy as np
 np.random.seed(SEED)
 
 
-from collections import deque
-import numpy as np
-
-
 class MyDeque(deque):
-
     def popmiddle(self, pos):
         self.rotate(-pos)
         ret = self.popleft()
@@ -31,67 +21,76 @@ class MyDeque(deque):
 
 
 class PairBuffer(object):
-
     """
     Attributes:
     * transitionList (list of tuples)
     * matchedPairs (dataframe containing matched pairs of transitions)
     """
 
-    def __init__(self, bufferSize=20, minTolerance=35, percentTolerance=0.035, largeTransition=1000, num_measurements=3):
+    def __init__(self, buffer_size, min_tolerance, percent_tolerance,
+                 large_transition, num_measurements):
+        """
+        Parameters
+        ----------
+        buffer_size: int, optional
+            size of the buffer to use for finding edges
+        min_tolerance: int, optional
+            variance in power draw allowed for pairing a match
+        percent_tolerance: float, optional
+            if transition is greater than large_transition, then use percent of large_transition
+        large_transition: float, optional
+            power draw of a Large transition
+        num_measurements: int, optional
+            2 if only active power
+            3 if both active and reactive power
+        """
         # We use a deque here, because it allows us quick access to start and end popping
         # and additionally, we can set a maxlen which drops oldest items. This nicely
         # suits Hart's recomendation that the size should be tunable.
-        self._bufferSize = bufferSize
-        self._minTol = minTolerance
-        self._percentTol = percentTolerance
-        self._largeTransition = largeTransition
-        self.transitionList = MyDeque([], maxlen=self._bufferSize)
+        self._buffer_size = buffer_size
+        self._min_tol = min_tolerance
+        self._percent_tol = percent_tolerance
+        self._large_transition = large_transition
+        self.transition_list = MyDeque([], maxlen=self._buffer_size)
         self._num_measurements = num_measurements
         if self._num_measurements == 3:
             # Both active and reactive power is available
-            self.pairColumns = ['T1 Time', 'T1 Active', 'T1 Reactive',
+            self.pair_columns = ['T1 Time', 'T1 Active', 'T1 Reactive',
                                 'T2 Time', 'T2 Active', 'T2 Reactive']
         elif self._num_measurements == 2:
             # Only active power is available
-            self.pairColumns = ['T1 Time', 'T1 Active',
+            self.pair_columns = ['T1 Time', 'T1 Active',
                                 'T2 Time', 'T2 Active']
-        self.matchedPairs = pd.DataFrame(columns=self.pairColumns)
-
+        self.matched_pairs = pd.DataFrame(columns=self.pair_columns)
     
-    def cleanBuffer(self):
+    def clean_buffer(self):
         # Remove any matched transactions
-        for idx, entry in enumerate(self.transitionList):
-            if entry[self._num_measurements] == True:
-                self.transitionList.popmiddle(idx)
-                self.cleanBuffer()
+        for idx, entry in enumerate(self.transition_list):
+            if entry[self._num_measurements]:
+                self.transition_list.popmiddle(idx)
+                self.clean_buffer()
                 break
-        # Remove oldest transaction if buffercleaning didn't remove anything
+        # Remove oldest transaction if buffer cleaning didn't remove anything
         # if len(self.transitionList) == self._bufferSize:
         #    self.transitionList.popleft()
 
-    def addTransition(self, transition):
-
+    def add_transition(self, transition):
         # Check transition is as expected.
         assert isinstance(transition, (tuple, list))
-
         # Check that we have both active and reactive powers.
         assert len(transition) == self._num_measurements
-
         # Convert as appropriate
         if isinstance(transition, tuple):
-            mTransition = list(transition)
-
+            mtransition = list(transition)
         # Add transition to List of transitions (set marker as unpaired)
-        mTransition.append(False)
-        self.transitionList.append(mTransition)
-
+        mtransition.append(False)
+        self.transition_list.append(mtransition)
         # checking for pairs
         # self.pairTransitions()
         # self.cleanBuffer()
 
-    def pairTransitions(self):
-        '''
+    def pair_transitions(self):
+        """
         Hart 85, P 33.
         When searching the working buffer for pairs, the order in which 
         entries are examined is very important. If an Appliance has 
@@ -105,7 +104,7 @@ class PairBuffer(object):
         types of transition sequences.
 
         Hart 85, P 32.
-        For the two-state load onitor, a pair is defined as two entries
+        For the two-state load monitor, a pair is defined as two entries
         which meet the following four conditions:
         (1) They are on the same leg, or are both 240 V,
         (2) They are both unmarked, 
@@ -124,13 +123,12 @@ class PairBuffer(object):
         are checked, then three, and so on, until the first and last 
         element are checked...
 
-        '''
+        """
 
-        tLength = len(self.transitionList)
-        pairMatched = False
-
-        if tLength < 2:
-            return pairMatched
+        tlength = len(self.transition_list)
+        pairmatched = False
+        if tlength < 2:
+            return pairmatched
 
         # Can we reduce the running time of this algorithm?
         # My gut feeling is no, because we can't re-order the list...
@@ -138,68 +136,62 @@ class PairBuffer(object):
         # (perhaps!).
 
         # Start the element distance at 1, go up to current length of buffer
-        for eDistance in range(1, tLength):
-
+        for eDistance in range(1, tlength):
             idx = 0
-            while idx < tLength - 1:
-
+            while idx < tlength - 1:
                 # We don't want to go beyond length of array
-                compIndex = idx + eDistance
-
-                if compIndex < tLength:
-
-                    val = self.transitionList[idx]
+                compindex = idx + eDistance
+                if compindex < tlength:
+                    val = self.transition_list[idx]
                     # val[1] is the active power and
                     # val[self._num_measurements] is match status
-                    if (val[1] > 0) and (val[self._num_measurements] == False):
-
-                        compVal = self.transitionList[compIndex]
-                        if compVal[self._num_measurements] == False:
+                    if (val[1] > 0) and (val[self._num_measurements] is False):
+                        compval = self.transition_list[compindex]
+                        if compval[self._num_measurements] is False:
                             # Add the two elements for comparison
-                            vSum = np.add(
+                            vsum = np.add(
                                 val[1:self._num_measurements],
-                                compVal[1:self._num_measurements])
-
+                                compval[1:self._num_measurements])
                             # Set the allowable tolerance for reactive and
                             # active
-                            matchTols = [self._minTol, self._minTol]
+                            matchtols = [self._min_tol, self._min_tol]
                             for ix in range(1, self._num_measurements):
-                                matchTols[ix - 1] = self._minTol if (max(np.fabs([val[ix], compVal[ix]]))
-                                                                     < self._largeTransition) else (self._percentTol
-                                                                                                    * max(np.fabs([val[ix], compVal[ix]])))
+                                matchtols[ix - 1] = self._min_tol if (max(np.fabs([val[ix], compval[ix]]))
+                                                                     < self._large_transition) else (self._percent_tol
+                                                                                                     * max(np.fabs([val[ix], compval[ix]])))
                             if self._num_measurements == 3:
-                                condition = (np.fabs(vSum[0]) < matchTols[0]) and (
-                                    np.fabs(vSum[1]) < matchTols[1])
+                                condition = (np.fabs(vsum[0]) < matchtols[0]) and (
+                                    np.fabs(vsum[1]) < matchtols[1])
 
                             elif self._num_measurements == 2:
-                                condition = np.fabs(vSum[0]) < matchTols[0]
+                                condition = np.fabs(vsum[0]) < matchtols[0]
 
                             if condition:
                                 # Mark the transition as complete
-                                self.transitionList[idx][
+                                self.transition_list[idx][
                                     self._num_measurements] = True
-                                self.transitionList[compIndex][
+                                self.transition_list[compindex][
                                     self._num_measurements] = True
-                                pairMatched = True
+                                pairmatched = True
 
                                 # Append the OFF transition to the ON. Add to
                                 # dataframe.
-                                matchedPair = val[
-                                    0:self._num_measurements] + compVal[0:self._num_measurements]
-                                self.matchedPairs.loc[
-                                    len(self.matchedPairs)] = matchedPair
+                                matchedpair = val[
+                                    0:self._num_measurements] + compval[0:self._num_measurements]
+                                self.matched_pairs.loc[
+                                    len(self.matched_pairs)] = matchedpair
 
                     # Iterate Index
                     idx += 1
                 else:
                     break
 
-        return pairMatched
+        return pairmatched
 
 
 class Hart85(object):
-
-    """1 or 2 dimensional Hart 1985 algorithm.
+    """
+    1 or 2 dimensional Hart 1985 algorithm.
 
     Attributes
     ----------
@@ -212,36 +204,45 @@ class Hart85(object):
     def __init__(self):
         self.model = {}
 
-
-
-    def train(self, metergroup, cluster_features=['active'], bsize=20, minTol=35):
-        """Train using Hart85. Places the learnt model in `model` attribute.
+    def train(self, metergroup, cols=[('power','active')],
+                buffer_size=20, min_tolerance=35, percent_tolerance=0.035,
+                large_transition=1000, **kwargs):
+        """
+        Train using Hart85. Places the learnt model in `model` attribute.
 
         Parameters
         ----------
         metergroup : a nilmtk.MeterGroup object
-
-
+        cols: nilmtk.Measurement, should be one of the following
+            [('power','active')]
+            [('power','apparent')]
+            [('power','reactive')]
+            [('power','active'), ('power', 'reactive')]
+        buffer_size: int, optional
+            size of the buffer to use for finding edges
+        min_tolerance: int, optional
+            variance in power draw allowed for pairing a match
+        percent_tolerance: float, optional
+            if transition is greater than large_transition, then use percent of large_transition
+        large_transition: float, optional
+            power draw of a Large transition
         """
-        [self.steady_states, self.transients] = find_steady_states_transients(metergroup)
+        [self.steady_states, self.transients] = find_steady_states_transients(metergroup, cols, **kwargs)
+        self.pair_df = self.pair(buffer_size, min_tolerance, percent_tolerance, large_transition)
+        self.centroids = hart85_means_shift_cluster(self.pair_df, cols)
 
-        self.pair_df = self.pair(bsize, minTol)
-
-        self.centroids = hart85_means_shift_cluster(self.pair_df, cluster_features)
-
-    def pair(self, bsize, minTol):
+    def pair(self, buffer_size, min_tolerance, percent_tolerance, large_transition):
         subset = list(self.transients.itertuples())
-        buffer = PairBuffer(minTolerance=minTol,
-                            bufferSize=bsize, percentTolerance=0.035,
+        buffer = PairBuffer(min_tolerance=min_tolerance,
+                            buffer_size=buffer_size, percent_tolerance=percent_tolerance,
                             num_measurements=len(self.transients.columns) + 1)
         for s in subset:
             # if len(buffer.transitionList) < bsize
-            if len(buffer.transitionList) == bsize:
-                buffer.cleanBuffer()
-            buffer.addTransition(s)
-            buffer.pairTransitions()
-       
-        return buffer.matchedPairs
+            if len(buffer.transition_list) == buffer_size:
+                buffer.clean_buffer()
+            buffer.add_transition(s)
+            buffer.pair_transitions()
+        return buffer.matched_pairs
 
   
 
@@ -250,20 +251,20 @@ class Hart85(object):
 
         """
 
-        states = pd.DataFrame(-1, index = chunk.index, columns = self.centroids.index.values)
+        states = pd.DataFrame(-1, index=chunk.index, columns=self.centroids.index.values)
         for transient_tuple in transients.itertuples():
-            if transient_tuple[0]<chunk.index[0]:
+            if transient_tuple[0] < chunk.index[0]:
                 # Transient occurs before chunk has started; do nothing
                 pass 
-            elif transient_tuple[0]>chunk.index[-1]:
+            elif transient_tuple[0] > chunk.index[-1]:
                 # Transient occurs after chunk has ended; do nothing
                 pass
             else:
                 # Absolute value of transient
                 abs_value = np.abs(transient_tuple[1:])
-                positive = transient_tuple[1]>0
+                positive = transient_tuple[1] > 0
                 absolute_value_transient_minus_centroid = pd.DataFrame((self.centroids - abs_value).abs())
-                if len(transient_tuple)==2:
+                if len(transient_tuple) == 2:
                     # 1d data
                     index_least_delta = absolute_value_transient_minus_centroid.idxmin().values[0]
                 else:
@@ -350,7 +351,7 @@ class Hart85(object):
 
 
     def disaggregate(self, mains, output_datastore, **load_kwargs):
-        '''
+        """
         Disaggregate mains according to the model learnt previously.
 
         Parameters
@@ -366,7 +367,7 @@ class Hart85(object):
             The desired sample period in seconds.
         **load_kwargs : key word arguments
             Passed to `mains.power_series(**kwargs)`
-        '''
+        """
 
         date_now = datetime.now().isoformat().split('.')[0]
         output_name = load_kwargs.pop('output_name', 'Hart85_' + date_now)
