@@ -1308,6 +1308,7 @@ class MeterGroup(Electric):
         series['mains_uptime'] = str(mains_uptime)
         series['proportion_uptime'] = (timeframe.timedelta.total_seconds() / 
                                        mains_uptime.total_seconds())
+        series['average_mains_energy_per_day'] = self.mains().average_energy_per_period()
 
         return series
 
