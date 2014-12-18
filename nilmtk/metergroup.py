@@ -493,7 +493,7 @@ class MeterGroup(Electric):
                     metergroup = meter
                     _build_wiring_graph(metergroup.meters)
                 else:
-                    upstream_meter = meter.upstream_meter()
+                    upstream_meter = meter.upstream_meter(warn=False)
                     # Need to ensure we use the same object
                     # if upstream meter already exists.
                     if upstream_meter is not None:
@@ -1294,8 +1294,11 @@ class MeterGroup(Electric):
         series['submeter_sample_period'] = self.submeters().sample_period()
         timeframe = self.get_timeframe()
         series['timeframe'] = "start={}, end={}".format(timeframe.start, timeframe.end)
-        series['total_duration'] = timeframe.timedelta
-        series['mains_uptime'] = self.mains().uptime(**kwargs)
+        series['total_duration'] = str(timeframe.timedelta)
+        mains_uptime = self.mains().uptime(**kwargs)
+        series['mains_uptime'] = str(mains_uptime)
+        series['proportion_uptime'] = (timeframe.timedelta.total_seconds() / 
+                                       mains_uptime.total_seconds())
 
         return series
 
@@ -1413,6 +1416,7 @@ def combine_chunks_from_generators(index, columns, meters, kwargs):
 
     del columns_to_average
     gc.collect()
-
+    print()
+    print("Done loading data all meters for this chunk.")
     cumulator.timeframe = timeframe
     return cumulator
