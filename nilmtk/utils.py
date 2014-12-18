@@ -312,3 +312,13 @@ def get_datastore(filename, format, mode='a'):
     else:
         ValueError('filename is None')
         
+
+def normalise_timestamp(timestamp, freq):
+    """Returns the nearest Timestamp to `timestamp` which would be
+    in the set of timestamps returned by pd.DataFrame.resample(freq=freq)
+    """
+    timestamp = pd.Timestamp(timestamp)
+    series = pd.Series(np.NaN, index=[timestamp])
+    resampled = series.resample(freq)
+    return resampled.index[0]
+

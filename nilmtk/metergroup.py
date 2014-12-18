@@ -13,7 +13,7 @@ from .elecmeter import ElecMeter, ElecMeterID
 from .appliance import Appliance
 from .datastore.datastore import join_key
 from .utils import (tree_root, nodes_adjacent_to_root, simplest_type_for,
-                    flatten_2d_list, convert_to_timestamp)
+                    flatten_2d_list, convert_to_timestamp, normalise_timestamp)
 from .plots import plot_series
 from .measurement import (select_best_ac_type, AC_TYPES, LEVEL_NAMES,
                           PHYSICAL_QUANTITIES_TO_AVERAGE)
@@ -577,12 +577,19 @@ class MeterGroup(Electric):
         duration_threshold = sample_period * chunksize
         columns = pd.MultiIndex.from_tuples(
             self._all_columns_from_kwargs(**kwargs), names=LEVEL_NAMES)
+        freq = '{:d}S'.format(sample_period)
+
+        # Check for empty sections
+        sections = [section for section in sections if section]
+        if not sections:
+            yield pd.DataFrame(columns=columns)
+            return
 
         # Loop through each section to load
         for section in split_timeframes(sections, duration_threshold):
             kwargs['sections'] = [section]
-            index = pd.date_range(section.start, section.end, closed='left',
-                                  freq='{:d}S'.format(sample_period))
+            start = normalise_timestamp(section.start, freq)
+            index = pd.date_range(start, section.end, closed='left', freq=freq)
             chunk = combine_chunks_from_generators(index, columns, self.meters, kwargs)
             if chunk.empty:
                 break
@@ -1329,7 +1336,7 @@ def combine_chunks_from_generators(index, columns, meters, kwargs):
     # See http://stackoverflow.com/a/27526721/732596
 
     DTYPE = np.float32
-    cumulator = pd.DataFrame(0, index=index, columns=columns, dtype=DTYPE)
+    cumulator = pd.DataFrame(np.NaN, index=index, columns=columns, dtype=DTYPE)
     cumulator_arr = cumulator.as_matrix()
     columns_to_average_counter = pd.DataFrame(dtype=np.uint16)
     timeframe = None
@@ -1362,10 +1369,10 @@ def combine_chunks_from_generators(index, columns, meters, kwargs):
             except KeyError:
                 continue
 
-            column.fillna(0, inplace=True)
-            aligned = column.reindex(index, fill_value=0, copy=False).values
+            aligned = column.reindex(index, copy=False).values
             del column
-            np.add(cumulator_arr[:,i], aligned, out=cumulator_arr[:,i])
+            np.nansum([cumulator_arr[:,i], aligned], axis=0, 
+                      out=cumulator_arr[:,i], dtype=DTYPE)
             del aligned
             gc.collect()
 

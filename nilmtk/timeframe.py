@@ -265,6 +265,10 @@ class TimeFrame(object):
         -------
         generator of new TimeFrame objects
         """
+        if not self:
+            raise ValueError("Cannot split a TimeFrame if `start` or `end`"
+                             " is None")
+
         duration_threshold_td = timedelta(seconds=duration_threshold)
         timeframe = self
         while True:
