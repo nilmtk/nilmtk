@@ -291,7 +291,7 @@ class Electric(object):
             return np.sqrt(s_square)
 
         x_s = stdev(self, x_bar, x_n)
-        y_s = stdev(self, y_bar, y_n)
+        y_s = stdev(other, y_bar, y_n)
 
         numerator = 0.0
         for (x_power, y_power) in izip(self.power_series(**load_kwargs), 
