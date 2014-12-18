@@ -1144,9 +1144,10 @@ class MeterGroup(Electric):
 
         # TODO: currently just works with the first mains meter, assuming
         # both to be simultaneosly sampled
-        mains_first_meter = self.mains().meters[0]
-        good_sections = mains_first_meter.good_sections()
-        sample_period = mains_first_meter.device['sample_period']
+
+        mains = self.mains()
+        good_sections = self.mains().good_sections()
+        sample_period = mains.device['sample_period']
         appx_num_records_in_each_good_section = [
             int((ts.end - ts.start).total_seconds() / sample_period) for ts in good_sections]
         appx_total_records = sum(appx_num_records_in_each_good_section)
