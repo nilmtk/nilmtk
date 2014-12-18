@@ -122,7 +122,7 @@ class Electric(object):
                 end = timeframe_for_meter.end
         return start, end
 
-    def plot(self, ax=None, plot_legend=True, **kwargs):
+    def plot(self, ax=None, timeframe=None, plot_legend=True, **kwargs):
         """
         Parameters
         ----------
@@ -134,10 +134,11 @@ class Electric(object):
         **kwargs
         """
         # Get start and end times for the plot
-        timeframe = self.get_timeframe()
+        timeframe = self.get_timeframe() if timeframe is None else timeframe
         if not timeframe:
             return ax
 
+        kwargs['sections'] = [timeframe]
         kwargs = self._set_sample_period(timeframe, **kwargs)
         power_series = self.power_series_all_data(**kwargs)
         ax = plot_series(power_series, ax=ax, label=self.appliance_label())

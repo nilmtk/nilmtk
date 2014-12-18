@@ -1291,6 +1291,8 @@ class MeterGroup(Electric):
         plot_legend : boolean, optional
             Defaults to True.  Set to False to not plot legend.
         kind : {'separate lines', 'sum', 'area'}
+        timeframe : nilmtk.TimeFrame, optional
+            Defaults to self.get_timeframe()
         """
         # Load data and plot each meter
         function_map = {
@@ -1312,17 +1314,18 @@ class MeterGroup(Electric):
             plt.legend()
         return ax
 
-    def _plot_area(self, ax=None, plot_kwargs=None, **kwargs):
+    def _plot_area(self, ax=None, timeframe=None, plot_kwargs=None, **kwargs):
         """
         Parameters
         ----------
         plot_kwargs : dict of key word arguments for DataFrame.plot()
         """
         # Get start and end times for the plot
-        timeframe = self.get_timeframe()
+        timeframe = self.get_timeframe() if timeframe is None else timeframe
         if not timeframe:
             return ax
 
+        kwargs['sections'] = [timeframe]
         kwargs = self._set_sample_period(timeframe, **kwargs)
         df = self.dataframe_of_meters(**kwargs)
 
