@@ -42,11 +42,14 @@ def convert_ukdale(ukdale_path, output_filename, format='HDF'):
     # Convert 6-second data
     _convert(ukdale_path, store, _ukdale_measurement_mapping_func, TZ,
              sort_index=False)
+    store.close()
 
     # Add metadata
-    convert_yaml_to_hdf5(join(ukdale_path, 'metadata'), store)
+    if format == 'HDF':
+        convert_yaml_to_hdf5(join(ukdale_path, 'metadata'), output_filename)
 
     # Convert 1-second data
+    store.open()
     _convert_one_sec_data(ukdale_path, store, ac_type_map)
 
     store.close()
@@ -96,7 +99,7 @@ def _convert_one_sec_data(ukdale_path, store, ac_type_map):
         house_path = 'house_{:d}'.format(key.building)
         filename = join(ukdale_path, house_path, 'mains.dat')
         df = _load_csv(filename, ONE_SEC_COLUMNS, TZ)
-        store.put(store, str(key), df)
+        store.put(str(key), df)
         
         # Set 'disabled' metadata attributes
         # TODO: needs to use `nilmtk.DataStore` API rather than grabbing

@@ -206,8 +206,8 @@ class HDFDataStore(DataStore):
         self.store.close()
 
     @doc_inherit
-    def open(self):
-        pass
+    def open(self, mode='a'):
+        self.store.open(mode=mode)
         
     @doc_inherit
     def get_timeframe(self, key):
