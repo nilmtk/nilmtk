@@ -384,6 +384,10 @@ class ElecMeter(Hashable, Electric):
         kwargs = self._convert_physical_quantity_and_ac_type_to_cols(**kwargs)
         kwargs = self._prep_kwargs_for_sample_period_and_resample(**kwargs)
 
+        if kwargs.get('verbose'):
+            print("ElecMeter.load", self)
+            print("kwargs after processing =", kwargs)
+
         # Get source node
         preprocessing = kwargs.pop('preprocessing', [])
         last_node = self.get_source_node(**kwargs)
