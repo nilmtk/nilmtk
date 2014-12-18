@@ -1294,7 +1294,8 @@ class MeterGroup(Electric):
         series['submeter_sample_period'] = self.submeters().sample_period()
         timeframe = self.get_timeframe()
         series['timeframe'] = "start={}, end={}".format(timeframe.start, timeframe.end)
-        series['mains_uptime'] = "{}".format(self.mains().uptime(**kwargs))
+        series['total_duration'] = timeframe.timedelta
+        series['mains_uptime'] = self.mains().uptime(**kwargs)
 
         return series
 
