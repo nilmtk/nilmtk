@@ -1290,6 +1290,15 @@ class MeterGroup(Electric):
                 self.correlation_of_sum_of_submeters_with_mains(**kwargs))
             series['proportion_of_energy_submetered'] = (
                 self.proportion_of_energy_submetered(**kwargs))
+            dropout_rates = self._collect_stats_on_all_meters(
+                kwargs, 'dropout_rate', False)
+            dropout_rates = np.array(dropout_rates)
+            series['dropout_rates_ignoring_gaps'] = (
+                "min={}, mean={}, max={}".format(
+                    dropout_rates.min(), 
+                    dropout_rates.mean(), 
+                    dropout_rates.max()))
+
         series['mains_sample_period'] = self.mains().sample_period()
         series['submeter_sample_period'] = self.submeters().sample_period()
         timeframe = self.get_timeframe()
