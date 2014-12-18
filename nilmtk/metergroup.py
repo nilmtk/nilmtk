@@ -9,6 +9,7 @@ from sys import stdout
 from collections import Counter
 from copy import deepcopy
 import gc
+from collections import namedtuple
 from .elecmeter import ElecMeter, ElecMeterID
 from .appliance import Appliance
 from .datastore.datastore import join_key
@@ -23,6 +24,11 @@ from .electric import Electric
 from .timeframe import TimeFrame, split_timeframes
 from .preprocessing import Apply
 from .datastore import MAX_MEM_ALLOWANCE_IN_BYTES
+
+# meters is a tuple or ElecMeterIDs.  Order doesn't matter.
+# (we can't use a set because sets aren't hashable so we can't use 
+# a set as a dict key or a DataFrame column name)
+MeterGroupID = namedtuple('MeterGroupID', ['meters'])
 
 class MeterGroup(Electric):
 
@@ -160,11 +166,12 @@ class MeterGroup(Electric):
                 if none are found.  If meter instance 1 is in a nested MeterGroup
                 then retrieve the ElecMeter, not the MeterGroup.
         * `ElecMeterID(1, 1, 'REDD')` - retrieves meter with specified meter ID
+        * `MeterGroupID(meters=(ElecMeterID(1, 1, 'REDD')))` - retrieves
+          existing nested MeterGroup containing exactly meter instances 1 and 2.
         * `[ElecMeterID(1, 1, 'REDD'), ElecMeterID(2, 1, 'REDD')]` - retrieves
           existing nested MeterGroup containing exactly meter instances 1 and 2.
         * `ElecMeterID(0, 1, 'REDD')` - instance `0` means `mains`. This returns
            a new MeterGroup of all site_meters in building 1 in REDD.
-        * `ElecMeterID(1, 1, 'REDD')` - retrieves meter with specified meter ID
         * `ElecMeterID((1,2), 1, 'REDD')` - retrieve existing MeterGroup 
            which contains exactly meters 1 & 2.
         * `(1, 2, 'REDD')` - converts to ElecMeterID and treats as an ElecMeterID.
@@ -205,6 +212,12 @@ class MeterGroup(Electric):
                 for meter in self.meters:
                     if meter.identifier == key:
                         return meter
+            raise KeyError(key)
+        elif isinstance(key, MeterGroupID):
+            key_meters = set(key.meters)
+            for group in self.nested_metergroups():
+                if (set(group.identifier) == key_meters):
+                    return group
             raise KeyError(key)
         # find MeterGroup from list of ElecMeterIDs
         elif isinstance(key, list):
@@ -363,8 +376,7 @@ class MeterGroup(Electric):
         Parameters
         ----------
         meter_ids : list or tuple
-            Each element is an ElecMeterID or 
-            a tuple of ElecMeterIDs (to make a nested MeterGroup)
+            Each element is an ElecMeterID or a MeterGroupID.
 
         Returns
         -------
@@ -373,17 +385,24 @@ class MeterGroup(Electric):
         meter_ids = list(meter_ids)
         meter_ids = list(set(meter_ids))  # make unique
         meters = []
+
+        def append_meter_group(meter_id):
+            try:
+                # see if there is an existing MeterGroup
+                metergroup = self[meter_id]
+            except KeyError:
+                # there is no existing MeterGroup so assemble one
+                metergroup = self.from_list(meter_id.meters)
+            meters.append(metergroup)
+
         for meter_id in meter_ids:
             if isinstance(meter_id, ElecMeterID):
                 meters.append(self[meter_id])
+            elif isinstance(meter_id, MeterGroupID):
+                append_meter_group(meter_id)
             elif isinstance(meter_id, tuple):
-                try:
-                    # see if there is an existing MeterGroup
-                    metergroup = self[list(meter_id)]
-                except KeyError:
-                    # there is no existing MeterGroup so assemble one
-                    metergroup = self.from_list(meter_id)
-                meters.append(metergroup)
+                meter_id = MeterGroupID(meters=meter_id)
+                append_meter_group(meter_id)
             else:
                 raise TypeError()
         return MeterGroup(meters)
@@ -416,7 +435,9 @@ class MeterGroup(Electric):
                 new_identifiers.append(tuple(nested))
             else:
                 new_identifiers.append(new_id)
-        return MeterGroup.from_list(new_identifiers)
+        metergroup = MeterGroup()
+        metergroup.from_list(new_identifiers)
+        return metergroup
 
     def __eq__(self, other):
         if isinstance(other, MeterGroup):
@@ -491,6 +512,9 @@ class MeterGroup(Electric):
     def identifier(self):
         """Returns tuple of ElecMeterIDs or nested tuples of ElecMeterIDs"""
         return tuple([meter.identifier for meter in self.meters])
+
+    def get_metergroupid(self):
+        return MeterGroupID(meters=tuple([meter.identifier for meter in self.meters]))
 
     def instance(self):
         """Returns tuple of integers where each int is a meter instance."""
@@ -660,7 +684,11 @@ class MeterGroup(Electric):
             kwargs_copy = deepcopy(kwargs)
             generator = meter.load(raise_exceptions=False, **kwargs_copy)
             generators.append(generator)
-            identifiers.append(meter.identifier)
+            try:
+                identifier = meter.get_metergroupid()
+            except AttributeError:
+                identifier = meter.identifier
+            identifiers.append(identifier)
 
         return identifiers, generators
 
@@ -882,8 +910,8 @@ class MeterGroup(Electric):
         sample_period : int or float, optional
             Number of seconds to use as sample period when reindexing meters.
             If not specified then will use the max of all meters' sample_periods.
-        resample : bool, defaults to False
-            If True then resample to `sample_period` before reindexing.
+        resample : bool, defaults to True
+            If True then resample to `sample_period`.
         **kwargs : 
             any other key word arguments to pass to `self.store.load()` including:
         ac_type : string, defaults to 'best'
@@ -892,12 +920,9 @@ class MeterGroup(Electric):
         Returns
         -------
         DataFrame
-            Each column is a meter.  We select the most appropriate measurement.
-            All NaNs are zeroed out.  Note that column names are string 
-            representations of ElecMeterIDs (because 'pd.concat' tries to use
-            tuples to construct a multiindex)
+            Each column is a meter.
         """
-        sample_period = kwargs.get('sample_period', self.sample_period())
+        kwargs.setdefault('sample_period', self.sample_period())
         kwargs.setdefault('ac_type', 'best')
         kwargs.setdefault('physical_quantity', 'power')
         identifiers, generators = self._meter_generators(**kwargs)
@@ -1215,7 +1240,7 @@ class MeterGroup(Electric):
         if group_remainder:
             remainder_ids = top_k_series[k:].index
             remainder_metergroup = self.from_list(remainder_ids)
-            remainder_metergroup.name = 'remainder'
+            remainder_metergroup.name = 'others'
             top_k_metergroup.meters.append(remainder_metergroup)
         return top_k_metergroup
 
