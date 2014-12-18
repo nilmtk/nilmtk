@@ -528,6 +528,8 @@ class MeterGroup(Electric):
            `load` to automatically select columns.
 
         Each meter in the MeterGroup will first be resampled before being added.
+        The returned DataFrame will include NaNs at timestamps where no meter
+        had a sample (after resampling the meter).
 
         Parameters
         ----------
@@ -1371,9 +1373,13 @@ def combine_chunks_from_generators(index, columns, meters, kwargs):
 
             aligned = column.reindex(index, copy=False).values
             del column
-            np.nansum([cumulator_arr[:,i], aligned], axis=0, 
-                      out=cumulator_arr[:,i], dtype=DTYPE)
+            cumulator_col = cumulator_arr[:,i]
+            where_both_are_nan = np.isnan(cumulator_col) & np.isnan(aligned)
+            np.nansum([cumulator_col, aligned], axis=0, out=cumulator_col, 
+                      dtype=DTYPE)
+            cumulator_col[where_both_are_nan] = np.NaN
             del aligned
+            del where_both_are_nan
             gc.collect()
 
         # Update columns_to_average_counter - this is necessary so we do not
