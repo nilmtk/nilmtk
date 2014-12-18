@@ -600,6 +600,7 @@ class MeterGroup(Electric):
                 break
             yield chunk
 
+
     def _all_columns_from_kwargs(self, **kwargs):
         all_columns = set()
         for meter in self.meters:
@@ -1365,7 +1366,8 @@ def combine_chunks_from_generators(index, columns, meters, kwargs):
     for meter in meters:
         print_on_line("\rLoading data for meter", meter.identifier, "    ")
         kwargs_copy = deepcopy(kwargs)
-        generator = meter.load(raise_exceptions=False, **kwargs_copy)
+        kwargs_copy['raise_exceptions'] = False
+        generator = meter.load(**kwargs_copy)
         try:
             chunk_from_next_meter = generator.next()
         except StopIteration:

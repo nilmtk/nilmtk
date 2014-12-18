@@ -269,6 +269,10 @@ class TimeFrame(object):
             raise ValueError("Cannot split a TimeFrame if `start` or `end`"
                              " is None")
 
+        if duration_threshold >= self.timedelta.total_seconds():
+            yield self
+            return
+
         duration_threshold_td = timedelta(seconds=duration_threshold)
         timeframe = self
         while True:
