@@ -78,6 +78,7 @@ class Results(object):
         self._data.sort_index(inplace=True)
 
     def check_for_overlap(self):
+        # TODO this could be made much faster
         n = len(self._data)
         index = self._data.index
         for i in range(n):
@@ -101,7 +102,10 @@ class Results(object):
             raise TypeError("new_results must be of type '{}'"
                             .format(self.__class__))
 
-        self._data = self._data.append(new_result._data, verify_integrity=True)
+        if new_result._data.empty:
+            return
+
+        self._data = self._data.append(new_result._data)
         self._data.sort_index(inplace=True)
         self.check_for_overlap()
 

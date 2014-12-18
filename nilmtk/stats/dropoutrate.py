@@ -1,4 +1,5 @@
 from __future__ import print_function, division
+import numpy as np
 from ..node import Node
 from ..exceptions import TooFewSamplesError
 from ..utils import get_index 
@@ -35,16 +36,11 @@ def get_dropout_rate(data, sample_period):
         The proportion of samples that have been lost; where 
         1 means that all samples have been lost and 
         0 means that no samples have been lost.
-
-    Raises
-    ------
-    TooFewSamplesError
+        NaN means too few samples.
     """
     MIN_N_SAMPLES = 5
     if len(data) < MIN_N_SAMPLES:
-        raise TooFewSamplesError("Cannot calculate dropout rate because"
-                                 " data only has {:d} samples and we need {:d}."
-                                 .format(len(data), MIN_N_SAMPLES))
+        return np.NaN
 
     index = get_index(data)
     assert(index[-1] > index[0])

@@ -521,10 +521,12 @@ class ElecMeter(Hashable, Electric):
         return self._get_stat_from_cache_or_compute(
             nodes, TotalEnergy.results_class(), loader_kwargs)
 
-    def dropout_rate(self, **loader_kwargs):
+    def dropout_rate(self, ignore_gaps=True, **loader_kwargs):
         """
         Parameters
         ----------
+        ignore_gaps : bool, default=True
+            If True then will only calculate dropout rate for good sections.
         full_results : bool, default=False
         **loader_kwargs : key word arguments for DataStore.load()
 
@@ -534,6 +536,9 @@ class ElecMeter(Hashable, Electric):
         else float
         """
         nodes = [DropoutRate]
+        if ignore_gaps:
+            loader_kwargs['sections'] = self.good_sections(**loader_kwargs)
+
         return self._get_stat_from_cache_or_compute(
             nodes, DropoutRate.results_class(), loader_kwargs)
 
