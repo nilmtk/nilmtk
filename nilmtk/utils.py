@@ -6,7 +6,7 @@ from copy import deepcopy
 from os.path import isdir, dirname, abspath
 from os import getcwd
 from inspect import currentframe, getfile, getsourcefile
-from sys import getfilesystemencoding
+from sys import getfilesystemencoding, stdout
 from IPython.core.display import HTML, display
 from collections import OrderedDict
 import datetime
@@ -322,3 +322,7 @@ def normalise_timestamp(timestamp, freq):
     resampled = series.resample(freq)
     return resampled.index[0]
 
+
+def print_on_line(*strings):
+    print(*strings, end="")
+    stdout.flush()

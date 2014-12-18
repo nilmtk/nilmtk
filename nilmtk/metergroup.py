@@ -13,7 +13,8 @@ from .elecmeter import ElecMeter, ElecMeterID
 from .appliance import Appliance
 from .datastore.datastore import join_key
 from .utils import (tree_root, nodes_adjacent_to_root, simplest_type_for,
-                    flatten_2d_list, convert_to_timestamp, normalise_timestamp)
+                    flatten_2d_list, convert_to_timestamp, normalise_timestamp,
+                    print_on_line)
 from .plots import plot_series
 from .measurement import (select_best_ac_type, AC_TYPES, LEVEL_NAMES,
                           PHYSICAL_QUANTITIES_TO_AVERAGE)
@@ -580,10 +581,12 @@ class MeterGroup(Electric):
         columns = pd.MultiIndex.from_tuples(
             self._all_columns_from_kwargs(**kwargs), names=LEVEL_NAMES)
         freq = '{:d}S'.format(sample_period)
+        verbose = kwargs.get('verbose')
 
         # Check for empty sections
         sections = [section for section in sections if section]
         if not sections:
+            print("No sections to load.")
             yield pd.DataFrame(columns=columns)
             return
 
@@ -970,6 +973,7 @@ class MeterGroup(Electric):
         -------
         float [0,1] or NaN if mains total_energy == 0
         """
+        print("Running MeterGroup.proportion_of_energy_submetered...")
         mains = self.mains()
         downstream_meters = self.meters_directly_downstream_of_mains()
         proportion = 0.0
@@ -1268,8 +1272,7 @@ class MeterGroup(Electric):
             meter.clear_cache()
         
     def correlation_of_sum_of_submeters_with_mains(self, **load_kwargs):
-        if load_kwargs.get('verbose'):
-            print("Running MeterGroup.correlation_of_sum_of_submeters_with_mains()")
+        print("Running MeterGroup.correlation_of_sum_of_submeters_with_mains...")
         submeters = self.meters_directly_downstream_of_mains()
         return self.mains().correlation(submeters, **load_kwargs)
 
@@ -1345,6 +1348,7 @@ def combine_chunks_from_generators(index, columns, meters, kwargs):
 
     # Go through each generator to try sum values together
     for meter in meters:
+        print_on_line("\rLoading data for meter", meter.identifier, "    ")
         kwargs_copy = deepcopy(kwargs)
         generator = meter.load(raise_exceptions=False, **kwargs_copy)
         try:
