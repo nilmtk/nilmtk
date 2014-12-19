@@ -14,11 +14,12 @@ from .hashable import Hashable
 from .appliance import Appliance
 from .datastore import Key
 from .measurement import (select_best_ac_type, AC_TYPES, PHYSICAL_QUANTITIES, 
-                          PHYSICAL_QUANTITIES_WITH_AC_TYPES)
+                          PHYSICAL_QUANTITIES_WITH_AC_TYPES, 
+                          check_ac_type, check_physical_quantity)
 from .node import Node
 from .electric import Electric
 from .timeframe import TimeFrame, list_of_timeframe_dicts
-from .exceptions import MeasurementError
+from nilmtk.exceptions import MeasurementError
 from .utils import flatten_2d_list
 import nilmtk
 
@@ -416,12 +417,63 @@ class ElecMeter(Hashable, Electric):
 
         return generator
 
+    def _ac_type_to_columns(self, ac_type):
+        if ac_type is None:
+            return []
+
+        if isinstance(ac_type, list):
+            cols2d = [self._ac_type_to_columns(a_t) for a_t in ac_type]
+            return list(set(flatten_2d_list(cols2d)))
+
+        check_ac_type(ac_type)
+        cols_matching = [col for col in self.available_columns()
+                         if col[1] == ac_type]
+        return cols_matching
+
+    def _physical_quantity_to_columns(self, physical_quantity):
+        if physical_quantity is None:
+            return []
+
+        if isinstance(physical_quantity, list):
+            cols2d = [self._physical_quantity_to_columns(p_q)
+                      for p_q in physical_quantity]
+            return list(set(flatten_2d_list(cols2d)))
+                                  
+        check_physical_quantity(physical_quantity)
+        cols_matching = [col for col in self.available_columns()
+                         if col[0] == physical_quantity]
+        return cols_matching
+
+    def _get_columns_with_best_ac_type(self, physical_quantity=None):
+        if physical_quantity is None:
+            physical_quantity = self.available_physical_quantities()
+
+        if isinstance(physical_quantity, list):
+            columns = set()
+            for pq in physical_quantity:
+                best = self._get_columns_with_best_ac_type(pq)
+                if best:
+                    columns.update(best)
+            return list(columns)
+
+        check_physical_quantity(physical_quantity)
+        available_pqs = self.available_physical_quantities()
+        if physical_quantity not in available_pqs:
+            return []
+
+        ac_types = self.available_ac_types(physical_quantity)
+        try:
+            best_ac_type = select_best_ac_type(ac_types)
+        except KeyError:
+            return []
+        else:
+            return [(physical_quantity, best_ac_type)]
+
     def _convert_physical_quantity_and_ac_type_to_cols(
             self, physical_quantity=None, ac_type=None, cols=None, 
-            raise_exceptions=True, **kwargs):
+            **kwargs):
         """Returns kwargs dict with physical_quantity and ac_type removed
-        and cols populated appropriately.
-        """
+        and cols populated appropriately."""
         if cols:
             if (ac_type or physical_quantity):
                 raise ValueError("Cannot use `ac_type` and/or `physical_quantity`"
@@ -431,68 +483,39 @@ class ElecMeter(Hashable, Electric):
                     kwargs['cols'] = cols
                     return kwargs
                 else:
-                    if raise_exceptions:
-                        msg = ("'{}' is not a subset of the available columns: '{}'"
-                               .format(cols, self.available_columns()))
-                        raise MeasurementError(msg)
-                    else:
-                        kwargs['cols'] = list(set(cols).intersection(self.available_columns()))
-                        return kwargs
+                    msg = ("'{}' is not a subset of the available columns: '{}'"
+                           .format(cols, self.available_columns()))
+                    raise MeasurementError(msg)
 
-        if isinstance(ac_type, basestring):
-            ac_type = [ac_type]
-
-        if physical_quantity is None:
-            physical_quantity = self.available_physical_quantities()
+        msg = ""
+        if not (ac_type or physical_quantity):
+            cols = self.available_columns()
+        elif ac_type == 'best':
+            cols = self._get_columns_with_best_ac_type(physical_quantity)
+            if not cols:
+                msg += "No AC types for physical quantity {}".format(physical_quantity)
+        else:
             if ac_type:
-                physical_quantity = [pq for pq in physical_quantity
-                                     if pq in PHYSICAL_QUANTITIES_WITH_AC_TYPES]
-                if ac_type != ['best']:
-                    physical_quantities_filtered = set()
-                    for pq in physical_quantity:
-                        available_ac_types = self.available_ac_types(pq)
-                        for a_t in ac_type:
-                            if a_t in available_ac_types:
-                                physical_quantities_filtered.add(pq)
-                    physical_quantity = list(physical_quantities_filtered)
+                cols = self._ac_type_to_columns(ac_type)
+                if not cols:
+                    msg += "AC type '{}' not available. ".format(ac_type)
 
-        elif isinstance(physical_quantity, basestring):
-            physical_quantity = [physical_quantity]
-
-        cols = []
-        available_physical_quantities = self.available_physical_quantities()
-        for pq in physical_quantity:
-            if pq not in available_physical_quantities:
-                if raise_exceptions:
-                    error_msg = ("Physical quantity '{}' not available."
-                                 " Only {} are available"
-                                 .format(pq, available_physical_quantities))
-                    raise MeasurementError(error_msg)
+            if physical_quantity:
+                cols_matching_pq = self._physical_quantity_to_columns(physical_quantity)
+                if not cols_matching_pq:
+                    msg += ("Physical quantity '{}' not available. "
+                            .format(physical_quantity))
+                if cols:
+                    cols = list(set(cols).intersection(cols_matching_pq))
+                    if not cols:
+                        msg += ("No measurement matching ({}, {}). "
+                                .format(physical_quantity, ac_type))
                 else:
-                    continue
+                    cols = cols_matching_pq
 
-            available_ac_types = self.available_ac_types(pq)
-            if not available_ac_types:
-                # then this is probably a physical quantity like 'voltage'
-                cols.append((pq, None))
-                continue
-
-            if ac_type is None:
-                ac_type = available_ac_types
-            elif ac_type == ['best']:
-                ac_type = [select_best_ac_type(available_ac_types)]
-
-            for a_t in ac_type:
-                if a_t not in available_ac_types:
-                    if raise_exceptions:
-                        error_msg = ("AC type '{}' not available."
-                                     " only {} are available"
-                                     .format(a_t, available_ac_types))
-                        raise MeasurementError(error_msg)
-                    else:
-                        continue
-
-                cols.append((pq, a_t))
+        if msg:
+            msg += "Available columns = {}. ".format(self.available_columns())
+            raise MeasurementError(msg)
 
         kwargs['cols'] = cols
         return kwargs

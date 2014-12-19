@@ -671,7 +671,6 @@ class MeterGroup(Electric):
         kwargs = deepcopy(kwargs)
         for meter in self.meters:
             kwargs_copy = deepcopy(kwargs)
-            kwargs_copy.setdefault('raise_exceptions', False)
             new_kwargs = meter._convert_physical_quantity_and_ac_type_to_cols(**kwargs_copy)
             cols = new_kwargs.get('cols', [])
             for col in cols:
@@ -685,7 +684,7 @@ class MeterGroup(Electric):
         identifiers = []
         for meter in self.meters:
             kwargs_copy = deepcopy(kwargs)
-            generator = meter.load(raise_exceptions=False, **kwargs_copy)
+            generator = meter.load(**kwargs_copy)
             generators.append(generator)
             identifiers.append(meter.identifier)
 
@@ -941,7 +940,10 @@ class MeterGroup(Electric):
             else:
                 break
 
-        return pd.concat(segments)
+        if segments:
+            return pd.concat(segments)
+        else:
+            return pd.DataFrame(columns=self.identifier.meters)
 
     def entropy_per_meter(self):
         """Finds the entropy of each meter in this MeterGroup.
@@ -1590,7 +1592,6 @@ def combine_chunks_from_generators(index, columns, meters, kwargs):
     for meter in meters:
         print_on_line("\rLoading data for meter", meter.identifier, "    ")
         kwargs_copy = deepcopy(kwargs)
-        kwargs_copy['raise_exceptions'] = False
         generator = meter.load(**kwargs_copy)
         try:
             chunk_from_next_meter = generator.next()

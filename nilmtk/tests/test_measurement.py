@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import nilmtk.measurement as measure
 from nilmtk.elecmeter import ElecMeter, ElecMeterID
+from nilmtk.exceptions import MeasurementError
 
 BAD_AC_TYPES = ['foo', '', None, True, {'a':'b'}, 
                 (1,2), [], ['reactive'], 'reaactive']
@@ -14,7 +15,7 @@ class TestMeasurement(unittest.TestCase):
         for ac_type in measure.AC_TYPES:
             measure.check_ac_type(ac_type)
         for bad_ac_type in BAD_AC_TYPES:
-            with self.assertRaises(ValueError):
+            with self.assertRaises(MeasurementError):
                 measure.check_ac_type(bad_ac_type)
 
     def _test_ac_class(self, cls):
@@ -22,7 +23,7 @@ class TestMeasurement(unittest.TestCase):
             obj = cls(ac_type=ac_type)
             self.assertIsInstance(obj, cls)
         for bad_ac_type in BAD_AC_TYPES:
-            with self.assertRaises(ValueError):
+            with self.assertRaises(MeasurementError):
                 cls(ac_type=bad_ac_type)
 
     def test_as_dataframe_columns(self):
