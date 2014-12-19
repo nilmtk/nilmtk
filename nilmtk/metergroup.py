@@ -567,10 +567,21 @@ class MeterGroup(Electric):
         _build_wiring_graph(self.meters)
         return wiring_graph
 
-    def draw_wiring_graph(self):
+    def draw_wiring_graph(self, show_appliance_labels=True):
         graph = self.wiring_graph()
-        labels = {meter:meter.instance() for meter in graph.nodes()}
-        nx.draw(graph, labels=labels)
+        meter_labels = {meter: meter.instance() for meter in graph.nodes()}
+        pos = nx.graphviz_layout(graph, prog='dot')
+
+        nx.draw(graph, pos, labels=meter_labels, arrows=False)
+        if show_appliance_labels:
+            appliance_labels = {meter: meter.appliance_label() for meter in graph.nodes()}
+            for meter, name in appliance_labels.iteritems():
+                x, y = pos[meter]
+                if meter.is_site_meter():
+                    delta_y = 5
+                else:
+                    delta_y = -5
+                plt.text(x, y+delta_y, s=name, bbox=dict(facecolor='red', alpha=0.5), horizontalalignment='center')
 
     def load(self, **kwargs):
         """Returns a generator of DataFrames loaded from the DataStore.
