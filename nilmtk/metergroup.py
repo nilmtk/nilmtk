@@ -1091,6 +1091,18 @@ class MeterGroup(Electric):
             will return the average energy per period.
         ac_type : None or str
             e.g. 'active' or 'best'.  Defaults to 'best'.
+        use_appliance_labels : bool
+            If True then columns will be human-friendly appliance labels.
+            If False then columns will be ElecMeterIDs or MeterGroupIDs
+        mains : None or MeterGroup or ElecMeter
+            If None then will return DataFrame without remainder.
+            If not None then will return a Series including a 'remainder'
+            row which will be `mains.total_energy() - energy_per_meter.sum()`
+            and an attempt will be made to use the correct AC_TYPE.
+
+        Returns
+        -------
+        pd.DataFrame if mains is None else a pd.Series
         """
         meter_identifiers = list(self.identifier.meters)
         energy_per_meter = pd.DataFrame(columns=meter_identifiers, index=AC_TYPES)
@@ -1112,14 +1124,18 @@ class MeterGroup(Electric):
         if use_appliance_labels:
             energy_per_meter.columns = self.get_appliance_labels(energy_per_meter.columns)
 
+        if mains is not None:
+            energy_per_meter = self._energy_per_meter_with_remainder(
+                energy_per_meter, mains, per_period, **load_kwargs)
+
         return energy_per_meter
 
-    def energy_per_meter_with_remainder(self, mains, per_period=None, **kwargs):
-        energy = self.energy_per_meter(per_period=per_period, **kwargs)
-        ac_types = energy.keys()
-        energy = energy.sum() # Collapse AC_TYPEs into Series
+    def _energy_per_meter_with_remainder(self, energy_per_meter,
+                                         mains, per_period, **kwargs):
+        ac_types = energy_per_meter.keys()
+        energy_per_meter = energy_per_meter.sum() # Collapse AC_TYPEs into Series
 
-        # Find most common ac_type in energy:
+        # Find most common ac_type in energy_per_meter:
         most_common_ac_type = most_common(ac_types)
         mains_ac_types = mains.available_ac_types(
             ['power', 'energy', 'cumulative energy'])
@@ -1128,18 +1144,19 @@ class MeterGroup(Electric):
         else:
             mains_ac_type = 'best'
 
-        # Get mains energy
+        # Get mains energy_per_meter
+        kwargs['ac_type'] = mains_ac_type
         if per_period is None:
             mains_energy = mains.total_energy(**kwargs)
         else:
             mains_energy = mains.average_energy_per_period(
-                offset_alias=per_period, ac_type=mains_ac_type, **kwargs)
+                offset_alias=per_period, **kwargs)
         mains_energy = mains_energy[mains_energy.keys()[0]]
 
         # Calculate remainder
-        energy['Remainder'] = mains_energy - energy.sum()
-        energy.sort(ascending=False)
-        return energy
+        energy_per_meter['Remainder'] = mains_energy - energy_per_meter.sum()
+        energy_per_meter.sort(ascending=False)
+        return energy_per_meter
 
     def fraction_per_meter(self, **load_kwargs):
         """Fraction of energy per meter.
