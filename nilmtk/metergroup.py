@@ -217,7 +217,7 @@ class MeterGroup(Electric):
         elif isinstance(key, MeterGroupID):
             key_meters = set(key.meters)
             for group in self.nested_metergroups():
-                if (set(group.identifier) == key_meters):
+                if (set(group.identifier.meters) == key_meters):
                     return group
             raise KeyError(key)
         # find MeterGroup from list of ElecMeterIDs
@@ -228,7 +228,7 @@ class MeterGroup(Electric):
                 # list of ElecMeterIDs.  Return existing MeterGroup
                 if isinstance(meter, MeterGroup):
                     metergroup = meter
-                    meter_ids = set(metergroup.identifier)
+                    meter_ids = set(metergroup.identifier.meters)
                     if meter_ids == set(key):
                         return metergroup
             raise KeyError(key)
@@ -424,7 +424,7 @@ class MeterGroup(Electric):
         -------
         MeterGroup
         """
-        other_identifiers = other.identifier
+        other_identifiers = other.identifier.meters
         new_identifiers = []
         for other_id in other_identifiers:
             new_id = other_id._replace(dataset=dataset)
@@ -511,10 +511,7 @@ class MeterGroup(Electric):
 
     @property
     def identifier(self):
-        """Returns tuple of ElecMeterIDs or nested tuples of ElecMeterIDs"""
-        return tuple([meter.identifier for meter in self.meters])
-
-    def get_metergroupid(self):
+        """Returns a MeterGroupID."""
         return MeterGroupID(meters=tuple([meter.identifier for meter in self.meters]))
 
     def instance(self):
@@ -570,15 +567,7 @@ class MeterGroup(Electric):
 
     def draw_wiring_graph(self):
         graph = self.wiring_graph()
-        labels = {}
-        for meter in graph.nodes():
-            if isinstance(meter, ElecMeter):
-                labels[meter] = meter.identifier.instance
-            else:
-                metergroup = meter
-                meter_instances = [
-                    m.identifier.instance for m in metergroup.meters]
-                labels[meter] = meter_instances
+        labels = {meter:meter.instance() for meter in graph.nodes()}
         nx.draw(graph, labels=labels)
 
     def load(self, **kwargs):
@@ -685,16 +674,12 @@ class MeterGroup(Electric):
             kwargs_copy = deepcopy(kwargs)
             generator = meter.load(raise_exceptions=False, **kwargs_copy)
             generators.append(generator)
-            try:
-                identifier = meter.get_metergroupid()
-            except AttributeError:
-                identifier = meter.identifier
-            identifiers.append(identifier)
+            identifiers.append(meter.identifier)
 
         return identifiers, generators
 
     def plot_when_on(self, **load_kwargs):
-        meter_identifiers = list(self.identifier)
+        meter_identifiers = list(self.identifier.meters)
         fig, ax = plt.subplots()
         for i, meter in enumerate(self.meters):
             id_meter = meter.identifier
@@ -980,7 +965,7 @@ class MeterGroup(Electric):
         -------
         pd.Series of result of `method` called on each element in `self.meters`.
         """
-        meter_identifiers = list(self.identifier)
+        meter_identifiers = list(self.identifier.meters)
         result = pd.Series(index=meter_identifiers)
         for meter in self.meters:
             id_meter = meter.identifier
@@ -1003,7 +988,7 @@ class MeterGroup(Electric):
         pd.DataFrame of the result of `method` called on each 
         pair in `self.meters`.
         """
-        meter_identifiers = list(self.identifier)
+        meter_identifiers = list(self.identifier.meters)
         result = pd.DataFrame(index=meter_identifiers, columns=meter_identifiers)
         for i, m_i in enumerate(self.meters):
             for j, m_j in enumerate(self.meters):
@@ -1107,7 +1092,7 @@ class MeterGroup(Electric):
         ac_type : None or str
             e.g. 'active' or 'best'.  Defaults to 'best'.
         """
-        meter_identifiers = list(self.identifier)
+        meter_identifiers = list(self.identifier.meters)
         energy_per_meter = pd.DataFrame(columns=meter_identifiers, index=AC_TYPES)
         n_meters = len(self.meters)
         load_kwargs.setdefault('ac_type', 'best')
@@ -1167,7 +1152,7 @@ class MeterGroup(Electric):
         return energy_per_meter / total_energy
 
     def proportion_of_upstream_total_per_meter(self, **load_kwargs):
-        prop_per_meter = pd.Series(index=self.identifier)
+        prop_per_meter = pd.Series(index=self.identifier.meters)
         n_meters = len(self.meters)
         for i, meter in enumerate(self.meters):
             proportion = meter.proportion_of_upstream(**load_kwargs)
@@ -1441,6 +1426,27 @@ class MeterGroup(Electric):
         return series
 
 
+def replace_dataset(identifier, dataset):
+    """
+    Parameters
+    ----------
+    identifier : ElecMeterID or MeterGroupID
+
+    Returns
+    -------
+    ElecMeterID or MeterGroupID with dataset replaced with `dataset`
+    """
+    if isinstance(identifier, MeterGroupID):
+        new_meter_ids = [replace_dataset(id, dataset) for id in identifier.meters]
+        new_id = MeterGroupID(meters=tuple(new_meter_ids))
+    elif isinstance(identifier, ElecMeterID):
+        new_id = identifier._replace(dataset=dataset)
+    else:
+        raise TypeError()
+
+    return new_id
+
+
 def iterate_through_submeters_of_two_metergroups(master, slave):
     """
     Parameters
@@ -1453,8 +1459,7 @@ def iterate_through_submeters_of_two_metergroups(master, slave):
     """
     zipped = []
     for master_meter in master.submeters().meters:
-        slave_identifier = master_meter.identifier._replace(
-            dataset=slave.dataset())
+        slave_identifier = replace_dataset(master_meter.identifier, slave.dataset())
         slave_meter = slave[slave_identifier]
         zipped.append((master_meter, slave_meter))
     return zipped
