@@ -507,8 +507,8 @@ class ElecMeter(Hashable, Electric):
         if self.store is None:
             raise RuntimeError(
                 "Cannot get source node if meter.store is None!")
-        if 'ac_type' in loader_kwargs or 'physical_quantity' in loader_kwargs:
-            loader_kwargs = self._convert_physical_quantity_and_ac_type_to_cols(**loader_kwargs)
+
+        loader_kwargs = self._convert_physical_quantity_and_ac_type_to_cols(**loader_kwargs)
         generator = self.store.load(key=self.key, **loader_kwargs)
         self.metadata['device'] = self.device
         return Node(self, generator=generator)

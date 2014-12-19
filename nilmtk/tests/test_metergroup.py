@@ -146,7 +146,7 @@ class TestMeterGroup(unittest.TestCase):
         self.assertEqual(len(df), 13)
         self.assertEqual(df.columns.levels, [['energy'], ['reactive']])
         df = elec.load(ac_type='active').next()
-        self.assertEqual(df.columns.levels, [['active'], ['power']])
+        self.assertEqual(df.columns.levels, [['power'], ['active']])
         
 
 if __name__ == '__main__':
