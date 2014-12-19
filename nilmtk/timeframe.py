@@ -126,6 +126,8 @@ class TimeFrame(object):
     def timedelta(self):
         if self.end and self.start:
             return self.end - self.start
+        elif self.empty:
+            return timedelta(0)
 
     def intersect(self, other):
         """Returns a new TimeFrame of the intersection between

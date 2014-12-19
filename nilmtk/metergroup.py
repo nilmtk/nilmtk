@@ -1436,8 +1436,11 @@ class MeterGroup(Electric):
         series['total_duration'] = str(timeframe.timedelta)
         mains_uptime = self.mains().uptime(**kwargs)
         series['mains_uptime'] = str(mains_uptime)
-        series['proportion_uptime'] = (mains_uptime.total_seconds() /
-                                       timeframe.timedelta.total_seconds())
+        try:
+            series['proportion_uptime'] = (mains_uptime.total_seconds() /
+                                           timeframe.timedelta.total_seconds())
+        except ZeroDivisionError:
+            series['proportion_uptime'] = np.NaN
         series['average_mains_energy_per_day'] = self.mains().average_energy_per_period()
 
         return series
