@@ -21,7 +21,7 @@ from .utils import (offset_alias_to_seconds, convert_to_timestamp,
                     flatten_2d_list, append_or_extend_list)
 from .plots import plot_series
 from .preprocessing import Apply
-
+from nilmtk.stats.histogram import histogram_from_generator
 
 MAX_SIZE_ENTROPY = 10000
 
@@ -381,6 +381,16 @@ class Electric(object):
         fig, ax = plt.subplots()
         for power in self.power_series():
             autocorrelation_plot(power, ax = ax)
+        return ax
+
+    def plot_histogram_of_power(self, ax=None, load_kwargs=None, **plot_kwargs):
+        if ax is None:
+            ax = plt.gca()
+        if load_kwargs is None:
+            load_kwargs = {}
+        generator = self.power_series(**load_kwargs)
+        hist, bins = histogram_from_generator(generator, **plot_kwargs)
+        ax.bar(bins[:-1], hist, np.diff(bins))
         return ax
 
     def switch_times(self, threshold=40):

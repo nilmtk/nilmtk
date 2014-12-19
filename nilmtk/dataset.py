@@ -2,6 +2,7 @@ from __future__ import print_function, division
 import os
 from collections import OrderedDict
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 from .building import Building
 from .datastore.datastore import join_key
@@ -125,3 +126,14 @@ class DataSet(object):
     def clear_cache(self):
         for elec in self.elecs():
             elec.clear_cache()
+
+    def plot_histograms_of_mains_power(self, axes=None, **kwargs):
+        n = len(self.buildings)
+        if axes is None:
+            fig, axes = plt.subplots(n, 1, sharex=True)
+        assert n == len(axes)
+
+        for ax, elec in zip(axes, self.elecs()):
+            ax = elec.mains().plot_histogram_of_power(ax=ax, **kwargs)
+            ax.set_title('House {}'.format(elec.building()))
+        return axes
