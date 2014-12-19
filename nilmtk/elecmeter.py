@@ -471,7 +471,7 @@ class ElecMeter(Hashable, Electric):
 
     def _convert_physical_quantity_and_ac_type_to_cols(
             self, physical_quantity=None, ac_type=None, cols=None, 
-            raise_exceptions=True, **kwargs):
+            **kwargs):
         """Returns kwargs dict with physical_quantity and ac_type removed
         and cols populated appropriately."""
         if cols:
@@ -483,13 +483,9 @@ class ElecMeter(Hashable, Electric):
                     kwargs['cols'] = cols
                     return kwargs
                 else:
-                    if raise_exceptions:
-                        msg = ("'{}' is not a subset of the available columns: '{}'"
-                               .format(cols, self.available_columns()))
-                        raise MeasurementError(msg)
-                    else:
-                        kwargs['cols'] = list(set(cols).intersection(self.available_columns()))
-                        return kwargs            
+                    msg = ("'{}' is not a subset of the available columns: '{}'"
+                           .format(cols, self.available_columns()))
+                    raise MeasurementError(msg)
 
         msg = ""
         if not (ac_type or physical_quantity):
