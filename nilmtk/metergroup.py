@@ -1391,31 +1391,43 @@ class MeterGroup(Electric):
         return ax
 
     def plot_good_sections(self, ax=None, label_func='instance', 
-                           include_disabled_meters=True, **kwargs):
+                           include_disabled_meters=True, load_kwargs=None,
+                           **plot_kwargs):
         """
         Parameters
         ----------
-        label_func : str
+        label_func : str or None
             e.g. 'instance' (default) or 'appliance_label'
+            if None then no labels will be produced.
         include_disabled_meters : bool
         """
         if ax is None:
             ax = plt.gca()
 
+        if load_kwargs is None:
+            load_kwargs = {}
+
         # Prepare list of meters
-        meters = copy(self.meters)
         if include_disabled_meters:
-            meters += self.disabled_meters
+            meters = self.all_meters()
+        else:
+            meters = self.meters
+        meters = copy(meters)
         meters.sort(key=meter_sorting_key, reverse=True)
+        n = len(meters)
 
         labels = []
         for i, meter in enumerate(meters):
-            good_sections = meter.good_sections(**kwargs)
-            ax = good_sections.plot(ax=ax, y=i)
-            labels.append(getattr(meter, label_func)())
+            good_sections = meter.good_sections(**load_kwargs)
+            ax = good_sections.plot(ax=ax, y=i, **plot_kwargs)
+            if label_func:
+                labels.append(getattr(meter, label_func)())
+
+        # Just end numbers
+        if label_func is None:
+            labels = [n] + ([''] * (n-2)) + [1]
 
         # Y tick formatting
-        n = len(meters)
         ax.set_yticks(np.arange(0, n) + 0.5)
         def y_formatter(y, pos):
             try:
@@ -1425,6 +1437,7 @@ class MeterGroup(Electric):
             return label
         ax.yaxis.set_major_formatter(FuncFormatter(y_formatter))
         ax.set_ylim([0, n])
+
         return ax
 
     def sort_meters(self):
@@ -1442,6 +1455,7 @@ class MeterGroup(Electric):
         return ", ".join(set([meter.appliance_label() for meter in self.meters]))
 
     def clear_cache(self):
+        """Clear cache on all meters in this MeterGroup."""
         for meter in self.meters:
             meter.clear_cache()
         
@@ -1450,11 +1464,15 @@ class MeterGroup(Electric):
         submeters = self.meters_directly_downstream_of_mains()
         return self.mains().correlation(submeters, **load_kwargs)
 
+    def all_meters(self):
+        """Returns a list of self.meters + self.disabled_meters."""
+        return self.meters + self.disabled_meters
+
     def describe(self, compute_expensive_stats=True, **kwargs):
         """Returns pd.Series describing this MeterGroup."""
         series = pd.Series()
 
-        all_meters = self.meters + self.disabled_meters
+        all_meters = self.all_meters()
         series['total_n_meters'] = len(all_meters)
         site_meters = [m for m in all_meters if m.is_site_meter()]
         series['total_n_site_meters'] = len(site_meters)

@@ -2,6 +2,7 @@ from __future__ import print_function, division
 import os
 from collections import OrderedDict
 import pandas as pd
+import matplotlib.pyplot as plt
 from .building import Building
 from .datastore.datastore import join_key
 from .utils import get_datastore
@@ -90,3 +91,37 @@ class DataSet(object):
         for i, building in self.buildings.iteritems():
             results[i] = building.describe(**kwargs)
         return results
+
+    def plot_good_sections(self, axes=None, label_func=None, gap=0, **kwargs):
+        """Plots all good sections for all buildings.
+
+        Parameters
+        ----------
+        axes : list of axes or None.
+            If None then they will be generated.
+
+        Returns
+        -------
+        axes : list of axes
+        """
+        n = len(self.buildings)
+        if axes is None:
+            n_meters_per_building = [len(elec.all_meters()) 
+                                     for elec in self.elecs()]
+            gridspec_kw = dict(height_ratios=n_meters_per_building)
+            fig, axes = plt.subplots(n, 1, sharex=True, gridspec_kw=gridspec_kw)
+                                     
+        assert n == len(axes)
+        for ax, elec in zip(axes, self.elecs()):
+            elec.plot_good_sections(ax=ax, label_func=label_func, gap=gap, 
+                                    **kwargs)
+            ax.set_title('House {}'.format(elec.building()))
+
+        return axes
+
+    def elecs(self):
+        return [building.elec for building in self.buildings.values()]
+
+    def clear_cache(self):
+        for elec in self.elecs():
+            elec.clear_cache()
