@@ -348,3 +348,21 @@ def most_common(lst):
     counts.sort()
     most_common = counts.index[-1]
     return most_common
+
+
+def capitalise_first_letter(string):
+    return string[0].upper() + string[1:]
+
+
+def capitalise_index(index):
+    labels = list(index)
+    for i, label in enumerate(labels):
+        labels[i] = capitalise_first_letter(label)
+    return labels
+
+
+def capitalise_legend(ax):
+    legend_handles = ax.get_legend_handles_labels()
+    labels = capitalise_index(legend_handles[1])
+    ax.legend(legend_handles[0], labels)
+    return ax
