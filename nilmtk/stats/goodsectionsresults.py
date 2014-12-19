@@ -2,9 +2,9 @@ import pandas as pd
 from datetime import timedelta
 import matplotlib.pyplot as plt
 from ..results import Results
-from ..consts import SECS_PER_DAY
 from nilmtk.timeframe import TimeFrame, convert_none_to_nat, convert_nat_to_none
 from nilmtk.utils import get_tz, tz_localize_naive
+from nilmtk.timeframegroup import TimeFrameGroup
 
 class GoodSectionsResults(Results):
     """
@@ -95,21 +95,10 @@ class GoodSectionsResults(Results):
                                        for timeframe in good_sections]
         return {'statistics': {'good_sections': good_sections_list_of_dicts}}
 
-    def plot(self, ax=None):
-        if ax is None:
-            ax = plt.gca()
-        ax.xaxis.axis_date()
-        for timeframe in self.combined():
-            length = ((timeframe.end - timeframe.start).total_seconds() / 
-                      SECS_PER_DAY)
-            rect = plt.Rectangle((timeframe.start, 0), # bottom left corner
-                                 length,
-                                 1, # width
-                                 color='b') 
-            ax.add_patch(rect)            
-
-        ax.autoscale_view()
-
+    def plot(self, **kwargs):
+        timeframes = TimeFrameGroup(self.combined())
+        return timeframes.plot(**kwargs)
+        
     def import_from_cache(self, cached_stat, sections):
         # we (deliberately) use duplicate indices to cache GoodSectionResults
         grouped_by_index = cached_stat.groupby(level=0)
