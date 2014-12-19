@@ -8,7 +8,7 @@ from datetime import timedelta
 from warnings import warn
 from sys import stdout
 from collections import Counter
-from copy import deepcopy
+from copy import copy, deepcopy
 import gc
 from collections import namedtuple
 from .elecmeter import ElecMeter, ElecMeterID
@@ -1390,26 +1390,46 @@ class MeterGroup(Electric):
         plt.ylim((-0.5, len(self.meters)+0.5))
         return ax
 
-    def plot_good_sections(self, ax=None, **kwargs):
+    def plot_good_sections(self, ax=None, label_func='instance', 
+                           include_disabled_meters=True, **kwargs):
+        """
+        Parameters
+        ----------
+        label_func : str
+            e.g. 'instance' (default) or 'appliance_label'
+        include_disabled_meters : bool
+        """
         if ax is None:
             ax = plt.gca()
 
+        # Prepare list of meters
+        meters = copy(self.meters)
+        if include_disabled_meters:
+            meters += self.disabled_meters
+        meters.sort(key=meter_sorting_key, reverse=True)
+
         labels = []
-        for i, meter in enumerate(self.meters):
+        for i, meter in enumerate(meters):
             good_sections = meter.good_sections(**kwargs)
             ax = good_sections.plot(ax=ax, y=i)
-            labels.append(meter.appliance_label())
+            labels.append(getattr(meter, label_func)())
 
         # Y tick formatting
-        ax.set_yticks(np.arange(0, len(self.meters)) + 0.5)
+        n = len(meters)
+        ax.set_yticks(np.arange(0, n) + 0.5)
         def y_formatter(y, pos):
-            return labels[int(y)]
+            try:
+                label = labels[int(y)]
+            except IndexError:
+                label = ''
+            return label
         ax.yaxis.set_major_formatter(FuncFormatter(y_formatter))
+        ax.set_ylim([0, n])
         return ax
 
     def sort_meters(self):
         """Sorts meters by instance."""
-        self.meters.sort(key=lambda meter: meter.instance())
+        self.meters.sort(key=meter_sorting_key)
 
     def appliance_label(self):
         """
@@ -1607,3 +1627,6 @@ def combine_chunks_from_generators(index, columns, meters, kwargs):
     print("Done loading data all meters for this chunk.")
     cumulator.timeframe = timeframe
     return cumulator
+
+
+meter_sorting_key = lambda meter: meter.instance()
