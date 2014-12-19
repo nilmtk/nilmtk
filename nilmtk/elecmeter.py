@@ -462,7 +462,12 @@ class ElecMeter(Hashable, Electric):
             return []
 
         ac_types = self.available_ac_types(physical_quantity)
-        return [(physical_quantity, select_best_ac_type(ac_types))]
+        try:
+            best_ac_type = select_best_ac_type(ac_types)
+        except KeyError:
+            return []
+        else:
+            return [(physical_quantity, best_ac_type)]
 
     def _convert_physical_quantity_and_ac_type_to_cols(
             self, physical_quantity=None, ac_type=None, cols=None, 

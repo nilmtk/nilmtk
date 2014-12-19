@@ -930,7 +930,10 @@ class MeterGroup(Electric):
             else:
                 break
 
-        return pd.concat(segments)
+        if segments:
+            return pd.concat(segments)
+        else:
+            return pd.DataFrame(columns=self.identifier.meters)
 
     def entropy_per_meter(self):
         """Finds the entropy of each meter in this MeterGroup.
