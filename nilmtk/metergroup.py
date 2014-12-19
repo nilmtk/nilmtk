@@ -3,6 +3,7 @@ import networkx as nx
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.ticker import FuncFormatter
 from datetime import timedelta
 from warnings import warn
 from sys import stdout
@@ -25,6 +26,7 @@ from .electric import Electric
 from .timeframe import TimeFrame, split_timeframes
 from .preprocessing import Apply
 from .datastore import MAX_MEM_ALLOWANCE_IN_BYTES
+from nilmtk.timeframegroup import TimeFrameGroup
 
 # meters is a tuple or ElecMeterIDs.  Order doesn't matter.
 # (we can't use a set because sets aren't hashable so we can't use 
@@ -1387,6 +1389,27 @@ class MeterGroup(Electric):
         plt.yticks(range(len(self.meters)), labels)
         plt.ylim((-0.5, len(self.meters)+0.5))
         return ax
+
+    def plot_good_sections(self, ax=None, **kwargs):
+        if ax is None:
+            ax = plt.gca()
+
+        labels = []
+        for i, meter in enumerate(self.meters):
+            good_sections = meter.good_sections(**kwargs)
+            ax = good_sections.plot(ax=ax, y=i)
+            labels.append(meter.appliance_label())
+
+        # Y tick formatting
+        ax.set_yticks(np.arange(0, len(self.meters)) + 0.5)
+        def y_formatter(y, pos):
+            return labels[int(y)]
+        ax.yaxis.set_major_formatter(FuncFormatter(y_formatter))
+        return ax
+
+    def sort_meters(self):
+        """Sorts meters by instance."""
+        self.meters.sort(key=lambda meter: meter.instance())
 
     def appliance_label(self):
         """

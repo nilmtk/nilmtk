@@ -40,7 +40,7 @@ class GoodSectionsResults(Results):
 
         Returns
         -------
-        sections : list of nilmtk.TimeFrame objects
+        sections : TimeFrameGroup (a subclass of Python's list class)
         """
         sections = []
         end_date_of_prev_row = None
@@ -82,7 +82,7 @@ class GoodSectionsResults(Results):
             if sections[-1].end is None:
                 sections[-1].end = end_date_of_prev_row
 
-        return sections
+        return TimeFrameGroup(sections)
 
     def unify(self, other):
         # TODO!
@@ -96,7 +96,7 @@ class GoodSectionsResults(Results):
         return {'statistics': {'good_sections': good_sections_list_of_dicts}}
 
     def plot(self, **kwargs):
-        timeframes = TimeFrameGroup(self.combined())
+        timeframes = self.combined()
         return timeframes.plot(**kwargs)
         
     def import_from_cache(self, cached_stat, sections):
