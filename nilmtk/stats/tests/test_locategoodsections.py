@@ -43,6 +43,7 @@ class TestLocateGoodSections(unittest.TestCase):
                     kwargs = {}
                 else:
                     kwargs = {'chunksize': chunksize}
+                              
                 source_node = meter.get_source_node(**kwargs)
                 good_sections = GoodSections(source_node)
                 good_sections.run()

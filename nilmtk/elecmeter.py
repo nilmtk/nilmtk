@@ -392,7 +392,6 @@ class ElecMeter(Hashable, Electric):
             print("kwargs after setting resample setting:")
             print(kwargs)
 
-        kwargs = self._convert_physical_quantity_and_ac_type_to_cols(**kwargs)
         kwargs = self._prep_kwargs_for_sample_period_and_resample(**kwargs)
 
         if verbose:
@@ -441,14 +440,16 @@ class ElecMeter(Hashable, Electric):
         if physical_quantity is None:
             physical_quantity = self.available_physical_quantities()
             if ac_type:
-                physical_quantities_filtered = set()
-                for pq in physical_quantity:
-                    if pq in PHYSICAL_QUANTITIES_WITH_AC_TYPES:
+                physical_quantity = [pq for pq in physical_quantity
+                                     if pq in PHYSICAL_QUANTITIES_WITH_AC_TYPES]
+                if ac_type != ['best']:
+                    physical_quantities_filtered = set()
+                    for pq in physical_quantity:
                         available_ac_types = self.available_ac_types(pq)
                         for a_t in ac_type:
                             if a_t in available_ac_types:
                                 physical_quantities_filtered.add(pq)
-                physical_quantity = list(physical_quantities_filtered)
+                    physical_quantity = list(physical_quantities_filtered)
 
         elif isinstance(physical_quantity, basestring):
             physical_quantity = [physical_quantity]
@@ -468,7 +469,7 @@ class ElecMeter(Hashable, Electric):
             available_ac_types = self.available_ac_types(pq)
             if not available_ac_types:
                 # then this is probably a physical quantity like 'voltage'
-                cols.append((pq, ''))
+                cols.append((pq, None))
                 continue
 
             if ac_type is None:
@@ -501,6 +502,8 @@ class ElecMeter(Hashable, Electric):
         if self.store is None:
             raise RuntimeError(
                 "Cannot get source node if meter.store is None!")
+        if 'ac_type' in loader_kwargs or 'physical_quantity' in loader_kwargs:
+            loader_kwargs = self._convert_physical_quantity_and_ac_type_to_cols(**loader_kwargs)
         generator = self.store.load(key=self.key, **loader_kwargs)
         self.metadata['device'] = self.device
         return Node(self, generator=generator)
@@ -593,6 +596,11 @@ class ElecMeter(Hashable, Electric):
         """
         full_results = loader_kwargs.pop('full_results', False)
         verbose = loader_kwargs.get('verbose')
+        if 'ac_type' in loader_kwargs or 'physical_quantity' in loader_kwargs:
+            loader_kwargs = self._convert_physical_quantity_and_ac_type_to_cols(**loader_kwargs)
+        cols = loader_kwargs.get('cols', [])
+        ac_types = set([m[1] for m in cols if m[1]])
+        results_obj_copy = deepcopy(results_obj)
 
         # Prepare `sections` list
         sections = loader_kwargs.get('sections')
@@ -607,12 +615,24 @@ class ElecMeter(Hashable, Electric):
         if loader_kwargs.get('preprocessing') is None:
             cached_stat = self.get_cached_stat(key_for_cached_stat)
             results_obj.import_from_cache(cached_stat, sections)
-            
-            # Get sections_to_compute
-            results_obj_timeframes = results_obj.timeframes()
-            sections_to_compute = set(sections) - set(results_obj_timeframes)
-            sections_to_compute = list(sections_to_compute)
-            sections_to_compute.sort()
+        
+            def find_sections_to_compute():
+                # Get sections_to_compute
+                results_obj_timeframes = results_obj.timeframes()
+                sections_to_compute = set(sections) - set(results_obj_timeframes)
+                sections_to_compute = list(sections_to_compute)
+                sections_to_compute.sort()
+                return sections_to_compute
+            try:
+                ac_type_keys = results_obj.simple().keys()
+            except:
+                sections_to_compute = find_sections_to_compute()
+            else:
+                if ac_types.issubset(ac_type_keys):
+                    sections_to_compute = find_sections_to_compute()
+                else:
+                    sections_to_compute = sections
+                    results_obj = results_obj_copy
         else:
             sections_to_compute = sections
 
@@ -635,8 +655,20 @@ class ElecMeter(Hashable, Electric):
                 # the old table probably had different columns
                 self.store.remove(key_for_cached_stat)
                 self.store.put(key_for_cached_stat, results_obj.export_to_cache())
-
-        return results_obj if full_results else results_obj.simple()
+                
+        if full_results:
+            return results_obj
+        else:
+            res = results_obj.simple()
+            if ac_types:
+                try:
+                    ac_type_keys = res.keys()
+                except:
+                    return res
+                else:
+                    return pd.Series(res[ac_types], index=ac_types)
+            else:
+                return res
 
     def _compute_stat(self, nodes, loader_kwargs):
         """

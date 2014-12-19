@@ -185,7 +185,7 @@ class Electric(object):
             uptime += good_section.timedelta
         return uptime
 
-    def average_energy_per_period(self, offset_alias='D', **load_kwargs):
+    def average_energy_per_period(self, offset_alias='D', use_uptime=True, **load_kwargs):
         """Calculate the average energy per period.  e.g. the average 
         energy per day.
 
@@ -194,6 +194,7 @@ class Electric(object):
         offset_alias : str
             A Pandas `offset alias`.  See:
             pandas.pydata.org/pandas-docs/stable/timeseries.html#offset-aliases
+        use_uptime : bool
 
         Returns
         -------
@@ -201,7 +202,17 @@ class Electric(object):
             Keys are AC types.
             Values are energy in kWh per period.
         """
-        uptime_secs = self.uptime(**load_kwargs).total_seconds()
+        if 'sections' in load_kwargs:
+            raise RuntimeError("Please do not pass in 'sections' into"
+                               " 'average_energy_per_period'.  Instead"
+                               " use 'use_uptime' param.")
+        if use_uptime:
+            td = self.uptime(**load_kwargs)
+        else:
+            td = self.get_timeframe().timedelta
+        if not td:
+            return np.NaN
+        uptime_secs = td.total_seconds()
         periods = uptime_secs / offset_alias_to_seconds(offset_alias)
         energy = self.total_energy(**load_kwargs)
         return energy / periods

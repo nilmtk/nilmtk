@@ -1089,12 +1089,21 @@ class MeterGroup(Electric):
                                for meter in self.meters]
         return list(set(flatten_2d_list(all_physical_quants)))
 
-    def energy_per_meter(self, **load_kwargs):
+    def energy_per_meter(self, per_period=None, **load_kwargs):
         """Returns pd.DataFrame where columns is meter.identifier and 
         each value is total energy.  Index is AC types.
 
         Does not care about wiring hierarchy.  Does not attempt to ensure all 
         channels share the same time sections.
+
+        Parameters
+        ----------
+        per_period : None or offset alias
+            If None then returns absolute energy used per meter.
+            If a Pandas offset alias (e.g. 'D' for 'daily') then 
+            will return the average energy per period.
+        ac_type : None or str
+            e.g. 'active' or 'best'
         """
         meter_identifiers = list(self.identifier)
         energy_per_meter = pd.DataFrame(columns=meter_identifiers, index=AC_TYPES)
@@ -1102,7 +1111,12 @@ class MeterGroup(Electric):
         for i, meter in enumerate(self.meters):
             print('\r{:d}/{:d} {}'.format(i+1, n_meters, meter), end='')
             stdout.flush()
-            meter_energy = meter.total_energy(**load_kwargs)
+            if per_period is None:
+                meter_energy = meter.total_energy(**load_kwargs)
+            else:
+                load_kwargs.setdefault('use_uptime', False)
+                meter_energy = meter.average_energy_per_period(
+                    offset_alias=per_period, **load_kwargs)
             energy_per_meter[meter.identifier] = meter_energy
         return energy_per_meter.dropna(how='all')
 
