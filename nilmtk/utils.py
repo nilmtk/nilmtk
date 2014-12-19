@@ -338,3 +338,13 @@ def append_or_extend_list(lst, value):
 
 def convert_to_list(list_like):
     return [] if list_like is None else list(list_like)
+
+
+def most_common(lst):
+    """Returns the most common entry in lst."""
+    lst = list(lst)
+    counts = {item:lst.count(item) for item in set(lst)}
+    counts = pd.Series(counts)
+    counts.sort()
+    most_common = counts.index[-1]
+    return most_common

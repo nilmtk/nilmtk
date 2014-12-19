@@ -19,6 +19,7 @@ from .node import Node
 from .electric import Electric
 from .timeframe import TimeFrame, list_of_timeframe_dicts
 from .exceptions import MeasurementError
+from .utils import flatten_2d_list
 import nilmtk
 
 ElecMeterID = namedtuple('ElecMeterID', ['instance', 'building', 'dataset'])
@@ -207,12 +208,16 @@ class ElecMeter(Hashable, Electric):
 
         Parameters
         ----------
-        physical_quantity : str
+        physical_quantity : str or list of strings
 
         Returns
         -------
         list of strings e.g. ['apparent', 'active']
         """
+        if isinstance(physical_quantity, list):
+            ac_types = [self.available_ac_types(pq) for pq in physical_quantity]
+            return list(set(flatten_2d_list(ac_types)))
+
         if physical_quantity not in PHYSICAL_QUANTITIES:
             raise ValueError("`physical_quantity` must by one of '{}', not '{}'"
                              .format(PHYSICAL_QUANTITIES, physical_quantity))

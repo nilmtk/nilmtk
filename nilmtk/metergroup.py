@@ -15,7 +15,8 @@ from .appliance import Appliance
 from .datastore.datastore import join_key
 from .utils import (tree_root, nodes_adjacent_to_root, simplest_type_for,
                     flatten_2d_list, convert_to_timestamp, normalise_timestamp,
-                    print_on_line, convert_to_list, append_or_extend_list)
+                    print_on_line, convert_to_list, append_or_extend_list,
+                    most_common)
 from .plots import plot_series
 from .measurement import (select_best_ac_type, AC_TYPES, LEVEL_NAMES,
                           PHYSICAL_QUANTITIES_TO_AVERAGE)
@@ -1069,7 +1070,7 @@ class MeterGroup(Electric):
 
         Parameters
         ----------
-        physical_quantity : str
+        physical_quantity : str or list of strings
 
         Returns
         -------
@@ -1089,7 +1090,8 @@ class MeterGroup(Electric):
                                for meter in self.meters]
         return list(set(flatten_2d_list(all_physical_quants)))
 
-    def energy_per_meter(self, per_period=None, **load_kwargs):
+    def energy_per_meter(self, per_period=None, mains=None, 
+                         use_appliance_labels=False, **load_kwargs):
         """Returns pd.DataFrame where columns is meter.identifier and 
         each value is total energy.  Index is AC types.
 
@@ -1103,11 +1105,12 @@ class MeterGroup(Electric):
             If a Pandas offset alias (e.g. 'D' for 'daily') then 
             will return the average energy per period.
         ac_type : None or str
-            e.g. 'active' or 'best'
+            e.g. 'active' or 'best'.  Defaults to 'best'.
         """
         meter_identifiers = list(self.identifier)
         energy_per_meter = pd.DataFrame(columns=meter_identifiers, index=AC_TYPES)
         n_meters = len(self.meters)
+        load_kwargs.setdefault('ac_type', 'best')
         for i, meter in enumerate(self.meters):
             print('\r{:d}/{:d} {}'.format(i+1, n_meters, meter), end='')
             stdout.flush()
@@ -1118,7 +1121,40 @@ class MeterGroup(Electric):
                 meter_energy = meter.average_energy_per_period(
                     offset_alias=per_period, **load_kwargs)
             energy_per_meter[meter.identifier] = meter_energy
-        return energy_per_meter.dropna(how='all')
+
+        energy_per_meters = energy_per_meter.dropna(how='all')
+
+        if use_appliance_labels:
+            energy_per_meter.columns = self.get_appliance_labels(energy_per_meter.columns)
+
+        return energy_per_meter
+
+    def energy_per_meter_with_remainder(self, mains, per_period=None, **kwargs):
+        energy = self.energy_per_meter(per_period=per_period, **kwargs)
+        ac_types = energy.keys()
+        energy = energy.sum() # Collapse AC_TYPEs into Series
+
+        # Find most common ac_type in energy:
+        most_common_ac_type = most_common(ac_types)
+        mains_ac_types = mains.available_ac_types(
+            ['power', 'energy', 'cumulative energy'])
+        if most_common_ac_type in mains_ac_types:
+            mains_ac_type = most_common_ac_type
+        else:
+            mains_ac_type = 'best'
+
+        # Get mains energy
+        if per_period is None:
+            mains_energy = mains.total_energy(**kwargs)
+        else:
+            mains_energy = mains.average_energy_per_period(
+                offset_alias=per_period, ac_type=mains_ac_type, **kwargs)
+        mains_energy = mains_energy[mains_energy.keys()[0]]
+
+        # Calculate remainder
+        energy['Remainder'] = mains_energy - energy.sum()
+        energy.sort(ascending=False)
+        return energy
 
     def fraction_per_meter(self, **load_kwargs):
         """Fraction of energy per meter.
@@ -1305,7 +1341,7 @@ class MeterGroup(Electric):
         ax : matplotlib.axes, optional
         plot_legend : boolean, optional
             Defaults to True.  Set to False to not plot legend.
-        kind : {'separate lines', 'sum', 'area'}
+        kind : {'separate lines', 'sum', 'area', 'energy bar'}
         timeframe : nilmtk.TimeFrame, optional
             Defaults to self.get_timeframe()
         """
