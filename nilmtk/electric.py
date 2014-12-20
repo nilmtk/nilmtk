@@ -22,13 +22,14 @@ from .utils import (offset_alias_to_seconds, convert_to_timestamp,
 from .plots import plot_series
 from .preprocessing import Apply
 from nilmtk.stats.histogram import histogram_from_generator
+from nilmtk.appliance import DEFAULT_ON_POWER_THRESHOLD
 
 MAX_SIZE_ENTROPY = 10000
 
 class Electric(object):
     """Common implementations of methods shared by ElecMeter and MeterGroup.
     """   
-    def when_on(self, **load_kwargs):
+    def when_on(self, on_power_threshold=None, **load_kwargs):
         """Are the connected appliances appliance is on (True) or off (False)?
 
         Uses `self.min_on_power_threshold()` if `on_power_threshold` not provided.
@@ -36,6 +37,7 @@ class Electric(object):
         Parameters
         ----------
         on_power_threshold : number, optional
+            Defaults to self.min_on_power_threshold()
         **load_kwargs : key word arguments
             Passed to self.power_series()
 
@@ -45,23 +47,19 @@ class Electric(object):
             index is the same as for chunk returned by `self.power_series()`
             values are booleans
         """
-        on_power_threshold = load_kwargs.pop('on_power_threshold', 
-                                             self.min_on_power_threshold())
+        if on_power_threshold is None:
+            on_power_threshold = self.min_on_power_threshold()
         for chunk in self.power_series(**load_kwargs):
-            yield chunk > on_power_threshold
+            yield chunk >= on_power_threshold
             
     def min_on_power_threshold(self):
         """Returns the minimum `on_power_threshold` across all appliances 
         immediately downstream of this meter.  If any appliance 
         does not have an `on_power_threshold` then default to 10 watts."""
-        DEFAULT_ON_POWER_THRESHOLD = 10
-        on_power_thresholds = [
-            appl.metadata.get('on_power_threshold', DEFAULT_ON_POWER_THRESHOLD)
-            for appl in self.appliances]
-        if on_power_thresholds:
-            return min(on_power_thresholds)
-        else:
+        if not self.appliances:
             return DEFAULT_ON_POWER_THRESHOLD
+        on_power_thresholds = [a.on_power_threshold() for a in self.appliances]
+        return min(on_power_thresholds)
 
     def matches_appliances(self, key):
         """
@@ -569,16 +567,48 @@ class Electric(object):
         kwargs.setdefault('ac_type', 'best')
         return self.load_series(**kwargs)
 
-  #   def activity_distribution(self):
-  # * activity distribution:
-  #   - use ElecMeter.get_timeframe() to get start and end
-  #   - use pd.period_range to make daily period index
-  #   - load daily chunks
-  #   - downsample using Apply
-  #   - when_on
-  #   - answers = zeros(n_timeslices_per_chunk)
-  #   - add each chunk to answers
-  #   - answer is now the histogram!
+    def activity_distribution(self, bin_duration='H', period='D', **kwargs):
+        """Return a histogram vector showing when activity occurs.
+
+        e.g. to see when, over the course of an average day, activity occurs
+        then use `bin_duration='H'` and `period='D'`.
+
+        Parameters
+        ----------
+        bin_duration : str. Pandas period alias e.g. 'H' = hourly; 'D' = daily.
+            Width of each bin of the histogram.  `bin_duration` must exactly
+            divide the chosen `period`.
+        period : str. Pandas period alias.
+
+        Returns
+        -------
+        hist : np.ndarray
+        """
+        n_bins = (offset_alias_to_seconds(period) / 
+                  offset_alias_to_seconds(bin_duration))
+        if n_bins != int(n_bins):
+            raise ValueError('`bin_duration` must exactly divide the'
+                             ' chosen `period`')
+        n_bins = int(n_bins)
+        when_on = self.when_on(**kwargs)
+        hist = np.zeros(n_bins, dtype=int)
+        for on_chunk in when_on:
+            on_chunk = on_chunk.resample(bin_duration, how='max')
+
+            # reindex so it starts and ends at midnight
+            start = on_chunk.index[0].date()
+            end = on_chunk.index[-1].date() + timedelta(days=1)
+            new_index = pd.date_range(start, end, freq=bin_duration, closed='left')
+            on_chunk = on_chunk.reindex(new_index)
+            on_chunk = on_chunk.fillna(0)
+
+            # reshape
+            matrix = on_chunk.reshape((-1, n_bins))
+
+            # histogram
+            hist += matrix.sum(axis=0)
+
+        return hist
 
 
 def align_two_meters(master, slave, func='power_series'):

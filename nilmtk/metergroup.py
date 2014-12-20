@@ -1391,9 +1391,6 @@ class MeterGroup(Electric):
                 graph[upstream_meter][meter]["color"] = "blue"
             plt.draw()
 
-
-
-
     def _plot_area(self, ax=None, timeframe=None, plot_kwargs=None, **kwargs):
         """
         Parameters
@@ -1478,6 +1475,33 @@ class MeterGroup(Electric):
         ax.set_ylim([0, n])
 
         return ax
+
+    def plot_multiple(self, nrows, ncols, meters, plot_func, 
+                      kwargs_per_meter=None, **kwargs):
+        """Create multiple subplots.
+
+        Parameters
+        -----------
+        nrows : int
+        ncols : int
+        meters : list of keys for identifying ElecMeters or MeterGroups. 
+            e.g. ['fridge', 'kettle', 4, MeterGroupID, ElecMeterID].  
+            Each element is anything that MeterGroup.__getitem__() accepts.
+        plot_func : function
+        kwargs_per_meter : dict
+            Provide key word arguments for the plot_func for each meter.
+            each key is a parameter name for plot_func
+            each value is a list (same length as `meters`) for specifying a value for
+            this parameter for each meter. 
+            e.g. {'range': [(0,100), (0,200)]}
+        **kwargs : any key word arguments to pass the same values to the
+           plot func for every meter.
+
+        Returns
+        -------
+        fig, axes
+        """
+        raise NotImplementedError()
 
     def sort_meters(self):
         """Sorts meters by instance."""
