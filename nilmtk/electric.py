@@ -382,14 +382,18 @@ class Electric(object):
             autocorrelation_plot(power, ax = ax)
         return ax
 
-    def plot_histogram_of_power(self, ax=None, load_kwargs=None, **plot_kwargs):
+    def plot_histogram_of_power(self, ax=None, load_kwargs=None, 
+                                hist_kwargs=None, **plot_kwargs):
         if ax is None:
             ax = plt.gca()
         if load_kwargs is None:
             load_kwargs = {}
+        if hist_kwargs is None:
+            hist_kwargs = {}
         generator = self.power_series(**load_kwargs)
-        hist, bins = histogram_from_generator(generator, **plot_kwargs)
-        ax.bar(bins[:-1], hist, np.diff(bins))
+        hist, bins = histogram_from_generator(generator, **hist_kwargs)
+        plot_kwargs.setdefault('align', 'center')
+        ax.bar(bins[:-1], hist, np.diff(bins), **plot_kwargs)
         return ax
 
     def switch_times(self, threshold=40):
@@ -568,7 +572,7 @@ class Electric(object):
         kwargs.setdefault('ac_type', 'best')
         return self.load_series(**kwargs)
 
-    def activity_distribution(self, bin_duration='H', period='D', **kwargs):
+    def activity_histogram(self, period='D', bin_duration='H', **kwargs):
         """Return a histogram vector showing when activity occurs.
 
         e.g. to see when, over the course of an average day, activity occurs
@@ -576,11 +580,10 @@ class Electric(object):
 
         Parameters
         ----------
+        period : str. Pandas period alias.
         bin_duration : str. Pandas period alias e.g. 'H' = hourly; 'D' = daily.
             Width of each bin of the histogram.  `bin_duration` must exactly
             divide the chosen `period`.
-        period : str. Pandas period alias.
-
         Returns
         -------
         hist : np.ndarray
@@ -620,6 +623,23 @@ class Electric(object):
             hist += matrix.sum(axis=0)
 
         return hist
+
+    def plot_activity_histogram(self, ax=None, period='D', bin_duration='H',
+                                plot_kwargs=None, **kwargs):
+        if ax is None:
+            ax = plt.gca()
+        hist = self.activity_histogram(bin_duration=bin_duration,
+                                       period=period, **kwargs)
+        if plot_kwargs is None:
+            plot_kwargs = {}
+        n_bins = len(hist)
+        plot_kwargs.setdefault('align', 'center')
+        ax.bar(range(n_bins), hist, np.ones(n_bins), **plot_kwargs)
+        ax.set_xlim([0, n_bins])
+        ax.set_title('Activity distribution')
+        ax.set_xlabel(bin_duration + ' of ' + period)
+        ax.set_ylabel('Count')
+        return ax
 
 
 def align_two_meters(master, slave, func='power_series'):
