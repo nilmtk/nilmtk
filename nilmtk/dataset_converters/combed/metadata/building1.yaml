@@ -7,13 +7,26 @@ elec_meters:
   2: &total_lifts
      submeter_of: 0
      device_model: EM6400
-  3: &floor_total
+  3: &first_floor_total
      submeter_of: 0 
      device_model: EM6400
-  4: *floor_total
-  5: *floor_total
-  6: *floor_total
-  7: *floor_total
+     name: First floor total
+  4: &second_floor_total
+     submeter_of: 0
+     device_model: EM6400
+     name: Second floor total
+  5: &third_floor_total
+     submeter_of: 0
+     device_model: EM6400
+     name: Third floor total
+  6: &fourth_floor_total
+     submeter_of: 0
+     device_model: EM6400
+     name: Fourth floor total
+  7: &fifth_floor_total
+     submeter_of: 0
+     device_model: EM6400
+     name: Fifth floor total
   8: &AHU_ground
      submeter_of: 0
      device_model: EM6400
