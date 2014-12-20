@@ -101,11 +101,12 @@ class Electric(object):
             sample_period = self.sample_period()
         else:
             resample = True
+        sample_period = int(round(sample_period))
 
         if resample:
             if resample_kwargs is None:
                 resample_kwargs = {}
-            resample_func = lambda df: df.resample(rule='{}S'.format(sample_period),
+            resample_func = lambda df: df.resample(rule='{:d}S'.format(sample_period),
                                                    **resample_kwargs)
             kwargs.setdefault('preprocessing', []).append(Apply(func=resample_func))
 
@@ -583,6 +584,7 @@ class Electric(object):
         Returns
         -------
         hist : np.ndarray
+            length will be `period / bin_duration`
         """
         n_bins = (offset_alias_to_seconds(period) / 
                   offset_alias_to_seconds(bin_duration))
@@ -590,17 +592,26 @@ class Electric(object):
             raise ValueError('`bin_duration` must exactly divide the'
                              ' chosen `period`')
         n_bins = int(n_bins)
+
+        # Resample to `bin_duration` and load
+        kwargs['sample_period'] = offset_alias_to_seconds(bin_duration)
+        kwargs['resample_kwargs'] = {'how': 'max'}
         when_on = self.when_on(**kwargs)
+
+        # Calculate histogram...
         hist = np.zeros(n_bins, dtype=int)
         for on_chunk in when_on:
-            on_chunk = on_chunk.resample(bin_duration, how='max')
+            on_chunk = on_chunk.fillna(0).astype(int)
 
-            # reindex so it starts and ends at midnight
-            start = on_chunk.index[0].date()
-            end = on_chunk.index[-1].date() + timedelta(days=1)
+            # Trick using resample to 'normalise' start and end dates
+            # to natural boundaries of 'period'.
+            resampled_to_period = on_chunk.iloc[[0, -1]].resample(period).index
+            start = resampled_to_period[0]
+            end = resampled_to_period[-1] + 1
+
+            # Reindex chunk
             new_index = pd.date_range(start, end, freq=bin_duration, closed='left')
-            on_chunk = on_chunk.reindex(new_index)
-            on_chunk = on_chunk.fillna(0)
+            on_chunk = on_chunk.reindex(new_index, fill_value=0, copy=False)
 
             # reshape
             matrix = on_chunk.reshape((-1, n_bins))
