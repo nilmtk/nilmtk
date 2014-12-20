@@ -1374,7 +1374,7 @@ class MeterGroup(Electric):
         graph = self.wiring_graph()
         meter_labels = {meter: meter.instance() for meter in graph.nodes()}
         pos = nx.graphviz_layout(graph, prog='dot')
-        nx.draw(graph, pos, labels=meter_labels, arrows=False)
+        #nx.draw(graph, pos, labels=meter_labels, arrows=False)
         meter_labels = {meter: meter.label() for meter in graph.nodes()}
         for meter, name in meter_labels.iteritems():
             x, y = pos[meter]
@@ -1387,9 +1387,9 @@ class MeterGroup(Electric):
                 upstream_meter = meter.upstream_meter()
                 proportion_of_upstream = meter.proportion_of_upstream()
                 print(meter.instance(), upstream_meter.instance(), proportion_of_upstream)
-                graph[upstream_meter][meter]["weight"] = proportion_of_upstream
+                graph[upstream_meter][meter]["weight"] = proportion_of_upstream*10
                 graph[upstream_meter][meter]["color"] = "blue"
-            plt.draw()
+            nx.draw(graph, pos, labels=meter_labels, arrows=False)
 
     def _plot_area(self, ax=None, timeframe=None, plot_kwargs=None, **kwargs):
         """
