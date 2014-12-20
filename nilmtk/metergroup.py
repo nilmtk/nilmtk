@@ -582,7 +582,7 @@ class MeterGroup(Electric):
                     delta_y = -5
                 plt.text(x, y+delta_y, s=name, bbox=dict(facecolor='red', alpha=0.5), horizontalalignment='center')
         ax = plt.gca()
-        return graph, nx, ax, pos
+        return graph, ax
 
     def load(self, **kwargs):
         """Returns a generator of DataFrames loaded from the DataStore.
@@ -1370,14 +1370,27 @@ class MeterGroup(Electric):
             plt.legend()
         return ax
 
-    def _plot_sankey(self, graph, nx, ax, pos):
-        meters = nx.nodes()
-        for meter in meters:
+    def _plot_sankey(self):
+        graph = self.wiring_graph()
+        meter_labels = {meter: meter.instance() for meter in graph.nodes()}
+        pos = nx.graphviz_layout(graph, prog='dot')
+        nx.draw(graph, pos, labels=meter_labels, arrows=False)
+        appliance_labels = {meter: meter.appliance_label() for meter in graph.nodes()}
+        for meter, name in appliance_labels.iteritems():
+            x, y = pos[meter]
+            if meter.is_site_meter():
+                delta_y = 5
+            else:
+                delta_y = -5
+            plt.text(x, y+delta_y, s=name, bbox=dict(facecolor='red', alpha=0.5), horizontalalignment='center')
             if not meter.is_site_meter():
                 upstream_meter = meter.upstream_meter()
                 proportion_of_upstream = meter.proportion_of_upstream()
-                nx.edge[upstream_meter, meter]["weight"] = proportion_of_upstream
-        return nx
+                print(meter.instance(), upstream_meter.instance(), proportion_of_upstream)
+                graph[upstream_meter][meter]["weight"] = proportion_of_upstream
+                graph[upstream_meter][meter]["color"] = "blue"
+            plt.draw()
+
 
 
 
