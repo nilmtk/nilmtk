@@ -6,8 +6,10 @@ from nilmtk.exceptions import MeasurementError
 AC_TYPES = ['active', 'apparent', 'reactive']
 # AC is short for 'Alternating Current'.
 # AC_TYPES is in order of preference (favourite first).
+# Note that 'pf' is deprecated. Please use 'power factor'.  See issue #289.
 PHYSICAL_QUANTITIES = ['power', 'energy', 'cumulative energy', 
-                       'voltage', 'current', 'pf', 'frequency', 'power factor']
+                       'voltage', 'current', 'pf', 'frequency', 'power factor', 
+                       'state']
 PHYSICAL_QUANTITIES_WITH_AC_TYPES = ['power', 'energy', 'cumulative energy']
 PHYSICAL_QUANTITIES_TO_AVERAGE = ['voltage', 'pf', 'frequency', 'power factor']
 LEVEL_NAMES = ['physical_quantity', 'type']
