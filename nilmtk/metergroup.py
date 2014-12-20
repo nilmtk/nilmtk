@@ -571,7 +571,6 @@ class MeterGroup(Electric):
         graph = self.wiring_graph()
         meter_labels = {meter: meter.instance() for meter in graph.nodes()}
         pos = nx.graphviz_layout(graph, prog='dot')
-
         nx.draw(graph, pos, labels=meter_labels, arrows=False)
         if show_appliance_labels:
             appliance_labels = {meter: meter.appliance_label() for meter in graph.nodes()}
@@ -582,6 +581,8 @@ class MeterGroup(Electric):
                 else:
                     delta_y = -5
                 plt.text(x, y+delta_y, s=name, bbox=dict(facecolor='red', alpha=0.5), horizontalalignment='center')
+        ax = plt.gca()
+        return graph, nx, ax, pos
 
     def load(self, **kwargs):
         """Returns a generator of DataFrames loaded from the DataStore.
@@ -1352,7 +1353,8 @@ class MeterGroup(Electric):
         function_map = {
             'separate lines': self._plot_separate_lines,
             'sum': super(MeterGroup, self).plot,
-            'area': self._plot_area
+            'area': self._plot_area,
+            'sankey': self._plot_sankey
         }
         try:
             ax = function_map[kind](**kwargs)
@@ -1367,6 +1369,17 @@ class MeterGroup(Electric):
         if plot_legend:
             plt.legend()
         return ax
+
+    def _plot_sankey(self, graph, nx, ax, pos):
+        meters = nx.nodes()
+        for meter in meters:
+            if not meter.is_site_meter():
+                upstream_meter = meter.upstream_meter()
+                proportion_of_upstream = meter.proportion_of_upstream()
+                nx.edge[upstream_meter, meter]["weight"] = proportion_of_upstream
+        return nx
+
+
 
     def _plot_area(self, ax=None, timeframe=None, plot_kwargs=None, **kwargs):
         """
