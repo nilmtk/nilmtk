@@ -196,8 +196,8 @@ class ElecMeter(Hashable, Electric):
         meter_names = []
         if self.is_site_meter():
             meter_names.append('SITE METER')
-        if hasattr(self, 'name'):
-            meter_names.append(self.name)
+        if "name" in self.metadata:
+            meter_names.append(self.metadata["name"])
         else:
             for appliance in self.appliances:
                 appliance_name = appliance.label()

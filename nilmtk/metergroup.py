@@ -1513,8 +1513,8 @@ class MeterGroup(Electric):
         -------
         string : A label listing all the appliance types.
         """
-        if hasattr(self, "name"):
-            return self.name
+        if "name" in self.metadata:
+            return self.metadata["name"]
         return ", ".join(set([meter.label() for meter in self.meters]))
 
     def clear_cache(self):
