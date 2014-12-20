@@ -489,8 +489,8 @@ class MeterGroup(Electric):
             append_or_extend_list(values, value)
         return list(set(values))
 
-    def get_appliance_labels(self, meter_ids):
-        """Create human-readable appliance labels.
+    def get_labels(self, meter_ids):
+        """Create human-readable meter labels.
 
         Parameters
         ----------
@@ -501,7 +501,7 @@ class MeterGroup(Electric):
         list of strings describing the appliances.
         """
         meters = [self[meter_id] for meter_id in meter_ids]
-        labels = [meter.appliance_label() for meter in meters]
+        labels = [meter.label() for meter in meters]
         return labels
 
     def __repr__(self):
@@ -567,14 +567,14 @@ class MeterGroup(Electric):
         _build_wiring_graph(self.meters)
         return wiring_graph
 
-    def draw_wiring_graph(self, show_appliance_labels=True):
+    def draw_wiring_graph(self, show_meter_labels=True):
         graph = self.wiring_graph()
         meter_labels = {meter: meter.instance() for meter in graph.nodes()}
         pos = nx.graphviz_layout(graph, prog='dot')
         nx.draw(graph, pos, labels=meter_labels, arrows=False)
-        if show_appliance_labels:
-            appliance_labels = {meter: meter.appliance_label() for meter in graph.nodes()}
-            for meter, name in appliance_labels.iteritems():
+        if show_meter_labels:
+            meter_labels = {meter: meter.label() for meter in graph.nodes()}
+            for meter, name in meter_labels.iteritems():
                 x, y = pos[meter]
                 if meter.is_site_meter():
                     delta_y = 5
@@ -1078,7 +1078,7 @@ class MeterGroup(Electric):
         return list(set(flatten_2d_list(all_physical_quants)))
 
     def energy_per_meter(self, per_period=None, mains=None, 
-                         use_appliance_labels=False, **load_kwargs):
+                         use_meter_labels=False, **load_kwargs):
         """Returns pd.DataFrame where columns is meter.identifier and 
         each value is total energy.  Index is AC types.
 
@@ -1093,8 +1093,8 @@ class MeterGroup(Electric):
             will return the average energy per period.
         ac_type : None or str
             e.g. 'active' or 'best'.  Defaults to 'best'.
-        use_appliance_labels : bool
-            If True then columns will be human-friendly appliance labels.
+        use_meter_labels : bool
+            If True then columns will be human-friendly meter labels.
             If False then columns will be ElecMeterIDs or MeterGroupIDs
         mains : None or MeterGroup or ElecMeter
             If None then will return DataFrame without remainder.
@@ -1123,8 +1123,8 @@ class MeterGroup(Electric):
 
         energy_per_meters = energy_per_meter.dropna(how='all')
 
-        if use_appliance_labels:
-            energy_per_meter.columns = self.get_appliance_labels(energy_per_meter.columns)
+        if use_meter_labels:
+            energy_per_meter.columns = self.get_labels(energy_per_meter.columns)
 
         if mains is not None:
             energy_per_meter = self._energy_per_meter_with_remainder(
@@ -1375,8 +1375,8 @@ class MeterGroup(Electric):
         meter_labels = {meter: meter.instance() for meter in graph.nodes()}
         pos = nx.graphviz_layout(graph, prog='dot')
         nx.draw(graph, pos, labels=meter_labels, arrows=False)
-        appliance_labels = {meter: meter.appliance_label() for meter in graph.nodes()}
-        for meter, name in appliance_labels.iteritems():
+        meter_labels = {meter: meter.label() for meter in graph.nodes()}
+        for meter, name in meter_labels.iteritems():
             x, y = pos[meter]
             if meter.is_site_meter():
                 delta_y = 5
@@ -1411,7 +1411,7 @@ class MeterGroup(Electric):
 
         if plot_kwargs is None:
             plot_kwargs = {}
-        df.columns = self.get_appliance_labels(df.columns)
+        df.columns = self.get_labels(df.columns)
         ax = df.plot(kind='area', **plot_kwargs)
         return ax
 
@@ -1424,7 +1424,7 @@ class MeterGroup(Electric):
                 series_to_plot = chunk_when_on[chunk_when_on==True]
                 if len(series_to_plot.index):
                     (series_to_plot+i-1).plot(ax=ax, style='k.')
-        labels = self.get_appliance_labels(meter_identifiers)
+        labels = self.get_labels(meter_identifiers)
         plt.yticks(range(len(self.meters)), labels)
         plt.ylim((-0.5, len(self.meters)+0.5))
         return ax
@@ -1436,7 +1436,7 @@ class MeterGroup(Electric):
         Parameters
         ----------
         label_func : str or None
-            e.g. 'instance' (default) or 'appliance_label'
+            e.g. 'instance' (default) or 'label'
             if None then no labels will be produced.
         include_disabled_meters : bool
         """
@@ -1483,7 +1483,7 @@ class MeterGroup(Electric):
         """Sorts meters by instance."""
         self.meters.sort(key=meter_sorting_key)
 
-    def appliance_label(self):
+    def label(self):
         """
         Returns
         -------
@@ -1491,7 +1491,7 @@ class MeterGroup(Electric):
         """
         if self.name:
             return self.name
-        return ", ".join(set([meter.appliance_label() for meter in self.meters]))
+        return ", ".join(set([meter.label() for meter in self.meters]))
 
     def clear_cache(self):
         """Clear cache on all meters in this MeterGroup."""
