@@ -139,7 +139,7 @@ class Electric(object):
         kwargs['sections'] = [timeframe]
         kwargs = self._set_sample_period(timeframe, **kwargs)
         power_series = self.power_series_all_data(**kwargs)
-        ax = plot_series(power_series, ax=ax, label=self.appliance_label())
+        ax = plot_series(power_series, ax=ax, label=self.label())
 
         if plot_legend:
             plt.legend()

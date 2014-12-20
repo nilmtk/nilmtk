@@ -187,21 +187,24 @@ class ElecMeter(Hashable, Electric):
                  ' returning the first appliance in the list.', RuntimeWarning)
             return self.appliances[0]
 
-    def appliance_label(self):
+    def label(self):
         """
         Returns
         -------
         string : A label listing all the appliance types.
         """
-        appliance_names = []
+        meter_names = []
         if self.is_site_meter():
-            appliance_names.append('SITE METER')
-        for appliance in self.appliances:
-            appliance_name = appliance.label()
-            if appliance.metadata.get('dominant_appliance'):
-                appliance_name = appliance_name.upper()
-            appliance_names.append(appliance_name)
-        label = ", ".join(appliance_names)
+            meter_names.append('SITE METER')
+        if self.name:
+            meter_names.append(self.name)
+        else:
+            for appliance in self.appliances:
+                appliance_name = appliance.label()
+                if appliance.metadata.get('dominant_appliance'):
+                    appliance_name = appliance_name.upper()
+                meter_names.append(appliance_name)
+        label = ", ".join(meter_names)
         return label
 
     def available_ac_types(self, physical_quantity):
