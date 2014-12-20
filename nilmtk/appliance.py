@@ -7,6 +7,7 @@ from .utils import flatten_2d_list
 from nilm_metadata import get_appliance_types
 
 ApplianceID = namedtuple('ApplianceID', ['type', 'instance'])
+DEFAULT_ON_POWER_THRESHOLD = 10
 
 class Appliance(Hashable):
     """Represents an appliance instance.
@@ -50,6 +51,12 @@ class Appliance(Hashable):
     def n_meters(self):
         """Return number of meters (int) to which this appliance is connected"""
         return len(self.metadata['meters'])
+
+    def on_power_threshold(self):
+        threshold_from_appliance_type = self.type.get('on_power_threshold', 
+                                                      DEFAULT_ON_POWER_THRESHOLD)
+        return self.metadata.get('on_power_threshold', 
+                                 threshold_from_appliance_type)
 
     def label(self):
         """Return string '(<type>, <identifier>)' e.g. '(fridge, 1)'.
