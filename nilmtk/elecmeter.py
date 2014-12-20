@@ -351,7 +351,7 @@ class ElecMeter(Hashable, Electric):
             e.g. [('power', 'active'), ('voltage', ''), ('energy', 'reactive')]
             `cols` can't be used if `ac_type` and/or `physical_quantity` are set.
 
-        sample_period : int or float, defaults to None
+        sample_period : int, defaults to None
             Number of seconds to use as the new sample period for resampling.
             If None then will use self.sample_period()
 
@@ -384,7 +384,7 @@ class ElecMeter(Hashable, Electric):
             print("ElecMeter.load")
             print(self)
 
-        if 'sample_period' is kwargs:
+        if 'sample_period' in kwargs:
             kwargs['resample'] = True
 
         if kwargs.get('resample'):
