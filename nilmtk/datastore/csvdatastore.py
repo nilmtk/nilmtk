@@ -11,9 +11,10 @@ from os import listdir, makedirs, remove
 from shutil import rmtree
 import re
 from nilm_metadata.convert_yaml_to_hdf5 import _load_file
-from nilmtk.timeframe import TimeFrame, timeframes_from_periodindex
+from nilmtk.timeframe import TimeFrame
+from nilmtk.timeframegroup import TimeFrameGroup
 from nilmtk.node import Node
-from nilmtk.datastore import DataStore
+from nilmtk.datastore import DataStore, MAX_MEM_ALLOWANCE_IN_BYTES
 from nilmtk.datastore.key import Key
 from nilmtk.datastore.datastore import write_yaml_to_file
 from nilmtk.docinherit import doc_inherit
@@ -21,8 +22,6 @@ from nilmtk.docinherit import doc_inherit
 # do not edit! added by PythonBreakpoints
 from pdb import set_trace as _breakpoint
 
-
-MAX_MEM_ALLOWANCE_IN_BYTES = 2**29 # 512 MBytes
 
 class CSVDataStore(DataStore):
 
@@ -57,8 +56,7 @@ class CSVDataStore(DataStore):
         
         # Set `sections` variable
         sections = [TimeFrame()] if sections is None else sections
-        if isinstance(sections, pd.PeriodIndex):
-            sections = timeframes_from_periodindex(sections)
+        sections = TimeFrameGroup(sections)
 
         self.all_sections_smaller_than_chunksize = True
         

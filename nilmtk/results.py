@@ -122,7 +122,8 @@ class Results(object):
         """
         assert isinstance(other, self.__class__)
         for i, row in self._data.iterrows():
-            if other._data['end'].loc[i] != row['end']:
+            if (other._data['end'].loc[i] != row['end'] or
+                i not in other._data.index):
                 raise RuntimeError("The sections we are trying to merge"
                                    " do not have the same end times so we"
                                    " cannot merge them.")

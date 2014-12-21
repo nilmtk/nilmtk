@@ -11,7 +11,8 @@ from os import listdir, makedirs, remove
 from shutil import rmtree
 import re
 from nilm_metadata.convert_yaml_to_hdf5 import _load_file
-from nilmtk.timeframe import TimeFrame, timeframes_from_periodindex
+from nilmtk.timeframe import TimeFrame
+from nilmtk.timeframegroup import TimeFrameGroup
 from nilmtk.node import Node
 from .datastore import DataStore, MAX_MEM_ALLOWANCE_IN_BYTES
 from nilmtk.docinherit import doc_inherit
@@ -51,8 +52,7 @@ class HDFDataStore(DataStore):
 
         # Set `sections` variable
         sections = [TimeFrame()] if sections is None else sections
-        if isinstance(sections, pd.PeriodIndex):
-            sections = timeframes_from_periodindex(sections)
+        sections = TimeFrameGroup(sections)
 
         if verbose:
             print("HDFDataStore.load. key='{}'".format(key))

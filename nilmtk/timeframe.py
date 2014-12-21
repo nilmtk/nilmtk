@@ -288,6 +288,7 @@ class TimeFrame(object):
 
 
 def split_timeframes(timeframes, duration_threshold):
+    # TODO: put this into TimeFrameGroup. #316
     for timeframe in timeframes:
         for split in timeframe.split(duration_threshold):
             yield split
@@ -304,6 +305,7 @@ def merge_timeframes(timeframes, gap=0):
     merged : list of TimeFrame objects 
         Where adjacent timeframes have been merged.
     """
+    # TODO: put this into TimeFrameGroup. #316
     assert isinstance(timeframes, list)
     assert all([isinstance(timeframe, TimeFrame) for timeframe in timeframes])
     n_timeframes = len(timeframes)
@@ -332,6 +334,7 @@ def list_of_timeframe_dicts(timeframes):
     -------
     list of dicts
     """
+    # TODO: put this into TimeFrameGroup. #316
     return [timeframe.to_dict() for timeframe in timeframes]
 
 
@@ -340,29 +343,13 @@ def timeframe_from_dict(d):
 
 
 def list_of_timeframes_from_list_of_dicts(dicts):
+    # TODO: put this into TimeFrameGroup. #316
     return [timeframe_from_dict(d) for d in dicts]
-
-
-def timeframes_from_periodindex(periods):
-    """
-    Parameters
-    ----------
-    periods : pd.PeriodIndex
-
-    Returns
-    -------
-    list of TimeFrames
-    """
-    assert isinstance(periods, pd.tseries.period.PeriodIndex)
-    timeframes = []
-    for period in periods:
-        timeframe = TimeFrame(period.start_time, period.end_time)
-        timeframes.append(timeframe)
-    return timeframes
 
 
 def convert_none_to_nat(timestamp):
     return pd.NaT if timestamp is None else timestamp
+
 
 def convert_nat_to_none(timestamp):
     return None if timestamp is pd.NaT else timestamp

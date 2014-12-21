@@ -11,7 +11,7 @@ from os import listdir, makedirs, remove
 from shutil import rmtree
 import re
 from nilm_metadata.convert_yaml_to_hdf5 import _load_file
-from nilmtk.timeframe import TimeFrame, timeframes_from_periodindex
+from nilmtk.timeframe import TimeFrame
 from nilmtk.node import Node
 
 # do not edit! added by PythonBreakpoints
@@ -88,8 +88,9 @@ class DataStore(object):
         cols : list of Measurements, optional
             e.g. [('power', 'active'), ('power', 'reactive'), ('voltage')]
             if not provided then will return all columns from the table.
-        sections : list of nilmtk.TimeFrame objects or a pd.PeriodIndex, optional
-            defines the time sections to load.  If `self.window` is enabled
+        sections : TimeFrameGroup; or list of nilmtk.TimeFrame objects;
+            or a pd.PeriodIndex, optional.
+            Defines the time sections to load.  If `self.window` is enabled
             then each `section` will be intersected with `self.window`.
         n_look_ahead_rows : int, optional, defaults to 0
             If >0 then each returned DataFrame will have a `look_ahead`

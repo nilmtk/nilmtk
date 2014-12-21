@@ -15,7 +15,7 @@ class GoodSectionsResults(Results):
     _data : pd.DataFrame
         index is start date for the whole chunk
         `end` is end date for the whole chunk
-        `sections` is a list of nilmtk.TimeFrame objects
+        `sections` is a TimeFrameGroups object (a list of nilmtk.TimeFrame objects)
     """
     
     name = "good_sections"
@@ -32,6 +32,7 @@ class GoodSectionsResults(Results):
         timeframe : nilmtk.TimeFrame
         new_results : {'sections': list of TimeFrame objects}
         """
+        new_results['sections'] = [TimeFrameGroup(new_results['sections'][0])]
         super(GoodSectionsResults, self).append(timeframe, new_results)
 
     def combined(self):
@@ -43,7 +44,7 @@ class GoodSectionsResults(Results):
         -------
         sections : TimeFrameGroup (a subclass of Python's list class)
         """
-        sections = []
+        sections = TimeFrameGroup()
         end_date_of_prev_row = None
         for index, row in self._data.iterrows():
             row_sections = row['sections']
@@ -83,12 +84,14 @@ class GoodSectionsResults(Results):
             if sections[-1].end is None:
                 sections[-1].end = end_date_of_prev_row
 
-        return TimeFrameGroup(sections)
+        return sections
 
     def unify(self, other):
-        # TODO!
-        warn("Not yet able to do unification of good sections results.")
         super(GoodSectionsResults, self).unify(other)
+        for start, row in self._data.iterrows():
+            other_sections = other._data['sections'].loc[start]
+            intersection = row['sections'].intersection(other_sections)
+            self._data['sections'].loc[start] = intersection
 
     def to_dict(self):
         good_sections = self.combined()

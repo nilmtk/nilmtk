@@ -1,9 +1,21 @@
 from __future__ import print_function, division
 import matplotlib.pyplot as plt
+import pandas as pd
+
+# NILMTK imports
 from nilmtk.consts import SECS_PER_DAY
+from nilmtk.timeframe import TimeFrame
 
 class TimeFrameGroup(list):
     """A collection of nilmtk.TimeFrame objects."""
+
+    def __init__(self, timeframes=None):
+        if isinstance(timeframes, pd.tseries.period.PeriodIndex):
+            periods = timeframes
+            timeframes = [TimeFrame(period.start_time, period.end_time) 
+                          for period in periods]
+        args = [timeframes] if timeframes else []
+        super(TimeFrameGroup, self).__init__(*args)
 
     def plot(self, ax=None, y=0, height=1, gap=0.05, color='b', **kwargs):
         if ax is None:
@@ -19,3 +31,8 @@ class TimeFrameGroup(list):
 
         ax.autoscale_view()
         return ax
+
+    def intersection(self, other):
+        """Returns a new TimeFrameGroup of self masked by other."""
+        pass
+
