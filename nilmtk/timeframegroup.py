@@ -34,5 +34,12 @@ class TimeFrameGroup(list):
 
     def intersection(self, other):
         """Returns a new TimeFrameGroup of self masked by other."""
-        pass
+        assert isinstance(other, (TimeFrameGroup, list))
+        new_tfg = TimeFrameGroup()
+        for self_timeframe in self:
+            for other_timeframe in other:
+                intersect = self_timeframe.intersection(other_timeframe)
+                if not intersect.empty:
+                    new_tfg.append(intersect)
+        return new_tfg
 
