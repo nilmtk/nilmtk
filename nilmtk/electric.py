@@ -323,7 +323,7 @@ class Electric(object):
         corr = numerator / denominator
         return corr
 
-    def plot_lag(self, lag=1, ax = None):
+    def plot_lag(self, lag=1, ax=None):
         """
         Plots a lag plot of power data
         http://www.itl.nist.gov/div898/handbook/eda/section3/lagplot.htm
@@ -333,12 +333,12 @@ class Electric(object):
         matplotlib.axis
         """
         if ax is None:
-            fig, ax = plt.subplots()
+            ax = plt.gca()
         for power in self.power_series():
-            lag_plot(power, lag, ax = ax)
+            lag_plot(power, lag, ax=ax)
         return ax
 
-    def plot_spectrum(self):
+    def plot_spectrum(self, ax=None):
         """
         Plots spectral plot of power data
         http://www.itl.nist.gov/div898/handbook/eda/section3/spectrum.htm
@@ -350,11 +350,12 @@ class Electric(object):
         -------
         matplotlib.axis
         """ 
-        fig, ax = plt.subplots()
+        if ax is None:
+            ax = plt.gca()
         Fs = 1.0/self.sample_period()
         for power in self.power_series():
             n = len(power.values) # length of the signal
-            k = np.arange(n)            
+            k = np.arange(n)
             T = n/Fs
             frq = k/T # two sides frequency range
             frq = frq[range(n//2)] # one side frequency range
@@ -368,7 +369,7 @@ class Electric(object):
         ax.set_ylabel('|Y(freq)|')
         return ax
           
-    def plot_autocorrelation(self):
+    def plot_autocorrelation(self, ax=None):
         """
         Plots autocorrelation of power data 
         Reference: 
@@ -378,9 +379,10 @@ class Electric(object):
         -------
         matplotlib.axis 
         """
-        fig, ax = plt.subplots()
+        if ax is None:
+            ax = plt.gca()
         for power in self.power_series():
-            autocorrelation_plot(power, ax = ax)
+            autocorrelation_plot(power, ax=ax)
         return ax
 
     def plot_histogram_of_power(self, ax=None, load_kwargs=None, 
