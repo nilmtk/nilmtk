@@ -33,7 +33,14 @@ class TimeFrameGroup(list):
         return ax
 
     def intersection(self, other):
-        """Returns a new TimeFrameGroup of self masked by other."""
+        """Returns a new TimeFrameGroup of self masked by other.
+
+        Illustrated example:
+
+         self.good_sections():  |######----#####-----######|
+        other.good_sections():  |---##---####----##-----###|
+               intersection():  |---##-----##-----------###|
+        """
         assert isinstance(other, (TimeFrameGroup, list))
         new_tfg = TimeFrameGroup()
         for self_timeframe in self:
