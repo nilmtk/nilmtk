@@ -11,6 +11,8 @@ from collections import Counter
 from copy import copy, deepcopy
 import gc
 from collections import namedtuple
+
+# NILMTK imports
 from .elecmeter import ElecMeter, ElecMeterID
 from .appliance import Appliance
 from .datastore.datastore import join_key
@@ -21,16 +23,16 @@ from .utils import (tree_root, nodes_adjacent_to_root, simplest_type_for,
 from .plots import plot_series
 from .measurement import (select_best_ac_type, AC_TYPES, LEVEL_NAMES,
                           PHYSICAL_QUANTITIES_TO_AVERAGE)
-from .exceptions import MeasurementError
+from nilmtk.exceptions import MeasurementError
 from .electric import Electric
 from .timeframe import TimeFrame, split_timeframes
 from .preprocessing import Apply
 from .datastore import MAX_MEM_ALLOWANCE_IN_BYTES
 from nilmtk.timeframegroup import TimeFrameGroup
 
-# meters is a tuple or ElecMeterIDs.  Order doesn't matter.
+# MeterGroupID.meters is a tuple of ElecMeterIDs.  Order doesn't matter.
 # (we can't use a set because sets aren't hashable so we can't use 
-# a set as a dict key or a DataFrame column name)
+# a set as a dict key or a DataFrame column name.)
 MeterGroupID = namedtuple('MeterGroupID', ['meters'])
 
 class MeterGroup(Electric):
