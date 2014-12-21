@@ -1,25 +1,8 @@
 from __future__ import print_function, division
-import pandas as pd
-from itertools import repeat, tee
-from time import time
-from copy import deepcopy
-from collections import OrderedDict
-import numpy as np
-import yaml
-from os.path import isdir, isfile, join, exists, dirname
-from os import listdir, makedirs, remove
-from shutil import rmtree
-import re
-from nilm_metadata.convert_yaml_to_hdf5 import _load_file
-from nilmtk.timeframe import TimeFrame, timeframes_from_periodindex
-from nilmtk.node import Node
-from .datastore import DataStore
 
 # do not edit! added by PythonBreakpoints
 from pdb import set_trace as _breakpoint
 
-
-MAX_MEM_ALLOWANCE_IN_BYTES = 2**29 # 512 MBytes
 
 class Key(object):
     """A location of data or metadata within NILMTK.
