@@ -408,15 +408,22 @@ class Electric(object):
         if plot_kwargs is None:
             plot_kwargs = {}
         generator = self.power_series(**load_kwargs)
+
+        # set range
         if range is None or range[0] is None:
             maximum = None if range is None else range[1]
             range = (self.on_power_threshold(), maximum)
+
         hist, bins = histogram_from_generator(generator, range=range, 
                                               **hist_kwargs)
+
+        # Plot
         plot_kwargs.setdefault('align', 'center')
         ax.bar(bins[:-1], hist, np.diff(bins), **plot_kwargs)
         first_bin_width = bins[1] - bins[0]
         ax.set_xlim([bins[0]-(first_bin_width/2), bins[-1]])
+        ax.set_xlabel('power (watts)')
+        ax.set_ylabel('count')
         return ax
 
     def switch_times(self, threshold=40):
