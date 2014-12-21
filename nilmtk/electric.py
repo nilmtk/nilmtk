@@ -32,12 +32,12 @@ class Electric(object):
     def when_on(self, on_power_threshold=None, **load_kwargs):
         """Are the connected appliances appliance is on (True) or off (False)?
 
-        Uses `self.min_on_power_threshold()` if `on_power_threshold` not provided.
+        Uses `self.on_power_threshold()` if `on_power_threshold` not provided.
 
         Parameters
         ----------
         on_power_threshold : number, optional
-            Defaults to self.min_on_power_threshold()
+            Defaults to self.on_power_threshold()
         **load_kwargs : key word arguments
             Passed to self.power_series()
 
@@ -48,11 +48,11 @@ class Electric(object):
             values are booleans
         """
         if on_power_threshold is None:
-            on_power_threshold = self.min_on_power_threshold()
+            on_power_threshold = self.on_power_threshold()
         for chunk in self.power_series(**load_kwargs):
             yield chunk >= on_power_threshold
             
-    def min_on_power_threshold(self):
+    def on_power_threshold(self):
         """Returns the minimum `on_power_threshold` across all appliances 
         immediately downstream of this meter.  If any appliance 
         does not have an `on_power_threshold` then default to 10 watts."""
@@ -385,18 +385,38 @@ class Electric(object):
             autocorrelation_plot(power, ax=ax)
         return ax
 
-    def plot_histogram_of_power(self, ax=None, load_kwargs=None, 
-                                hist_kwargs=None, **plot_kwargs):
+    def plot_power_histogram(self, ax=None, load_kwargs=None, 
+                             plot_kwargs=None, range=None, **hist_kwargs):
+        """
+        Parameters
+        ----------
+        ax : axes
+        load_kwargs : dict
+        plot_kwargs : dict
+        range : None or tuple
+            if range=(None, x) then on_power_threshold will be used as minimum.
+        **hist_kwargs
+
+        Returns
+        -------
+        ax
+        """
         if ax is None:
             ax = plt.gca()
         if load_kwargs is None:
             load_kwargs = {}
-        if hist_kwargs is None:
-            hist_kwargs = {}
+        if plot_kwargs is None:
+            plot_kwargs = {}
         generator = self.power_series(**load_kwargs)
-        hist, bins = histogram_from_generator(generator, **hist_kwargs)
+        if range is None or range[0] is None:
+            maximum = None if range is None else range[1]
+            range = (self.on_power_threshold(), maximum)
+        hist, bins = histogram_from_generator(generator, range=range, 
+                                              **hist_kwargs)
         plot_kwargs.setdefault('align', 'center')
         ax.bar(bins[:-1], hist, np.diff(bins), **plot_kwargs)
+        first_bin_width = bins[1] - bins[0]
+        ax.set_xlim([bins[0]-(first_bin_width/2), bins[-1]])
         return ax
 
     def switch_times(self, threshold=40):
@@ -638,7 +658,7 @@ class Electric(object):
         n_bins = len(hist)
         plot_kwargs.setdefault('align', 'center')
         ax.bar(range(n_bins), hist, np.ones(n_bins), **plot_kwargs)
-        ax.set_xlim([0, n_bins])
+        ax.set_xlim([-0.5, n_bins])
         ax.set_title('Activity distribution')
         ax.set_xlabel(bin_duration + ' of ' + period)
         ax.set_ylabel('Count')

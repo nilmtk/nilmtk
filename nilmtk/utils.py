@@ -151,10 +151,15 @@ def simplest_type_for(values):
 def flatten_2d_list(list2d):
     list1d = []
     for item in list2d:
-        if isinstance(item, (list, set)):
-            list1d.extend(item)
-        else:
+        if isinstance(item, basestring):
             list1d.append(item)
+        else:
+            try:
+                len(item)
+            except TypeError:
+                list1d.append(item)
+            else:
+                list1d.extend(item)
     return list1d
 
 

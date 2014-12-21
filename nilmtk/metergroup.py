@@ -1480,18 +1480,20 @@ class MeterGroup(Electric):
 
         return ax
 
-    def plot_multiple(self, nrows, ncols, meters, plot_func, 
+    def plot_multiple(self, axes, meter_keys, plot_func, 
                       kwargs_per_meter=None, **kwargs):
         """Create multiple subplots.
 
         Parameters
         -----------
-        nrows : int
-        ncols : int
-        meters : list of keys for identifying ElecMeters or MeterGroups. 
+        axes : list of matplotlib axes objects.
+            e.g. created using `fix, axes = plt.subplots()`
+        meter_keys : list of keys for identifying ElecMeters or MeterGroups. 
             e.g. ['fridge', 'kettle', 4, MeterGroupID, ElecMeterID].  
             Each element is anything that MeterGroup.__getitem__() accepts.
-        plot_func : function
+        plot_func : string
+            Name of function from ElecMeter or Electric or MeterGroup
+            e.g. `plot_power_histogram`
         kwargs_per_meter : dict
             Provide key word arguments for the plot_func for each meter.
             each key is a parameter name for plot_func
@@ -1503,9 +1505,24 @@ class MeterGroup(Electric):
 
         Returns
         -------
-        fig, axes
+        axes (flattened into a 1D list)
         """
-        raise NotImplementedError()
+        axes = flatten_2d_list(axes)
+        if len(axes) != len(meter_keys):
+            raise ValueError("`axes` and `meters` must be of equal length.")
+
+        if kwargs_per_meter is None:
+            kwargs_per_meter = {}
+
+        meters = [self[meter_key] for meter_key in meter_keys]
+        for i, (ax, meter) in enumerate(zip(axes, meters)):
+            kwargs_copy = deepcopy(kwargs)
+            for parameter, arguments in kwargs_per_meter.iteritems():
+                kwargs_copy[parameter] = arguments[i]
+            getattr(meter, plot_func)(ax=ax, **kwargs_copy)
+            ax.set_title(meter.dominant_appliance().label())
+
+        return axes
 
     def sort_meters(self):
         """Sorts meters by instance."""

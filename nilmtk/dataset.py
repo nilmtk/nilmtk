@@ -127,13 +127,13 @@ class DataSet(object):
         for elec in self.elecs():
             elec.clear_cache()
 
-    def plot_histograms_of_mains_power(self, axes=None, **kwargs):
+    def plot_mains_power_histograms(self, axes=None, **kwargs):
         n = len(self.buildings)
         if axes is None:
             fig, axes = plt.subplots(n, 1, sharex=True)
         assert n == len(axes)
 
         for ax, elec in zip(axes, self.elecs()):
-            ax = elec.mains().plot_histogram_of_power(ax=ax, **kwargs)
+            ax = elec.mains().plot_power_histogram(ax=ax, **kwargs)
             ax.set_title('House {}'.format(elec.building()))
         return axes
