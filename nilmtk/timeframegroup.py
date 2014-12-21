@@ -43,3 +43,4 @@ class TimeFrameGroup(list):
                     new_tfg.append(intersect)
         return new_tfg
 
+ 

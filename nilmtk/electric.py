@@ -218,6 +218,9 @@ class Electric(object):
         
     def proportion_of_energy(self, other, **loader_kwargs):
         """
+
+        Uses the intersection of self.good_sections() and other.good_sections()
+
         Parameters
         ----------
         other : nilmtk.MeteGroup or ElecMeter
@@ -228,7 +231,8 @@ class Electric(object):
         float [0,1] or NaN if other.total_energy == 0
         """
         good_other_sections = other.good_sections(**loader_kwargs)
-        loader_kwargs['sections'] = good_other_sections
+        self_good_sections = self.good_sections(**loader_kwargs)
+        loader_kwargs['sections'] = self_good_sections.intersection(good_other_sections)
 
         # TODO test effect of setting `sections` for other
         other_total_energy = other.total_energy(**loader_kwargs)
