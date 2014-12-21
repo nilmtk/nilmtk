@@ -671,6 +671,63 @@ class Electric(object):
         ax.set_ylabel('Count')
         return ax
 
+    def activation_series(self, min_on_rows=1, border=0,
+                          on_power_threshold=None, **kwargs):
+        """Returns runs of an appliance.
+
+        Most appliances spend a lot of their time off.  This function finds
+        periods when the appliance is on.
+
+        Parameters
+        ----------
+        min_on_rows : int
+            If min_on_rows > 0 then forward fill to 'smooth over' small periods
+            of sub-threshold power consumption (e.g. a washing machine might 
+            draw no power for a short period while the clothes soak.)
+        border : int
+            Number of rows to include before and after the detected activation
+        on_power_threshold : int or float
+            Defaults to self.on_power_threshold()
+        **kwargs : kwargs for self.power_series()
+
+        Returns
+        -------
+        list of pd.Series.  Each series contains one activation.
+        """
+        kwargs.setdefault('resample', True)
+        if on_power_threshold is None:
+            on_power_threshold = self.on_power_threshold()
+
+        activations = []
+        for chunk in self.power_series(**kwargs):
+            when_on = chunk >= on_power_threshold
+            when_on = (when_on == True).replace(False, np.NaN)
+
+            # Forward fill to 'smooth over' small periods of sub-threshold power
+            # consumption (e.g. a washing machine might draw no power for 
+            # a short period while the clothes soak.)
+            when_on = when_on.fillna(method='ffill', limit=min_on_rows)
+            when_on = when_on.fillna(False)
+
+            # Find state changes
+            state_changes = when_on.diff()
+            del when_on
+            switch_on_events = np.where(state_changes == 1)[0]
+            switch_off_events = np.where(state_changes == -1)[0]
+            del state_changes
+            
+            if switch_off_events[0] < switch_on_events[0]:
+                switch_off_events = switch_off_events.iloc[1:]
+
+            for on, off in zip(switch_on_events, switch_off_events):
+                on -= 1 + border
+                if on < 0:
+                    on = 0
+                off += border
+                activations.append(chunk.iloc[on:off])
+
+        return activations
+
 
 def align_two_meters(master, slave, func='power_series'):
     """Returns a generator of 2-column pd.DataFrames.  The first column is from
