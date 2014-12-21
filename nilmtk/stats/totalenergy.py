@@ -1,5 +1,6 @@
 from __future__ import print_function, division
 import numpy as np
+import gc
 from .totalenergyresults import TotalEnergyResults
 from ..node import Node
 from ..utils import timedelta64_to_secs
@@ -92,6 +93,8 @@ def _energy_for_power_series(series, max_sample_period):
     series = series.dropna()
     timedelta = np.diff(series.index.values)
     timedelta_secs = timedelta64_to_secs(timedelta)
+    del timedelta
+    gc.collect()
     timedelta_secs = timedelta_secs.clip(max=max_sample_period)
     joules = (timedelta_secs * series.values[:-1]).sum()
     kwh = joules / JOULES_PER_KWH
