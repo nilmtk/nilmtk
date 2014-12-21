@@ -217,9 +217,10 @@ class Electric(object):
         return energy / periods
         
     def proportion_of_energy(self, other, **loader_kwargs):
-        """
+        """Compute the proportion of energy of self compared to `other`.
 
-        Uses the intersection of self.good_sections() and other.good_sections()
+        By default, only uses other.good_sections().  You may want to set 
+        `sections=self.good_sections().intersection(other.good_sections())`
 
         Parameters
         ----------
@@ -231,8 +232,7 @@ class Electric(object):
         float [0,1] or NaN if other.total_energy == 0
         """
         good_other_sections = other.good_sections(**loader_kwargs)
-        self_good_sections = self.good_sections(**loader_kwargs)
-        loader_kwargs['sections'] = self_good_sections.intersection(good_other_sections)
+        loader_kwargs.setdefault('sections', good_other_sections)
 
         # TODO test effect of setting `sections` for other
         other_total_energy = other.total_energy(**loader_kwargs)
