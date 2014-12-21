@@ -1481,7 +1481,7 @@ class MeterGroup(Electric):
         return ax
 
     def plot_multiple(self, axes, meter_keys, plot_func, 
-                      kwargs_per_meter=None, **kwargs):
+                      kwargs_per_meter=None, pretty_label=True, **kwargs):
         """Create multiple subplots.
 
         Parameters
@@ -1500,6 +1500,7 @@ class MeterGroup(Electric):
             each value is a list (same length as `meters`) for specifying a value for
             this parameter for each meter. 
             e.g. {'range': [(0,100), (0,200)]}
+        pretty_label : bool
         **kwargs : any key word arguments to pass the same values to the
            plot func for every meter.
 
@@ -1520,7 +1521,7 @@ class MeterGroup(Electric):
             for parameter, arguments in kwargs_per_meter.iteritems():
                 kwargs_copy[parameter] = arguments[i]
             getattr(meter, plot_func)(ax=ax, **kwargs_copy)
-            ax.set_title(meter.dominant_appliance().label())
+            ax.set_title(meter.label(pretty=pretty_label))
 
         return axes
 
@@ -1528,7 +1529,7 @@ class MeterGroup(Electric):
         """Sorts meters by instance."""
         self.meters.sort(key=meter_sorting_key)
 
-    def label(self):
+    def label(self, **kwargs):
         """
         Returns
         -------
@@ -1536,7 +1537,7 @@ class MeterGroup(Electric):
         """
         if self.name:
             return self.name
-        return ", ".join(set([meter.label() for meter in self.meters]))
+        return ", ".join(set([meter.label(**kwargs) for meter in self.meters]))
 
     def clear_cache(self):
         """Clear cache on all meters in this MeterGroup."""

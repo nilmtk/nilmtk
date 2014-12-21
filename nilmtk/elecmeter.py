@@ -20,7 +20,7 @@ from .node import Node
 from .electric import Electric
 from .timeframe import TimeFrame, list_of_timeframe_dicts
 from nilmtk.exceptions import MeasurementError
-from .utils import flatten_2d_list
+from .utils import flatten_2d_list, capitalise_first_letter
 import nilmtk
 
 ElecMeterID = namedtuple('ElecMeterID', ['instance', 'building', 'dataset'])
@@ -187,12 +187,23 @@ class ElecMeter(Hashable, Electric):
                  ' returning the first appliance in the list.', RuntimeWarning)
             return self.appliances[0]
 
-    def label(self):
-        """
+    def label(self, pretty=True):
+        """Returns a string describing this meter.
+
+        Parameters
+        ----------
+        pretty : boolean
+            If True then just return the type name of the dominant appliance
+            (without the instance number) or metadata['name'], with the
+            first letter capitalised.
+
         Returns
         -------
         string : A label listing all the appliance types.
         """
+        if pretty:
+            return self._pretty_label()
+
         meter_names = []
         if self.is_site_meter():
             meter_names.append('SITE METER')
@@ -205,6 +216,17 @@ class ElecMeter(Hashable, Electric):
                     appliance_name = appliance_name.upper()
                 meter_names.append(appliance_name)
         label = ", ".join(meter_names)
+        return label
+
+    def _pretty_label(self):
+        name = self.metadata.get("name")
+        if name:
+            label = name
+        elif self.is_site_meter():
+            label = 'Site meter'
+        else:
+            label = self.dominant_appliance().identifier.type
+        label = capitalise_first_letter(label)
         return label
 
     def available_ac_types(self, physical_quantity):
