@@ -72,8 +72,8 @@ class GoodSections(Node):
             self.previous_chunk_ended_with_open_ended_good_section = (
                 good_sections[-1].end is None)
 
-        # Update self.results
-        self.results.append(timeframe, {'sections': [good_sections]})
+            # Update self.results
+            self.results.append(timeframe, {'sections': [good_sections]})
 
 
 def get_good_sections(df, max_sample_period, look_ahead=None,
@@ -96,6 +96,10 @@ def get_good_sections(df, max_sample_period, look_ahead=None,
     """
     index = df.dropna().sort_index().index
     del df
+    
+    if len(index) < 2:
+        return []
+
     timedeltas_sec = timedelta64_to_secs(diff(index.values))
     timedeltas_check = timedeltas_sec <= max_sample_period
 
