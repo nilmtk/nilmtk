@@ -63,7 +63,7 @@ class CSVDataStore(DataStore):
         # iterate through parameter sections
         # requires 1 pass through file for each section
         for section in sections:
-            window_intersect = self.window.intersect(section)
+            window_intersect = self.window.intersection(section)
             header_rows = [0,1]
             text_file_reader = pd.read_csv(file_path, 
                                             index_col=0, 
@@ -229,7 +229,7 @@ class CSVDataStore(DataStore):
                 start = df.index[0]
             end = df.index[-1]
         timeframe = TimeFrame(start, end)
-        return self.window.intersect(timeframe)
+        return self.window.intersection(timeframe)
         
     def _get_metadata_path(self):
         return join(self.filename, 'metadata')

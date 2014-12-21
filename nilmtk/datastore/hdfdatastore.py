@@ -62,7 +62,7 @@ class HDFDataStore(DataStore):
         for section in sections:
             if verbose:
                 print("   ", section)
-            window_intersect = self.window.intersect(section)
+            window_intersect = self.window.intersection(section)
 
             if window_intersect.empty:
                 data = pd.DataFrame()
@@ -219,7 +219,7 @@ class HDFDataStore(DataStore):
         data_start_date = self.store.select(key, [0]).index[0]
         data_end_date = self.store.select(key, start=-1).index[0]
         timeframe = TimeFrame(data_start_date, data_end_date)
-        return self.window.intersect(timeframe)
+        return self.window.intersection(timeframe)
     
     def _check_columns(self, key, columns):
         if columns is None:
@@ -284,7 +284,7 @@ class HDFDataStore(DataStore):
         -------
         nrows : int
         """
-        timeframe_intersect = self.window.intersect(timeframe)
+        timeframe_intersect = self.window.intersection(timeframe)
         if timeframe_intersect.empty:
             nrows = 0
         elif timeframe_intersect:

@@ -129,7 +129,7 @@ class TimeFrame(object):
         elif self.empty:
             return timedelta(0)
 
-    def intersect(self, other):
+    def intersection(self, other):
         """Returns a new TimeFrame of the intersection between
         this TimeFrame and `other` TimeFrame.
         If the intersect is empty then the returned TimeFrame
@@ -250,7 +250,7 @@ class TimeFrame(object):
                  " e.g. 'Europe/London'.")
 
     def check_for_overlap(self, other):
-        intersect = self.intersect(other)
+        intersect = self.intersection(other)
         if not intersect.empty:
             raise ValueError("Periods overlap: " + str(self) + 
                              " " + str(other))

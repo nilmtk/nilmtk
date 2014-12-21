@@ -110,7 +110,7 @@ class DataStore(object):
                     the next `section.start`.
 
             Returns an empty DataFrame if no data is available for the
-            specified section (or if the section.intersect(self.window)
+            specified section (or if the section.intersection(self.window)
             is empty).
 
         Raises
