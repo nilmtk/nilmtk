@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 import numpy as np
 from numpy import diff, concatenate
+import gc
 from .goodsectionsresults import GoodSectionsResults
 from ..timeframe import TimeFrame
 from ..utils import timedelta64_to_secs
@@ -94,34 +95,49 @@ def get_good_sections(df, max_sample_period, look_ahead=None,
         then the first TimeFrame will have `start=None`.
     """
     index = df.dropna().sort_index().index
+    del df
     timedeltas_sec = timedelta64_to_secs(diff(index.values))
     timedeltas_check = timedeltas_sec <= max_sample_period
+
+    # Memory management
+    del timedeltas_sec
+    gc.collect()
+
     timedeltas_check = concatenate(
         [[previous_chunk_ended_with_open_ended_good_section], 
          timedeltas_check])
     transitions = diff(timedeltas_check.astype(np.int))
-    good_sect_starts = index[:-1][transitions ==  1]
-    good_sect_ends   = index[:-1][transitions == -1]
-    good_sect_ends = list(good_sect_ends)
-    good_sect_starts = list(good_sect_starts)
+
+    # Memory management
+    last_timedeltas_check = timedeltas_check[-1]
+    del timedeltas_check
+    gc.collect()
+
+    good_sect_starts = list(index[:-1][transitions ==  1])
+    good_sect_ends   = list(index[:-1][transitions == -1])
+
+    # Memory management
+    last_index = index[-1]
+    del index
+    gc.collect()
 
     # Use look_ahead to see if we need to append a 
     # good sect start or good sect end.
-    look_ahead_valid = look_ahead is not None and not df.look_ahead.empty
+    look_ahead_valid = look_ahead is not None and not look_ahead.empty
     if look_ahead_valid:
-        look_ahead_timedelta = df.look_ahead.dropna().index[0] - index[-1]
+        look_ahead_timedelta = look_ahead.dropna().index[0] - last_index
         look_ahead_gap = look_ahead_timedelta.total_seconds()
-    if timedeltas_check[-1]: # current chunk ends with a good section
+    if last_timedeltas_check: # current chunk ends with a good section
         if not look_ahead_valid or look_ahead_gap > max_sample_period:
             # current chunk ends with a good section which needs to 
             # be closed because next chunk either does not exist
             # or starts with a sample which is more than max_sample_period
             # away from df.index[-1]
-            good_sect_ends += [index[-1]]
+            good_sect_ends += [last_index]
     elif look_ahead_valid and look_ahead_gap <= max_sample_period:
         # Current chunk appears to end with a bad section
         # but last sample is the start of a good section
-        good_sect_starts += [index[-1]]
+        good_sect_starts += [last_index]
 
     # Work out if this chunk ends with an open ended good section
     if len(good_sect_ends) == 0:
@@ -148,5 +164,10 @@ def get_good_sections(df, max_sample_period, look_ahead=None,
 
     sections = [TimeFrame(start, end) 
                 for start, end in zip(good_sect_starts, good_sect_ends)]
+
+    # Memory management
+    del good_sect_starts
+    del good_sect_ends
+    gc.collect()
 
     return sections

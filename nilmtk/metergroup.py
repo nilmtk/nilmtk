@@ -1456,6 +1456,8 @@ class MeterGroup(Electric):
         for i, meter in enumerate(meters):
             good_sections = meter.good_sections(**load_kwargs)
             ax = good_sections.plot(ax=ax, y=i, **plot_kwargs)
+            del good_sections
+            gc.collect()
             if label_func:
                 labels.append(getattr(meter, label_func)())
 
