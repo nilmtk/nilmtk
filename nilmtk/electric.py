@@ -179,10 +179,7 @@ class Electric(object):
         timedelta: total duration of all good sections.
         """
         good_sections = self.good_sections(**load_kwargs)
-        uptime = timedelta(seconds=0)
-        for good_section in good_sections:
-            uptime += good_section.timedelta
-        return uptime
+        return good_sections.uptime()
 
     def average_energy_per_period(self, offset_alias='D', use_uptime=True, **load_kwargs):
         """Calculate the average energy per period.  e.g. the average 

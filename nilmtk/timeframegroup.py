@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 import matplotlib.pyplot as plt
 import pandas as pd
+from datetime import timedelta
 
 # NILMTK imports
 from nilmtk.consts import SECS_PER_DAY
@@ -50,4 +51,10 @@ class TimeFrameGroup(list):
                     new_tfg.append(intersect)
         return new_tfg
 
- 
+    def uptime(self):
+        """Returns total timedelta of all timeframes joined together."""
+        uptime = timedelta(0)
+        for timeframe in self:
+            uptime += timeframe.timedelta
+        return uptime
+    
