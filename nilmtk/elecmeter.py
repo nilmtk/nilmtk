@@ -247,7 +247,7 @@ class ElecMeter(Hashable, Electric):
         list of 2-tuples of strings e.g. [('power', 'active')]
         """
         measurements = self.device['measurements']
-        return list(set([(m['physical_quantity'], m.get('type')) 
+        return list(set([(m['physical_quantity'], m.get('type', '')) 
                          for m in measurements]))
 
     def __repr__(self):
