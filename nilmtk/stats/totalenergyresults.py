@@ -36,3 +36,6 @@ class TotalEnergyResults(Results):
 
     def simple(self):
         return self.combined()
+
+    def export_to_cache(self):
+        return self._data.fillna(0).convert_objects()

@@ -19,7 +19,7 @@ from .datastore.datastore import join_key
 from .utils import (tree_root, nodes_adjacent_to_root, simplest_type_for,
                     flatten_2d_list, convert_to_timestamp, normalise_timestamp,
                     print_on_line, convert_to_list, append_or_extend_list,
-                    most_common)
+                    most_common, capitalise_first_letter)
 from .plots import plot_series
 from .measurement import (select_best_ac_type, AC_TYPES, LEVEL_NAMES,
                           PHYSICAL_QUANTITIES_TO_AVERAGE)
@@ -491,7 +491,7 @@ class MeterGroup(Electric):
             append_or_extend_list(values, value)
         return list(set(values))
 
-    def get_labels(self, meter_ids):
+    def get_labels(self, meter_ids, **label_kwargs):
         """Create human-readable meter labels.
 
         Parameters
@@ -503,7 +503,7 @@ class MeterGroup(Electric):
         list of strings describing the appliances.
         """
         meters = [self[meter_id] for meter_id in meter_ids]
-        labels = [meter.label() for meter in meters]
+        labels = [meter.label(**label_kwargs) for meter in meters]
         return labels
 
     def __repr__(self):
@@ -1393,26 +1393,35 @@ class MeterGroup(Electric):
                 graph[upstream_meter][meter]["color"] = "blue"
             nx.draw(graph, pos, labels=meter_labels, arrows=False)
 
-    def _plot_area(self, ax=None, timeframe=None, plot_kwargs=None, **kwargs):
+    def _plot_area(self, ax=None, timeframe=None, pretty_labels=True, unit='W',
+                   label_kwargs=None, plot_kwargs=None, **load_kwargs):
         """
         Parameters
         ----------
         plot_kwargs : dict of key word arguments for DataFrame.plot()
+        unit : {kW or W}
+
+        Returns
+        -------
+        ax, dataframe
         """
         # Get start and end times for the plot
         timeframe = self.get_timeframe() if timeframe is None else timeframe
         if not timeframe:
             return ax
 
-        kwargs['sections'] = [timeframe]
-        kwargs = self._set_sample_period(timeframe, **kwargs)
-        df = self.dataframe_of_meters(**kwargs)
+        load_kwargs['sections'] = [timeframe]
+        load_kwargs = self._set_sample_period(timeframe, **load_kwargs)
+        df = self.dataframe_of_meters(**load_kwargs)
+        if unit == 'kW':
+            df /= 1000
 
         if plot_kwargs is None:
             plot_kwargs = {}
-        df.columns = self.get_labels(df.columns)
+        df.columns = self.get_labels(df.columns, pretty=pretty_labels)
         ax = df.plot(kind='area', **plot_kwargs)
-        return ax
+        ax.set_ylabel("Power ({:s})".format(unit))
+        return ax, df
 
     def plot_when_on(self, **load_kwargs):
         meter_identifiers = list(self.identifier.meters)
@@ -1536,7 +1545,10 @@ class MeterGroup(Electric):
         string : A label listing all the appliance types.
         """
         if self.name:
-            return self.name
+            label = self.name
+            if kwargs.get('pretty'):
+                label = capitalise_first_letter(label)
+            return label
         return ", ".join(set([meter.label(**kwargs) for meter in self.meters]))
 
     def clear_cache(self):
