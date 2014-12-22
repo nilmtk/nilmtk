@@ -491,7 +491,7 @@ class MeterGroup(Electric):
             append_or_extend_list(values, value)
         return list(set(values))
 
-    def get_labels(self, meter_ids, **label_kwargs):
+    def get_labels(self, meter_ids, pretty=True):
         """Create human-readable meter labels.
 
         Parameters
@@ -503,7 +503,7 @@ class MeterGroup(Electric):
         list of strings describing the appliances.
         """
         meters = [self[meter_id] for meter_id in meter_ids]
-        labels = [meter.label(**label_kwargs) for meter in meters]
+        labels = [meter.label(pretty=pretty) for meter in meters]
         return labels
 
     def __repr__(self):

@@ -386,7 +386,8 @@ class Electric(object):
         return ax
 
     def plot_power_histogram(self, ax=None, load_kwargs=None, 
-                             plot_kwargs=None, range=None, **hist_kwargs):
+                             plot_kwargs=None, range=None,
+                             **hist_kwargs):
         """
         Parameters
         ----------
@@ -419,11 +420,12 @@ class Electric(object):
 
         # Plot
         plot_kwargs.setdefault('align', 'center')
+        plot_kwargs.setdefault('linewidth', 0)
         ax.bar(bins[:-1], hist, np.diff(bins), **plot_kwargs)
         first_bin_width = bins[1] - bins[0]
         ax.set_xlim([bins[0]-(first_bin_width/2), bins[-1]])
-        ax.set_xlabel('power (watts)')
-        ax.set_ylabel('count')
+        ax.set_xlabel('Power (watts)')
+        ax.set_ylabel('Count')
         return ax
 
     def switch_times(self, threshold=40):
@@ -634,6 +636,9 @@ class Electric(object):
         # Calculate histogram...
         hist = np.zeros(n_bins, dtype=int)
         for on_chunk in when_on:
+            if len(on_chunk) < 5:
+                continue
+
             on_chunk = on_chunk.fillna(0).astype(int)
 
             # Trick using resample to 'normalise' start and end dates
@@ -664,6 +669,7 @@ class Electric(object):
             plot_kwargs = {}
         n_bins = len(hist)
         plot_kwargs.setdefault('align', 'center')
+        plot_kwargs.setdefault('linewidth', 0)
         ax.bar(range(n_bins), hist, np.ones(n_bins), **plot_kwargs)
         ax.set_xlim([-0.5, n_bins])
         ax.set_title('Activity distribution')
