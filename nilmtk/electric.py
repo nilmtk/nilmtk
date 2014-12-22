@@ -499,15 +499,15 @@ class Electric(object):
             x = [list(p + intens*nr.rand(len(x[0]))) for p in x]
             y = [list(p + intens*nr.rand(len(y[0]))) for p in y]
             points = zip2(x,y)
-            #Find nearest neighbors in joint space, p=inf means max-norm
+            # Find nearest neighbors in joint space, p=inf means max-norm
             tree = ss.cKDTree(points)
             dvec = [tree.query(point, k+1, p=float('inf'))[0][k] for point in points]
             a, b, c, d = avgdigamma(x, dvec), avgdigamma(y, dvec), digamma(k), digamma(len(x))
             return (-a-b+c+d)/log(base)
             
         def zip2(*args):
-            #zip2(x,y) takes the lists of vectors and makes it a list of vectors in a joint space
-            #E.g. zip2([[1],[2],[3]],[[4],[5],[6]]) = [[1,4],[2,5],[3,6]]
+            # zip2(x,y) takes the lists of vectors and makes it a list of vectors in a joint space
+            # E.g. zip2([[1],[2],[3]],[[4],[5],[6]]) = [[1,4],[2,5],[3,6]]
             return [sum(sublist, []) for sublist in zip(*args)]
 
         def avgdigamma(points, dvec):

@@ -207,7 +207,7 @@ class ElecMeter(Hashable, Electric):
         meter_names = []
         if self.is_site_meter():
             meter_names.append('SITE METER')
-        if "name" in self.metadata:
+        elif "name" in self.metadata:
             meter_names.append(self.metadata["name"])
         else:
             for appliance in self.appliances:
@@ -224,8 +224,17 @@ class ElecMeter(Hashable, Electric):
             label = name
         elif self.is_site_meter():
             label = 'Site meter'
-        else:
+        elif self.dominant_appliance() is not None:
             label = self.dominant_appliance().identifier.type
+        else:
+            meter_names = []
+            for appliance in self.appliances:
+                appliance_name = appliance.label()
+                if appliance.metadata.get('dominant_appliance'):
+                    appliance_name = appliance_name.upper()
+                meter_names.append(appliance_name)
+            label = ", ".join(meter_names)
+
         label = capitalise_first_letter(label)
         return label
 
