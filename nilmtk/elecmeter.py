@@ -234,6 +234,7 @@ class ElecMeter(Hashable, Electric):
                     appliance_name = appliance_name.upper()
                 meter_names.append(appliance_name)
             label = ", ".join(meter_names)
+            return label
 
         label = capitalise_first_letter(label)
         return label
