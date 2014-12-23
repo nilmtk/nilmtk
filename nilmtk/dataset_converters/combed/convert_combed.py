@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 from os.path import join, isdir, dirname, abspath
 from os import getcwd
+import os
 from sys import getfilesystemencoding
 from inspect import currentframe, getfile, getsourcefile
 from collections import OrderedDict
@@ -17,7 +18,7 @@ acad_block_meter_mapping = {'Building Total Mains': {'0': 1},
                             'Lifts': {'0': 2},
                             'Floor Total': {'1': 3, '2': 4, '3': 5, '4': 6, '5': 7},
                             'AHU': {'0': 8, '1': 9, '2': 10, '5': 11},
-                            'Lights': {'3': 12},
+                            'Light': {'3': 12},
                             'Power Sockets': {'3': 13},
                             'UPS Sockets': {'3': 14}}
 
@@ -60,17 +61,22 @@ def convert_combed(combed_path, output_filename, format='HDF'):
                 dfs = []
                 for attribute in column_mapping.keys():
                     filename_attribute = join(combed_path, building_name, load_name, load_mapping_path, "%s.csv" %attribute)
-                    print(filename_attribute)
-                    df = pd.read_csv(filename_attribute, header=True, names=["timestamp", attribute])
-                    df.index = pd.to_datetime(df["timestamp"], unit='ms')
-                    df = df.drop("timestamp", 1)
-                    dfs.append(df)
-                total = pd.concat(dfs, axis=1)
-                total = total.tz_localize('UTC').tz_convert('Asia/Kolkata')
-                total.rename(columns=lambda x: column_mapping[x], inplace=True)
-                total.columns.set_names(LEVEL_NAMES, inplace=True)
-                assert total.index.is_unique
-                store.put(str(key), total)
+                    if os.path.isfile(filename_attribute):
+                        exists = True
+                        print(filename_attribute)
+                        df = pd.read_csv(filename_attribute, header=True, names=["timestamp", attribute])
+                        df.index = pd.to_datetime(df["timestamp"], unit='ms')
+                        df = df.drop("timestamp", 1)
+                        dfs.append(df)
+                    else:
+                        exists = False
+                if exists:
+                    total = pd.concat(dfs, axis=1)
+                    total = total.tz_localize('UTC').tz_convert('Asia/Kolkata')
+                    total.rename(columns=lambda x: column_mapping[x], inplace=True)
+                    total.columns.set_names(LEVEL_NAMES, inplace=True)
+                    assert total.index.is_unique
+                    store.put(str(key), total)
     convert_yaml_to_hdf5(join(_get_module_directory(), 'metadata'),
                          output_filename)
 

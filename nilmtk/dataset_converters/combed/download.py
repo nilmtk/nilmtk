@@ -20,13 +20,13 @@ MEASUREMENTS = ["Power", "Energy", "Current"]
 BASE_PATH = "/Users/nipunbatra/Desktop/iiitd/"
 
 academic_block = {'AHU': [0, 1, 2, 5],
-    'Building Total Mains': [0],
-    'Floor Total': [1, 2, 3, 4, 5],
-    'Lifts': [0],
-    'Light': [3],
-    'Power': [3],
-    'UPS': [3]
-    }
+                  'Building Total Mains': [0],
+                  'Floor Total': [1, 2, 3, 4, 5],
+                  'Lifts': [0],
+                  'Light': [3],
+                  'Power': [3],
+                  'UPS': [3]
+}
 
 lecture_block = {'AHU-1': [0],
                  'AHU-2': [1],

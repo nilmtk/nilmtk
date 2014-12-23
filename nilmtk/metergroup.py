@@ -1358,6 +1358,8 @@ class MeterGroup(Electric):
             'area': self._plot_area,
             'sankey': self._plot_sankey
         }
+        print(kind)
+        print(kind in function_map)
         try:
             ax = function_map[kind](**kwargs)
         except KeyError:
