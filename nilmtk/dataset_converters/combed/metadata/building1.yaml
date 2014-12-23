@@ -45,10 +45,7 @@ elec_meters:
   13: &Power_sockets_A
       submeter_of: 5
       device_model: EM6400
-  14: &Power_sockets_B
-      submeter_of: 5
-      device_model: EM6400
-  15: &UPS_sockets
+  14: &UPS_sockets
       submeter_of: 5
       device_model: EM6400
 
@@ -96,18 +93,11 @@ appliances:
   #floor: 1
   meters: [13]
 
-- original_name: Power Sockets
-  type: sockets
-  instance: 2
-  #floor: 1
-  meters: [14]
-
-
 - original_name: UPS Sockets
   type: sockets
-  instance: 3
+  instance: 1
   #floor: 1
-  meters: [15]
+  meters: [14]
 
 
 

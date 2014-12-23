@@ -18,8 +18,8 @@ acad_block_meter_mapping = {'Building Total Mains': {'0': 1},
                             'Floor Total': {'1': 3, '2': 4, '3': 5, '4': 6, '5': 7},
                             'AHU': {'0': 8, '1': 9, '2': 10, '5': 11},
                             'Lights': {'3': 12},
-                            'Power Sockets': {'3A': 13, '3B': 14},
-                            'UPS Sockets': {'3': 15}}
+                            'Power Sockets': {'3': 13},
+                            'UPS Sockets': {'3': 14}}
 
 lecture_block_meter_mapping = {'Building Total Mains': {'0': 1},
                                'Floor Total': {'0': 2, '1': 3, '2': 4},
@@ -61,7 +61,10 @@ def convert_combed(combed_path, output_filename, format='HDF'):
                 for attribute in column_mapping.keys():
                     filename_attribute = join(combed_path, building_name, load_name, load_mapping_path, "%s.csv" %attribute)
                     print(filename_attribute)
-                    dfs.append(pd.read_csv(filename_attribute, parse_dates=True, index_col=0, header=True, names=[attribute]))
+                    df = pd.read_csv(filename_attribute, header=True, names=["timestamp", attribute])
+                    df.index = pd.to_datetime(df["timestamp"], unit='ms')
+                    df = df.drop("timestamp", 1)
+                    dfs.append(df)
                 total = pd.concat(dfs, axis=1)
                 total = total.tz_localize('UTC').tz_convert('Asia/Kolkata')
                 total.rename(columns=lambda x: column_mapping[x], inplace=True)
