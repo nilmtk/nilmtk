@@ -13,7 +13,7 @@ pattern = '%d-%m-%Y %H:%M:%S'
 START_TIME = int(time.mktime(time.strptime(START_TIME_STR, pattern)))*1000
 END_TIME = int(time.mktime(time.strptime(END_TIME_STR, pattern)))*1000
 
-SMAP_URL = "http://energy.iiitd.edu.in:9102"
+SMAP_URL = raw_input("Enter SMAP URL")
 UUID_URL = join(SMAP_URL, "backend/api/query")
 
 MEASUREMENTS = ["Power", "Energy", "Current"]
