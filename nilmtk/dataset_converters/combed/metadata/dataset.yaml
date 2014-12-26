@@ -1,2 +1,25 @@
 name: combed
 long_name: Commercial Building Energy Dataset
+creators:
+- Batra, Nipun
+- Parson, Oliver
+- Berges, Mario
+- Singh, Amarjeet
+- Rogers, Alex
+publication_date: 2014
+institution: Indraprastha Institute of Information Technology Delhi (IIITD)
+contact: nipunb@iiitd.ac.in
+description: 30 days of electricity data from IIITD campus
+subject: First public data set from an educational campus
+number_of_buildings: 2
+timezone: Asia/Kolkata
+geo_location:
+  locality: Delhi   # village, town, city or state
+  country: IN  # standard two-letter country code defined by ISO 3166-1 alpha-2
+  latitude: 28.54 #
+  longitude: 77.27
+related_documents:
+- http://combed.github.io
+- >
+  A comparison of non-intrusive load monitoring methods for commercial and residential buildings
+schema: https://github.com/nilmtk/nilm_metadata/tree/v0.2
