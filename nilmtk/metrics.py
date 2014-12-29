@@ -94,11 +94,16 @@ def fraction_energy_assigned_correctly(predictions, ground_truth):
         Fraction of Energy Correctly Assigned.
     '''
 
+
     predictions_submeters = MeterGroup(meters=predictions.submeters().meters)
     ground_truth_submeters = MeterGroup(meters=ground_truth.submeters().meters)
 
+
     fraction_per_meter_predictions = predictions_submeters.fraction_per_meter()
     fraction_per_meter_ground_truth = ground_truth_submeters.fraction_per_meter()
+
+    fraction_per_meter_ground_truth.index = fraction_per_meter_ground_truth.index.map(lambda meter: meter.instance)
+    fraction_per_meter_predictions.index = fraction_per_meter_predictions.index.map(lambda meter: meter.instance)
 
     fraction = 0
     for meter_instance in predictions_submeters.instance():
