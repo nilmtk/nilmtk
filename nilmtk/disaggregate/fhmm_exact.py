@@ -203,7 +203,7 @@ class FHMM(object):
 
             # Data to fit
             X = []
-            meter_data = meter.power_series().next()
+            meter_data = meter.power_series().next().dropna()
             """
             This was the behaviour in v0.1. Now assuming all
             preprocessing has been done

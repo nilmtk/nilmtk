@@ -205,7 +205,7 @@ class Hart85(object):
         self.model = {}
 
     def train(self, metergroup, cols=[('power','active')],
-                buffer_size=20, min_tolerance=35, percent_tolerance=0.035,
+                buffer_size=20, min_tolerance=100, percent_tolerance=0.035,
                 large_transition=1000, **kwargs):
         """
         Train using Hart85. Places the learnt model in `model` attribute.
@@ -227,6 +227,7 @@ class Hart85(object):
         large_transition: float, optional
             power draw of a Large transition
         """
+        self.cols = cols
         [self.steady_states, self.transients] = find_steady_states_transients(metergroup, cols, **kwargs)
         self.pair_df = self.pair(buffer_size, min_tolerance, percent_tolerance, large_transition)
         self.centroids = hart85_means_shift_cluster(self.pair_df, cols)
@@ -235,6 +236,7 @@ class Hart85(object):
         subset = list(self.transients.itertuples())
         buffer = PairBuffer(min_tolerance=min_tolerance,
                             buffer_size=buffer_size, percent_tolerance=percent_tolerance,
+                            large_transition=large_transition,
                             num_measurements=len(self.transients.columns) + 1)
         for s in subset:
             # if len(buffer.transitionList) < bsize
@@ -376,7 +378,7 @@ class Hart85(object):
         building_path = '/building{}'.format(mains.building())
         mains_data_location = '{}/elec/meter1'.format(building_path)
 
-        [temp, transients] = find_steady_states_transients(mains)
+        [temp, transients] = find_steady_states_transients(mains, cols=self.cols, **load_kwargs)
 
         # For now ignoring the first transient
         transients = transients[1:]
@@ -390,7 +392,7 @@ class Hart85(object):
         states_total = [] 
         timeframes=[]
         # Now iterating over mains data and disaggregating chunk by chunk
-        for chunk in mains.power_series():
+        for chunk in mains.power_series(**load_kwargs):
             # Record metadata
             timeframes.append(chunk.timeframe)
             measurement = chunk.name

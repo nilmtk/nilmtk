@@ -122,10 +122,13 @@ def _apply_clustering(X, max_num_clusters):
 
 def hart85_means_shift_cluster(pair_buffer_df, cols):
 
+    print(cols)
+    print(cols[0])
+    print(type(cols[0]))
     from sklearn.cluster import MeanShift
     # Creating feature vector
     cluster_df = pd.DataFrame()
-    power_types = [col.type for col in cols]
+    power_types = [col[1] for col in cols]
     if 'active' in power_types:
         cluster_df['active'] = pd.Series(pair_buffer_df.apply(lambda row:
                                                                    ((np.fabs(row['T1 Active']) + np.fabs(row['T2 Active'])) / 2), axis=1), index=pair_buffer_df.index)
