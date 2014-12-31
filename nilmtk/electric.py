@@ -723,7 +723,7 @@ class Electric(object):
             del state_changes
             
             if switch_off_events[0] < switch_on_events[0]:
-                switch_off_events = switch_off_events.iloc[1:]
+                switch_off_events = switch_off_events[1:]
 
             for on, off in zip(switch_on_events, switch_off_events):
                 on -= 1 + border
