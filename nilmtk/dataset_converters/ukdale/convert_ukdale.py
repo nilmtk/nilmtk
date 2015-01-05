@@ -101,14 +101,5 @@ def _convert_one_sec_data(ukdale_path, store, ac_type_map):
         filename = join(ukdale_path, house_path, 'mains.dat')
         df = _load_csv(filename, ONE_SEC_COLUMNS, TZ)
         store.put(str(key), df)
-        
-        # Set 'disabled' metadata attributes
-        # TODO: needs to use `nilmtk.DataStore` API rather than grabbing
-        # the `pd.HDFStore` directly.
-        group = store.store._handle.get_node('/building{:d}'.format(key.building))
-        metadata = group._f_getattr('metadata')
-        metadata['elec_meters'][key.meter]['disabled'] = True
-        group._f_setattr('metadata', metadata)
-        store.store.flush()
 
     store.close()
