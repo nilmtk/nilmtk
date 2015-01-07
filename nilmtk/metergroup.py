@@ -1394,12 +1394,16 @@ class MeterGroup(Electric):
             nx.draw(graph, pos, labels=meter_labels, arrows=False)
 
     def _plot_area(self, ax=None, timeframe=None, pretty_labels=True, unit='W',
-                   label_kwargs=None, plot_kwargs=None, **load_kwargs):
+                   label_kwargs=None, plot_kwargs=None, threshold=None,
+                   **load_kwargs):
         """
         Parameters
         ----------
         plot_kwargs : dict of key word arguments for DataFrame.plot()
         unit : {kW or W}
+        threshold : float or None
+           if set to a float then any measured value under this threshold
+           will be set to 0.
 
         Returns
         -------
@@ -1413,6 +1417,10 @@ class MeterGroup(Electric):
         load_kwargs['sections'] = [timeframe]
         load_kwargs = self._set_sample_period(timeframe, **load_kwargs)
         df = self.dataframe_of_meters(**load_kwargs)
+
+        if threshold is not None:
+            df[df <= threshold] = 0
+            
         if unit == 'kW':
             df /= 1000
 
