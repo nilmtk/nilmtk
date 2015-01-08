@@ -419,9 +419,8 @@ class Electric(object):
                                               **hist_kwargs)
 
         # Plot
-        plot_kwargs.setdefault('align', 'center')
-        plot_kwargs.setdefault('linewidth', 0)
-        ax.bar(bins[:-1], hist, np.diff(bins), **plot_kwargs)
+        plot_kwargs.setdefault('linewidth', 0.1)
+        ax.fill_between(bins[:-1], 0, hist, **plot_kwargs)
         first_bin_width = bins[1] - bins[0]
         ax.set_xlim([bins[0]-(first_bin_width/2), bins[-1]])
         ax.set_xlabel('Power (watts)')
