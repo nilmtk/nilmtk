@@ -386,8 +386,7 @@ class Electric(object):
         return ax
 
     def plot_power_histogram(self, ax=None, load_kwargs=None, 
-                             plot_kwargs=None, range=None,
-                             **hist_kwargs):
+                             plot_kwargs=None, range=None, **hist_kwargs):
         """
         Parameters
         ----------
