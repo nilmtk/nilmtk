@@ -1476,13 +1476,12 @@ class MeterGroup(Electric):
             good_sections = meter.good_sections(**load_kwargs)
             ax = good_sections.plot(ax=ax, y=i, **plot_kwargs)
             del good_sections
-            gc.collect()
             if label_func:
                 labels.append(getattr(meter, label_func)())
 
         # Just end numbers
         if label_func is None:
-            labels = [n] + ([''] * (n-2)) + [1]
+            labels = [n] + ([''] * (n-1))
 
         # Y tick formatting
         ax.set_yticks(np.arange(0, n) + 0.5)

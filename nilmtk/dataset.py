@@ -114,10 +114,22 @@ class DataSet(object):
             fig, axes = plt.subplots(n, 1, sharex=True, gridspec_kw=gridspec_kw)
                                      
         assert n == len(axes)
-        for ax, elec in zip(axes, self.elecs()):
+        for i, (ax, elec) in enumerate(zip(axes, self.elecs())):
             elec.plot_good_sections(ax=ax, label_func=label_func, gap=gap, 
                                     **kwargs)
-            ax.set_title('House {}'.format(elec.building()))
+            ax.set_title('House {}'.format(elec.building()), y=0.4, va='top')
+            ax.grid(False)
+            for spine in ax.spines.values():
+                spine.set_linewidth(0.5)
+            if i == n // 2:
+                ax.set_ylabel('Meter', rotation=0, 
+                              ha='center', va='center', y=.4)
+
+        ax.set_xlabel('Date')
+
+        plt.tight_layout()
+        plt.subplots_adjust(hspace=0.05)
+        plt.draw()
 
         return axes
 
