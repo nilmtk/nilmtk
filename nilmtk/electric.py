@@ -121,7 +121,8 @@ class Electric(object):
                 end = timeframe_for_meter.end
         return start, end
 
-    def plot(self, ax=None, timeframe=None, plot_legend=True, **kwargs):
+    def plot(self, ax=None, timeframe=None, plot_legend=True, unit='W', 
+             plot_kwargs=None, **kwargs):
         """
         Parameters
         ----------
@@ -130,6 +131,7 @@ class Electric(object):
         ax : matplotlib.axes, optional
         plot_legend : boolean, optional
             Defaults to True.  Set to False to not plot legend.
+        unit : {'W', 'kW'}
         **kwargs
         """
         # Get start and end times for the plot
@@ -140,8 +142,17 @@ class Electric(object):
         kwargs['sections'] = [timeframe]
         kwargs = self._set_sample_period(timeframe, **kwargs)
         power_series = self.power_series_all_data(**kwargs)
-        ax = plot_series(power_series, ax=ax, label=self.label())
+        if power_series is None or power_series.empty:
+            return ax
 
+        if unit == 'kW':
+            power_series /= 1000
+
+        if plot_kwargs is None:
+            plot_kwargs = {}
+        plot_kwargs.setdefault('label', self.label())
+        ax = power_series.plot(ax=ax, **plot_kwargs)
+        ax.set_ylabel('Power ({})'.format(unit))
         if plot_legend:
             plt.legend()
 
