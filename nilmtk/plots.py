@@ -9,7 +9,8 @@ SPINE_COLOR = 'gray'
 
 _to_ordinalf_np_vectorized = np.vectorize(mdates._to_ordinalf)
 
-def plot_series(series, **kwargs):
+def plot_series(series, ax=None, fig=None, 
+                date_format='%d/%m/%y %H:%M:%S', tz_localize=True, **kwargs):
     """Plot function for series which is about 5 times faster than
     pd.Series.plot().
 
@@ -25,10 +26,6 @@ def plot_series(series, **kwargs):
 
     Can also use all **kwargs expected by `ax.plot`
     """
-    ax = kwargs.pop('ax', None)
-    fig = kwargs.pop('fig', None)
-    date_format = kwargs.pop('date_format', '%d/%m/%y %H:%M:%S')
-    tz_localize = kwargs.pop('tz_localize', True)
     if series is None or len(series) == 0:
         return ax
 
