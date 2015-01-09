@@ -934,7 +934,7 @@ class MeterGroup(Electric):
                     timeframe = timeframe.union(chunk_from_next_meter.timeframe)
 
                 ids.append(meter_id)
-                chunks.append(chunk_from_next_meter.icol(0))
+                chunks.append(chunk_from_next_meter.sum(axis=1))
 
             if chunks:
                 df = pd.concat(chunks, axis=1)
@@ -1427,6 +1427,9 @@ class MeterGroup(Electric):
         if plot_kwargs is None:
             plot_kwargs = {}
         df.columns = self.get_labels(df.columns, pretty=pretty_labels)
+        # Set a tiny linewidth otherwise we get lines even if power is zero
+        # and this looks ugly when drawn above other lines.
+        plot_kwargs.setdefault('linewidth', 0.0001)
         ax = df.plot(kind='area', **plot_kwargs)
         ax.set_ylabel("Power ({:s})".format(unit))
         return ax, df
