@@ -80,6 +80,14 @@ class ElecMeter(Hashable, Electric):
     def dataset(self):
         return self._identifier_attr('dataset')
 
+    @property
+    def name(self):
+        return self.metadata.get('name')
+
+    @name.setter
+    def name(self, value):
+        self.metadata['name'] = value
+
     def _identifier_attr(self, attr):
         if self.identifier is None:
             return
