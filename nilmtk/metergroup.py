@@ -1347,7 +1347,7 @@ class MeterGroup(Electric):
         ax : matplotlib.axes, optional
         plot_legend : boolean, optional
             Defaults to True.  Set to False to not plot legend.
-        kind : {'separate lines', 'sum', 'area', 'energy bar'}
+        kind : {'separate lines', 'sum', 'area', 'snakey', 'energy bar'}
         timeframe : nilmtk.TimeFrame, optional
             Defaults to self.get_timeframe()
         """
@@ -1356,7 +1356,8 @@ class MeterGroup(Electric):
             'separate lines': self._plot_separate_lines,
             'sum': super(MeterGroup, self).plot,
             'area': self._plot_area,
-            'sankey': self._plot_sankey
+            'sankey': self._plot_sankey,
+            'energy bar': self._plot_energy_bar
         }
         try:
             ax = function_map[kind](**kwargs)
@@ -1496,6 +1497,41 @@ class MeterGroup(Electric):
             return label
         ax.yaxis.set_major_formatter(FuncFormatter(y_formatter))
         ax.set_ylim([0, n])
+
+        return ax
+
+    def _plot_energy_bar(self, ax=None, mains=None):
+        """Plot a stacked bar of the energy per meter, in order.
+
+        Parameters
+        ----------
+        ax : matplotlib axes
+        mains : MeterGroup or ElecMeter, optional
+            Used to calculate Remainder.
+
+        Returns
+        -------
+        ax
+        """
+        energy = self.energy_per_meter(mains=mains, per_period='D',
+                                        use_meter_labels=True)
+
+        energy.sort(ascending=False)
+
+        # Plot
+        ax = pd.DataFrame(energy).T.plot(kind='bar', stacked=True, grid=True,
+                                         edgecolor="none", legend=False, width=2)
+        ax.set_xticks([])
+        ax.set_ylabel('kWh\nper\nday', rotation=0, ha='center', va='center', 
+                      labelpad=15)
+
+        cumsum = energy.cumsum()
+        text_ys = cumsum - (cumsum.diff().fillna(energy['Remainder']) / 2)
+        for kwh, (label, y) in zip(energy.values, text_ys.iteritems()):
+            label += " ({:.2f})".format(kwh)
+            ax.annotate(label, (0, y), color='white', size=8,
+                        horizontalalignment='center', 
+                        verticalalignment='center')
 
         return ax
 
