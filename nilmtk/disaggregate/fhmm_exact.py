@@ -475,9 +475,11 @@ class FHMM(object):
                 }
             })
 
-            #Setting the name if it exists
-            if "name" in meter.metadata:
-                elec_meters[meter_instance]['name'] = meter.metadata['name']
+            
+           #Setting the name if it exists
+           if meter.name:
+               if len(meter.name)>0:
+                   elec_meters[meter_instance]['name'] = meter.name
         building_metadata = {
             'instance': mains.building(),
             'elec_meters': elec_meters,

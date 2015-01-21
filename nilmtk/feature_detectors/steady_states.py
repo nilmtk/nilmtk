@@ -9,7 +9,7 @@ SEED = 42
 np.random.seed(SEED)
 
 
-def find_steady_states_transients(metergroup, cols, **load_kwargs):
+def find_steady_states_transients(metergroup, cols, noise_level, state_threshold,  **load_kwargs):
     steady_states_list = []
     transients_list = []
 
@@ -25,7 +25,7 @@ def find_steady_states_transients(metergroup, cols, **load_kwargs):
 
         power_dataframe = power_df.dropna()
 
-        x, y = find_steady_states(power_dataframe)
+        x, y = find_steady_states(power_dataframe, noise_level=noise_level, stateThreshold=state_threshold)
         steady_states_list.append(x)
         transients_list.append(y)
     return [pd.concat(steady_states_list), pd.concat(transients_list)]

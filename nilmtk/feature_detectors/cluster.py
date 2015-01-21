@@ -122,9 +122,7 @@ def _apply_clustering(X, max_num_clusters):
 
 def hart85_means_shift_cluster(pair_buffer_df, cols):
 
-    print(cols)
-    print(cols[0])
-    print(type(cols[0]))
+
     from sklearn.cluster import MeanShift
     # Creating feature vector
     cluster_df = pd.DataFrame()

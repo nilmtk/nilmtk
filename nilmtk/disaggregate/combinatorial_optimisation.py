@@ -246,9 +246,9 @@ class CombinatorialOptimisation(object):
             })
 
             #Setting the name if it exists
-            if "name" in meter.metadata:
-                print(meter)
-                elec_meters[meter_instance]['name'] = meter.metadata["name"]
+            if meter.name:
+                if len(meter.name)>0:
+                    elec_meters[meter_instance]['name'] = meter.name
 
         building_metadata = {
             'instance': mains.building(),

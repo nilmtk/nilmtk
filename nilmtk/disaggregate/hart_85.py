@@ -205,7 +205,7 @@ class Hart85(object):
         self.model = {}
 
     def train(self, metergroup, cols=[('power','active')],
-                buffer_size=20, min_tolerance=100, percent_tolerance=0.035,
+                buffer_size=20, noise_level=70, state_threshold=15,  min_tolerance=100, percent_tolerance=0.035,
                 large_transition=1000, **kwargs):
         """
         Train using Hart85. Places the learnt model in `model` attribute.
@@ -228,7 +228,9 @@ class Hart85(object):
             power draw of a Large transition
         """
         self.cols = cols
-        [self.steady_states, self.transients] = find_steady_states_transients(metergroup, cols, **kwargs)
+        self.state_threshold = state_threshold
+        self.noise_level = noise_level
+        [self.steady_states, self.transients] = find_steady_states_transients(metergroup,  cols, noise_level, state_threshold, **kwargs)
         self.pair_df = self.pair(buffer_size, min_tolerance, percent_tolerance, large_transition)
         self.centroids = hart85_means_shift_cluster(self.pair_df, cols)
 
@@ -348,7 +350,7 @@ class Hart85(object):
                     
 
             di[appliance] = power
-            print(power.sum())
+            #print(power.sum())
         return di          
 
 
@@ -378,7 +380,7 @@ class Hart85(object):
         building_path = '/building{}'.format(mains.building())
         mains_data_location = '{}/elec/meter1'.format(building_path)
 
-        [temp, transients] = find_steady_states_transients(mains, cols=self.cols, **load_kwargs)
+        [temp, transients] = find_steady_states_transients(mains, cols=self.cols, state_threshold = self.state_threshold, noise_level=self.noise_level, **load_kwargs)
 
         # For now ignoring the first transient
         transients = transients[1:]
@@ -399,7 +401,7 @@ class Hart85(object):
             states_chunk = self.hart85_disaggregate_single_chunk(chunk, prev, transients)
             prev = states_chunk.iloc[-1].to_dict()
             power_chunk_dict = self.assign_power_from_states(states_chunk, prev)
-            self.po = power_chunk_dict
+            #self.po = power_chunk_dict
             cols = pd.MultiIndex.from_tuples([chunk.name])
             for meter in power_chunk_dict.keys():
                 output_datastore.append('{}/elec/meter{:d}'
