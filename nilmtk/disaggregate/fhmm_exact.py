@@ -315,7 +315,7 @@ class FHMM(object):
         self.predictions = pd.concat(dfs_list).sort_index()
         """
 
-    def disaggregate(self, mains, output_datastore, **load_kwargs):
+    def disaggregate(self, sections, mains, output_datastore, **load_kwargs):
         '''Disaggregate mains according to the model learnt previously.
 
         Parameters
@@ -348,7 +348,7 @@ class FHMM(object):
         resample_seconds = load_kwargs.pop('resample_seconds', 60)
 
         
-        load_kwargs['sections'] = load_kwargs.pop('sections',
+        sections = load_kwargs.pop('sections',
                                                   mains.good_sections())
         resample_rule = '{:d}S'.format(resample_seconds)
         timeframes = []
@@ -477,9 +477,9 @@ class FHMM(object):
 
             
            #Setting the name if it exists
-           if meter.name:
-               if len(meter.name)>0:
-                   elec_meters[meter_instance]['name'] = meter.name
+            if meter.name:
+                if len(meter.name) > 0:
+                    elec_meters[meter_instance]['name'] = meter.name
         building_metadata = {
             'instance': mains.building(),
             'elec_meters': elec_meters,
