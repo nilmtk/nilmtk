@@ -25,13 +25,13 @@ class HDFDataStore(DataStore):
 
     @doc_inherit
     def __init__(self, filename, mode='a'):
-    
+        if mode == 'a' and not isfile(filename):
+            raise IOError("No such file as " + filename)
         self.store = pd.HDFStore(filename, mode, complevel=9, complib='blosc')
         super(HDFDataStore, self).__init__()
 
     @doc_inherit
     def __getitem__(self, key):
-    
         return self.store[key]
 
     @doc_inherit
