@@ -315,7 +315,7 @@ class FHMM(object):
         self.predictions = pd.concat(dfs_list).sort_index()
         """
 
-    def disaggregate(self, sections, mains, output_datastore, **load_kwargs):
+    def disaggregate(self, mains, output_datastore, **load_kwargs):
         '''Disaggregate mains according to the model learnt previously.
 
         Parameters
