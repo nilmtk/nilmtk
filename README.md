@@ -150,7 +150,7 @@ cd ..
 ```bash
 git clone git://github.com/hmmlearn/hmmlearn.git
 cd hmmlearn
-python setup.py develop
+python setup.py install
 cd ..
 ```
 
