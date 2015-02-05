@@ -146,6 +146,14 @@ cd nilm_metadata
 python setup.py develop
 cd ..
 ```
+- Installing [hmmlearn](https://github.com/hmmlearn/hmmlearn)
+```bash
+git clone git://github.com/hmmlearn/hmmlearn.git
+cd hmmlearn
+python setup.py develop
+cd ..
+```
+
 -  Installing postgresql support (currently needed for WikiEnergy converter)
 ```bash
 sudo apt-get build-dep python-psycopg2
