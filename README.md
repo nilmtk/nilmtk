@@ -147,6 +147,14 @@ python setup.py develop
 cd ..
 ```
 
+- Installing [hmmlearn](https://github.com/hmmlearn/hmmlearn)
+```bash
+git clone git://github.com/hmmlearn/hmmlearn.git
+cd hmmlearn
+python setup.py install
+cd ..
+```
+
 - Misc. pip installs
 ```bash
 pip install psycopg2 nose coveralls coverage
