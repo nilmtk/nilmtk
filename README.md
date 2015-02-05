@@ -146,10 +146,6 @@ cd nilm_metadata
 python setup.py develop
 cd ..
 ```
--  Installing postgresql support (currently needed for WikiEnergy converter)
-```bash
-sudo apt-get build-dep python-psycopg2
-```
 
 - Misc. pip installs
 ```bash
