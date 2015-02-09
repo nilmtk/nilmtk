@@ -687,7 +687,7 @@ class Electric(object):
         return ax
 
     def activation_series(self, min_on_rows=1, border=0,
-                          on_power_threshold=None, **kwargs):
+                          on_power_threshold=None, min_on_duration=0, **kwargs):
         """Returns runs of an appliance.
 
         Most appliances spend a lot of their time off.  This function finds
@@ -703,6 +703,9 @@ class Electric(object):
             Number of rows to include before and after the detected activation
         on_power_threshold : int or float
             Defaults to self.on_power_threshold()
+        min_on_duration : int
+            Any activation lasting less seconds than min_on_duration will be ignored.
+            Defaults to 0.
         **kwargs : kwargs for self.power_series()
 
         Returns
@@ -735,6 +738,9 @@ class Electric(object):
                 switch_off_events = switch_off_events[1:]
 
             for on, off in zip(switch_on_events, switch_off_events):
+                duration = (chunk.index[off] - chunk.index[on]).total_seconds()
+                if duration < min_on_duration:
+                    continue
                 on -= 1 + border
                 if on < 0:
                     on = 0
