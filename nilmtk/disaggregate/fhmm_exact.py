@@ -190,7 +190,7 @@ class FHMM(object):
         self.model = {}
         self.predictions = pd.DataFrame()
 
-    def train(self, metergroup):
+    def train(self, metergroup, **load_kwargs):
         """
         Train using 1d FHMM. Places the learnt model in `model` attribute
         The current version performs training ONLY on the first chunk.
@@ -203,7 +203,7 @@ class FHMM(object):
 
             # Data to fit
             X = []
-            meter_data = meter.power_series().next().dropna()
+            meter_data = meter.power_series(**load_kwargs).next().dropna()
             """
             This was the behaviour in v0.1. Now assuming all
             preprocessing has been done
@@ -260,6 +260,7 @@ class FHMM(object):
             temp = test_mains[start:end].values.reshape(length, 1)
             learnt_states_array.append(self.model.predict(temp))
         """
+        test_mains = test_mains.dropna()
         length = len(test_mains.index)
         temp = test_mains.values.reshape(length, 1)
         learnt_states_array.append(self.model.predict(temp))
@@ -377,12 +378,12 @@ class FHMM(object):
                 meter_instance = meter.instance()
                 cols = pd.MultiIndex.from_tuples([chunk.name])
 
-                predicted_power = predictions[[meter]].values
+                predicted_power = predictions[[meter]]
+                output_df = pd.DataFrame(predicted_power)
+                output_df.columns = pd.MultiIndex.from_tuples([chunk.name])
                 output_datastore.append('{}/elec/meter{}'
                                         .format(building_path, meter_instance),
-                                        pd.DataFrame(predicted_power,
-                                                     index=chunk.index,
-                                                     columns=cols))
+                                        output_df)
 
             # Copy mains data to disag output
             output_datastore.append(key=mains_data_location,
