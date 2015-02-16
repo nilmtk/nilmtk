@@ -118,10 +118,12 @@ Please see the docs for more info.
 Please use our [github issue queue](https://github.com/nilmtk/nilmtk/issues) to submit bug reports, rather than emailing them, which will allow any of us to respond to your issue.
 
 Before opening an issue:
+
 1. Search the issue queue in case a duplicate already exists
 2. Pull the latest changes from the repository master branch to see if the error goes away
 
 If not, please open a new issue, ensuring:
+
 1. The title summarises the issue
 2. The issue is described in prose
 3. A snippet of code is included which will allow us to recreate the bug
