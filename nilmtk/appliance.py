@@ -58,10 +58,19 @@ class Appliance(Hashable):
         return self.metadata.get('on_power_threshold', 
                                  threshold_from_appliance_type)
 
-    def label(self):
-        """Return string '(<type>, <identifier>)' e.g. '(fridge, 1)'.
-        If type == 'unknown' then also returns `original_name`."""
-        label = str(tuple(self.identifier))
+    def label(self, pretty=False):
+        """Return string '(<type>, <identifier>)' e.g. '(fridge, 1)'
+        if `pretty=False` else if `pretty=True` then return a string like
+        'Fridge' or 'Fridge 2'. If type == 'unknown' then 
+        appends `original_name` to end of label."""
+        if pretty:
+            label = str(self.identifier.type)
+            label = label.capitalize()
+            if self.identifier.instance > 1:
+                label += " {}".format(self.identifier.instance)
+        else:
+            label = str(tuple(self.identifier))
+
         if self.identifier.type is 'unknown':
             label += ', original name = {}'.format(
                 self.metadata.get('original_name'))
