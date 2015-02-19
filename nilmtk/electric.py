@@ -18,7 +18,8 @@ import gc
 from .timeframe import TimeFrame
 from .measurement import select_best_ac_type
 from .utils import (offset_alias_to_seconds, convert_to_timestamp, 
-                    flatten_2d_list, append_or_extend_list)
+                    flatten_2d_list, append_or_extend_list,
+                    timedelta64_to_secs)
 from .plots import plot_series
 from .preprocessing import Apply
 from nilmtk.stats.histogram import histogram_from_generator
@@ -686,8 +687,8 @@ class Electric(object):
         ax.set_ylabel('Count')
         return ax
 
-    def activation_series(self, ffill_limit=1, border=0,
-                          on_power_threshold=None, min_on_duration=0, **kwargs):
+    def activation_series(self, min_off_duration=0, min_on_duration=0, border=1,
+                          on_power_threshold=None, **kwargs):
         """Returns runs of an appliance.
 
         Most appliances spend a lot of their time off.  This function finds
@@ -695,18 +696,18 @@ class Electric(object):
 
         Parameters
         ----------
-        ffill_limit : int
-            If ffill_limit > 0 then forward fill to 'smooth over' small periods
-            of sub-threshold power consumption (e.g. a washing machine might 
-            draw no power for a short period while the clothes soak.) 
-            Number of rows.
+        min_off_duration : int
+            If min_off_duration > 0 then ignore 'off' periods less than
+            min_off_duration seconds of sub-threshold power consumption 
+            (e.g. a washing machine might draw no power for a short
+            period while the clothes soak.)  Defaults to 0.
+        min_on_duration : int
+            Any activation lasting less seconds than min_on_duration will be 
+            ignored.  Defaults to 0.
         border : int
             Number of rows to include before and after the detected activation
         on_power_threshold : int or float
             Defaults to self.on_power_threshold()
-        min_on_duration : int
-            Any activation lasting less seconds than min_on_duration will be ignored.
-            Defaults to 0.
         **kwargs : kwargs for self.power_series()
 
         Returns
@@ -720,25 +721,41 @@ class Electric(object):
         activations = []
         for chunk in self.power_series(**kwargs):
             when_on = chunk >= on_power_threshold
-            if len(when_on) < 2:
-                continue
-            when_on = (when_on == True).replace(False, np.NaN)
-
-            # Forward fill to 'smooth over' small periods of sub-threshold power
-            # consumption (e.g. a washing machine might draw no power for 
-            # a short period while the clothes soak.)
-            when_on = when_on.fillna(method='ffill', limit=ffill_limit)
-            when_on = when_on.fillna(False)
 
             # Find state changes
-            state_changes = when_on.diff()
+            state_changes = when_on.astype(np.int8).diff()
             del when_on
             switch_on_events = np.where(state_changes == 1)[0]
             switch_off_events = np.where(state_changes == -1)[0]
             del state_changes
+
+            if len(switch_on_events) == 0 or len(switch_off_events) == 0:
+                continue
             
+            # Make sure events align
             if switch_off_events[0] < switch_on_events[0]:
                 switch_off_events = switch_off_events[1:]
+            if switch_on_events[-1] > switch_off_events[-1]:
+                switch_on_events = switch_on_events[:-1]
+            assert len(switch_on_events) == len(switch_off_events)
+                
+            # Smooth over off-durations less than min_off_duration
+            if min_off_duration > 0:
+                off_durations = (chunk.index[switch_on_events[1:]].values - 
+                                 chunk.index[switch_off_events[:-1]].values)
+
+                off_durations = timedelta64_to_secs(off_durations)
+
+                above_threshold_off_durations = np.where(
+                    off_durations >= min_off_duration)[0]
+
+                # Now remove off_events and on_events
+                switch_off_events = switch_off_events[
+                    np.concatenate([above_threshold_off_durations, 
+                                    [len(switch_off_events)-1]])]
+                switch_on_events = switch_on_events[
+                    np.concatenate([[0], above_threshold_off_durations+1])]
+            assert len(switch_on_events) == len(switch_off_events)
 
             for on, off in zip(switch_on_events, switch_off_events):
                 duration = (chunk.index[off] - chunk.index[on]).total_seconds()
