@@ -719,6 +719,8 @@ class Electric(object):
         activations = []
         for chunk in self.power_series(**kwargs):
             when_on = chunk >= on_power_threshold
+            if len(when_on) < 2:
+                continue
             when_on = (when_on == True).replace(False, np.NaN)
 
             # Forward fill to 'smooth over' small periods of sub-threshold power
