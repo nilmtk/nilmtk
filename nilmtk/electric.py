@@ -686,7 +686,7 @@ class Electric(object):
         ax.set_ylabel('Count')
         return ax
 
-    def activation_series(self, min_on_rows=1, border=0,
+    def activation_series(self, ffill_limit=1, border=0,
                           on_power_threshold=None, min_on_duration=0, **kwargs):
         """Returns runs of an appliance.
 
@@ -695,10 +695,11 @@ class Electric(object):
 
         Parameters
         ----------
-        min_on_rows : int
-            If min_on_rows > 0 then forward fill to 'smooth over' small periods
+        ffill_limit : int
+            If ffill_limit > 0 then forward fill to 'smooth over' small periods
             of sub-threshold power consumption (e.g. a washing machine might 
-            draw no power for a short period while the clothes soak.)
+            draw no power for a short period while the clothes soak.) 
+            Number of rows.
         border : int
             Number of rows to include before and after the detected activation
         on_power_threshold : int or float
@@ -726,7 +727,7 @@ class Electric(object):
             # Forward fill to 'smooth over' small periods of sub-threshold power
             # consumption (e.g. a washing machine might draw no power for 
             # a short period while the clothes soak.)
-            when_on = when_on.fillna(method='ffill', limit=min_on_rows)
+            when_on = when_on.fillna(method='ffill', limit=ffill_limit)
             when_on = when_on.fillna(False)
 
             # Find state changes
