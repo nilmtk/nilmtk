@@ -1,22 +1,5 @@
-### nilmtk survey
 
-Please fill in our [NILMTK survey](https://docs.google.com/forms/d/1JlGn0pRgAIj152PJtVsGEUe9OVv2naWbdDHosJ3sHko/viewform?c=0&w=1) to help us get a better idea of who's using NILMTK and what's important to you.
-
-[![Build Status](https://travis-ci.org/nilmtk/nilmtk.svg?branch=master)](https://travis-ci.org/nilmtk/nilmtk) 
-
-[![Coverage Status](https://coveralls.io/repos/nilmtk/nilmtk/badge.png)](https://coveralls.io/r/nilmtk/nilmtk)
-
-[![Code Health](https://landscape.io/github/nilmtk/nilmtk/master/landscape.png)](https://landscape.io/github/nilmtk/nilmtk/master)
-
-### v0.2 Released!
-
-v0.2 is a complete re-write.  Please see
-[the docs for details](http://nilmtk.github.io/nilmtk/master/index.html).
-The old v0.1 code is still available in the v0.1 branch and the [old
-docs are in v0.1.1](http://nilmtk.github.io/nilmtk/v0.1.1/index.html).
-
-
-nilmtk: Non-Intrusive Load Monitoring Toolkit
+NILMTK: Non-Intrusive Load Monitoring Toolkit
 ======
 
 Non-Intrusive Load Monitoring (NILM) is the process of estimating the energy consumed by individual
@@ -33,7 +16,14 @@ Below is an illustration (produced using nilmtk) of what NILM, in general, can d
 
 <img src="https://dl.dropboxusercontent.com/u/75845627/nilmtk/submetered.png" alt="Drawing" style="width: 40% height: 40%;"/>
 
-##### NILMTK Documentation
+##### History
+
+* Feb 2014: v0.1 released
+* June 2014: NILMTK presented at ACM e-Energy
+* July 2014: v0.2 released
+* Nov 2014: NILMTK wins best demo award at ACM BuildSys
+
+##### Documentation
 
 http://nilmtk.github.io/nilmtk/
 
@@ -42,7 +32,7 @@ This is the demo that [Oli Parson](http://www.oliverparson.co.uk)
 presented at [BuildSys 2014](http://www.buildsys.org/2014/) in Memphis
 and it won best demo.
 
-##### Academic paper on NILMTK
+##### Publications
 
 Batra, N., Kelly, J., Parson, O., Dutta, H., Knottenbelt, W., Rogers, A., Singh, A., Srivastava, M. (2014). NILMTK: An Open Source Toolkit for Non-intrusive Load Monitoring. In Fifth International Conference on Future Energy Systems (ACM e-Energy). Cambridge, UK. arXiv:[1404.3878](http://arxiv.org/abs/1404.3878) DOI:[10.1145/2602044.2602051](http://dx.doi.org/10.1145/2602044.2602051)
 
@@ -113,6 +103,10 @@ will be capable of doing 'plug and play' disaggregation in the future.
 
 Please see the docs for more info.
 
+##### User survey
+
+Please fill in our [NILMTK survey](https://docs.google.com/forms/d/1JlGn0pRgAIj152PJtVsGEUe9OVv2naWbdDHosJ3sHko/viewform?c=0&w=1) to help us get a better idea of who's using NILMTK and what's important to you.
+
 ##### Submitting a bug report
 
 Please use our [github issue queue](https://github.com/nilmtk/nilmtk/issues) to submit bug reports, rather than emailing them, which will allow any of us to respond to your issue.
@@ -129,6 +123,14 @@ If not, please open a new issue, ensuring:
 3. A snippet of code is included which will allow us to recreate the bug
 4. A copy-paste of the stack produced error
 5. Include a copy-paste of the output from nilmtk.utils.show_versions()
+
+##### Test coverage
+
+[![Build Status](https://travis-ci.org/nilmtk/nilmtk.svg?branch=master)](https://travis-ci.org/nilmtk/nilmtk) 
+
+[![Coverage Status](https://coveralls.io/repos/nilmtk/nilmtk/badge.png)](https://coveralls.io/r/nilmtk/nilmtk)
+
+[![Code Health](https://landscape.io/github/nilmtk/nilmtk/master/landscape.png)](https://landscape.io/github/nilmtk/nilmtk/master)
 
 ##### Installing on Ubuntu like Linux variants (debian based)
 
