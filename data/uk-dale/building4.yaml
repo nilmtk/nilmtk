@@ -1,0 +1,95 @@
+appliances:
+- instance: 1
+  meters: [2]
+  original_name: tv_dvd_digibox_lamp
+  type: television
+- instance: 1
+  meters: [2]
+  original_name: tv_dvd_digibox_lamp
+  type: DVD player
+- description: digibox
+  instance: 1
+  meters: [2]
+  original_name: tv_dvd_digibox_lamp
+  type: set top box
+- description: probably near the television
+  instance: 1
+  meters: [2]
+  original_name: tv_dvd_digibox_lamp
+  type: light
+- instance: 1
+  meters: [3]
+  original_name: kettle_radio
+  type: kettle
+- description: probably near the kettle
+  instance: 1
+  meters: [3]
+  original_name: kettle_radio
+  type: radio
+- fuel: natural gas
+  instance: 1
+  meters: [4]
+  original_name: gas_boiler
+  type: boiler
+- instance: 1
+  meters: [5]
+  original_name: freezer
+  type: freezer
+- instance: 1
+  meters: [6]
+  original_name: washing_machine_microwave_breadmaker
+  type: washing machine
+- instance: 1
+  meters: [6]
+  original_name: washing_machine_microwave_breadmaker
+  type: microwave
+- instance: 1
+  meters: [6]
+  original_name: washing_machine_microwave_breadmaker
+  type: breadmaker
+elec_meters:
+  1:
+    data_location: house_4/channel_1.dat
+    device_model: EcoManagerWholeHouseTx
+    preprocessing_applied:
+      clip: {upper_limit: 20000}
+    site_meter: true
+    timeframe: {end: '2013-10-01T06:15:07+01:00', start: '2013-03-09T14:40:07+00:00'}
+  2:
+    data_location: house_4/channel_2.dat
+    device_model: EcoManagerTxPlug
+    preprocessing_applied:
+      clip: {upper_limit: 4000}
+    submeter_of: 1
+    timeframe: {end: '2013-10-01T06:15:07+01:00', start: '2013-03-09T14:40:13+00:00'}
+  3:
+    data_location: house_4/channel_3.dat
+    device_model: EcoManagerTxPlug
+    preprocessing_applied:
+      clip: {upper_limit: 4000}
+    submeter_of: 1
+    timeframe: {end: '2013-09-29T10:38:28+01:00', start: '2013-03-09T14:40:13+00:00'}
+  4:
+    data_location: house_4/channel_4.dat
+    device_model: EcoManagerTxPlug
+    preprocessing_applied:
+      clip: {upper_limit: 4000}
+    submeter_of: 1
+    timeframe: {end: '2013-10-01T06:15:14+01:00', start: '2013-03-09T14:40:13+00:00'}
+  5:
+    data_location: house_4/channel_5.dat
+    device_model: EcoManagerTxPlug
+    preprocessing_applied:
+      clip: {upper_limit: 4000}
+    submeter_of: 1
+    timeframe: {end: '2013-10-01T06:15:14+01:00', start: '2013-03-09T14:40:13+00:00'}
+  6:
+    data_location: house_4/channel_6.dat
+    device_model: EcoManagerTxPlug
+    preprocessing_applied:
+      clip: {upper_limit: 4000}
+    submeter_of: 1
+    timeframe: {end: '2013-10-01T06:15:14+01:00', start: '2013-03-09T14:40:13+00:00'}
+instance: 4
+original_name: house_4
+timeframe: {end: '2013-10-01T06:15:14+01:00', start: '2013-03-09T14:40:07+00:00'}
