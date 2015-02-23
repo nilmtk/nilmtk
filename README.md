@@ -18,7 +18,7 @@ Below is an illustration (produced using nilmtk) of what NILM, in general, can d
 
 ##### History
 
-* Feb 2014: v0.1 released
+* April 2014: v0.1 released
 * June 2014: NILMTK presented at [ACM e-Energy](http://conferences.sigcomm.org/eenergy/2014/)
 * July 2014: v0.2 released
 * Nov 2014: NILMTK wins best demo award at [ACM BuildSys](http://www.buildsys.org/2014/)
