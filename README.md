@@ -203,6 +203,14 @@ $ python setup.py develop
 $ cd ..
 ```
 
+- Installing [hmmlearn](https://github.com/hmmlearn/hmmlearn)
+```bash
+git clone git://github.com/hmmlearn/hmmlearn.git
+cd hmmlearn
+python setup.py install
+cd ..
+```
+
 -  Installing postgresql support (currently needed for WikiEnergy converter)
 Download release for your python environment:
 http://www.stickpeople.com/projects/python/win-psycopg/
