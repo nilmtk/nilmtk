@@ -5,7 +5,7 @@ from pdb import set_trace as _breakpoint
 class Disaggregator(object):
     """
     Provides a common interface to all disaggregation classes.
-    Subclasses only need to override train_on_chunk() and disaggregate_chunk().
+    See https://github.com/nilmtk/nilmtk/issues/271 for discussion.
 
     Attributes
     ----------
@@ -45,14 +45,14 @@ class Disaggregator(object):
         
     def disaggregate(self, mains, output_datastore):
         """
-        Disaggregate mains using model learned by train(), and saves the disaggregated data to output_datastore.
+        Passes each chunk from mains generator to disaggregate_chunk() and passes the output to _write_disaggregated_chunk_to_datastore()
         Will have a default implementation in super class.
         Can be overridden for more simple in-memory disaggregation, or more complex out-of-core disaggregation.
 
         Parameters
         ----------
         mains : nilmtk.ElecMeter (single-phase) or nilmtk.MeterGroup (multi-phase)
-        output_datastore : instance of nilmtk.DataStore subclass
+        output_datastore : instance of nilmtk.DataStore or str of datastore location
         """
         
         raise NotImplementedError("NotImplementedError")
@@ -72,7 +72,7 @@ class Disaggregator(object):
 
         raise NotImplementedError("NotImplementedError")
     
-    def write_disaggregated_chunk_to_datastore(self, chunk, datastore):
+    def _write_disaggregated_chunk_to_datastore(self, chunk, datastore):
         """
         Writes disaggregated chunk to NILMTK datastore.
         Should not need to be overridden by sub-classes.
@@ -81,20 +81,6 @@ class Disaggregator(object):
         ----------
         chunk : pd.DataFrame representing a single appliance (chunk needs to include metadata)
         datastore : nilmtk.DataStore
-        
-        """
-
-        raise NotImplementedError("NotImplementedError")
-    
-    def disaggregate(self, mains, output_datastore):
-        """
-        Passes each chunk from mains generator to disaggregate_chunk() and passes the output to write_disaggregated_chunk_to_datastore()
-        Should not need to be overridden by sub-classes.
-
-        Parameters
-        ----------
-        mains : nilmtk.ElecMeter (single-phase) or nilmtk.MeterGroup (multi-phase)
-        output_datastore : str or nilmtk.DataStore to save output to
         
         """
 
