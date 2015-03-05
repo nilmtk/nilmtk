@@ -1,10 +1,12 @@
 instance: 1
 original_name: MAK
 elec_meters:
-  1: &PS18
+  1: &PS18_mains
     site_meter: true
     device_model: PS18
-  2: *PS18
+  2: &PS18
+    submeter_of: 0
+    device_model: PS18
   3: *PS18
   4: *PS18
   5: *PS18

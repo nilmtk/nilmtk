@@ -1,22 +1,5 @@
-### nilmtk survey
 
-Please fill in our [NILMTK survey](https://docs.google.com/forms/d/1JlGn0pRgAIj152PJtVsGEUe9OVv2naWbdDHosJ3sHko/viewform?c=0&w=1) to help us get a better idea of who's using NILMTK and what's important to you.
-
-[![Build Status](https://travis-ci.org/nilmtk/nilmtk.svg?branch=master)](https://travis-ci.org/nilmtk/nilmtk) 
-
-[![Coverage Status](https://coveralls.io/repos/nilmtk/nilmtk/badge.png)](https://coveralls.io/r/nilmtk/nilmtk)
-
-[![Code Health](https://landscape.io/github/nilmtk/nilmtk/master/landscape.png)](https://landscape.io/github/nilmtk/nilmtk/master)
-
-### v0.2 Released!
-
-v0.2 is a complete re-write.  Please see
-[the docs for details](http://nilmtk.github.io/nilmtk/master/index.html).
-The old v0.1 code is still available in the v0.1 branch and the [old
-docs are in v0.1.1](http://nilmtk.github.io/nilmtk/v0.1.1/index.html).
-
-
-nilmtk: Non-Intrusive Load Monitoring Toolkit
+NILMTK: Non-Intrusive Load Monitoring Toolkit
 ======
 
 Non-Intrusive Load Monitoring (NILM) is the process of estimating the energy consumed by individual
@@ -33,18 +16,20 @@ Below is an illustration (produced using nilmtk) of what NILM, in general, can d
 
 <img src="https://dl.dropboxusercontent.com/u/75845627/nilmtk/submetered.png" alt="Drawing" style="width: 40% height: 40%;"/>
 
-##### NILMTK Documentation
+##### History
+
+* April 2014: v0.1 released
+* June 2014: NILMTK presented at [ACM e-Energy](http://conferences.sigcomm.org/eenergy/2014/)
+* July 2014: v0.2 released
+* Nov 2014: NILMTK wins best demo award at [ACM BuildSys](http://www.buildsys.org/2014/)
+
+##### Documentation
 
 http://nilmtk.github.io/nilmtk/
 
-[NILMTK v0.2 BuildSys 2014 demo](http://nbviewer.ipython.org/github/nilmtk/nilmtk/blob/master/notebooks/BuildSys_2014_demo.ipynb).
-This is the demo that [Oli Parson](http://www.oliverparson.co.uk)
-presented at [BuildSys 2014](http://www.buildsys.org/2014/) in Memphis
-and it won best demo.
+##### Publications
 
-##### Academic paper on NILMTK
-
-Batra, N., Kelly, J., Parson, O., Dutta, H., Knottenbelt, W., Rogers, A., Singh, A., Srivastava, M. (2014). NILMTK: An Open Source Toolkit for Non-intrusive Load Monitoring. In Fifth International Conference on Future Energy Systems (ACM e-Energy). Cambridge, UK. arXiv:[1404.3878](http://arxiv.org/abs/1404.3878) DOI:[10.1145/2602044.2602051](http://dx.doi.org/10.1145/2602044.2602051)
+* Batra, N., Kelly, J., Parson, O., Dutta, H., Knottenbelt, W., Rogers, A., Singh, A., Srivastava, M. (2014). NILMTK: An Open Source Toolkit for Non-intrusive Load Monitoring. In Fifth International Conference on Future Energy Systems (ACM e-Energy). Cambridge, UK. arXiv:[1404.3878](http://arxiv.org/abs/1404.3878) DOI:[10.1145/2602044.2602051](http://dx.doi.org/10.1145/2602044.2602051)
 
 Bibtex:
 
@@ -66,14 +51,7 @@ Bibtex:
 }
 ```
 
-Please note that the paper was submitted back in Jan 2014 and the code
-has evolved *a lot* since then!  Please do not use the paper as a
-guide to the current API.  Instead please use the
-[online docs](http://nilmtk.github.io/nilmtk/master/index.html).
-
-We also wrote a short paper on some of the updates to NILMTK v0.2:
-
-Kelly, J., Batra, N., Parson, O., Dutta, H., Knottenbelt, W., Rogers,
+* Kelly, J., Batra, N., Parson, O., Dutta, H., Knottenbelt, W., Rogers,
 A., Singh, A., Srivastava, M. (2014). NILMTK v0.2: A Non-intrusive
 Load Monitoring Toolkit for Large Scale Data Sets.  In
 The first ACM Workshop On Embedded Systems For Energy-Efficient Buildings at BuildSys 2014. Memphis, USA. DOI:[10.1145/2674061.2675024](http://dx.doi.org/10.1145/2674061.2675024) arXiv:[1409.5908](http://arxiv.org/abs/1409.5908)
@@ -97,11 +75,14 @@ Bibtex:
 }
 ```
 
+N.B. NILMTK has evolved *a lot* since these papers were published! Please use the
+[online docs](http://nilmtk.github.io/nilmtk/master/index.html)
+as a guide to the current API.
+
 ##### Keeping up to date with NILMTK
 
-Please sign up to the [NILMTK-Announce mailing list](https://groups.google.com/forum/#!forum/nilmtk-announce) to be kept up to speed on NILMTK.  It will be a fairly low-traffic mailing list.  We'll just announce new versions, new docs etc.
-
-[NILMTK is also on Twitter](https://twitter.com/nilmtk).
+* [NILMTK-Announce mailing list](https://groups.google.com/forum/#!forum/nilmtk-announce): stay up to speed with NILMTK.  It will be a fairly low-traffic mailing list.  We'll just announce new versions, new docs etc.
+* [NILMTK on Twitter](https://twitter.com/nilmtk).
 
 ##### Current state of the project
 
@@ -112,6 +93,10 @@ ready for use by end-users, although we certainly hope that NILMTK
 will be capable of doing 'plug and play' disaggregation in the future.
 
 Please see the docs for more info.
+
+##### User survey
+
+Please fill in our [NILMTK survey](https://docs.google.com/forms/d/1JlGn0pRgAIj152PJtVsGEUe9OVv2naWbdDHosJ3sHko/viewform?c=0&w=1) to help us get a better idea of who's using NILMTK and what's important to you.
 
 ##### Submitting a bug report
 
@@ -129,6 +114,14 @@ If not, please open a new issue, ensuring:
 3. A snippet of code is included which will allow us to recreate the bug
 4. A copy-paste of the stack produced error
 5. Include a copy-paste of the output from nilmtk.utils.show_versions()
+
+##### Test coverage
+
+[![Build Status](https://travis-ci.org/nilmtk/nilmtk.svg?branch=master)](https://travis-ci.org/nilmtk/nilmtk) 
+
+[![Coverage Status](https://coveralls.io/repos/nilmtk/nilmtk/badge.png)](https://coveralls.io/r/nilmtk/nilmtk)
+
+[![Code Health](https://landscape.io/github/nilmtk/nilmtk/master/landscape.png)](https://landscape.io/github/nilmtk/nilmtk/master)
 
 ##### Installing on Ubuntu like Linux variants (debian based)
 
@@ -208,6 +201,14 @@ $ git clone https://github.com/nilmtk/nilm_metadata/
 $ cd nilm_metadata
 $ python setup.py develop
 $ cd ..
+```
+
+- Installing [hmmlearn](https://github.com/hmmlearn/hmmlearn)
+```bash
+git clone git://github.com/hmmlearn/hmmlearn.git
+cd hmmlearn
+python setup.py install
+cd ..
 ```
 
 -  Installing postgresql support (currently needed for WikiEnergy converter)

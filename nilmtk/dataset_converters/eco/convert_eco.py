@@ -6,6 +6,7 @@ from os.path import isdir, join, dirname, abspath
 from pandas.tools.merge import concat
 from nilmtk.utils import get_module_directory, check_directory_exists
 from nilmtk.datastore import Key
+from nilmtk.measurement import LEVEL_NAMES
 from nilm_metadata import convert_yaml_to_hdf5
 from inspect import currentframe, getfile, getsourcefile
 from sys import getfilesystemencoding
@@ -104,6 +105,7 @@ def convert_eco(dataset_loc, hdf_filename, timezone):
                         if (tmp_before != tmp_after):
                             print('Removed missing measurements - Size before: ' + str(tmp_before) + ', size after: ' + str(tmp_after))
                         
+                        df_phase.columns.set_names(LEVEL_NAMES, inplace=True)
                         if not key in store:
                             store.put(key, df_phase, format='Table')
                         else:
@@ -123,6 +125,7 @@ def convert_eco(dataset_loc, hdf_filename, timezone):
                     df.index = pd.DatetimeIndex(start=fi[:-4], freq='s', periods=86400, tz = 'GMT')
                     df.rename(columns=plugs_column_name, inplace=True)
                     df = df.tz_convert(timezone)
+                    df.columns.set_names(LEVEL_NAMES, inplace=True)
 
                     tmp_before = np.size(df.power.active)
                     df = df[df.power.active != -1]

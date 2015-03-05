@@ -782,8 +782,13 @@ class ElecMeter(Hashable, Electric):
         _get_stat_from_cache_or_compute
         get_cached_stat
         """
-        return ("building{:d}/elec/cache/meter{:d}/{:s}"
-                .format(self.building(), self.instance(), stat_name))
+        if isinstance(self.instance(), tuple):
+            meter_str = "_".join([str(i) for i in (self.instance())])
+        else:
+            meter_str = "{:d}".format(self.instance())
+
+        return ("building{:d}/elec/cache/meter{}/{:s}"
+                .format(self.building(), meter_str, stat_name))
 
     def clear_cache(self, verbose=False):
         """
