@@ -5,31 +5,31 @@ elec_meters:
   1:
     device_model: circle
     submeter_of: 0
-    room: bathroom
+    room: kitchen
   2:
     device_model: circle
     submeter_of: 0
-    room: bathroom
+    room: kitchen
   3:
     device_model: circle
     submeter_of: 0
-    room: bedroom
+    room: kitchen
   4:
     device_model: circle
     submeter_of: 0
-    room: lounge
+    room: kitchen
   5:
     device_model: circle
     submeter_of: 0
-    room: kitchen
+    room: bathroom
   6:
     device_model: circle
     submeter_of: 0
-    room: kitchen
+    room: lounge
   7:
     device_model: circle
     submeter_of: 0
-    room: kitchen
+    room: bathroom
   8:
     device_model: circle
     submeter_of: 0
@@ -37,7 +37,7 @@ elec_meters:
   9:
     device_model: circle
     submeter_of: 0
-    room: kitchen
+    room: bedroom
 
 appliances:
 - type: fridge

@@ -5,11 +5,11 @@ elec_meters:
   1:
     device_model: circle
     submeter_of: 0
-    room: bathroom
+    room: hall
   2:
     device_model: circle
     submeter_of: 0
-    room: lounge
+    room: kitchen
   3:
     device_model: circle
     submeter_of: 0
@@ -21,19 +21,19 @@ elec_meters:
   5:
     device_model: circle
     submeter_of: 0
-    room: kitchen
+    room: bathroom
   6:
     device_model: circle
     submeter_of: 0
-    room: hall
+    room: bathroom
   7:
     device_model: circle
     submeter_of: 0
-    room: kitchen
+    room: lounge
   8:
     device_model: circle
     submeter_of: 0
-    room: bathroom
+    room: kitchen
   9:
     device_model: circle
     submeter_of: 0
