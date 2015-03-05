@@ -80,4 +80,55 @@ class Disaggregator(object):
 
         raise NotImplementedError("NotImplementedError")
 
-    ####################### interface proposed by Jack on 1 Feb
+    ####################### helper methods (Disaggregator superclass)
+    
+    def write_disaggregated_chunk_to_datastore(self, chunk, datastore):
+        """
+
+        Parameters
+        ----------
+        chunk : pd.DataFrame representing a single appliance (chunk needs to include metadata)
+        datastore : nilmtk.DataStore
+        
+        """
+
+        raise NotImplementedError("NotImplementedError")
+    
+    def disaggregate(self, mains, output_datastore):
+        """
+        Passes each chunk from mains generator to disaggregate_chunk() and passes the output to write_disaggregated_chunk_to_datastore()
+
+        Parameters
+        ----------
+        mains : nilmtk.ElecMeter (single-phase) or nilmtk.MeterGroup (multi-phase)
+        output_datastore : str or nilmtk.DataStore to save output to
+        
+        """
+
+        raise NotImplementedError("NotImplementedError")
+        
+    ####################### methods to be overriden to save/load learned model to disk
+    
+    def import_model(self, filename):
+        """
+        Loads learned model from file
+
+        Parameters
+        ----------
+        filename : str path to file to load model from
+        
+        """
+
+        raise NotImplementedError("NotImplementedError")
+        
+    def export_model(self, filename):
+        """
+        Saves learned model to file 
+
+        Parameters
+        ----------
+        filename : str path to file to save model to
+        
+        """
+
+        raise NotImplementedError("NotImplementedError")
