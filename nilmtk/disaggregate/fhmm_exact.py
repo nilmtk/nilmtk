@@ -355,6 +355,7 @@ class FHMM(object):
         timeframes = []
         building_path = '/building{}'.format(mains.building())
         mains_data_location = '{}/elec/meter1'.format(building_path)
+        data_is_available = False
 
         for chunk in mains.power_series(**load_kwargs):
 
@@ -374,7 +375,7 @@ class FHMM(object):
             # Start disaggregation
             predictions = self.disaggregate_chunk(chunk)
             for meter in predictions.columns:
-            
+                data_is_available = True
                 meter_instance = meter.instance()
                 cols = pd.MultiIndex.from_tuples([chunk.name])
 
@@ -388,6 +389,10 @@ class FHMM(object):
             # Copy mains data to disag output
             output_datastore.append(key=mains_data_location,
                                     value=pd.DataFrame(chunk, columns=cols))
+
+
+        if not data_is_available:
+            return
 
         ##################################
         # Add metadata to output_datastore
