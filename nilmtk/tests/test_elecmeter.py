@@ -46,6 +46,11 @@ class TestElecMeter(WarningTestMixin, unittest.TestCase):
         check_energy_numbers(self, energy)
 
         meter.clear_cache()
+
+        # Check period_range
+        period_index = pd.period_range(start=meter.get_timeframe().start, 
+                                       periods=5, freq='D')
+        meter.total_energy(sections=period_index, full_results=True)
         
     def test_upstream_meter(self):
         meter1 = ElecMeter(metadata={'site_meter': True}, meter_id=METER_ID)
@@ -82,7 +87,6 @@ class TestElecMeter(WarningTestMixin, unittest.TestCase):
 
         #self.assertEqual(corr12_nilmtk, corr12_pandas)
         #print("Correlation using pandas:", corr12_pandas)
-
 
 
 if __name__ == '__main__':

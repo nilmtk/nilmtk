@@ -21,6 +21,7 @@ from .electric import Electric
 from .timeframe import TimeFrame, list_of_timeframe_dicts
 from nilmtk.exceptions import MeasurementError
 from .utils import flatten_2d_list, capitalise_first_letter
+from nilmtk.timeframegroup import TimeFrameGroup
 import nilmtk
 
 ElecMeterID = namedtuple('ElecMeterID', ['instance', 'building', 'dataset'])
@@ -679,6 +680,7 @@ class ElecMeter(Hashable, Electric):
             tf = self.get_timeframe()
             tf.include_end = True
             sections = [tf]
+        sections = TimeFrameGroup(sections)
         sections = [s for s in sections if not s.empty]
 
         # Retrieve usable stats from cache
