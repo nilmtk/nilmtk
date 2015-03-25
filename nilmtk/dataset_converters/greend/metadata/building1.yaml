@@ -5,31 +5,31 @@ elec_meters:
   1:
     device_model: circle
     submeter_of: 0
-    room: bathroom
+    room: kitchen
   2:
     device_model: circle
     submeter_of: 0
-    room: bathroom
+    room: kitchen
   3:
     device_model: circle
     submeter_of: 0
-    room: bedroom
+    room: kitchen
   4:
     device_model: circle
     submeter_of: 0
-    room: lounge
+    room: kitchen
   5:
     device_model: circle
     submeter_of: 0
-    room: kitchen
+    room: bathroom
   6:
     device_model: circle
     submeter_of: 0
-    room: kitchen
+    room: lounge
   7:
     device_model: circle
     submeter_of: 0
-    room: kitchen
+    room: bathroom
   8:
     device_model: circle
     submeter_of: 0
@@ -37,72 +37,24 @@ elec_meters:
   9:
     device_model: circle
     submeter_of: 0
-    room: kitchen
+    room: bedroom
 
 appliances:
-- type: washing machine
+- type: fridge
   instance: 1
   meters: [1]
   control:
-    - manual
-  efficiency_rating: A
-  nominal_consumption: 2200
-  model: F1215
-  manufacturer: Zanussi
-  year_of_purchase: 2006
-  year_of_manufacture: 2006
-
-- type: hair dryer
-  instance: 1
-  meters: [2]
-  control:
-    - manual
-  nominal_consumption: 1800
-  model: 3522
-  manufacturer: Braun
-  year_of_purchase: 2008
-  year_of_manufacture: 2000
-      
-- type: charger # tootbrusher
-  instance: 1
-  meters: [2]
-  control:
-    - manual
-  nominal_consumption: 2
-  model: 4729
-  manufacturer: Braun
-  year_of_purchase: 2005
-  year_of_manufacture: 2005
-      
-- type: incandescent lamp
-  instance: 1
-  meters: [3]
-  control:
-    - manual
-  manufacturer: Philips
-  
-- type: audio amplifier
-  instance: 1
-  meters: [4]
-  control:
-    - manual
-  model: DRA-275RD
-  manufacturer: Denon
-    
-- type: kettle
-  instance: 1
-  meters: [5]
-  control:
-    - manual
-  nominal_consumption: 900
-  model: HD 4619
-  manufacturer: Philips
-  year_of_purchase: 2012
-  year_of_manufacture: 2010
+    - thermostat
+  efficiency_rating: A+
+  nominal_consumption: 26
+  model: ARG 737
+  manufacturer: Whirpool
+  year_of_purchase: 2011
+  year_of_manufacture: 2011
   
 - type: dish washer
   instance: 1
-  meters: [6]
+  meters: [2]
   control:
     - manual
   nominal_consumption: 2100
@@ -113,7 +65,7 @@ appliances:
   
 - type: microwave
   instance: 1
-  meters: [7]
+  meters: [3]
   control:
     - manual
   nominal_consumption: 1300
@@ -122,21 +74,62 @@ appliances:
   year_of_purchase: 2011
   year_of_manufacture: 2011  
   
-- type: fridge
+- type: kettle
   instance: 1
-  meters: [8]
+  meters: [4]
   control:
-    - thermostat
-  efficiency_rating: A+
-  nominal_consumption: 26
-  model: ARG 737
-  manufacturer: Whirpool
-  year_of_purchase: 2011
-  year_of_manufacture: 2011
+    - manual
+  nominal_consumption: 900
+  model: HD 4619
+  manufacturer: Philips
+  year_of_purchase: 2012
+  year_of_manufacture: 2010 
   
+- type: washing machine
+  instance: 1
+  meters: [5]
+  control:
+    - manual
+  efficiency_rating: A
+  nominal_consumption: 2200
+  model: F1215
+  manufacturer: Zanussi
+  year_of_purchase: 2006
+  year_of_manufacture: 2006
+
+- type: audio amplifier
+  instance: 1
+  meters: [6]
+  control:
+    - manual
+  model: DRA-275RD
+  manufacturer: Denon
+
+- type: hair dryer
+  instance: 1
+  meters: [7]
+  control:
+    - manual
+  nominal_consumption: 1800
+  model: 3522
+  manufacturer: Braun
+  year_of_purchase: 2008
+  year_of_manufacture: 2000
+
+- type: charger # tootbrusher
+  instance: 1
+  meters: [7]
+  control:
+    - manual
+  nominal_consumption: 2
+  model: 4729
+  manufacturer: Braun
+  year_of_purchase: 2005
+  year_of_manufacture: 2005
+
 - type: food processor
   instance: 1
-  meters: [9]
+  meters: [8]
   control:
     - manual
   nominal_consumption: 450
@@ -144,6 +137,13 @@ appliances:
   manufacturer: Bosch
   year_of_purchase: 2010
   year_of_manufacture: 2010
+  
+- type: incandescent lamp
+  instance: 1
+  meters: [9]
+  control:
+    - manual
+  manufacturer: Philips
   
 description: A flat within an appartment house
 rooms:
