@@ -126,6 +126,7 @@ class CombinatorialOptimisation(object):
         timeframes = []
         building_path = '/building{}'.format(mains.building())
         mains_data_location = '{}/elec/meter1'.format(building_path)
+        data_is_available = False
 
         for chunk in mains.power_series(**load_kwargs):
 
@@ -143,6 +144,7 @@ class CombinatorialOptimisation(object):
 
             for i, model in enumerate(self.model):
                 print("Estimating power demand for '{}'".format(model['training_metadata']))
+                data_is_available = True
                 predicted_power = state_combinations[
                     indices_of_state_combinations, i].flatten()
                 cols = pd.MultiIndex.from_tuples([chunk.name])
@@ -156,6 +158,9 @@ class CombinatorialOptimisation(object):
             # Copy mains data to disag output
             output_datastore.append(key=mains_data_location,
                                     value=pd.DataFrame(chunk, columns=cols))
+
+        if not data_is_available:
+            return
 
         ##################################
         # Add metadata to output_datastore
