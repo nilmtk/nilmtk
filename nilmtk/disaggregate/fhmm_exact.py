@@ -390,7 +390,6 @@ class FHMM(object):
             output_datastore.append(key=mains_data_location,
                                     value=pd.DataFrame(chunk, columns=cols))
 
-
         if not data_is_available:
             return
 
