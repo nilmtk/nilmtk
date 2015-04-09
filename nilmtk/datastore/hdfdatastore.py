@@ -158,7 +158,6 @@ class HDFDataStore(DataStore):
 
     @doc_inherit
     def put(self, key, value):
-
         self.store.put(key, value, format='table', 
                        expectedrows=len(value), index=False)
         self.store.create_table_index(key, columns=['index'], 
@@ -167,12 +166,10 @@ class HDFDataStore(DataStore):
 
     @doc_inherit
     def remove(self, key):
-    
         self.store.remove(key)
 
     @doc_inherit
-    def load_metadata(self, key='/'):
-    
+    def load_metadata(self, key='/'):    
         if key == '/':
             node = self.store.root
         else:
@@ -183,7 +180,6 @@ class HDFDataStore(DataStore):
 
     @doc_inherit
     def save_metadata(self, key, metadata):
-        
         if key == '/':
             node = self.store.root
         else:
@@ -194,7 +190,6 @@ class HDFDataStore(DataStore):
 
     @doc_inherit
     def elements_below_key(self, key='/'):
-    
         if key == '/' or not key:
             node = self.store.root
         else:
