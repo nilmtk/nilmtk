@@ -665,8 +665,6 @@ class MeterGroup(Electric):
             start = normalise_timestamp(section.start, freq)
             index = pd.date_range(start, section.end, closed='left', freq=freq)
             chunk = combine_chunks_from_generators(index, columns, self.meters, kwargs)
-            if chunk.empty:
-                break
             yield chunk
 
     def _convert_physical_quantity_and_ac_type_to_cols(self, **kwargs):
