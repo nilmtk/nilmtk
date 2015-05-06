@@ -186,7 +186,6 @@ def decode_hmm(length_sequence, centroids, appliance_list, states):
 class FHMM(object):
 
     def __init__(self):
-
         self.model = {}
         self.predictions = pd.DataFrame()
 
@@ -231,7 +230,8 @@ class FHMM(object):
         new_learnt_models = OrderedDict()
         for meter in learnt_model:
             startprob, means, covars, transmat = sort_learnt_parameters(
-                learnt_model[meter].startprob_, learnt_model[meter].means_, learnt_model[meter].covars_, learnt_model[meter].transmat_)
+                learnt_model[meter].startprob_, learnt_model[meter].means_,
+                learnt_model[meter].covars_, learnt_model[meter].transmat_)
             new_learnt_models[meter] = hmm.GaussianHMM(
                 startprob.size, "full", startprob, transmat)
             new_learnt_models[meter].means_ = means
@@ -243,78 +243,42 @@ class FHMM(object):
         self.individual = new_learnt_models
         self.model = learnt_model_combined
 
-
     def disaggregate_chunk(self, test_mains):
         """
         Disaggregate the test data according to the model learnt previously
-        Performs 1D FHMM disaggregation        
+        Performs 1D FHMM disaggregation.
+
+        For now assuming there is no missing data at this stage.
         """
-        
+        # See v0.1 code
+        # for ideas of how to handle missing data in this code if needs be.
+
         # Array of learnt states
         learnt_states_array = []
-
-        """For now assuming there is no missing data at this stage
-        # Break down test_data into chunks and disaggregate separately on them
-        for start, end in contiguous_blocks(test_mains.index):
-            length = test_mains[start:end].values.size
-            temp = test_mains[start:end].values.reshape(length, 1)
-            learnt_states_array.append(self.model.predict(temp))
-        """
         test_mains = test_mains.dropna()
         length = len(test_mains.index)
         temp = test_mains.values.reshape(length, 1)
         learnt_states_array.append(self.model.predict(temp))
 
-
         # Model
         means = OrderedDict()
         for elec_meter, model in self.individual.iteritems():
-            means[elec_meter] = model.means_
-        means_copy = deepcopy(means)
-        for elec_meter, mean in means.iteritems():
-            means_copy[elec_meter] = mean.round().astype(int).flatten().tolist()
-            means_copy[elec_meter].sort()
+            means[elec_meter] = (
+                model.means_.round().astype(int).flatten().tolist())
+            means[elec_meter].sort()
 
         decoded_power_array = []
         decoded_states_array = []
 
         for learnt_states in learnt_states_array:
             [decoded_states, decoded_power] = decode_hmm(
-                len(learnt_states), means_copy, means_copy.keys(), learnt_states)
+                len(learnt_states), means, means.keys(), learnt_states)
             decoded_states_array.append(decoded_states)
             decoded_power_array.append(decoded_power)
 
-        """
-        The following code is different from its 0.1 version which is
-        mentioned below this
-        """
-        dfs_list = []
-        count = 0
-        #cont_blocks = contiguous_blocks(test_mains.index)
-        
-        prediction = pd.DataFrame(decoded_power_array[0], index=test_mains.index)
-        #prediction.index = test.index
+        prediction = pd.DataFrame(decoded_power_array[0],
+                                  index=test_mains.index)
         return prediction
-        """
-        The following code was used in v0.1
-        For now, I am assuming that we have no missing data by the time
-        we reach the disaggregate stage. This will greatly simplify our design
-        
-
-        # Combining to make a DataFrame with correct index, based on the start,
-        # end time and the frequency of the data
-        dfs_list = []
-        count = 0
-        cont_blocks = contiguous_blocks(test_mains.index)
-        for i, (start, end) in enumerate(contiguous_blocks(test_mains.index)):
-            index = pd.DatetimeIndex(start=start, end=end,
-                                     freq=self.freq)
-
-            df = pd.DataFrame(decoded_power_array[i], index=index)
-            dfs_list.append(df)
-
-        self.predictions = pd.concat(dfs_list).sort_index()
-        """
 
     def disaggregate(self, mains, output_datastore, **load_kwargs):
         '''Disaggregate mains according to the model learnt previously.
@@ -326,7 +290,7 @@ class FHMM(object):
             For storing power predictions from disaggregation algorithm.
         output_name : string, optional
             The `name` to use in the metadata for the `output_datastore`.
-            e.g. some sort of name for this experiment.  Defaults to 
+            e.g. some sort of name for this experiment.  Defaults to
             "NILMTK_FHMM_<date>"
         resample_seconds : number, optional
             The desired sample period in seconds.
@@ -341,15 +305,11 @@ class FHMM(object):
                                " calling `disaggregate`.  For example, the"
                                " model can be instantiated by running `train`.")
 
-        
-        
         # Extract optional parameters from load_kwargs
         date_now = datetime.now().isoformat().split('.')[0]
         output_name = load_kwargs.pop('output_name', 'NILMTK_FHMM_' + date_now)
         resample_seconds = load_kwargs.pop('resample_seconds', 60)
 
-        
-        sections = load_kwargs.pop('sections', mains.good_sections())
         resample_rule = '{:d}S'.format(resample_seconds)
         timeframes = []
         building_path = '/building{}'.format(mains.building())
@@ -357,7 +317,6 @@ class FHMM(object):
         data_is_available = False
 
         for chunk in mains.power_series(**load_kwargs):
-
             # Check that chunk is sensible size before resampling
             if len(chunk) < MIN_CHUNK_LENGTH:
                 continue
