@@ -268,16 +268,16 @@ class FHMM(object):
 
         # Model
         means = OrderedDict()
-        for appliance in self.individual:
-            means[appliance] = self.individual[appliance].means_
+        for elec_meter, model in self.individual.iteritems():
+            means[elec_meter] = model.means_
         means_copy = deepcopy(means)
-        for appliance in means:
-            means_copy[appliance] = means[
-                appliance].astype(int).flatten().tolist()
-            means_copy[appliance].sort()
+        for elec_meter, mean in means.iteritems():
+            means_copy[elec_meter] = mean.round().astype(int).flatten().tolist()
+            means_copy[elec_meter].sort()
 
         decoded_power_array = []
         decoded_states_array = []
+
         for learnt_states in learnt_states_array:
             [decoded_states, decoded_power] = decode_hmm(
                 len(learnt_states), means_copy, means_copy.keys(), learnt_states)
@@ -335,7 +335,7 @@ class FHMM(object):
         '''
         import warnings
         warnings.filterwarnings("ignore", category=Warning)
-        MIN_CHUNK_LENGTH =100
+        MIN_CHUNK_LENGTH = 100
         if not self.model:
             raise RuntimeError("The model needs to be instantiated before"
                                " calling `disaggregate`.  For example, the"
@@ -349,8 +349,7 @@ class FHMM(object):
         resample_seconds = load_kwargs.pop('resample_seconds', 60)
 
         
-        sections = load_kwargs.pop('sections',
-                                                  mains.good_sections())
+        sections = load_kwargs.pop('sections', mains.good_sections())
         resample_rule = '{:d}S'.format(resample_seconds)
         timeframes = []
         building_path = '/building{}'.format(mains.building())
@@ -374,6 +373,7 @@ class FHMM(object):
 
             # Start disaggregation
             predictions = self.disaggregate_chunk(chunk)
+
             for meter in predictions.columns:
                 data_is_available = True
                 meter_instance = meter.instance()
