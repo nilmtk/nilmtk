@@ -167,7 +167,8 @@ def get_good_sections(df, max_sample_period, look_ahead=None,
     assert len(good_sect_starts) == len(good_sect_ends)
 
     sections = [TimeFrame(start, end) 
-                for start, end in zip(good_sect_starts, good_sect_ends)]
+                for start, end in zip(good_sect_starts, good_sect_ends)
+                if start != end]
 
     # Memory management
     del good_sect_starts
