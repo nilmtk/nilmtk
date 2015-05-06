@@ -1,19 +1,10 @@
 from __future__ import print_function, division
-from ..utils import find_nearest
 import pandas as pd
 import itertools
 import numpy as np
-from sklearn import metrics
 from hmmlearn import hmm
-import pandas as pd
-import numpy as np
-import json
 from datetime import datetime
-from ..appliance import ApplianceID
-from ..utils import find_nearest, container_to_string
-from ..feature_detectors import cluster
 from ..timeframe import merge_timeframes, list_of_timeframe_dicts, TimeFrame
-from ..preprocessing import Apply, Clip
 
 from copy import deepcopy
 from collections import OrderedDict
@@ -35,7 +26,6 @@ def sort_startprob(mapping, startprob):
 
 
 def sort_covars(mapping, covars):
-    num_elements = len(covars)
     new_covars = np.zeros_like(covars)
     for i in xrange(len(covars)):
         new_covars[i] = covars[mapping[i]]
@@ -43,12 +33,12 @@ def sort_covars(mapping, covars):
 
 
 def sort_transition_matrix(mapping, A):
-    """ Sorts the transition matrix according to increasing order of 
+    """Sorts the transition matrix according to increasing order of
     power means; as returned by mapping
 
     Parameters
     ----------
-    mapping : 
+    mapping :
     A : numpy.array of shape (k, k)
         transition matrix
     """
@@ -91,12 +81,10 @@ def compute_A_fhmm(list_A):
 
 def compute_means_fhmm(list_means):
     """
-    Returns 
+    Returns
     -------
     [mu, cov]
     """
-
-    #list_of_appliances_centroids=[ [appliance[i][0] for i in range(len(appliance))] for appliance in list_B]
     states_combination = list(itertools.product(*list_means))
     num_combinations = len(states_combination)
     means_stacked = np.array([sum(x) for x in states_combination])
@@ -122,7 +110,6 @@ def compute_pi_fhmm(list_pi):
 
 
 def create_combined_hmm(model):
-
     list_pi = [model[appliance].startprob_ for appliance in model]
     list_A = [model[appliance].transmat_ for appliance in model]
     list_means = [model[appliance].means_.flatten().tolist()
@@ -131,9 +118,10 @@ def create_combined_hmm(model):
     pi_combined = compute_pi_fhmm(list_pi)
     A_combined = compute_A_fhmm(list_A)
     [mean_combined, cov_combined] = compute_means_fhmm(list_means)
-    #model_fhmm=create_combined_hmm(len(pi_combined),pi_combined, A_combined, mean_combined, cov_combined)
-    combined_model = hmm.GaussianHMM(n_components=len(
-        pi_combined), covariance_type='full', startprob=pi_combined, transmat=A_combined)
+
+    combined_model = hmm.GaussianHMM(
+        n_components=len(pi_combined), covariance_type='full',
+        startprob=pi_combined, transmat=A_combined)
     combined_model.covars_ = cov_combined
     combined_model.means_ = mean_combined
     return combined_model
@@ -141,12 +129,11 @@ def create_combined_hmm(model):
 
 def return_sorting_mapping(means):
     means_copy = deepcopy(means)
-    # Sorting
     means_copy = np.sort(means_copy, axis=0)
+
     # Finding mapping
     mapping = {}
     for i, val in enumerate(means_copy):
-        #assert val == means[np.where(val == means)[0]]
         mapping[i] = np.where(val == means)[0][0]
     return mapping
 
@@ -155,7 +142,6 @@ def decode_hmm(length_sequence, centroids, appliance_list, states):
     """
     Decodes the HMM state sequence
     """
-    power_states_dict = {}
     hmm_states = {}
     hmm_power = {}
     total_num_combinations = 1
@@ -193,7 +179,8 @@ class FHMM(object):
         """
         Train using 1d FHMM. Places the learnt model in `model` attribute
         The current version performs training ONLY on the first chunk.
-        Online HMMs are welcome is someone can contribute :)
+        Online HMMs are welcome if someone can contribute :)
+        Assumes all pre-processing has been done.
         """
         learnt_model = OrderedDict()
         for i, meter in enumerate(metergroup.submeters().meters):
@@ -203,23 +190,6 @@ class FHMM(object):
             # Data to fit
             X = []
             meter_data = meter.power_series(**load_kwargs).next().dropna()
-            """
-            This was the behaviour in v0.1. Now assuming all
-            preprocessing has been done
-
-            # Breaking data into contiguous blocks
-            for start, end in contiguous_blocks(meter_data.index):
-                #print(start, end)
-                length = appliance_data[start:end].values.size
-                # print(length)
-                # Ignore small sequences
-                if length > 50:
-                    temp = meter_data[
-                        start:end].values.reshape(length, 1)
-                    X.append(temp)
-            # print(X)
-            # Fit
-            """
             length = len(meter_data.index)
             X = meter_data.values.reshape(length, 1)
             self.X = X
@@ -301,9 +271,10 @@ class FHMM(object):
         warnings.filterwarnings("ignore", category=Warning)
         MIN_CHUNK_LENGTH = 100
         if not self.model:
-            raise RuntimeError("The model needs to be instantiated before"
-                               " calling `disaggregate`.  For example, the"
-                               " model can be instantiated by running `train`.")
+            raise RuntimeError(
+                "The model needs to be instantiated before"
+                " calling `disaggregate`.  For example, the"
+                " model can be instantiated by running `train`.")
 
         # Extract optional parameters from load_kwargs
         date_now = datetime.now().isoformat().split('.')[0]
@@ -414,9 +385,8 @@ class FHMM(object):
             meter_instance = meter.instance()
 
             for app in meter.appliances:
-                meters = app.metadata['meters']
                 appliance = {
-                    'meters': [meter_instance], 
+                    'meters': [meter_instance],
                     'type': app.identifier.type,
                     'instance': app.identifier.instance
                     # TODO this `instance` will only be correct when the
@@ -439,8 +409,7 @@ class FHMM(object):
                 }
             })
 
-            
-           #Setting the name if it exists
+            # Setting the name if it exists
             if meter.name:
                 if len(meter.name) > 0:
                     elec_meters[meter_instance]['name'] = meter.name
@@ -451,3 +420,4 @@ class FHMM(object):
         }
 
         output_datastore.save_metadata(building_path, building_metadata)
+
