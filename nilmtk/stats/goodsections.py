@@ -96,7 +96,7 @@ def get_good_sections(df, max_sample_period, look_ahead=None,
     """
     index = df.dropna().sort_index().index
     del df
-    
+
     if len(index) < 2:
         return []
 
@@ -108,7 +108,7 @@ def get_good_sections(df, max_sample_period, look_ahead=None,
     gc.collect()
 
     timedeltas_check = concatenate(
-        [[previous_chunk_ended_with_open_ended_good_section], 
+        [[previous_chunk_ended_with_open_ended_good_section],
          timedeltas_check])
     transitions = diff(timedeltas_check.astype(np.int))
 
@@ -166,9 +166,9 @@ def get_good_sections(df, max_sample_period, look_ahead=None,
 
     assert len(good_sect_starts) == len(good_sect_ends)
 
-    sections = [TimeFrame(start, end) 
+    sections = [TimeFrame(start, end)
                 for start, end in zip(good_sect_starts, good_sect_ends)
-                if start != end]
+                if not (start == end and start is not None)]
 
     # Memory management
     del good_sect_starts
