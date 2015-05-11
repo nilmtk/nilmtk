@@ -916,23 +916,15 @@ class MeterGroup(Electric):
             chunks = []
             ids = []
             index = None
-            timeframe = None
             for meter_id, generator in zip(identifiers, generators):
                 try:
                     chunk_from_next_meter = next(generator)
                 except StopIteration:
                     continue
 
-                if chunk_from_next_meter.empty or not chunk_from_next_meter.timeframe:
-                    continue
-
-                if timeframe is None:
-                    timeframe = chunk_from_next_meter.timeframe
-                else:
-                    timeframe = timeframe.union(chunk_from_next_meter.timeframe)
-
-                ids.append(meter_id)
-                chunks.append(chunk_from_next_meter.sum(axis=1))
+                if not chunk_from_next_meter.empty:
+                    ids.append(meter_id)
+                    chunks.append(chunk_from_next_meter.sum(axis=1))
 
             if chunks:
                 df = pd.concat(chunks, axis=1)
