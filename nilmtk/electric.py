@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from datetime import timedelta
 import gc
+import pytz
 
 from .timeframe import TimeFrame
 from .measurement import select_best_ac_type
@@ -89,7 +90,7 @@ class Electric(object):
             all_data = None
         return all_data
 
-    def _prep_kwargs_for_sample_period_and_resample(self, sample_period=None, 
+    def _prep_kwargs_for_sample_period_and_resample(self, sample_period=None,
                                                     resample=False,
                                                     resample_kwargs=None,
                                                     **kwargs):
@@ -107,9 +108,22 @@ class Electric(object):
         if resample:
             if resample_kwargs is None:
                 resample_kwargs = {}
-            resample_func = lambda df: df.resample(rule='{:d}S'.format(sample_period),
-                                                   **resample_kwargs)
-            kwargs.setdefault('preprocessing', []).append(Apply(func=resample_func))
+
+            def resample_func(df):
+                resample_kwargs['rule'] = '{:d}S'.format(sample_period)
+                try:
+                    df = df.resample(**resample_kwargs)
+                except pytz.AmbiguousTimeError:
+                    # Work-around for
+                    # https://github.com/pydata/pandas/issues/10117
+                    tz = df.index.tz.zone
+                    df = df.tz_convert('UTC')
+                    df = df.resample(**resample_kwargs)
+                    df = df.tz_convert(tz)
+                return df
+
+            kwargs.setdefault('preprocessing', []).append(
+                Apply(func=resample_func))
 
         return kwargs
 
@@ -122,7 +136,7 @@ class Electric(object):
                 end = timeframe_for_meter.end
         return start, end
 
-    def plot(self, ax=None, timeframe=None, plot_legend=True, unit='W', 
+    def plot(self, ax=None, timeframe=None, plot_legend=True, unit='W',
              plot_kwargs=None, **kwargs):
         """
         Parameters
