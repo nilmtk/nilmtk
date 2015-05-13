@@ -100,7 +100,7 @@ Please fill in our [NILMTK survey](https://docs.google.com/forms/d/1JlGn0pRgAIj1
 
 ##### Submitting a bug report
 
-Please use our [github issue queue](https://github.com/nilmtk/nilmtk/issues) to submit bug reports, rather than emailing them, which will allow any of us to respond to your issue.
+Please use our [github issue queue](https://github.com/nilmtk/nilmtk/issues) to submit bug reports, rather than emailing them, which will allow any of us to respond to your issue.  If your bug concerns one of NILMTK's dependencies then please contact the relevant project.
 
 Before opening an issue:
 
