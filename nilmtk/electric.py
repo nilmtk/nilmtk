@@ -69,11 +69,9 @@ class Electric(object):
     def min_off_duration(self):
         return self._aggregate_metadata_attribute('min_off_duration')
 
-    def _aggregate_metadata_attribute(self, attr, agg_func=np.min,
+    def _aggregate_metadata_attribute(self, attr, agg_func=np.max,
                                       default_value=0,
                                       from_type_metadata=True):
-        """Returns the minimum `min_on_duration` across all appliances
-        immediately downstream of this meter."""
         attr_values = []
         for a in self.appliances:
             if from_type_metadata:
