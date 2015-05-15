@@ -30,7 +30,7 @@ MAX_SIZE_ENTROPY = 10000
 
 class Electric(object):
     """Common implementations of methods shared by ElecMeter and MeterGroup.
-    """   
+    """
     def when_on(self, on_power_threshold=None, **load_kwargs):
         """Are the connected appliances appliance is on (True) or off (False)?
 
@@ -53,15 +53,40 @@ class Electric(object):
             on_power_threshold = self.on_power_threshold()
         for chunk in self.power_series(**load_kwargs):
             yield chunk >= on_power_threshold
-            
+
     def on_power_threshold(self):
-        """Returns the minimum `on_power_threshold` across all appliances 
-        immediately downstream of this meter.  If any appliance 
+        """Returns the minimum `on_power_threshold` across all appliances
+        immediately downstream of this meter.  If any appliance
         does not have an `on_power_threshold` then default to 10 watts."""
         if not self.appliances:
             return DEFAULT_ON_POWER_THRESHOLD
         on_power_thresholds = [a.on_power_threshold() for a in self.appliances]
         return min(on_power_thresholds)
+
+    def min_on_duration(self):
+        return self._aggregate_metadata_attribute('min_on_duration')
+
+    def min_off_duration(self):
+        return self._aggregate_metadata_attribute('min_off_duration')
+
+    def _aggregate_metadata_attribute(self, attr, agg_func=np.min,
+                                      default_value=0,
+                                      from_type_metadata=True):
+        """Returns the minimum `min_on_duration` across all appliances
+        immediately downstream of this meter."""
+        attr_values = []
+        for a in self.appliances:
+            if from_type_metadata:
+                attr_value = a.type.get(attr)
+            else:
+                attr_value = a.metadata.get(attr)
+            if attr_value is not None:
+                attr_values.append(attr_value)
+
+        if len(attr_values) == 0:
+            return default_value
+        else:
+            return agg_func(attr_values)
 
     def matches_appliances(self, key):
         """
@@ -591,7 +616,7 @@ class Electric(object):
 
         Returns
         -------
-        generator of pd.Series.  If a single ac_type is found for the 
+        generator of pd.Series.  If a single ac_type is found for the
         physical_quantity then the series.name will be a normal tuple.
         If more than 1 ac_type is found then the ac_type will be a string
         of the ac_types with '+' in between.  e.g. 'active+apparent'.
@@ -701,7 +726,7 @@ class Electric(object):
         ax.set_ylabel('Count')
         return ax
 
-    def activation_series(self, min_off_duration=0, min_on_duration=0,
+    def activation_series(self, min_off_duration=None, min_on_duration=None,
                           border=1, on_power_threshold=None, **kwargs):
         """Returns runs of an appliance.
 
@@ -714,10 +739,12 @@ class Electric(object):
             If min_off_duration > 0 then ignore 'off' periods less than
             min_off_duration seconds of sub-threshold power consumption
             (e.g. a washing machine might draw no power for a short
-            period while the clothes soak.)  Defaults to 0.
+            period while the clothes soak.)  Defaults value from metadata or,
+            if metadata absent, defaults to 0.
         min_on_duration : int
             Any activation lasting less seconds than min_on_duration will be
-            ignored.  Defaults to 0.
+            ignored.  Defaults value from metadata or, if metadata absent,
+            defaults to 0.
         border : int
             Number of rows to include before and after the detected activation
         on_power_threshold : int or float
@@ -731,6 +758,12 @@ class Electric(object):
         kwargs.setdefault('resample', True)
         if on_power_threshold is None:
             on_power_threshold = self.on_power_threshold()
+
+        if min_off_duration is None:
+            min_off_duration = self.min_off_duration()
+
+        if min_on_duration is None:
+            min_on_duration = self.min_on_duration()
 
         activations = []
         for chunk in self.power_series(**kwargs):
