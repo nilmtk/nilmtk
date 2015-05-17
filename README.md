@@ -126,7 +126,7 @@ If not, please open a new issue, ensuring:
 ##### Installing on Ubuntu like Linux variants (debian based)
 
 NB: The following procedure is for Ubuntu like Linux variants (debian based). Please adapt accordingly for your OS. We would welcome installation instructions for other OS as well.
-We would recommend using [Anaconda](https://store.continuum.io/cshop/anaconda/), which bundles togther most of the required packages.
+We would recommend using [Anaconda](https://store.continuum.io/cshop/anaconda/), which bundles togther most of the required packages. Please download Anaconda for Python 2.7.x. We do not currently support Python 3.
 After installing Anaconda, please do the following:
 
 - Updating anaconda
@@ -186,9 +186,9 @@ nosetests
 
 ##### Installing on Windows
 
-- Install [Anaconda](https://store.continuum.io/cshop/anaconda/), which bundles togther most of the required packages.
+- Install [Anaconda](https://store.continuum.io/cshop/anaconda/), which bundles togther most of the required packages. Please download Anaconda for Python 2.7.x. We do not currently support Python 3.
 
-- Install [git](http://git-scm.com/download/win) client
+- Install [git](http://git-scm.com/download/win) client. You may need to add `git.exe` to your path in order to run nilmtk tests. 
 
 - Installing pip and other dependencies which might be missing from Anaconda
 ```bash
