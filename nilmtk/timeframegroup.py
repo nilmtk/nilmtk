@@ -57,3 +57,12 @@ class TimeFrameGroup(list):
         for timeframe in self:
             uptime += timeframe.timedelta
         return uptime
+
+    def remove_shorter_than(self, threshold):
+        """Removes TimeFrames shorter than `threshold` seconds."""
+        new_tfg = TimeFrameGroup()
+        for timeframe in self:
+            if timeframe.timedelta.total_seconds() >= threshold:
+                new_tfg.append(timeframe)
+
+        return new_tfg
