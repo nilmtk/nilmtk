@@ -12,6 +12,14 @@ nilmtk.feature_detectors.cluster module
     :undoc-members:
     :show-inheritance:
 
+nilmtk.feature_detectors.steady_states module
+---------------------------------------------
+
+.. automodule:: nilmtk.feature_detectors.steady_states
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
 Module contents
 ---------------

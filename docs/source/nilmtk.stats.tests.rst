@@ -4,6 +4,14 @@ nilmtk.stats.tests package
 Submodules
 ----------
 
+nilmtk.stats.tests.test_dropoutrate module
+------------------------------------------
+
+.. automodule:: nilmtk.stats.tests.test_dropoutrate
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 nilmtk.stats.tests.test_locategoodsections module
 -------------------------------------------------
 
