@@ -2,6 +2,7 @@
 .. code:: python
 
     from nilmtk.utils import print_dict
+
 Convert data to NILMTK format and load into NILMTK
 ==================================================
 
@@ -19,6 +20,7 @@ Converting the REDD dataset is easy because NILMTK v0.2 ships with a
 
     from nilmtk.dataset_converters import convert_redd
     convert_redd('/data/REDD/low_freq', '/data/REDD/redd.h5')
+
 
 .. parsed-literal::
 
@@ -59,6 +61,7 @@ Open HDF5 in NILMTK
     from nilmtk import DataSet
     
     redd = DataSet('/data/REDD/redd.h5')
+
 At this point, all the metadata has been loaded into memory but none of
 the power data has been loaded. This is our first encounter with a
 fundamental difference between NILMTK v0.1 and v0.2: NILMTK v0.1 used to
@@ -83,6 +86,7 @@ record REDD:
     print_dict(redd.metadata)
 
 
+
 .. raw:: html
 
     <ul><li><strong>meter_devices</strong>: <ul><li><strong>eMonitor</strong>: <ul><li><strong>max_sample_period</strong>: 50</li><li><strong>description</strong>: Measures circuit-level power demand.  Comes with 24 CTs. This FAQ page suggests the eMonitor measures real (active) power: http://www.energycircle.com/node/14103  although the REDD readme.txt says all channels record apparent power.
@@ -100,6 +104,7 @@ numbering buildings from 1 not 0)
     print_dict(redd.buildings)
 
 
+
 .. raw:: html
 
     <ul><li><strong>1</strong>: Building(instance=1, dataset='REDD')</li><li><strong>3</strong>: Building(instance=3, dataset='REDD')</li><li><strong>2</strong>: Building(instance=2, dataset='REDD')</li><li><strong>5</strong>: Building(instance=5, dataset='REDD')</li><li><strong>4</strong>: Building(instance=4, dataset='REDD')</li><li><strong>6</strong>: Building(instance=6, dataset='REDD')</li></ul>
@@ -113,6 +118,7 @@ isn't much building-specific metadata in REDD):
     print_dict(redd.buildings[1].metadata)
 
 
+
 .. raw:: html
 
     <ul><li><strong>instance</strong>: 1</li><li><strong>dataset</strong>: REDD</li><li><strong>original_name</strong>: house_1</li></ul>
@@ -124,6 +130,7 @@ Each building has an ``elec`` attribute which is a ``MeterGroup`` object
 .. code:: python
 
     redd.buildings[1].elec
+
 
 
 
@@ -165,6 +172,7 @@ And here's a wiring diagram of the meter hierarchy:
 .. code:: python
 
     redd.buildings[1].elec.draw_wiring_graph()
+
 
 
 .. image:: convert_data_to_NILMTK_format_files/convert_data_to_NILMTK_format_23_0.png

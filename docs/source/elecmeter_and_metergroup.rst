@@ -32,6 +32,7 @@ in REDD:
 
 
 
+
 .. parsed-literal::
 
     MeterGroup(meters=
@@ -73,6 +74,7 @@ appliances and have two meters per appliance):
 
 
 
+
 .. parsed-literal::
 
     [MeterGroup(meters=
@@ -98,6 +100,7 @@ We can easily get a MeterGroup of either the submeters or the mains:
 
 
 
+
 .. parsed-literal::
 
     MeterGroup(meters=
@@ -115,6 +118,7 @@ We can easily get the power data for both mains meters summed together:
 
 
 
+
 .. parsed-literal::
 
     2011-04-18 09:22:09-04:00    342.820007
@@ -129,6 +133,7 @@ We can easily get the power data for both mains meters summed together:
 .. code:: python
 
     elec.submeters()
+
 
 
 
@@ -173,6 +178,7 @@ Let's work out the proportion of energy submetered in REDD building 1:
 
     elec.proportion_of_energy_submetered()
 
+
 .. parsed-literal::
 
     /home/jack/workspace/python/nilmtk/nilmtk/measurement.py:56: RuntimeWarning: None of the AC types recorded by Mains are present in `available_ac_types`. Will use try using one of ['active', 'apparent', 'reactive'].
@@ -201,6 +207,7 @@ Active, apparent and reactive power
 
 
 
+
 .. parsed-literal::
 
     {'apparent'}
@@ -210,6 +217,7 @@ Active, apparent and reactive power
 .. code:: python
 
     elec.submeters().available_power_ac_types()
+
 
 
 
@@ -238,6 +246,7 @@ Total Energy
 
 
 
+
 .. parsed-literal::
 
     167.76623618641219
@@ -251,6 +260,7 @@ Energy per submeter
 
     energy_per_meter = elec.submeters().energy_per_meter() # kWh, again
     energy_per_meter
+
 
 
 
@@ -328,6 +338,7 @@ used more than 20 kWh:
 
 
 
+
 .. parsed-literal::
 
     5           44.750925
@@ -345,6 +356,7 @@ used more than 20 kWh:
 
 
 
+
 .. parsed-literal::
 
     Index([5, 8, 9, (10, 20)], dtype='object')
@@ -358,6 +370,7 @@ Now we use ``from_list`` to create a new MeterGroup from a list of
 
     from nilmtk.elecmeter import ElecMeterID
     elec.from_list([ElecMeterID(instance=instance, building=1, dataset='REDD') for instance in instances])
+
 
 
 
@@ -385,6 +398,7 @@ We can get the wiring diagram for the MeterGroup:
     elec.draw_wiring_graph()
 
 
+
 .. image:: elecmeter_and_metergroup_files/elecmeter_and_metergroup_35_0.png
 
 
@@ -398,6 +412,7 @@ useful to get only the meters immediately downstream of mains:
 .. code:: python
 
     elec.meters_directly_downstream_of_mains()
+
 
 
 
@@ -438,12 +453,14 @@ more stats functions (many of which are also available on
 .. code:: python
 
     fridge_meter = elec['fridge']
+
 Get upstream meter
 ~~~~~~~~~~~~~~~~~~
 
 .. code:: python
 
     fridge_meter.upstream_meter() # happens to be the mains meter group!
+
 
 
 
@@ -462,6 +479,7 @@ Metadata about the class of meter
 .. code:: python
 
     fridge_meter.device
+
 
 
 
@@ -494,6 +512,7 @@ this appliance can be retrieved with this method:
 
 
 
+
 .. parsed-literal::
 
     Appliance(type='fridge', instance=1)
@@ -506,6 +525,7 @@ Total energy
 .. code:: python
 
     fridge_meter.total_energy() # kWh
+
 
 
 
@@ -527,6 +547,7 @@ then we'd see lots of smaller gaps too):
     fridge_meter.plot()
 
 
+
 .. image:: elecmeter_and_metergroup_files/elecmeter_and_metergroup_53_0.png
 
 
@@ -540,9 +561,11 @@ where every pair of consecutive samples is less than
     # specifying full_results=False would give us a simple list of 
     # TimeFrames.  But we want the full GoodSectionsResults object so we can
     # plot the good sections...
+
 .. code:: python
 
     good_sections.plot()
+
 
 
 .. image:: elecmeter_and_metergroup_files/elecmeter_and_metergroup_56_0.png
@@ -557,6 +580,7 @@ We can also see the exact sections identified:
 .. code:: python
 
     good_sections.combined()
+
 
 
 
@@ -605,6 +629,7 @@ are missing:
 
 
 
+
 .. parsed-literal::
 
     0.28602798156004472
@@ -623,6 +648,7 @@ sections we specify (and hence only calculate stats on those sections):
 .. code:: python
 
     fridge_meter.dropout_rate(sections=good_sections.combined())
+
 
 
 
@@ -650,6 +676,7 @@ dryers in the whole of the REDD dataset:
 
 
 
+
 .. parsed-literal::
 
     MeterGroup(meters=
@@ -671,6 +698,7 @@ Or all appliances in the 'heating' category:
 .. code:: python
 
     nilmtk.global_meter_group.select_using_appliances(category='heating')
+
 
 
 
@@ -701,6 +729,7 @@ Or all appliances in building 1 with a single-phase induction motor(!):
 
 
 
+
 .. parsed-literal::
 
     MeterGroup(meters=
@@ -719,6 +748,7 @@ taxonomies <http://nilm-metadata.readthedocs.org/en/latest/central_metadata.html
 .. code:: python
 
     nilmtk.global_meter_group.select_using_appliances(building=2, category='laundry appliances')
+
 
 
 
@@ -741,6 +771,7 @@ Select a group of meters from properties of the meters (not the appliances)
 
 
 
+
 .. parsed-literal::
 
     MeterGroup(meters=
@@ -753,6 +784,7 @@ Select a group of meters from properties of the meters (not the appliances)
 .. code:: python
 
     elec.select(sample_period=3)
+
 
 
 
@@ -796,6 +828,7 @@ Search for a meter using appliances connected to each meter
 .. code:: python
 
     elec['fridge']
+
 Appliances are uniquely identified within a building by a ``type``
 (fridge, kettle, television, etc.) and an ``instance`` number. If we do
 not specify an instance number then ``ElecMeter`` retrieves instance 1
@@ -805,6 +838,7 @@ then just do this:
 .. code:: python
 
     elec['light', 2]
+
 To uniquely identify an appliance in ``nilmtk.global_meter_group`` then
 we must specify the dataset name, building instance number, appliance
 type and appliance instance in a dict:
@@ -813,6 +847,7 @@ type and appliance instance in a dict:
 
     import nilmtk
     nilmtk.global_meter_group[{'dataset': 'REDD', 'building': 1, 'type': 'fridge', 'instance': 1}]
+
 Search for a meter using details of the ElecMeter
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -821,6 +856,7 @@ get ElecMeter with instance = 1:
 .. code:: python
 
     elec[1]
+
 Instance numbering
 ~~~~~~~~~~~~~~~~~~
 
@@ -834,6 +870,7 @@ a meter globally, we need three keys:
     # ElecMeterID is a namedtuple for uniquely identifying each ElecMeter
     
     nilmtk.global_meter_group[ElecMeterID(instance=8, building=1, dataset='REDD')]
+
 Select nested MeterGroup
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -844,14 +881,17 @@ ways to specify a nested MeterGroup:
 
     elec[[ElecMeterID(instance=3, building=1, dataset='REDD'), 
           ElecMeterID(instance=4, building=1, dataset='REDD')]]
+
 .. code:: python
 
     elec[ElecMeterID(instance=(3,4), building=1, dataset='REDD')]
+
 We can also specify the mains by asking for meter instance 0:
 
 .. code:: python
 
     elec[ElecMeterID(instance=0, building=1, dataset='REDD')]
+
 which is equivalent to elec.mains():
 
 .. code:: python

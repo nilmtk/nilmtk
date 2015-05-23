@@ -9,6 +9,7 @@ Welcome to NILMTK's documentation!
 .. toctree::
    :maxdepth: 2
 
+   install
    intro_nilmtk_v0_2
 
 User Manual

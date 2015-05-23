@@ -37,6 +37,7 @@ stores its results in a ``TotalEnergyResults`` object:
 
 
 
+
 .. parsed-literal::
 
     nilmtk.stats.totalenergyresults.TotalEnergyResults
@@ -46,6 +47,7 @@ stores its results in a ``TotalEnergyResults`` object:
 .. code:: python
 
     total_fridge_energy
+
 
 
 
@@ -72,6 +74,7 @@ So, for example, let us get the total energy per day:
 
 
 
+
 .. parsed-literal::
 
     TimeFrame(start='2011-04-18 09:22:13-04:00', end='2011-05-24 15:56:34-04:00', empty=False)
@@ -83,6 +86,7 @@ So, for example, let us get the total energy per day:
     # Now make a PeriodIndex of daily periods:
     period_index = pd.period_range(start=tf.start, periods=5, freq='D')
     list(period_index) # just converting to a list for pretty printing
+
 
 
 
@@ -102,6 +106,7 @@ Now we can get the energy per day:
 
     energy_per_day = fridge_meter.total_energy(sections=period_index, full_results=True)
     energy_per_day
+
 
 
 
@@ -125,6 +130,7 @@ because REDD is UTC-4:
 
 
 
+
 .. parsed-literal::
 
     'US/Eastern'
@@ -136,6 +142,7 @@ And we can combine all the energy results from each day:
 .. code:: python
 
     energy_per_day.combined()
+
 
 
 
@@ -161,6 +168,7 @@ Load a restricted window of data
 
 
 
+
 .. parsed-literal::
 
     TimeFrame(start='2011-04-20 20:00:00-04:00', end='2011-04-25 20:00:00-04:00', empty=False)
@@ -173,6 +181,7 @@ To reset the timeframe:
 
     fridge_meter.store.window.clear()
     fridge_meter.get_timeframe()
+
 
 
 
@@ -192,11 +201,13 @@ every chunk as it moves through the pipeline:
 
     from nilmtk.preprocessing import Apply
     from nilmtk.stats import DropoutRate
+
 .. code:: python
 
     fridge_meter.store.window = TimeFrame("2011-04-21  20:00:00-04:00", "2011-04-23  20:00:00-04:00")
     good_sections = fridge_meter.good_sections()
     good_sections
+
 
 
 
@@ -232,10 +243,12 @@ Fill gaps in appliance data:
     # through the pipeline by running 'run' on the last node in the pipeline:
     
     dropout_rate2.run()
+
 .. code:: python
 
     # The dropout rate before resampling:
     dropout_rate1.results.combined()
+
 
 
 
@@ -249,6 +262,7 @@ Fill gaps in appliance data:
 
     # The dropout rate after resampling:
     dropout_rate2.results.combined()
+
 
 
 

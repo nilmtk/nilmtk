@@ -25,6 +25,7 @@ Disaggregation and Metrics
     co.train(elec)
     
     print("Model =", co.model)
+
 To allow disaggregation to be done on any arbitrarily large dataset,
 disaggregation output is dumped to disk chunk-by-chunk:
 
@@ -39,9 +40,11 @@ disaggregation output is dumped to disk chunk-by-chunk:
     output = HDFDataStore('output.h5', 'w')
     
     co.disaggregate(mains, output)
+
 .. code:: python
 
     output.store.get('/building1/elec/meter9')[:10]
+
 
 
 
@@ -109,6 +112,7 @@ disaggregation output is dumped to disk chunk-by-chunk:
 .. code:: python
 
     output.close()
+
 Metrics
 -------
 
@@ -123,6 +127,7 @@ First we load the disag output exactly as if it were a normal dataset:
     
     # all metrics take the same arguments:
     f1_score(disag_elec, elec)
+
 
 .. parsed-literal::
 
