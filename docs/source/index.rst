@@ -28,6 +28,15 @@ User Manual
    pipeline_preprocessing_more_stats
    disaggregation_and_metrics
 
+Cookbook
+---------------
+
+.. toctree::
+   :maxdepth: 2
+
+   exploring_dataset_pandas
+ 
+
 Developer Manual
 ----------------
 

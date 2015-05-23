@@ -29,14 +29,23 @@ explaining the need for a NILM toolkit.
     Empirically comparing disaggregation algorithms is currently
     virtually impossible. This is due to the different data sets used,
     the lack of reference implementations of these algorithms and the
-    variety of accuracy metrics employed. To address this challenge, we
-    present the Non-intrusive Load Monitoring Toolkit (NILMTK); an open
-    source toolkit designed specifically to enable the comparison of
-    energy disaggregation algorithms in a reproducible manner. This work
-    is the first research to compare multiple disaggregation ap-
-    proaches across multiple publicly available data sets. Our toolkit
-    includes parsers for a range of existing data sets, a collection of
-    preprocessing algorithms, a set of statistics for describing data
-    sets, two reference benchmark disaggregation algorithms and a suite
-    of accuracy metrics.
+    variety of accuracy metrics employed.
+
+What nilmtk provides
+====================
+
+To address this challenge, we present the Non-intrusive Load Monitoring
+Toolkit (NILMTK); an open source toolkit designed specifically to enable
+the comparison of energy disaggregation algorithms in a reproducible
+manner. This work is the first research to compare multiple
+disaggregation approaches across multiple publicly available data sets.
+nilmtk includes:
+
+-  parsers for a range of existing data sets (8 and counting)
+-  a collection of preprocessing algorithms
+-  a set of statistics for describing data sets
+-  3 reference benchmark disaggregation algorithms and a suite of
+   accuracy metrics
+-  a common set of accuracy metrics
+-  and much more!
 

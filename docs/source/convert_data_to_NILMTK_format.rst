@@ -182,4 +182,3 @@ It isn't very pretty but it shows that all the submeters are immediately
 downstream of the two mains meters.
 
 Let's dive in a little deeper and tinker with ``MeterGroup``...
-

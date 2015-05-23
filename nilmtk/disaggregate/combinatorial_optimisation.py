@@ -32,7 +32,7 @@ class CombinatorialOptimisation(object):
     def __init__(self):
         self.model = []
 
-    def train(self, metergroup):
+    def train(self, metergroup, **load_kwargs):
         """Train using 1D CO. Places the learnt model in the `model` attribute.
 
         Parameters
@@ -56,7 +56,7 @@ class CombinatorialOptimisation(object):
 
         for i, meter in enumerate(metergroup.submeters().meters):
             print("Training model for submeter '{}'".format(meter))
-            for chunk in meter.power_series(preprocessing=[Clip()]):
+            for chunk in meter.power_series(**load_kwargs):
                 states = cluster(chunk, max_num_clusters)
                 self.model.append({
                     'states': states,
