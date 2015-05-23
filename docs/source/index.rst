@@ -6,11 +6,16 @@
 Welcome to NILMTK's documentation!
 ==================================
 
+
+Introduction
+-----------
+
 .. toctree::
    :maxdepth: 2
 
+   about
    install
-   intro_nilmtk_v0_2
+   changelog
 
 User Manual
 -----------
