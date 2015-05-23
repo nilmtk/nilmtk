@@ -15,6 +15,11 @@ NILM is sometimes called:
 Below is an illustration (produced using nilmtk) of what NILM, in
 general, can do.
 
+.. figure:: https://dl.dropboxusercontent.com/u/75845627/nilmtk/submetered.png
+   :alt: Drawing
+
+   Drawing
+
 Why a toolkit for NILM?
 =======================
 
