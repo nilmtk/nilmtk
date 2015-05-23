@@ -46,7 +46,6 @@ Let us use building 1 for demo purposes
 
 
 Let's split data at April 30th
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: python
 

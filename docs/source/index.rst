@@ -25,16 +25,8 @@ User Manual
 
    convert_data_to_NILMTK_format
    elecmeter_and_metergroup
-   pipeline_preprocessing_more_stats
+   loading_data
    disaggregation_and_metrics
-
-Cookbook
----------------
-
-.. toctree::
-   :maxdepth: 2
-
-   exploring_dataset_pandas
  
 
 Developer Manual
