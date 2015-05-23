@@ -27,6 +27,10 @@ Below is an illustration (produced using nilmtk) of what NILM, in general, can d
 
 http://nilmtk.github.io/nilmtk/
 
+##### Installation guide
+
+http://nilmtk.github.io/nilmtk/master/install.html
+
 ##### Publications
 
 * Batra, N., Kelly, J., Parson, O., Dutta, H., Knottenbelt, W., Rogers, A., Singh, A., Srivastava, M. (2014). NILMTK: An Open Source Toolkit for Non-intrusive Load Monitoring. In Fifth International Conference on Future Energy Systems (ACM e-Energy). Cambridge, UK. arXiv:[1404.3878](http://arxiv.org/abs/1404.3878) DOI:[10.1145/2602044.2602051](http://dx.doi.org/10.1145/2602044.2602051)
@@ -93,10 +97,6 @@ ready for use by end-users, although we certainly hope that NILMTK
 will be capable of doing 'plug and play' disaggregation in the future.
 
 Please see the docs for more info.
-
-##### User survey
-
-Please fill in our [NILMTK survey](https://docs.google.com/forms/d/1JlGn0pRgAIj152PJtVsGEUe9OVv2naWbdDHosJ3sHko/viewform?c=0&w=1) to help us get a better idea of who's using NILMTK and what's important to you.
 
 ##### Submitting a bug report
 
