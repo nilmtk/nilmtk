@@ -47,6 +47,12 @@ class MLE(Disaggregator):
 		For the disaggregate_chunk method, max delta value difference between onpower and offpower
 	timeWindow: int 
 		For the disaggregate_chunk method, a time frame to speed up disaggregate_chunk method. 
+
+	TODO: 
+	-----
+	* Build a method for choosing thLikelihood automatically based on its optimization using ROC curve. 
+	* Method for measuring ROC curve.  
+
 	"""
 
 	def __init__(self):   
@@ -264,7 +270,7 @@ class MLE(Disaggregator):
 
 
 		## Saving output datastore: 
-		output_datastore.append(key=mains.keys, value=dis_chunk)
+		output_datastore.append(key=mains.key,value=dis_main))
 
 	def disaggregate_chunk(self, chunk):
 		"""
