@@ -6,7 +6,7 @@ from datetime import timedelta
 from scipy.stats import poisson, norm
 from sklearn import mixture
 
-class MaximumLikelihood(Disaggregator):
+class MLE(Disaggregator):
 	"""
 	Disaggregation of a single appliance based on its features and
 	using the maximum likelihood of all features.
