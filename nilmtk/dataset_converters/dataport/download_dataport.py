@@ -161,13 +161,17 @@ def download_dataport(database_username, database_password,
     for f in os.listdir(join(_get_module_directory(), 'metadata')):
         if re.search('^building', f):
             os.remove(join(_get_module_directory(), 'metadata', f))
-
+    
+    """
+    TODO:
+    The section below can be altered or removed, since the restructured Dataport
+    now has only one electricity_egauge_minutes table.
+    """
     # get tables in database schema
-    sql_query = ("SELECT TABLE_NAME" + 
-                 " FROM INFORMATION_SCHEMA.TABLES" + 
-                 " WHERE TABLE_TYPE = 'BASE TABLE'" + 
-                 " AND TABLE_SCHEMA='" + database_schema + "'" + 
-                 " ORDER BY TABLE_NAME")
+    sql_query = ("SELECT table_name" +
+                 " FROM information_schema.views" +
+                 " WHERE table_schema ='" + database_schema + "'" +
+                 " ORDER BY table_name")
     database_tables = pd.read_sql(sql_query, conn)['table_name'].tolist()
     database_tables = [t for t in database_tables if 'electricity_egauge_minutes' in t]
 
@@ -199,17 +203,18 @@ def download_dataport(database_username, database_password,
             print("  Loading table {:s}".format(database_table))
             sys.stdout.flush()
 
-            # get buildings present in this table
-            sql_query = ('SELECT DISTINCT dataid' + 
-                         ' FROM "' + database_schema + '".' + database_table + 
+            # get buildings present in electricity_egauge_minutes table
+            sql_query = ('SELECT DISTINCT dataid' +
+                         ' FROM university.metadata' +
+                         ' WHERE egauge_min_time IS NOT NULL' +
                          ' ORDER BY dataid')
             buildings_in_table = pd.read_sql(sql_query, conn)['dataid'].tolist()
 
             if building_id in buildings_in_table:
-                # get first and last timestamps for this house in this table
-                sql_query = ('SELECT MIN(localminute) AS minlocalminute,' + 
-                             ' MAX(localminute) AS maxlocalminute' + 
-                             ' FROM "' + database_schema + '".' + database_table + 
+                # get first and last timestamps for this house in electricity_egauge_minutes table
+                sql_query = ('SELECT MIN(egauge_min_time) AS minlocalminute,' +
+                             ' MAX(egauge_max_time) AS maxlocalminute' +
+                             ' FROM university.metadata' +
                              ' WHERE dataid=' + str(building_id))
                 range = pd.read_sql(sql_query, conn)
                 first_timestamp_in_table = range['minlocalminute'][0]
