@@ -55,7 +55,7 @@ class MLE(Disaggregator):
 		Inizialise of the model by default
 
 		"""	
-		super(MaximumLikelihood, self).__init__()
+		super(MLE, self).__init__()
 
 		# Metadata
 		self.appliance = None
