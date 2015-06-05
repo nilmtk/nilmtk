@@ -372,8 +372,7 @@ class FHMM(object):
                 'data_location': mains_data_location,
                 'preprocessing_applied': {},  # TODO
                 'statistics': {
-                    'timeframe': total_timeframe.to_dict(),
-                    'good_sections': list_of_timeframe_dicts(merged_timeframes)
+                    'timeframe': total_timeframe.to_dict()
                 }
             }
         }
@@ -403,8 +402,7 @@ class FHMM(object):
                                       .format(building_path, meter_instance)),
                     'preprocessing_applied': {},  # TODO
                     'statistics': {
-                        'timeframe': total_timeframe.to_dict(),
-                        'good_sections': list_of_timeframe_dicts(merged_timeframes)
+                        'timeframe': total_timeframe.to_dict()
                     }
                 }
             })
