@@ -1,13 +1,10 @@
 from __future__ import print_function, division
 import pandas as pd
 import numpy as np
-import json
 from datetime import datetime
-from ..appliance import ApplianceID
-from ..utils import find_nearest, container_to_string
+from ..utils import find_nearest
 from ..feature_detectors import cluster
 from ..timeframe import merge_timeframes, list_of_timeframe_dicts, TimeFrame
-from ..preprocessing import Clip
 
 # Fix the seed for repeatability of experiments
 SEED = 42
@@ -23,8 +20,8 @@ class CombinatorialOptimisation(object):
     model : list of dicts
        Each dict has these keys:
            states : list of ints (the power (Watts) used in different states)
-           training_metadata : ElecMeter or MeterGroup object used for training 
-               this set of states.  We need this information because we 
+           training_metadata : ElecMeter or MeterGroup object used for training
+               this set of states.  We need this information because we
                need the appliance type (and perhaps some other metadata)
                for each model.
     """
@@ -45,8 +42,9 @@ class CombinatorialOptimisation(object):
         """
 
         if self.model:
-            raise RuntimeError("This implementation of Combinatorial Optimisation"
-                               " does not support multiple calls to `train`.")
+            raise RuntimeError(
+                "This implementation of Combinatorial Optimisation"
+                " does not support multiple calls to `train`.")
 
         num_meters = len(metergroup.meters)
         if num_meters > 12:
@@ -61,7 +59,7 @@ class CombinatorialOptimisation(object):
                 self.model.append({
                     'states': states,
                     'training_metadata': meter})
-                break  # TODO handle multiple chunks per appliance 
+                break  # TODO handle multiple chunks per appliance
         print("Done training!")
 
     def disaggregate(self, mains, output_datastore, **load_kwargs):
@@ -74,7 +72,7 @@ class CombinatorialOptimisation(object):
             For storing power predictions from disaggregation algorithm.
         output_name : string, optional
             The `name` to use in the metadata for the `output_datastore`.
-            e.g. some sort of name for this experiment.  Defaults to 
+            e.g. some sort of name for this experiment.  Defaults to
             "NILMTK_CO_<date>"
         resample_seconds : number, optional
             The desired sample period in seconds.
@@ -84,9 +82,10 @@ class CombinatorialOptimisation(object):
         MIN_CHUNK_LENGTH = 100
 
         if not self.model:
-            raise RuntimeError("The model needs to be instantiated before"
-                               " calling `disaggregate`.  For example, the"
-                               " model can be instantiated by running `train`.")
+            raise RuntimeError(
+                "The model needs to be instantiated before"
+                " calling `disaggregate`.  For example, the"
+                " model can be instantiated by running `train`.")
 
         # If we import sklearn at the top of the file then auto doc fails.
         from sklearn.utils.extmath import cartesian
@@ -113,7 +112,8 @@ class CombinatorialOptimisation(object):
         print("vampire_power = {} watts".format(vampire_power))
         n_rows = state_combinations.shape[0]
         vampire_power_array = np.zeros((n_rows, 1)) + vampire_power
-        state_combinations = np.hstack((state_combinations, vampire_power_array))
+        state_combinations = np.hstack(
+            (state_combinations, vampire_power_array))
 
         summed_power_of_each_combination = np.sum(state_combinations, axis=1)
         # summed_power_of_each_combination is now an array where each
@@ -143,7 +143,8 @@ class CombinatorialOptimisation(object):
                 summed_power_of_each_combination, chunk.values)
 
             for i, model in enumerate(self.model):
-                print("Estimating power demand for '{}'".format(model['training_metadata']))
+                print("Estimating power demand for '{}'"
+                      .format(model['training_metadata']))
                 data_is_available = True
                 predicted_power = state_combinations[
                     indices_of_state_combinations, i].flatten()
@@ -225,9 +226,8 @@ class CombinatorialOptimisation(object):
             meter_instance = meter.instance()
 
             for app in meter.appliances:
-                meters = app.metadata['meters']
                 appliance = {
-                    'meters': [meter_instance], 
+                    'meters': [meter_instance],
                     'type': app.identifier.type,
                     'instance': app.identifier.instance
                     # TODO this `instance` will only be correct when the
@@ -245,14 +245,15 @@ class CombinatorialOptimisation(object):
                     'preprocessing_applied': {},  # TODO
                     'statistics': {
                         'timeframe': total_timeframe.to_dict(),
-                        'good_sections': list_of_timeframe_dicts(merged_timeframes)
+                        'good_sections': list_of_timeframe_dicts(
+                            merged_timeframes)
                     }
                 }
             })
 
-            #Setting the name if it exists
+            # Setting the name if it exists
             if meter.name:
-                if len(meter.name)>0:
+                if len(meter.name) > 0:
                     elec_meters[meter_instance]['name'] = meter.name
 
         building_metadata = {
