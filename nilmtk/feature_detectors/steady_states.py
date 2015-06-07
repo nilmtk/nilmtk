@@ -147,6 +147,8 @@ def find_steady_states(dataframe, min_n_samples=2, stateThreshold=15,
         # Step 8
         previousMeasurement = thisMeasurement
 
+
+
     #Appending last edge
     lastTransition = np.subtract(estimatedSteadyPower, lastSteadyPower)
     if np.sum(np.fabs(lastTransition) > noise_level):
@@ -154,6 +156,16 @@ def find_steady_states(dataframe, min_n_samples=2, stateThreshold=15,
         transitions.append(lastTransition)
         index_steadystates.append(time)
         steadyStates.append(estimatedSteadyPower)
+
+    #Removing first edge if the starting steady state power is more
+    # than the noise threshold
+    #  https://github.com/nilmtk/nilmtk/issues/400
+
+    if steadyStates[0] > noise_level and index_transitions[0] == index_steadystates[0] == dataframe.index.values[0]:
+        transitions = transitions[1:]
+        index_transitions = index_transitions[1:]
+        steadyStates = steadyStates[1:]
+        index_steadystates = index_steadystates[1:]
 
     print("Edge detection complete.")
 
