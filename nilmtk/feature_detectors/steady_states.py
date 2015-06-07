@@ -161,7 +161,10 @@ def find_steady_states(dataframe, min_n_samples=2, stateThreshold=15,
     # than the noise threshold
     #  https://github.com/nilmtk/nilmtk/issues/400
 
-    if steadyStates[0] > noise_level and index_transitions[0] == index_steadystates[0] == dataframe.index.values[0]:
+    print(index_transitions[0], index_steadystates[0], dataframe.index.values[0])
+    print("**********")
+    print(dataframe.iloc[0].name)
+    if steadyStates[0] > noise_level and index_transitions[0] == index_steadystates[0] == dataframe.iloc[0].name:
         transitions = transitions[1:]
         index_transitions = index_transitions[1:]
         steadyStates = steadyStates[1:]
