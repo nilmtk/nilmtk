@@ -270,7 +270,7 @@ class MLE(Disaggregator):
 
 
 		## Saving output datastore: 
-		output_datastore.append(key=mains.key,value=dis_main))
+		output_datastore.append(key=mains.key,value=dis_main)
 
 	def disaggregate_chunk(self, chunk):
 		"""
