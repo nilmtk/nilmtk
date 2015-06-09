@@ -1,19 +1,10 @@
 from __future__ import print_function, division
-from ..utils import find_nearest
 import pandas as pd
 import itertools
 import numpy as np
-from sklearn import metrics
 from hmmlearn import hmm
-import pandas as pd
-import numpy as np
-import json
 from datetime import datetime
-from ..appliance import ApplianceID
-from ..utils import find_nearest, container_to_string
-from ..feature_detectors import cluster
 from ..timeframe import merge_timeframes, list_of_timeframe_dicts, TimeFrame
-from ..preprocessing import Apply, Clip
 
 from copy import deepcopy
 from collections import OrderedDict
@@ -35,7 +26,6 @@ def sort_startprob(mapping, startprob):
 
 
 def sort_covars(mapping, covars):
-    num_elements = len(covars)
     new_covars = np.zeros_like(covars)
     for i in xrange(len(covars)):
         new_covars[i] = covars[mapping[i]]
@@ -43,12 +33,12 @@ def sort_covars(mapping, covars):
 
 
 def sort_transition_matrix(mapping, A):
-    """ Sorts the transition matrix according to increasing order of 
+    """Sorts the transition matrix according to increasing order of
     power means; as returned by mapping
 
     Parameters
     ----------
-    mapping : 
+    mapping :
     A : numpy.array of shape (k, k)
         transition matrix
     """
@@ -91,12 +81,10 @@ def compute_A_fhmm(list_A):
 
 def compute_means_fhmm(list_means):
     """
-    Returns 
+    Returns
     -------
     [mu, cov]
     """
-
-    #list_of_appliances_centroids=[ [appliance[i][0] for i in range(len(appliance))] for appliance in list_B]
     states_combination = list(itertools.product(*list_means))
     num_combinations = len(states_combination)
     means_stacked = np.array([sum(x) for x in states_combination])
@@ -122,7 +110,6 @@ def compute_pi_fhmm(list_pi):
 
 
 def create_combined_hmm(model):
-
     list_pi = [model[appliance].startprob_ for appliance in model]
     list_A = [model[appliance].transmat_ for appliance in model]
     list_means = [model[appliance].means_.flatten().tolist()
@@ -131,9 +118,10 @@ def create_combined_hmm(model):
     pi_combined = compute_pi_fhmm(list_pi)
     A_combined = compute_A_fhmm(list_A)
     [mean_combined, cov_combined] = compute_means_fhmm(list_means)
-    #model_fhmm=create_combined_hmm(len(pi_combined),pi_combined, A_combined, mean_combined, cov_combined)
-    combined_model = hmm.GaussianHMM(n_components=len(
-        pi_combined), covariance_type='full', startprob=pi_combined, transmat=A_combined)
+
+    combined_model = hmm.GaussianHMM(
+        n_components=len(pi_combined), covariance_type='full',
+        startprob=pi_combined, transmat=A_combined)
     combined_model.covars_ = cov_combined
     combined_model.means_ = mean_combined
     return combined_model
@@ -141,12 +129,11 @@ def create_combined_hmm(model):
 
 def return_sorting_mapping(means):
     means_copy = deepcopy(means)
-    # Sorting
     means_copy = np.sort(means_copy, axis=0)
+
     # Finding mapping
     mapping = {}
     for i, val in enumerate(means_copy):
-        #assert val == means[np.where(val == means)[0]]
         mapping[i] = np.where(val == means)[0][0]
     return mapping
 
@@ -155,7 +142,6 @@ def decode_hmm(length_sequence, centroids, appliance_list, states):
     """
     Decodes the HMM state sequence
     """
-    power_states_dict = {}
     hmm_states = {}
     hmm_power = {}
     total_num_combinations = 1
@@ -186,7 +172,6 @@ def decode_hmm(length_sequence, centroids, appliance_list, states):
 class FHMM(object):
 
     def __init__(self):
-
         self.model = {}
         self.predictions = pd.DataFrame()
 
@@ -194,7 +179,8 @@ class FHMM(object):
         """
         Train using 1d FHMM. Places the learnt model in `model` attribute
         The current version performs training ONLY on the first chunk.
-        Online HMMs are welcome is someone can contribute :)
+        Online HMMs are welcome if someone can contribute :)
+        Assumes all pre-processing has been done.
         """
         learnt_model = OrderedDict()
         for i, meter in enumerate(metergroup.submeters().meters):
@@ -204,23 +190,6 @@ class FHMM(object):
             # Data to fit
             X = []
             meter_data = meter.power_series(**load_kwargs).next().dropna()
-            """
-            This was the behaviour in v0.1. Now assuming all
-            preprocessing has been done
-
-            # Breaking data into contiguous blocks
-            for start, end in contiguous_blocks(meter_data.index):
-                #print(start, end)
-                length = appliance_data[start:end].values.size
-                # print(length)
-                # Ignore small sequences
-                if length > 50:
-                    temp = meter_data[
-                        start:end].values.reshape(length, 1)
-                    X.append(temp)
-            # print(X)
-            # Fit
-            """
             length = len(meter_data.index)
             X = meter_data.values.reshape(length, 1)
             self.X = X
@@ -231,7 +200,8 @@ class FHMM(object):
         new_learnt_models = OrderedDict()
         for meter in learnt_model:
             startprob, means, covars, transmat = sort_learnt_parameters(
-                learnt_model[meter].startprob_, learnt_model[meter].means_, learnt_model[meter].covars_, learnt_model[meter].transmat_)
+                learnt_model[meter].startprob_, learnt_model[meter].means_,
+                learnt_model[meter].covars_, learnt_model[meter].transmat_)
             new_learnt_models[meter] = hmm.GaussianHMM(
                 startprob.size, "full", startprob, transmat)
             new_learnt_models[meter].means_ = means
@@ -243,78 +213,42 @@ class FHMM(object):
         self.individual = new_learnt_models
         self.model = learnt_model_combined
 
-
     def disaggregate_chunk(self, test_mains):
         """
         Disaggregate the test data according to the model learnt previously
-        Performs 1D FHMM disaggregation        
+        Performs 1D FHMM disaggregation.
+
+        For now assuming there is no missing data at this stage.
         """
-        
+        # See v0.1 code
+        # for ideas of how to handle missing data in this code if needs be.
+
         # Array of learnt states
         learnt_states_array = []
-
-        """For now assuming there is no missing data at this stage
-        # Break down test_data into chunks and disaggregate separately on them
-        for start, end in contiguous_blocks(test_mains.index):
-            length = test_mains[start:end].values.size
-            temp = test_mains[start:end].values.reshape(length, 1)
-            learnt_states_array.append(self.model.predict(temp))
-        """
         test_mains = test_mains.dropna()
         length = len(test_mains.index)
         temp = test_mains.values.reshape(length, 1)
         learnt_states_array.append(self.model.predict(temp))
 
-
         # Model
         means = OrderedDict()
-        for appliance in self.individual:
-            means[appliance] = self.individual[appliance].means_
-        means_copy = deepcopy(means)
-        for appliance in means:
-            means_copy[appliance] = means[
-                appliance].astype(int).flatten().tolist()
-            means_copy[appliance].sort()
+        for elec_meter, model in self.individual.iteritems():
+            means[elec_meter] = (
+                model.means_.round().astype(int).flatten().tolist())
+            means[elec_meter].sort()
 
         decoded_power_array = []
         decoded_states_array = []
+
         for learnt_states in learnt_states_array:
             [decoded_states, decoded_power] = decode_hmm(
-                len(learnt_states), means_copy, means_copy.keys(), learnt_states)
+                len(learnt_states), means, means.keys(), learnt_states)
             decoded_states_array.append(decoded_states)
             decoded_power_array.append(decoded_power)
 
-        """
-        The following code is different from its 0.1 version which is
-        mentioned below this
-        """
-        dfs_list = []
-        count = 0
-        #cont_blocks = contiguous_blocks(test_mains.index)
-        
-        prediction = pd.DataFrame(decoded_power_array[0], index=test_mains.index)
-        #prediction.index = test.index
+        prediction = pd.DataFrame(decoded_power_array[0],
+                                  index=test_mains.index)
         return prediction
-        """
-        The following code was used in v0.1
-        For now, I am assuming that we have no missing data by the time
-        we reach the disaggregate stage. This will greatly simplify our design
-        
-
-        # Combining to make a DataFrame with correct index, based on the start,
-        # end time and the frequency of the data
-        dfs_list = []
-        count = 0
-        cont_blocks = contiguous_blocks(test_mains.index)
-        for i, (start, end) in enumerate(contiguous_blocks(test_mains.index)):
-            index = pd.DatetimeIndex(start=start, end=end,
-                                     freq=self.freq)
-
-            df = pd.DataFrame(decoded_power_array[i], index=index)
-            dfs_list.append(df)
-
-        self.predictions = pd.concat(dfs_list).sort_index()
-        """
 
     def disaggregate(self, mains, output_datastore, **load_kwargs):
         '''Disaggregate mains according to the model learnt previously.
@@ -326,7 +260,7 @@ class FHMM(object):
             For storing power predictions from disaggregation algorithm.
         output_name : string, optional
             The `name` to use in the metadata for the `output_datastore`.
-            e.g. some sort of name for this experiment.  Defaults to 
+            e.g. some sort of name for this experiment.  Defaults to
             "NILMTK_FHMM_<date>"
         resample_seconds : number, optional
             The desired sample period in seconds.
@@ -335,22 +269,18 @@ class FHMM(object):
         '''
         import warnings
         warnings.filterwarnings("ignore", category=Warning)
-        MIN_CHUNK_LENGTH =100
+        MIN_CHUNK_LENGTH = 100
         if not self.model:
-            raise RuntimeError("The model needs to be instantiated before"
-                               " calling `disaggregate`.  For example, the"
-                               " model can be instantiated by running `train`.")
+            raise RuntimeError(
+                "The model needs to be instantiated before"
+                " calling `disaggregate`.  For example, the"
+                " model can be instantiated by running `train`.")
 
-        
-        
         # Extract optional parameters from load_kwargs
         date_now = datetime.now().isoformat().split('.')[0]
         output_name = load_kwargs.pop('output_name', 'NILMTK_FHMM_' + date_now)
         resample_seconds = load_kwargs.pop('resample_seconds', 60)
 
-        
-        sections = load_kwargs.pop('sections',
-                                                  mains.good_sections())
         resample_rule = '{:d}S'.format(resample_seconds)
         timeframes = []
         building_path = '/building{}'.format(mains.building())
@@ -358,7 +288,6 @@ class FHMM(object):
         data_is_available = False
 
         for chunk in mains.power_series(**load_kwargs):
-
             # Check that chunk is sensible size before resampling
             if len(chunk) < MIN_CHUNK_LENGTH:
                 continue
@@ -374,6 +303,7 @@ class FHMM(object):
 
             # Start disaggregation
             predictions = self.disaggregate_chunk(chunk)
+
             for meter in predictions.columns:
                 data_is_available = True
                 meter_instance = meter.instance()
@@ -389,7 +319,6 @@ class FHMM(object):
             # Copy mains data to disag output
             output_datastore.append(key=mains_data_location,
                                     value=pd.DataFrame(chunk, columns=cols))
-
 
         if not data_is_available:
             return
@@ -443,8 +372,7 @@ class FHMM(object):
                 'data_location': mains_data_location,
                 'preprocessing_applied': {},  # TODO
                 'statistics': {
-                    'timeframe': total_timeframe.to_dict(),
-                    'good_sections': list_of_timeframe_dicts(merged_timeframes)
+                    'timeframe': total_timeframe.to_dict()
                 }
             }
         }
@@ -456,9 +384,8 @@ class FHMM(object):
             meter_instance = meter.instance()
 
             for app in meter.appliances:
-                meters = app.metadata['meters']
                 appliance = {
-                    'meters': [meter_instance], 
+                    'meters': [meter_instance],
                     'type': app.identifier.type,
                     'instance': app.identifier.instance
                     # TODO this `instance` will only be correct when the
@@ -475,14 +402,12 @@ class FHMM(object):
                                       .format(building_path, meter_instance)),
                     'preprocessing_applied': {},  # TODO
                     'statistics': {
-                        'timeframe': total_timeframe.to_dict(),
-                        'good_sections': list_of_timeframe_dicts(merged_timeframes)
+                        'timeframe': total_timeframe.to_dict()
                     }
                 }
             })
 
-            
-           #Setting the name if it exists
+            # Setting the name if it exists
             if meter.name:
                 if len(meter.name) > 0:
                     elec_meters[meter_instance]['name'] = meter.name
@@ -493,3 +418,4 @@ class FHMM(object):
         }
 
         output_datastore.save_metadata(building_path, building_metadata)
+

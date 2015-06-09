@@ -6,10 +6,16 @@
 Welcome to NILMTK's documentation!
 ==================================
 
+
+Introduction
+-----------
+
 .. toctree::
    :maxdepth: 2
 
-   intro_nilmtk_v0_2
+   about
+   install
+   changelog
 
 User Manual
 -----------
@@ -19,8 +25,9 @@ User Manual
 
    convert_data_to_NILMTK_format
    elecmeter_and_metergroup
-   pipeline_preprocessing_more_stats
+   loading_data
    disaggregation_and_metrics
+ 
 
 Developer Manual
 ----------------

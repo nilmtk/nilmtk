@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from datetime import timedelta
 import gc
+import pytz
 
 from .timeframe import TimeFrame
 from .measurement import select_best_ac_type
@@ -29,7 +30,7 @@ MAX_SIZE_ENTROPY = 10000
 
 class Electric(object):
     """Common implementations of methods shared by ElecMeter and MeterGroup.
-    """   
+    """
     def when_on(self, on_power_threshold=None, **load_kwargs):
         """Are the connected appliances appliance is on (True) or off (False)?
 
@@ -52,15 +53,38 @@ class Electric(object):
             on_power_threshold = self.on_power_threshold()
         for chunk in self.power_series(**load_kwargs):
             yield chunk >= on_power_threshold
-            
+
     def on_power_threshold(self):
-        """Returns the minimum `on_power_threshold` across all appliances 
-        immediately downstream of this meter.  If any appliance 
+        """Returns the minimum `on_power_threshold` across all appliances
+        immediately downstream of this meter.  If any appliance
         does not have an `on_power_threshold` then default to 10 watts."""
         if not self.appliances:
             return DEFAULT_ON_POWER_THRESHOLD
         on_power_thresholds = [a.on_power_threshold() for a in self.appliances]
         return min(on_power_thresholds)
+
+    def min_on_duration(self):
+        return self._aggregate_metadata_attribute('min_on_duration')
+
+    def min_off_duration(self):
+        return self._aggregate_metadata_attribute('min_off_duration')
+
+    def _aggregate_metadata_attribute(self, attr, agg_func=np.max,
+                                      default_value=0,
+                                      from_type_metadata=True):
+        attr_values = []
+        for a in self.appliances:
+            if from_type_metadata:
+                attr_value = a.type.get(attr)
+            else:
+                attr_value = a.metadata.get(attr)
+            if attr_value is not None:
+                attr_values.append(attr_value)
+
+        if len(attr_values) == 0:
+            return default_value
+        else:
+            return agg_func(attr_values)
 
     def matches_appliances(self, key):
         """
@@ -89,7 +113,7 @@ class Electric(object):
             all_data = None
         return all_data
 
-    def _prep_kwargs_for_sample_period_and_resample(self, sample_period=None, 
+    def _prep_kwargs_for_sample_period_and_resample(self, sample_period=None,
                                                     resample=False,
                                                     resample_kwargs=None,
                                                     **kwargs):
@@ -107,9 +131,22 @@ class Electric(object):
         if resample:
             if resample_kwargs is None:
                 resample_kwargs = {}
-            resample_func = lambda df: df.resample(rule='{:d}S'.format(sample_period),
-                                                   **resample_kwargs)
-            kwargs.setdefault('preprocessing', []).append(Apply(func=resample_func))
+
+            def resample_func(df):
+                resample_kwargs['rule'] = '{:d}S'.format(sample_period)
+                try:
+                    df = df.resample(**resample_kwargs)
+                except pytz.AmbiguousTimeError:
+                    # Work-around for
+                    # https://github.com/pydata/pandas/issues/10117
+                    tz = df.index.tz.zone
+                    df = df.tz_convert('UTC')
+                    df = df.resample(**resample_kwargs)
+                    df = df.tz_convert(tz)
+                return df
+
+            kwargs.setdefault('preprocessing', []).append(
+                Apply(func=resample_func))
 
         return kwargs
 
@@ -122,7 +159,7 @@ class Electric(object):
                 end = timeframe_for_meter.end
         return start, end
 
-    def plot(self, ax=None, timeframe=None, plot_legend=True, unit='W', 
+    def plot(self, ax=None, timeframe=None, plot_legend=True, unit='W',
              plot_kwargs=None, **kwargs):
         """
         Parameters
@@ -577,7 +614,7 @@ class Electric(object):
 
         Returns
         -------
-        generator of pd.Series.  If a single ac_type is found for the 
+        generator of pd.Series.  If a single ac_type is found for the
         physical_quantity then the series.name will be a normal tuple.
         If more than 1 ac_type is found then the ac_type will be a string
         of the ac_types with '+' in between.  e.g. 'active+apparent'.
@@ -687,8 +724,8 @@ class Electric(object):
         ax.set_ylabel('Count')
         return ax
 
-    def activation_series(self, min_off_duration=0, min_on_duration=0, border=1,
-                          on_power_threshold=None, **kwargs):
+    def activation_series(self, min_off_duration=None, min_on_duration=None,
+                          border=1, on_power_threshold=None, **kwargs):
         """Returns runs of an appliance.
 
         Most appliances spend a lot of their time off.  This function finds
@@ -698,12 +735,14 @@ class Electric(object):
         ----------
         min_off_duration : int
             If min_off_duration > 0 then ignore 'off' periods less than
-            min_off_duration seconds of sub-threshold power consumption 
+            min_off_duration seconds of sub-threshold power consumption
             (e.g. a washing machine might draw no power for a short
-            period while the clothes soak.)  Defaults to 0.
+            period while the clothes soak.)  Defaults value from metadata or,
+            if metadata absent, defaults to 0.
         min_on_duration : int
-            Any activation lasting less seconds than min_on_duration will be 
-            ignored.  Defaults to 0.
+            Any activation lasting less seconds than min_on_duration will be
+            ignored.  Defaults value from metadata or, if metadata absent,
+            defaults to 0.
         border : int
             Number of rows to include before and after the detected activation
         on_power_threshold : int or float
@@ -718,54 +757,18 @@ class Electric(object):
         if on_power_threshold is None:
             on_power_threshold = self.on_power_threshold()
 
+        if min_off_duration is None:
+            min_off_duration = self.min_off_duration()
+
+        if min_on_duration is None:
+            min_on_duration = self.min_on_duration()
+
         activations = []
         for chunk in self.power_series(**kwargs):
-            when_on = chunk >= on_power_threshold
-
-            # Find state changes
-            state_changes = when_on.astype(np.int8).diff()
-            del when_on
-            switch_on_events = np.where(state_changes == 1)[0]
-            switch_off_events = np.where(state_changes == -1)[0]
-            del state_changes
-
-            if len(switch_on_events) == 0 or len(switch_off_events) == 0:
-                continue
-            
-            # Make sure events align
-            if switch_off_events[0] < switch_on_events[0]:
-                switch_off_events = switch_off_events[1:]
-            if switch_on_events[-1] > switch_off_events[-1]:
-                switch_on_events = switch_on_events[:-1]
-            assert len(switch_on_events) == len(switch_off_events)
-                
-            # Smooth over off-durations less than min_off_duration
-            if min_off_duration > 0:
-                off_durations = (chunk.index[switch_on_events[1:]].values - 
-                                 chunk.index[switch_off_events[:-1]].values)
-
-                off_durations = timedelta64_to_secs(off_durations)
-
-                above_threshold_off_durations = np.where(
-                    off_durations >= min_off_duration)[0]
-
-                # Now remove off_events and on_events
-                switch_off_events = switch_off_events[
-                    np.concatenate([above_threshold_off_durations, 
-                                    [len(switch_off_events)-1]])]
-                switch_on_events = switch_on_events[
-                    np.concatenate([[0], above_threshold_off_durations+1])]
-            assert len(switch_on_events) == len(switch_off_events)
-
-            for on, off in zip(switch_on_events, switch_off_events):
-                duration = (chunk.index[off] - chunk.index[on]).total_seconds()
-                if duration < min_on_duration:
-                    continue
-                on -= 1 + border
-                if on < 0:
-                    on = 0
-                off += border
-                activations.append(chunk.iloc[on:off])
+            activations_for_chunk = activation_series_for_chunk(
+                chunk, min_off_duration, min_on_duration,
+                border, on_power_threshold)
+            activations.extend(activations_for_chunk)
 
         return activations
 
@@ -794,7 +797,90 @@ def align_two_meters(master, slave, func='power_series'):
 
         # TODO: do this resampling in the pipeline?
         slave_chunk = slave_chunk.resample(period_alias)
+        if slave_chunk.empty:
+            continue
         master_chunk = master_chunk.resample(period_alias)
 
         yield pd.DataFrame({'master': master_chunk, 'slave': slave_chunk})
 
+
+def activation_series_for_chunk(chunk, min_off_duration=0, min_on_duration=0,
+                                border=1, on_power_threshold=5):
+    """Returns runs of an appliance.
+
+    Most appliances spend a lot of their time off.  This function finds
+    periods when the appliance is on.
+
+    Parameters
+    ----------
+    chunk : pd.Series
+    min_off_duration : int
+        If min_off_duration > 0 then ignore 'off' periods less than
+        min_off_duration seconds of sub-threshold power consumption
+        (e.g. a washing machine might draw no power for a short
+        period while the clothes soak.)  Defaults to 0.
+    min_on_duration : int
+        Any activation lasting less seconds than min_on_duration will be
+        ignored.  Defaults to 0.
+    border : int
+        Number of rows to include before and after the detected activation
+    on_power_threshold : int or float
+        Defaults to self.on_power_threshold()
+
+    Returns
+    -------
+    list of pd.Series.  Each series contains one activation.
+    """
+    when_on = chunk >= on_power_threshold
+
+    # Find state changes
+    state_changes = when_on.astype(np.int8).diff()
+    del when_on
+    switch_on_events = np.where(state_changes == 1)[0]
+    switch_off_events = np.where(state_changes == -1)[0]
+    del state_changes
+
+    if len(switch_on_events) == 0 or len(switch_off_events) == 0:
+        return []
+
+    # Make sure events align
+    if switch_off_events[0] < switch_on_events[0]:
+        switch_off_events = switch_off_events[1:]
+        if len(switch_off_events) == 0:
+            return []
+    if switch_on_events[-1] > switch_off_events[-1]:
+        switch_on_events = switch_on_events[:-1]
+        if len(switch_on_events) == 0:
+            return []
+    assert len(switch_on_events) == len(switch_off_events)
+
+    # Smooth over off-durations less than min_off_duration
+    if min_off_duration > 0:
+        off_durations = (chunk.index[switch_on_events[1:]].values -
+                         chunk.index[switch_off_events[:-1]].values)
+
+        off_durations = timedelta64_to_secs(off_durations)
+
+        above_threshold_off_durations = np.where(
+            off_durations >= min_off_duration)[0]
+
+        # Now remove off_events and on_events
+        switch_off_events = switch_off_events[
+            np.concatenate([above_threshold_off_durations,
+                            [len(switch_off_events)-1]])]
+        switch_on_events = switch_on_events[
+            np.concatenate([[0], above_threshold_off_durations+1])]
+    assert len(switch_on_events) == len(switch_off_events)
+
+    activations = []
+    for on, off in zip(switch_on_events, switch_off_events):
+        duration = (chunk.index[off] - chunk.index[on]).total_seconds()
+        if duration < min_on_duration:
+            continue
+        on -= 1 + border
+        if on < 0:
+            on = 0
+        off += border
+        activations.append(chunk.iloc[on:off])
+
+    return activations

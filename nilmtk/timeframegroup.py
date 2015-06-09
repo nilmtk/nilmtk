@@ -13,7 +13,7 @@ class TimeFrameGroup(list):
     def __init__(self, timeframes=None):
         if isinstance(timeframes, pd.tseries.period.PeriodIndex):
             periods = timeframes
-            timeframes = [TimeFrame(period.start_time, period.end_time) 
+            timeframes = [TimeFrame(period.start_time, period.end_time)
                           for period in periods]
         args = [timeframes] if timeframes else []
         super(TimeFrameGroup, self).__init__(*args)
@@ -26,7 +26,7 @@ class TimeFrameGroup(list):
         for timeframe in self:
             length = timeframe.timedelta.total_seconds() / SECS_PER_DAY
             bottom_left_corner = (timeframe.start, y + gap)
-            rect = plt.Rectangle(bottom_left_corner, length, height, 
+            rect = plt.Rectangle(bottom_left_corner, length, height,
                                  color=color, **kwargs)
             ax.add_patch(rect)
 
@@ -57,4 +57,12 @@ class TimeFrameGroup(list):
         for timeframe in self:
             uptime += timeframe.timedelta
         return uptime
-    
+
+    def remove_shorter_than(self, threshold):
+        """Removes TimeFrames shorter than `threshold` seconds."""
+        new_tfg = TimeFrameGroup()
+        for timeframe in self:
+            if timeframe.timedelta.total_seconds() >= threshold:
+                new_tfg.append(timeframe)
+
+        return new_tfg

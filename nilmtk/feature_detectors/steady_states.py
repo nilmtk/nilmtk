@@ -67,7 +67,7 @@ def find_steady_states(dataframe, min_n_samples=2, stateThreshold=15,
     index_transitions = []  # Indices to use in returned Dataframe
     index_steadystates = []
     transitions = []  # holds information on transitions
-    steadyStates = []  # steadyStates to store in returned Dataframe
+    steady_states = []  # steadyStates to store in returned Dataframe
     N = 0  # N stores the number of samples in state
     time = dataframe.iloc[0].name  # first state starts at beginning
 
@@ -121,7 +121,7 @@ def find_steady_states(dataframe, min_n_samples=2, stateThreshold=15,
                 index_steadystates.append(time)
                 # logging.debug('The ''time'' stored is: %s' % (time))
                 # last states steady power
-                steadyStates.append(estimatedSteadyPower)
+                steady_states.append(estimatedSteadyPower)
 
             # 3B
             lastSteadyPower = estimatedSteadyPower
@@ -147,6 +147,26 @@ def find_steady_states(dataframe, min_n_samples=2, stateThreshold=15,
         # Step 8
         previousMeasurement = thisMeasurement
 
+
+
+    #Appending last edge
+    lastTransition = np.subtract(estimatedSteadyPower, lastSteadyPower)
+    if np.sum(np.fabs(lastTransition) > noise_level):
+        index_transitions.append(time)
+        transitions.append(lastTransition)
+        index_steadystates.append(time)
+        steady_states.append(estimatedSteadyPower)
+
+    #Removing first edge if the starting steady state power is more
+    # than the noise threshold
+    #  https://github.com/nilmtk/nilmtk/issues/400
+
+    if np.sum(steady_states[0] > noise_level) and index_transitions[0] == index_steadystates[0] == dataframe.iloc[0].name:
+        transitions = transitions[1:]
+        index_transitions = index_transitions[1:]
+        steady_states = steady_states[1:]
+        index_steadystates = index_steadystates[1:]
+
     print("Edge detection complete.")
 
     print("Creating transition frame ...")
@@ -159,7 +179,7 @@ def find_steady_states(dataframe, min_n_samples=2, stateThreshold=15,
                    2: ['active average', 'reactive average']}
 
     
-    if len(index_transitions)==0:
+    if len(index_transitions) == 0:
         # No events
         return pd.DataFrame(), pd.DataFrame()
     else:
@@ -169,11 +189,11 @@ def find_steady_states(dataframe, min_n_samples=2, stateThreshold=15,
 
         print("Creating states frame ...")
         sys.stdout.flush()
-        steadyStates = pd.DataFrame(data=steadyStates, index=index_steadystates,
+        steady_states = pd.DataFrame(data=steady_states, index=index_steadystates,
                                     columns=cols_steady[num_measurements])
         print("States frame created.")
         print("Finished.")
-        return steadyStates, transitions
+        return steady_states, transitions
 
 
 def cluster(X, max_num_clusters=3):

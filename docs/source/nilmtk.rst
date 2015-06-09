@@ -7,6 +7,7 @@ Subpackages
 .. toctree::
 
     nilmtk.dataset_converters
+    nilmtk.datastore
     nilmtk.disaggregate
     nilmtk.feature_detectors
     nilmtk.preprocessing
@@ -48,10 +49,10 @@ nilmtk.dataset module
     :undoc-members:
     :show-inheritance:
 
-nilmtk.datastore module
------------------------
+nilmtk.docinherit module
+------------------------
 
-.. automodule:: nilmtk.datastore
+.. automodule:: nilmtk.docinherit
     :members:
     :undoc-members:
     :show-inheritance:
@@ -104,14 +105,6 @@ nilmtk.metergroup module
     :undoc-members:
     :show-inheritance:
 
-nilmtk.exceptions module
-------------------------
-
-.. automodule:: nilmtk.exceptions
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 nilmtk.metrics module
 ---------------------
 
@@ -148,6 +141,14 @@ nilmtk.timeframe module
 -----------------------
 
 .. automodule:: nilmtk.timeframe
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+nilmtk.timeframegroup module
+----------------------------
+
+.. automodule:: nilmtk.timeframegroup
     :members:
     :undoc-members:
     :show-inheritance:

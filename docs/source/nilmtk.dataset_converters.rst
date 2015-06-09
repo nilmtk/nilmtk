@@ -6,19 +6,14 @@ Subpackages
 
 .. toctree::
 
+    nilmtk.dataset_converters.ampds
+    nilmtk.dataset_converters.combed
+    nilmtk.dataset_converters.dataport
+    nilmtk.dataset_converters.eco
+    nilmtk.dataset_converters.greend
+    nilmtk.dataset_converters.iawe
     nilmtk.dataset_converters.redd
-
-Submodules
-----------
-
-nilmtk.dataset_converters.wikienergy module
--------------------------------------------
-
-.. automodule:: nilmtk.dataset_converters.wikienergy
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
+    nilmtk.dataset_converters.ukdale
 
 Module contents
 ---------------

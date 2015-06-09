@@ -16,7 +16,7 @@ from nilmtk.timeframegroup import TimeFrameGroup
 from nilmtk.node import Node
 from nilmtk.datastore import DataStore, MAX_MEM_ALLOWANCE_IN_BYTES
 from nilmtk.datastore.key import Key
-from nilmtk.datastore.datastore import write_yaml_to_file
+from nilmtk.datastore.datastore import write_yaml_to_file, join_key
 from nilmtk.docinherit import doc_inherit
 
 # do not edit! added by PythonBreakpoints
@@ -188,18 +188,18 @@ class CSVDataStore(DataStore):
     @doc_inherit
     def elements_below_key(self, key='/'):
         
-        elements = OrderedDict()
+        elements = []
         if key == '/':
             for directory in listdir(self.filename):
                 dir_path = join(self.filename, directory)
                 if isdir(dir_path) and re.match('building[0-9]*', directory):
-                    elements[directory] = join_key(key, directory)
+                    elements += [directory]
         else:
             relative_path = key[1:]
             dir_path = join(self.filename, relative_path)
             if isdir(dir_path):
                 for element in listdir(dir_path):
-                    elements[element] = join_key(key, element)
+                    elements += [directory]
 
         return elements
 

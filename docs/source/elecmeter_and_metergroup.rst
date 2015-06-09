@@ -8,8 +8,8 @@ directly connected to. Or by sample rate. Or by whether the meter is a
 whole-house "site meter" or an appliance-level submeter, or a
 circuit-level submeter.
 
-In NILMTK v0.2, one of the key classes is ``MeterGroup`` which stores a
-list of ``meters`` and allows us to select a subset of meters, aggregate
+In NILMTK, one of the key classes is ``MeterGroup`` which stores a list
+of ``meters`` and allows us to select a subset of meters, aggregate
 power from all meters and many other functions.
 
 When we first open a ``DataSet``, NILMTK creates several ``MeterGroup``
@@ -24,11 +24,18 @@ in REDD:
 
 .. code:: python
 
+    from matplotlib import rcParams
+    import matplotlib.pyplot as plt
+    %matplotlib inline
+    rcParams['figure.figsize'] = (13, 6)
+    plt.style.use('ggplot')
     from nilmtk import DataSet
+    
     
     redd = DataSet('/data/REDD/redd.h5')
     elec = redd.buildings[1].elec
     elec
+
 
 
 
@@ -73,6 +80,7 @@ appliances and have two meters per appliance):
 
 
 
+
 .. parsed-literal::
 
     [MeterGroup(meters=
@@ -98,6 +106,7 @@ We can easily get a MeterGroup of either the submeters or the mains:
 
 
 
+
 .. parsed-literal::
 
     MeterGroup(meters=
@@ -114,6 +123,13 @@ We can easily get the power data for both mains meters summed together:
     elec.mains().power_series_all_data().head()
 
 
+.. parsed-literal::
+
+    Loading data for meter ElecMeterID(instance=2, building=1, dataset='REDD')     
+    Done loading data all meters for this chunk.
+
+
+
 
 .. parsed-literal::
 
@@ -122,13 +138,14 @@ We can easily get the power data for both mains meters summed together:
     2011-04-18 09:22:11-04:00    345.140015
     2011-04-18 09:22:12-04:00    341.679993
     2011-04-18 09:22:13-04:00    341.029999
-    Name: (power, apparent), dtype: float32
+    Name: (power, apparent), dtype: float64
 
 
 
 .. code:: python
 
     elec.submeters()
+
 
 
 
@@ -173,17 +190,29 @@ Let's work out the proportion of energy submetered in REDD building 1:
 
     elec.proportion_of_energy_submetered()
 
-.. parsed-literal::
-
-    /home/jack/workspace/python/nilmtk/nilmtk/measurement.py:56: RuntimeWarning: None of the AC types recorded by Mains are present in `available_ac_types`. Will use try using one of ['active', 'apparent', 'reactive'].
-      " Will use try using one of {}.".format(AC_TYPES), RuntimeWarning)
-
-
-
 
 .. parsed-literal::
 
-    0.75962890625021773
+    Running MeterGroup.proportion_of_energy_submetered...
+    Calculating total_energy for ElecMeterID(instance=2, building=1, dataset='REDD') ...   
+
+.. parsed-literal::
+
+    /Users/nipunbatra/git/nilmtk/nilmtk/metergroup.py:887: UserWarning: As a quick implementation we only get Good Sections from the first meter in the meter group.  We should really return the intersection of the good sections for all meters.  This will be fixed...
+      warn("As a quick implementation we only get Good Sections from"
+    /Users/nipunbatra/git/nilmtk/nilmtk/electric.py:303: UserWarning: No shared AC types.  Using 'active' for submeter and 'apparent' for other.
+      " and '{:s}' for other.".format(ac_type, other_ac_type))
+
+
+.. parsed-literal::
+
+    Calculating total_energy for ElecMeterID(instance=2, building=1, dataset='REDD') ...   
+
+
+
+.. parsed-literal::
+
+    0.75990318508883437
 
 
 
@@ -197,13 +226,18 @@ Active, apparent and reactive power
 
 .. code:: python
 
-    elec.mains().available_power_ac_types()
+    mains = elec.mains()
+
+.. code:: python
+
+    mains.available_power_ac_types()
+
 
 
 
 .. parsed-literal::
 
-    {'apparent'}
+    ['apparent']
 
 
 
@@ -213,21 +247,16 @@ Active, apparent and reactive power
 
 
 
+
 .. parsed-literal::
 
-    {'active'}
+    ['active']
 
 
 
-Get raw data
-~~~~~~~~~~~~
+.. code:: python
 
-There are two main ways to get at the raw power data. Either using
-``power_series()`` which returns a Python generator or use
-``power_series_all_data()`` which eagerly loads all data into a single
-``pandas.Series`` vector. ``MeterGroup.power_series`` and
-``MeterGroup.power_series_all_data()`` sums together the power demand
-from all meters in the MeterGroup.
+    elec.load()
 
 Total Energy
 ~~~~~~~~~~~~
@@ -237,10 +266,16 @@ Total Energy
     elec.mains().total_energy() # returns kWh
 
 
+.. parsed-literal::
+
+    Calculating total_energy for ElecMeterID(instance=2, building=1, dataset='REDD') ...   
+
+
 
 .. parsed-literal::
 
-    167.76623618641219
+    apparent    167.766283
+    dtype: float64
 
 
 
@@ -253,6 +288,17 @@ Energy per submeter
     energy_per_meter
 
 
+.. parsed-literal::
+
+    15/16 MeterGroup(meters=
+      ElecMeter(instance=3, building=1, dataset='REDD', appliances=[Appliance(type='electric oven', instance=1)])
+      ElecMeter(instance=4, building=1, dataset='REDD', appliances=[Appliance(type='electric oven', instance=1)])
+    16/16 MeterGroup(meters=
+      ElecMeter(instance=10, building=1, dataset='REDD', appliances=[Appliance(type='washer dryer', instance=1)])
+      ElecMeter(instance=20, building=1, dataset='REDD', appliances=[Appliance(type='washer dryer', instance=1)])
+    Calculating total_energy for ElecMeterID(instance=20, building=1, dataset='REDD') ...   
+
+
 
 .. raw:: html
 
@@ -261,43 +307,81 @@ Energy per submeter
       <thead>
         <tr style="text-align: right;">
           <th></th>
-          <th>5</th>
-          <th>6</th>
-          <th>7</th>
-          <th>8</th>
-          <th>9</th>
-          <th>11</th>
-          <th>12</th>
-          <th>13</th>
-          <th>14</th>
-          <th>15</th>
-          <th>16</th>
-          <th>17</th>
-          <th>18</th>
-          <th>19</th>
-          <th>(3, 4)</th>
-          <th>(10, 20)</th>
+          <th>(5, 1, REDD)</th>
+          <th>(6, 1, REDD)</th>
+          <th>(7, 1, REDD)</th>
+          <th>(8, 1, REDD)</th>
+          <th>(9, 1, REDD)</th>
+          <th>(11, 1, REDD)</th>
+          <th>(12, 1, REDD)</th>
+          <th>(13, 1, REDD)</th>
+          <th>(14, 1, REDD)</th>
+          <th>(15, 1, REDD)</th>
+          <th>(16, 1, REDD)</th>
+          <th>(17, 1, REDD)</th>
+          <th>(18, 1, REDD)</th>
+          <th>(19, 1, REDD)</th>
+          <th>(((3, 1, REDD), (4, 1, REDD)),)</th>
+          <th>(((10, 1, REDD), (20, 1, REDD)),)</th>
         </tr>
       </thead>
       <tbody>
         <tr>
           <th>active</th>
-          <td> 44.750925</td>
-          <td> 19.920875</td>
-          <td> 16.786282</td>
-          <td> 22.939649</td>
-          <td> 30.734511</td>
-          <td> 16.890262</td>
-          <td> 5.221226</td>
-          <td> 0.096302</td>
-          <td> 0.411592</td>
-          <td> 4.507334</td>
-          <td> 2.256583</td>
-          <td> 18.288595</td>
-          <td> 11.811224</td>
-          <td> 0.000085</td>
-          <td> 8.81796</td>
-          <td> 32.614809</td>
+          <td>44.750925</td>
+          <td>19.920875</td>
+          <td>16.786282</td>
+          <td>22.939649</td>
+          <td>30.734511</td>
+          <td>16.890262</td>
+          <td>5.221226</td>
+          <td>0.096302</td>
+          <td>0.411592</td>
+          <td>4.507334</td>
+          <td>2.256583</td>
+          <td>18.288595</td>
+          <td>11.811224</td>
+          <td>0.000085</td>
+          <td>8.81796</td>
+          <td>32.614809</td>
+        </tr>
+        <tr>
+          <th>apparent</th>
+          <td>NaN</td>
+          <td>NaN</td>
+          <td>NaN</td>
+          <td>NaN</td>
+          <td>NaN</td>
+          <td>NaN</td>
+          <td>NaN</td>
+          <td>NaN</td>
+          <td>NaN</td>
+          <td>NaN</td>
+          <td>NaN</td>
+          <td>NaN</td>
+          <td>NaN</td>
+          <td>NaN</td>
+          <td>NaN</td>
+          <td>NaN</td>
+        </tr>
+        <tr>
+          <th>reactive</th>
+          <td>NaN</td>
+          <td>NaN</td>
+          <td>NaN</td>
+          <td>NaN</td>
+          <td>NaN</td>
+          <td>NaN</td>
+          <td>NaN</td>
+          <td>NaN</td>
+          <td>NaN</td>
+          <td>NaN</td>
+          <td>NaN</td>
+          <td>NaN</td>
+          <td>NaN</td>
+          <td>NaN</td>
+          <td>NaN</td>
+          <td>NaN</td>
         </tr>
       </tbody>
     </table>
@@ -328,12 +412,13 @@ used more than 20 kWh:
 
 
 
+
 .. parsed-literal::
 
-    5           44.750925
-    8           22.939649
-    9           30.734511
-    (10, 20)    32.614809
+    (5, 1, REDD)                         44.750925
+    (8, 1, REDD)                         22.939649
+    (9, 1, REDD)                         30.734511
+    (((10, 1, REDD), (20, 1, REDD)),)    32.614809
     Name: active, dtype: float64
 
 
@@ -345,33 +430,14 @@ used more than 20 kWh:
 
 
 
-.. parsed-literal::
-
-    Index([5, 8, 9, (10, 20)], dtype='object')
-
-
-
-Now we use ``from_list`` to create a new MeterGroup from a list of
-``ElecMeterIDs``:
-
-.. code:: python
-
-    from nilmtk.elecmeter import ElecMeterID
-    elec.from_list([ElecMeterID(instance=instance, building=1, dataset='REDD') for instance in instances])
-
-
 
 .. parsed-literal::
 
-    MeterGroup(meters=
-      ElecMeter(instance=5, building=1, dataset='REDD', appliances=[Appliance(type='fridge', instance=1)])
-      MeterGroup(meters=
-        ElecMeter(instance=10, building=1, dataset='REDD', appliances=[Appliance(type='washer dryer', instance=1)])
-        ElecMeter(instance=20, building=1, dataset='REDD', appliances=[Appliance(type='washer dryer', instance=1)])
-      )
-      ElecMeter(instance=8, building=1, dataset='REDD', appliances=[Appliance(type='sockets', instance=2)])
-      ElecMeter(instance=9, building=1, dataset='REDD', appliances=[Appliance(type='light', instance=1)])
-    )
+    Index([                        (5, 1, u'REDD'),
+                                   (8, 1, u'REDD'),
+                                   (9, 1, u'REDD'),
+           (((10, 1, u'REDD'), (20, 1, u'REDD')),)],
+          dtype='object')
 
 
 
@@ -385,7 +451,17 @@ We can get the wiring diagram for the MeterGroup:
     elec.draw_wiring_graph()
 
 
-.. image:: elecmeter_and_metergroup_files/elecmeter_and_metergroup_35_0.png
+
+
+.. parsed-literal::
+
+    (<networkx.classes.digraph.DiGraph at 0x10a021c90>,
+     <matplotlib.axes._axes.Axes at 0x10a038950>)
+
+
+
+
+.. image:: elecmeter_and_metergroup_files/elecmeter_and_metergroup_33_1.png
 
 
 It's not very pretty but it shows that meters (1,2) (the site meters)
@@ -401,26 +477,29 @@ useful to get only the meters immediately downstream of mains:
 
 
 
+
 .. parsed-literal::
 
-    [ElecMeter(instance=18, building=1, dataset='REDD', appliances=[Appliance(type='light', instance=3)]),
-     ElecMeter(instance=11, building=1, dataset='REDD', appliances=[Appliance(type='microwave', instance=1)]),
-     ElecMeter(instance=17, building=1, dataset='REDD', appliances=[Appliance(type='light', instance=2)]),
-     ElecMeter(instance=20, building=1, dataset='REDD', appliances=[Appliance(type='washer dryer', instance=1)]),
-     ElecMeter(instance=13, building=1, dataset='REDD', appliances=[Appliance(type='electric space heater', instance=1)]),
-     ElecMeter(instance=10, building=1, dataset='REDD', appliances=[Appliance(type='washer dryer', instance=1)]),
-     ElecMeter(instance=3, building=1, dataset='REDD', appliances=[Appliance(type='electric oven', instance=1)]),
-     ElecMeter(instance=16, building=1, dataset='REDD', appliances=[Appliance(type='sockets', instance=4)]),
-     ElecMeter(instance=9, building=1, dataset='REDD', appliances=[Appliance(type='light', instance=1)]),
-     ElecMeter(instance=15, building=1, dataset='REDD', appliances=[Appliance(type='sockets', instance=3)]),
-     ElecMeter(instance=12, building=1, dataset='REDD', appliances=[Appliance(type='unknown', instance=1)]),
-     ElecMeter(instance=5, building=1, dataset='REDD', appliances=[Appliance(type='fridge', instance=1)]),
-     ElecMeter(instance=8, building=1, dataset='REDD', appliances=[Appliance(type='sockets', instance=2)]),
-     ElecMeter(instance=14, building=1, dataset='REDD', appliances=[Appliance(type='electric stove', instance=1)]),
-     ElecMeter(instance=7, building=1, dataset='REDD', appliances=[Appliance(type='sockets', instance=1)]),
-     ElecMeter(instance=4, building=1, dataset='REDD', appliances=[Appliance(type='electric oven', instance=1)]),
-     ElecMeter(instance=19, building=1, dataset='REDD', appliances=[Appliance(type='unknown', instance=2)]),
-     ElecMeter(instance=6, building=1, dataset='REDD', appliances=[Appliance(type='dish washer', instance=1)])]
+    MeterGroup(meters=
+      ElecMeter(instance=18, building=1, dataset='REDD', appliances=[Appliance(type='light', instance=3)])
+      ElecMeter(instance=11, building=1, dataset='REDD', appliances=[Appliance(type='microwave', instance=1)])
+      ElecMeter(instance=17, building=1, dataset='REDD', appliances=[Appliance(type='light', instance=2)])
+      ElecMeter(instance=20, building=1, dataset='REDD', appliances=[Appliance(type='washer dryer', instance=1)])
+      ElecMeter(instance=13, building=1, dataset='REDD', appliances=[Appliance(type='electric space heater', instance=1)])
+      ElecMeter(instance=10, building=1, dataset='REDD', appliances=[Appliance(type='washer dryer', instance=1)])
+      ElecMeter(instance=3, building=1, dataset='REDD', appliances=[Appliance(type='electric oven', instance=1)])
+      ElecMeter(instance=16, building=1, dataset='REDD', appliances=[Appliance(type='sockets', instance=4)])
+      ElecMeter(instance=9, building=1, dataset='REDD', appliances=[Appliance(type='light', instance=1)])
+      ElecMeter(instance=15, building=1, dataset='REDD', appliances=[Appliance(type='sockets', instance=3)])
+      ElecMeter(instance=12, building=1, dataset='REDD', appliances=[Appliance(type='unknown', instance=1)])
+      ElecMeter(instance=5, building=1, dataset='REDD', appliances=[Appliance(type='fridge', instance=1)])
+      ElecMeter(instance=8, building=1, dataset='REDD', appliances=[Appliance(type='sockets', instance=2)])
+      ElecMeter(instance=14, building=1, dataset='REDD', appliances=[Appliance(type='electric stove', instance=1)])
+      ElecMeter(instance=7, building=1, dataset='REDD', appliances=[Appliance(type='sockets', instance=1)])
+      ElecMeter(instance=4, building=1, dataset='REDD', appliances=[Appliance(type='electric oven', instance=1)])
+      ElecMeter(instance=19, building=1, dataset='REDD', appliances=[Appliance(type='unknown', instance=2)])
+      ElecMeter(instance=6, building=1, dataset='REDD', appliances=[Appliance(type='dish washer', instance=1)])
+    )
 
 
 
@@ -438,12 +517,14 @@ more stats functions (many of which are also available on
 .. code:: python
 
     fridge_meter = elec['fridge']
+
 Get upstream meter
 ~~~~~~~~~~~~~~~~~~
 
 .. code:: python
 
     fridge_meter.upstream_meter() # happens to be the mains meter group!
+
 
 
 
@@ -462,6 +543,7 @@ Metadata about the class of meter
 .. code:: python
 
     fridge_meter.device
+
 
 
 
@@ -494,6 +576,7 @@ this appliance can be retrieved with this method:
 
 
 
+
 .. parsed-literal::
 
     Appliance(type='fridge', instance=1)
@@ -509,9 +592,11 @@ Total energy
 
 
 
+
 .. parsed-literal::
 
-    44.750925277777775
+    active    44.750925
+    dtype: float64
 
 
 
@@ -527,7 +612,16 @@ then we'd see lots of smaller gaps too):
     fridge_meter.plot()
 
 
-.. image:: elecmeter_and_metergroup_files/elecmeter_and_metergroup_53_0.png
+
+
+.. parsed-literal::
+
+    <matplotlib.axes._subplots.AxesSubplot at 0x10c68ba10>
+
+
+
+
+.. image:: elecmeter_and_metergroup_files/elecmeter_and_metergroup_51_1.png
 
 
 We can automatically identify the 'good sections' (i.e. the sections
@@ -540,12 +634,22 @@ where every pair of consecutive samples is less than
     # specifying full_results=False would give us a simple list of 
     # TimeFrames.  But we want the full GoodSectionsResults object so we can
     # plot the good sections...
+
 .. code:: python
 
     good_sections.plot()
 
 
-.. image:: elecmeter_and_metergroup_files/elecmeter_and_metergroup_56_0.png
+
+
+.. parsed-literal::
+
+    <matplotlib.axes._subplots.AxesSubplot at 0x10c6c5610>
+
+
+
+
+.. image:: elecmeter_and_metergroup_files/elecmeter_and_metergroup_54_1.png
 
 
 The blue chunks show where the data is good. The white gap is the large
@@ -557,6 +661,7 @@ We can also see the exact sections identified:
 .. code:: python
 
     good_sections.combined()
+
 
 
 
@@ -605,30 +710,10 @@ are missing:
 
 
 
-.. parsed-literal::
-
-    0.28602798156004472
-
-
-
-Only load data from good sections
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-That dropout number above is an average for the entire timeperiod of the
-dataset. What about if we want the dropout rate ignoring the large gap
-that we identified with ``good_sections()``? We can pass a ``sections``
-parameter to all stats functions. This tells NILMTK to only load the
-sections we specify (and hence only calculate stats on those sections):
-
-.. code:: python
-
-    fridge_meter.dropout_rate(sections=good_sections.combined())
-
-
 
 .. parsed-literal::
 
-    0.21922786156570628
+    0.21922786156570626
 
 
 
@@ -650,17 +735,18 @@ dryers in the whole of the REDD dataset:
 
 
 
+
 .. parsed-literal::
 
     MeterGroup(meters=
       ElecMeter(instance=10, building=1, dataset='REDD', appliances=[Appliance(type='washer dryer', instance=1)])
       ElecMeter(instance=20, building=1, dataset='REDD', appliances=[Appliance(type='washer dryer', instance=1)])
+      ElecMeter(instance=7, building=2, dataset='REDD', appliances=[Appliance(type='washer dryer', instance=1)])
       ElecMeter(instance=13, building=3, dataset='REDD', appliances=[Appliance(type='washer dryer', instance=1)])
       ElecMeter(instance=14, building=3, dataset='REDD', appliances=[Appliance(type='washer dryer', instance=1)])
-      ElecMeter(instance=7, building=2, dataset='REDD', appliances=[Appliance(type='washer dryer', instance=1)])
+      ElecMeter(instance=7, building=4, dataset='REDD', appliances=[Appliance(type='washer dryer', instance=1)])
       ElecMeter(instance=8, building=5, dataset='REDD', appliances=[Appliance(type='washer dryer', instance=1)])
       ElecMeter(instance=9, building=5, dataset='REDD', appliances=[Appliance(type='washer dryer', instance=1)])
-      ElecMeter(instance=7, building=4, dataset='REDD', appliances=[Appliance(type='washer dryer', instance=1)])
       ElecMeter(instance=4, building=6, dataset='REDD', appliances=[Appliance(type='washer dryer', instance=1)])
     )
 
@@ -674,21 +760,17 @@ Or all appliances in the 'heating' category:
 
 
 
+
 .. parsed-literal::
 
     MeterGroup(meters=
       ElecMeter(instance=13, building=1, dataset='REDD', appliances=[Appliance(type='electric space heater', instance=1)])
       ElecMeter(instance=10, building=3, dataset='REDD', appliances=[Appliance(type='electric furnace', instance=1)])
+      ElecMeter(instance=4, building=4, dataset='REDD', appliances=[Appliance(type='electric furnace', instance=1)])
       ElecMeter(instance=6, building=5, dataset='REDD', appliances=[Appliance(type='electric furnace', instance=1)])
       ElecMeter(instance=12, building=5, dataset='REDD', appliances=[Appliance(type='electric space heater', instance=1)])
       ElecMeter(instance=13, building=5, dataset='REDD', appliances=[Appliance(type='electric space heater', instance=1)])
-      ElecMeter(instance=4, building=4, dataset='REDD', appliances=[Appliance(type='electric furnace', instance=1)])
-      ElecMeter(instance=9, building=4, dataset='REDD', appliances=[Appliance(type='air conditioner', instance=1)])
-      ElecMeter(instance=10, building=4, dataset='REDD', appliances=[Appliance(type='air conditioner', instance=1)])
-      ElecMeter(instance=20, building=4, dataset='REDD', appliances=[Appliance(type='air conditioner', instance=2)])
       ElecMeter(instance=12, building=6, dataset='REDD', appliances=[Appliance(type='electric space heater', instance=1)])
-      ElecMeter(instance=16, building=6, dataset='REDD', appliances=[Appliance(type='air conditioner', instance=1)])
-      ElecMeter(instance=17, building=6, dataset='REDD', appliances=[Appliance(type='air conditioner', instance=1)])
     )
 
 
@@ -698,6 +780,7 @@ Or all appliances in building 1 with a single-phase induction motor(!):
 .. code:: python
 
     nilmtk.global_meter_group.select_using_appliances(building=1, category='single-phase induction motor')
+
 
 
 
@@ -722,6 +805,7 @@ taxonomies <http://nilm-metadata.readthedocs.org/en/latest/central_metadata.html
 
 
 
+
 .. parsed-literal::
 
     MeterGroup(meters=
@@ -741,6 +825,7 @@ Select a group of meters from properties of the meters (not the appliances)
 
 
 
+
 .. parsed-literal::
 
     MeterGroup(meters=
@@ -753,6 +838,7 @@ Select a group of meters from properties of the meters (not the appliances)
 .. code:: python
 
     elec.select(sample_period=3)
+
 
 
 
@@ -796,6 +882,16 @@ Search for a meter using appliances connected to each meter
 .. code:: python
 
     elec['fridge']
+
+
+
+
+.. parsed-literal::
+
+    ElecMeter(instance=5, building=1, dataset='REDD', appliances=[Appliance(type='fridge', instance=1)])
+
+
+
 Appliances are uniquely identified within a building by a ``type``
 (fridge, kettle, television, etc.) and an ``instance`` number. If we do
 not specify an instance number then ``ElecMeter`` retrieves instance 1
@@ -805,6 +901,16 @@ then just do this:
 .. code:: python
 
     elec['light', 2]
+
+
+
+
+.. parsed-literal::
+
+    ElecMeter(instance=17, building=1, dataset='REDD', appliances=[Appliance(type='light', instance=2)])
+
+
+
 To uniquely identify an appliance in ``nilmtk.global_meter_group`` then
 we must specify the dataset name, building instance number, appliance
 type and appliance instance in a dict:
@@ -813,6 +919,16 @@ type and appliance instance in a dict:
 
     import nilmtk
     nilmtk.global_meter_group[{'dataset': 'REDD', 'building': 1, 'type': 'fridge', 'instance': 1}]
+
+
+
+
+.. parsed-literal::
+
+    ElecMeter(instance=5, building=1, dataset='REDD', appliances=[Appliance(type='fridge', instance=1)])
+
+
+
 Search for a meter using details of the ElecMeter
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -821,6 +937,16 @@ get ElecMeter with instance = 1:
 .. code:: python
 
     elec[1]
+
+
+
+
+.. parsed-literal::
+
+    ElecMeter(instance=1, building=1, dataset='REDD', site_meter, appliances=[])
+
+
+
 Instance numbering
 ~~~~~~~~~~~~~~~~~~
 
@@ -834,6 +960,16 @@ a meter globally, we need three keys:
     # ElecMeterID is a namedtuple for uniquely identifying each ElecMeter
     
     nilmtk.global_meter_group[ElecMeterID(instance=8, building=1, dataset='REDD')]
+
+
+
+
+.. parsed-literal::
+
+    ElecMeter(instance=8, building=1, dataset='REDD', appliances=[Appliance(type='sockets', instance=2)])
+
+
+
 Select nested MeterGroup
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -844,16 +980,64 @@ ways to specify a nested MeterGroup:
 
     elec[[ElecMeterID(instance=3, building=1, dataset='REDD'), 
           ElecMeterID(instance=4, building=1, dataset='REDD')]]
+
+
+
+
+.. parsed-literal::
+
+    MeterGroup(meters=
+      ElecMeter(instance=3, building=1, dataset='REDD', appliances=[Appliance(type='electric oven', instance=1)])
+      ElecMeter(instance=4, building=1, dataset='REDD', appliances=[Appliance(type='electric oven', instance=1)])
+    )
+
+
+
 .. code:: python
 
     elec[ElecMeterID(instance=(3,4), building=1, dataset='REDD')]
+
+
+
+
+.. parsed-literal::
+
+    MeterGroup(meters=
+      ElecMeter(instance=3, building=1, dataset='REDD', appliances=[Appliance(type='electric oven', instance=1)])
+      ElecMeter(instance=4, building=1, dataset='REDD', appliances=[Appliance(type='electric oven', instance=1)])
+    )
+
+
+
 We can also specify the mains by asking for meter instance 0:
 
 .. code:: python
 
     elec[ElecMeterID(instance=0, building=1, dataset='REDD')]
+
+
+
+
+.. parsed-literal::
+
+    MeterGroup(meters=
+      ElecMeter(instance=1, building=1, dataset='REDD', site_meter, appliances=[])
+      ElecMeter(instance=2, building=1, dataset='REDD', site_meter, appliances=[])
+    )
+
+
+
 which is equivalent to elec.mains():
 
 .. code:: python
 
     elec.mains() == elec[ElecMeterID(instance=0, building=1, dataset='REDD')]
+
+
+
+
+.. parsed-literal::
+
+    True
+
+

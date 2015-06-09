@@ -663,10 +663,12 @@ class MeterGroup(Electric):
         for section in split_timeframes(sections, duration_threshold):
             kwargs['sections'] = [section]
             start = normalise_timestamp(section.start, freq)
-            index = pd.date_range(start, section.end, closed='left', freq=freq)
-            chunk = combine_chunks_from_generators(index, columns, self.meters, kwargs)
-            if chunk.empty:
-                break
+            tz = None if start.tz is None else start.tz.zone
+            index = pd.date_range(
+                start.tz_localize(None), section.end.tz_localize(None), tz=tz,
+                closed='left', freq=freq)
+            chunk = combine_chunks_from_generators(
+                index, columns, self.meters, kwargs)
             yield chunk
 
     def _convert_physical_quantity_and_ac_type_to_cols(self, **kwargs):
@@ -917,24 +919,15 @@ class MeterGroup(Electric):
         while True:
             chunks = []
             ids = []
-            index = None
-            timeframe = None
             for meter_id, generator in zip(identifiers, generators):
                 try:
                     chunk_from_next_meter = next(generator)
                 except StopIteration:
                     continue
 
-                if chunk_from_next_meter.empty or not chunk_from_next_meter.timeframe:
-                    continue
-
-                if timeframe is None:
-                    timeframe = chunk_from_next_meter.timeframe
-                else:
-                    timeframe = timeframe.union(chunk_from_next_meter.timeframe)
-
-                ids.append(meter_id)
-                chunks.append(chunk_from_next_meter.sum(axis=1))
+                if not chunk_from_next_meter.empty:
+                    ids.append(meter_id)
+                    chunks.append(chunk_from_next_meter.sum(axis=1))
 
             if chunks:
                 df = pd.concat(chunks, axis=1)

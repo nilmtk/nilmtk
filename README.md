@@ -27,6 +27,10 @@ Below is an illustration (produced using nilmtk) of what NILM, in general, can d
 
 http://nilmtk.github.io/nilmtk/
 
+##### Installation guide
+
+http://nilmtk.github.io/nilmtk/master/install.html
+
 ##### Publications
 
 * Batra, N., Kelly, J., Parson, O., Dutta, H., Knottenbelt, W., Rogers, A., Singh, A., Srivastava, M. (2014). NILMTK: An Open Source Toolkit for Non-intrusive Load Monitoring. In Fifth International Conference on Future Energy Systems (ACM e-Energy). Cambridge, UK. arXiv:[1404.3878](http://arxiv.org/abs/1404.3878) DOI:[10.1145/2602044.2602051](http://dx.doi.org/10.1145/2602044.2602051)
@@ -94,13 +98,9 @@ will be capable of doing 'plug and play' disaggregation in the future.
 
 Please see the docs for more info.
 
-##### User survey
-
-Please fill in our [NILMTK survey](https://docs.google.com/forms/d/1JlGn0pRgAIj152PJtVsGEUe9OVv2naWbdDHosJ3sHko/viewform?c=0&w=1) to help us get a better idea of who's using NILMTK and what's important to you.
-
 ##### Submitting a bug report
 
-Please use our [github issue queue](https://github.com/nilmtk/nilmtk/issues) to submit bug reports, rather than emailing them, which will allow any of us to respond to your issue.
+Please use our [github issue queue](https://github.com/nilmtk/nilmtk/issues) to submit bug reports, rather than emailing them, which will allow any of us to respond to your issue.  If your bug concerns one of NILMTK's dependencies then please contact the relevant project.
 
 Before opening an issue:
 
@@ -122,116 +122,4 @@ If not, please open a new issue, ensuring:
 [![Coverage Status](https://coveralls.io/repos/nilmtk/nilmtk/badge.png)](https://coveralls.io/r/nilmtk/nilmtk)
 
 [![Code Health](https://landscape.io/github/nilmtk/nilmtk/master/landscape.png)](https://landscape.io/github/nilmtk/nilmtk/master)
-
-##### Installing on Ubuntu like Linux variants (debian based)
-
-NB: The following procedure is for Ubuntu like Linux variants (debian based). Please adapt accordingly for your OS. We would welcome installation instructions for other OS as well.
-We would recommend using [Anaconda](https://store.continuum.io/cshop/anaconda/), which bundles togther most of the required packages.
-After installing Anaconda, please do the following:
-
-- Updating anaconda
-```bash
-conda update --yes conda
-```
-
-- Installing HDF5 libaries and python-dev
-```bash
-sudo apt-get install libhdf5-serial-dev python-dev
-```
-
-- Installing git client
-```bash
-sudo apt-get install git
-```
-
-- Installing pip and other dependencies which might be missing from Anaconda
-```bash
-conda install --yes pip numpy scipy six scikit-learn pandas numexpr pytables dateutil matplotlib networkx
-```
-
-- Installing [NILM Metadata](https://github.com/nilmtk/nilm_metadata).
-```bash
-git clone https://github.com/nilmtk/nilm_metadata/
-cd nilm_metadata
-python setup.py develop
-cd ..
-```
-
-- Installing [hmmlearn](https://github.com/hmmlearn/hmmlearn)
-```bash
-git clone git://github.com/hmmlearn/hmmlearn.git
-cd hmmlearn
-python setup.py install
-cd ..
-```
-
-- Misc. pip installs
-```bash
-pip install psycopg2 nose coveralls coverage
-```
-
-- Finally! Install nilmtk
-```bash
-git clone https://github.com/nilmtk/nilmtk.git
-cd nilmtk
-python setup.py develop
-cd..
-```
-
-- Run tests
-```bash
-cd nilmtk
-nosetests
-```
-
-##### Installing on Windows
-
-- Install [Anaconda](https://store.continuum.io/cshop/anaconda/), which bundles togther most of the required packages.
-
-- Install [git](http://git-scm.com/download/win) client
-
-- Installing pip and other dependencies which might be missing from Anaconda
-```bash
-$ conda install --yes pip numpy scipy six scikit-learn pandas numexpr pytables dateutil matplotlib networkx
-```
-
-- Installing [NILM Metadata](https://github.com/nilmtk/nilm_metadata) from git bash
-```bash
-$ git clone https://github.com/nilmtk/nilm_metadata/
-$ cd nilm_metadata
-$ python setup.py develop
-$ cd ..
-```
-
-- Installing [hmmlearn](https://github.com/hmmlearn/hmmlearn)
-```bash
-git clone git://github.com/hmmlearn/hmmlearn.git
-cd hmmlearn
-python setup.py install
-cd ..
-```
-
--  Installing postgresql support (currently needed for WikiEnergy converter)
-Download release for your python environment:
-http://www.stickpeople.com/projects/python/win-psycopg/
-
-- Misc. pip installs
-```bash
-$ pip install nose pbs coveralls coverage
-```
-
-- Finally! Install nilmtk from git bash
-```bash
-$ git clone https://github.com/nilmtk/nilmtk.git
-$ cd nilmtk
-$ python setup.py develop
-$ cd..
-```
-
-- Run tests
-```bash
-$ cd nilmtk
-$ nosetests
-```
-
 

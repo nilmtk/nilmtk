@@ -43,6 +43,14 @@ nilmtk.stats.goodsectionsresults module
     :undoc-members:
     :show-inheritance:
 
+nilmtk.stats.histogram module
+-----------------------------
+
+.. automodule:: nilmtk.stats.histogram
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 nilmtk.stats.totalenergy module
 -------------------------------
 
