@@ -161,7 +161,7 @@ def find_steady_states(dataframe, min_n_samples=2, stateThreshold=15,
     # than the noise threshold
     #  https://github.com/nilmtk/nilmtk/issues/400
 
-    if steadyStates[0] > noise_level and index_transitions[0] == index_steadystates[0] == dataframe.iloc[0].name:
+    if np.sum(steadyStates[0] > noise_level) and index_transitions[0] == index_steadystates[0] == dataframe.iloc[0].name:
         transitions = transitions[1:]
         index_transitions = index_transitions[1:]
         steadyStates = steadyStates[1:]
@@ -179,7 +179,7 @@ def find_steady_states(dataframe, min_n_samples=2, stateThreshold=15,
                    2: ['active average', 'reactive average']}
 
     
-    if len(index_transitions)==0:
+    if len(index_transitions) == 0:
         # No events
         return pd.DataFrame(), pd.DataFrame()
     else:
