@@ -9,6 +9,23 @@ from nilmtk.measurement import LEVEL_NAMES
 from nilmtk.utils import check_directory_exists, get_datastore
 from nilm_metadata import convert_yaml_to_hdf5
 from inspect import currentframe, getfile, getsourcefile
+from copy import deepcopy
+
+def reindex_fill_na(df, idx):
+    df_copy = deepcopy(df)
+    df_copy = df_copy.reindex(idx)
+
+    power_columns = [
+        x for x in df.columns if x[0] in ['power']]
+    non_power_columns = [x for x in df.columns if x not in power_columns]
+
+    for power in power_columns:
+        df_copy[power].fillna(0, inplace=True)
+    for measurement in non_power_columns:
+        df_copy[measurement].fillna(
+            df[measurement].median(), inplace=True)
+
+    return df_copy
 
 
 column_mapping = {
@@ -31,6 +48,9 @@ column_mapping = {
 
 TIMESTAMP_COLUMN_NAME = "timestamp"
 TIMEZONE = "Asia/Kolkata"
+START_DATETIME, END_DATETIME = '7-13-2013', '8-4-2013'
+FREQ = "1T"
+
 
 def convert_iawe(iawe_path, output_filename, format="HDF"):
     """
@@ -43,13 +63,15 @@ def convert_iawe(iawe_path, output_filename, format="HDF"):
     """
 
     check_directory_exists(iawe_path)
+    idx = pd.DatetimeIndex(start=START_DATETIME, end=END_DATETIME, freq=FREQ)
+    idx = idx.tz_localize('GMT').tz_convert(TIMEZONE)
 
     # Open data store
     store = get_datastore(output_filename, format, mode='w')
     electricity_path = join(iawe_path, "electricity")
 
     # Mains data
-    for chan in range(1, 13):
+    for chan in range(1, 12):
         key = Key(building=1, meter=chan)
         filename = join(electricity_path, "%d.csv" % chan)
         print('Loading ', chan)
@@ -64,6 +86,9 @@ def convert_iawe(iawe_path, output_filename, format="HDF"):
         df = df.dropna()
         df = df.astype(np.float32)
         df = df.sort_index()
+        df = df.resample("1T")
+        df = reindex_fill_na(df, idx)
+        assert df.isnull().sum().sum() == 0
         store.put(str(key), df)
     store.close()
     convert_yaml_to_hdf5(join(_get_module_directory(), 'metadata'),
