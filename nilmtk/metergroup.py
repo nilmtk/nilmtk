@@ -1361,7 +1361,10 @@ class MeterGroup(Electric):
 
     def _plot_separate_lines(self, ax=None, plot_legend=True, **kwargs):
         for meter in self.meters:
-            ax = meter.plot(ax=ax, plot_legend=False, **kwargs)
+            if isinstance(meter, MeterGroup):
+                ax = meter.plot(ax=ax, plot_legend=False, kind='sum', **kwargs)
+            else:
+                ax = meter.plot(ax=ax, plot_legend=False, **kwargs)
         if plot_legend:
             plt.legend()
         return ax
