@@ -306,11 +306,7 @@ class ElecMeter(Hashable, Electric):
         # METER ROOM
         room = self.metadata.get('room')
         if room:
-            string += ', room={}'.format(room['name'])
-            try:
-                string += '{:d}'.format(room['instance'])
-            except KeyError:
-                pass
+            string += ', room={}'.format(room)
 
         string += ')'
         return string
