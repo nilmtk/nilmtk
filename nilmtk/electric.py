@@ -189,6 +189,10 @@ class Electric(object):
         if plot_kwargs is None:
             plot_kwargs = {}
         plot_kwargs.setdefault('label', self.label())
+        # Pandas 0.16.1 has a bug where 'label' isn't respected. See:
+        # https://github.com/nilmtk/nilmtk/issues/407
+        # The following line is a work around for this bug.
+        power_series.name = self.label()
         ax = power_series.plot(ax=ax, **plot_kwargs)
         ax.set_ylabel('Power ({})'.format(unit))
         if plot_legend:
