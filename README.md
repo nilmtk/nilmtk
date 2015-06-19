@@ -12,7 +12,7 @@ NILM is sometimes called:
 * "non-intrusive appliance load monitoring (NALM or NIALM)"
 * "[electriciy | energy | smart meter] disaggregation"
 
-Below is an illustration (produced using nilmtk) of what NILM, in general, can do.
+Below is an example of sub-metered appliance-level data, which NILM algorithms aim to produce. N.B. this is not the output of a NILMTK algorithm!
 
 <img src="https://dl.dropboxusercontent.com/u/75845627/nilmtk/submetered.png" alt="Drawing" style="width: 40% height: 40%;"/>
 
