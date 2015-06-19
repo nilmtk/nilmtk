@@ -16,13 +16,6 @@ Below is an example of sub-metered appliance-level data, which NILM algorithms a
 
 <img src="https://dl.dropboxusercontent.com/u/75845627/nilmtk/submetered.png" alt="Drawing" style="width: 40% height: 40%;"/>
 
-##### History
-
-* April 2014: v0.1 released
-* June 2014: NILMTK presented at [ACM e-Energy](http://conferences.sigcomm.org/eenergy/2014/)
-* July 2014: v0.2 released
-* Nov 2014: NILMTK wins best demo award at [ACM BuildSys](http://www.buildsys.org/2014/)
-
 ##### Documentation
 
 http://nilmtk.github.io/nilmtk/
@@ -87,6 +80,13 @@ as a guide to the current API.
 
 * [NILMTK-Announce mailing list](https://groups.google.com/forum/#!forum/nilmtk-announce): stay up to speed with NILMTK.  It will be a fairly low-traffic mailing list.  We'll just announce new versions, new docs etc.
 * [NILMTK on Twitter](https://twitter.com/nilmtk).
+
+##### History
+
+* April 2014: v0.1 released
+* June 2014: NILMTK presented at [ACM e-Energy](http://conferences.sigcomm.org/eenergy/2014/)
+* July 2014: v0.2 released
+* Nov 2014: NILMTK wins best demo award at [ACM BuildSys](http://www.buildsys.org/2014/)
 
 ##### Current state of the project
 
