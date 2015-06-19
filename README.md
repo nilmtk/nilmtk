@@ -16,6 +16,8 @@ Below is an example of sub-metered appliance-level data, which NILM algorithms a
 
 <img src="https://dl.dropboxusercontent.com/u/75845627/nilmtk/submetered.png" alt="Drawing" style="width: 40% height: 40%;"/>
 
+NILMTK is a toolkit designed to help researchers evaluate the accuracy of NILM algorithms. It is not yet capable of out-of-the-box disaggregation, although we hope that it might be some time in the future.
+
 ##### Documentation
 
 http://nilmtk.github.io/nilmtk/
@@ -87,16 +89,6 @@ as a guide to the current API.
 * June 2014: NILMTK presented at [ACM e-Energy](http://conferences.sigcomm.org/eenergy/2014/)
 * July 2014: v0.2 released
 * Nov 2014: NILMTK wins best demo award at [ACM BuildSys](http://www.buildsys.org/2014/)
-
-##### Current state of the project
-
-The project is in its early stages.
-
-Please note that NILMTK is currently a research tool.  It is not yet
-ready for use by end-users, although we certainly hope that NILMTK
-will be capable of doing 'plug and play' disaggregation in the future.
-
-Please see the docs for more info.
 
 ##### Submitting a bug report
 
