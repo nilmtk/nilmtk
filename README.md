@@ -1,117 +1,108 @@
+# NILMTK: Non-Intrusive Load Monitoring Toolkit
 
-NILMTK: Non-Intrusive Load Monitoring Toolkit
-======
-
-Non-Intrusive Load Monitoring (NILM) is the process of estimating the energy consumed by individual
-appliances given just a whole-house power meter
-reading.  In other words, it produces an (estimated) itemised
-energy bill from just a single, whole-house power meter.
+Non-Intrusive Load Monitoring (NILM) is the process of estimating the
+energy consumed by individual appliances given just a whole-house
+power meter reading.  In other words, it produces an (estimated)
+itemised energy bill from just a single, whole-house power meter.
 
 NILM is sometimes called:
 
 * "non-intrusive appliance load monitoring (NALM or NIALM)"
 * "[electriciy | energy | smart meter] disaggregation"
 
-NILMTK is a toolkit designed to help researchers evaluate the accuracy of NILM algorithms. It is not yet capable of out-of-the-box disaggregation, although we hope that it might be some time in the future.
+NILMTK is a toolkit designed to help *researchers* evaluate the
+accuracy of NILM algorithms. **NILMTK is not yet suitable for end
+users because NILMTK is not yet capable of out-of-the-box
+disaggregation (i.e. disaggregation where you do not yet have
+submetered training data), although we hope that it might be some time
+in the future**.
 
-Below is an example of sub-metered appliance-level data, which NILM algorithms aim to produce. N.B. this is not the output of a NILMTK algorithm!
+Below is an example of sub-metered appliance-level data, which NILM
+algorithms aim to produce. N.B. this is not the output of a NILMTK
+algorithm!
 
 <img src="https://dl.dropboxusercontent.com/u/75845627/nilmtk/submetered.png" alt="Drawing" style="width: 40% height: 40%;"/>
 
-##### Documentation
 
-http://nilmtk.github.io/nilmtk/
+# Why a toolkit for NILM?
 
-##### Installation guide
+We quote our [NILMTK paper](http://arxiv.org/pdf/1404.3878v1.pdf)
+explaining the need for a NILM toolkit:
 
-http://nilmtk.github.io/nilmtk/master/install.html
+  > Empirically comparing disaggregation algorithms is currently
+  > virtually impossible. This is due to the different data sets used,
+  > the lack of reference implementations of these algorithms and the
+  > variety of accuracy metrics employed.
 
-##### Publications
 
-* Batra, N., Kelly, J., Parson, O., Dutta, H., Knottenbelt, W., Rogers, A., Singh, A., Srivastava, M. (2014). NILMTK: An Open Source Toolkit for Non-intrusive Load Monitoring. In Fifth International Conference on Future Energy Systems (ACM e-Energy). Cambridge, UK. arXiv:[1404.3878](http://arxiv.org/abs/1404.3878) DOI:[10.1145/2602044.2602051](http://dx.doi.org/10.1145/2602044.2602051)
+# What nilmtk provides
 
-Bibtex:
+To address this challenge, we present the Non-intrusive Load Monitoring
+Toolkit (NILMTK); an open source toolkit designed specifically to enable
+the comparison of energy disaggregation algorithms in a reproducible
+manner. This work is the first research to compare multiple
+disaggregation approaches across multiple publicly available data sets.
+NILMTK includes:
 
-```
-@inproceedings{NILMTK,
-   title         = {NILMTK: An Open Source Toolkit for
-                    Non-intrusive Load Monitoring},
-   year          = {2014},
-   author        = {Batra, Nipun and Kelly, Jack and Parson, Oliver and
-                    Dutta, Haimonti and Knottenbelt, William and
-                    Rogers, Alex and Singh, Amarjeet and Srivastava, Mani},
-   booktitle     = {Fifth International Conference on Future Energy
-                    Systems (ACM e-Energy)},
-   address       = {Cambridge, UK},
-   archivePrefix = {arXiv},
-   arxivId       = {1404.3878},
-   doi           = {10.1145/2602044.2602051},
-   eprint        = {1404.3878}
-}
-```
+-  parsers for a range of existing data sets (8 and counting)
+-  a collection of preprocessing algorithms
+-  a set of statistics for describing data sets
+-  3 reference benchmark disaggregation algorithms and a suite of
+   accuracy metrics
+-  a common set of accuracy metrics
+-  and much more!
 
-* Kelly, J., Batra, N., Parson, O., Dutta, H., Knottenbelt, W., Rogers,
-A., Singh, A., Srivastava, M. (2014). NILMTK v0.2: A Non-intrusive
-Load Monitoring Toolkit for Large Scale Data Sets.  In
-The first ACM Workshop On Embedded Systems For Energy-Efficient Buildings at BuildSys 2014. Memphis, USA. DOI:[10.1145/2674061.2675024](http://dx.doi.org/10.1145/2674061.2675024) arXiv:[1409.5908](http://arxiv.org/abs/1409.5908)
 
-Bibtex:
+# Documentation
 
-```
-@Inproceedings{kelly2014NILMTKv02,
-  Title      = {NILMTK v0.2: A Non-intrusive Load Monitoring
-                Toolkit for Large Scale Data Sets},
-  Author     = {Kelly, Jack and Batra, Nipun and Parson, Oliver and
-                Dutta, Haimonti and Knottenbelt, William and
-                Rogers, Alex and Singh, Amarjeet and Srivastava, Mani},
-  Booktitle  = {The first ACM Workshop On Embedded Systems For
-                Energy-Efficient Buildings at BuildSys 2014},
-  Year       = {2014},
-  Doi        = {10.1145/2674061.2675024},
-  Eprint     = {1409.5908},
-  Eprinttype = {arXiv},
-  Address    = {Memphis, USA}
-}
-```
+* User Guide
+  * Installation
+  * Data: convert and load data.  Description of the data format.
+  * Statistics
+  * Preprocessing
+  * Disaggregation
+  * Metrics
+  * Cookbook
+* Development Guide
+  * Contributing  (including submitting a bug report)
+  * Architectural overview
+  * Overview of the flow of data through NILMTK
+  * Out of core processing
+  * Write a dataset importer
+  * Write a disaggregation algorithm
+  * Write a metric
+  * Changelog
 
-N.B. NILMTK has evolved *a lot* since these papers were published! Please use the
+
+# Publications
+
+Please see our [list of NILMTK publications](http://nilmtk.github.io/#publications).  If you use NILMTK in academic work then please consider citing our papers.
+
+Please note that NILMTK has evolved *a lot* since these papers were published! Please use the
 [online docs](http://nilmtk.github.io/nilmtk/master/index.html)
 as a guide to the current API.
 
-##### Keeping up to date with NILMTK
 
-* [NILMTK-Announce mailing list](https://groups.google.com/forum/#!forum/nilmtk-announce): stay up to speed with NILMTK.  It will be a fairly low-traffic mailing list.  We'll just announce new versions, new docs etc.
+# Keeping up to date with NILMTK
+
+* [NILMTK-Announce mailing list](https://groups.google.com/forum/#!forum/nilmtk-announce): stay up to speed with NILMTK.  This is a low-traffic mailing list.  We'll just announce new versions, new docs etc.
 * [NILMTK on Twitter](https://twitter.com/nilmtk).
 
-##### History
+
+# History
 
 * April 2014: v0.1 released
 * June 2014: NILMTK presented at [ACM e-Energy](http://conferences.sigcomm.org/eenergy/2014/)
 * July 2014: v0.2 released
 * Nov 2014: NILMTK wins best demo award at [ACM BuildSys](http://www.buildsys.org/2014/)
 
-##### Submitting a bug report
+For more detail, please see our [changelog](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/developer_guide/changelog.md).
 
-Please use our [github issue queue](https://github.com/nilmtk/nilmtk/issues) to submit bug reports, rather than emailing them, which will allow any of us to respond to your issue.  If your bug concerns one of NILMTK's dependencies then please contact the relevant project.
 
-Before opening an issue:
-
-1. Search the issue queue in case a duplicate already exists
-2. Pull the latest changes from the repository master branch to see if the error goes away
-
-If not, please open a new issue, ensuring:
-
-1. The title summarises the issue
-2. The issue is described in prose
-3. A snippet of code is included which will allow us to recreate the bug
-4. A copy-paste of the stack produced error
-5. Include a copy-paste of the output from nilmtk.utils.show_versions()
-
-##### Test coverage
+##### Code health
 
 [![Build Status](https://travis-ci.org/nilmtk/nilmtk.svg?branch=master)](https://travis-ci.org/nilmtk/nilmtk) 
 
 [![Coverage Status](https://coveralls.io/repos/nilmtk/nilmtk/badge.png)](https://coveralls.io/r/nilmtk/nilmtk)
 
 [![Code Health](https://landscape.io/github/nilmtk/nilmtk/master/landscape.png)](https://landscape.io/github/nilmtk/nilmtk/master)
-
