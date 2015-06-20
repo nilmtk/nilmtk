@@ -55,7 +55,7 @@ NILMTK includes:
 
 # Documentation
 
-[NILMTK Documentation](https://github.com/nilmtk/nilmtk/tree/master/docs/manual/table_of_contents.md)
+[NILMTK Documentation](https://github.com/nilmtk/nilmtk/tree/master/docs/manual)
 
 
 # Publications
@@ -63,7 +63,7 @@ NILMTK includes:
 Please see our [list of NILMTK publications](http://nilmtk.github.io/#publications).  If you use NILMTK in academic work then please consider citing our papers.
 
 Please note that NILMTK has evolved *a lot* since these papers were published! Please use the
-[online docs](https://github.com/nilmtk/nilmtk/tree/master/docs/manual/table_of_contents.md)
+[online docs](https://github.com/nilmtk/nilmtk/tree/master/docs/manual)
 as a guide to the current API.
 
 
