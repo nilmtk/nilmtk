@@ -55,7 +55,7 @@ NILMTK includes:
 
 # Documentation
 
-[NILMTK Documentation](https://github.com/nilmtk/nilmtk/tree/master/docs/manual/table_of_contents)
+[NILMTK Documentation](https://github.com/nilmtk/nilmtk/tree/master/docs/manual/table_of_contents.md)
 
 
 # Publications
