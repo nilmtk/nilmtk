@@ -1,8 +1,11 @@
-# NILMTK Documentation Table of Contents
+# NILMTK Documentation
+
+## Contents
 
 (list items which are not links are planned but are not yet written)
 
-[User Guide](https://github.com/nilmtk/nilmtk/tree/master/docs/manual/user_guide)
+### [User Guide](https://github.com/nilmtk/nilmtk/tree/master/docs/manual/user_guide)
+
 * [Introduction](https://github.com/nilmtk/nilmtk/blob/master/README.md)
 * [Installation](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/user_guide/install.md)
 * [Data](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/user_guide/data.ipynb): convert and load data.
@@ -13,7 +16,8 @@
 * [Cookbook](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/user_guide/cookbook.md)
 * [IPython notebook demos](https://github.com/nilmtk/nilmtk/tree/master/notebooks)
 
-[Development Guide](https://github.com/nilmtk/nilmtk/tree/master/docs/manual/development_guide)
+### [Development Guide](https://github.com/nilmtk/nilmtk/tree/master/docs/manual/development_guide)
+
 * [API Documentation](http://nilmtk.github.io/nilmtk/master/index.html)
 * [Contributing](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/development_guide/contributing.md)  (including submitting a bug report)
 * Architectural overview
@@ -23,4 +27,3 @@
 * Writing a disaggregation algorithm
 * Writing a metric
 * [Changelog](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/development_guide/changelog.md)
-
