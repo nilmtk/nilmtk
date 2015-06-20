@@ -14,23 +14,21 @@ If not, please open a new issue, ensuring:
 * The issue is described briefly in prose
 * A minimal snippet of code is included which will allow us to recreate the bug.  Please use github's pretty formatting for your code.  For example, if you put this in your issue:
 
-		<code>
-		\```python
-		print("hello")
-		\```
-		</code>
-
-		Then this will be rendered:
 		```python
 		print("hello")
 		```
+
+Then this will be rendered:
+```python
+print("hello")
+```
 
 * A copy-paste of the *entire* stack dump produced by the error
 * Please run this in Python:
-		```python
-		from nilmtk.utils import show_versions
-		show_versions()
-		```
+```python
+from nilmtk.utils import show_versions
+show_versions()
+```
   And copy-and-paste the output of `show_versions()` into your issue.
 
 
