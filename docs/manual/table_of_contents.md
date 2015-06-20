@@ -4,7 +4,7 @@
 
 [User Guide](https://github.com/nilmtk/nilmtk/tree/master/docs/manual/user_guide)
 * [Introduction](https://github.com/nilmtk/nilmtk/blob/master/README.md)
-* [Installation](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/user_guide/install.ipynb)
+* [Installation](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/user_guide/install.md)
 * [Data](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/user_guide/data.ipynb): convert and load data.
 * [The Load API: Loading data into memory](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/user_guide/loading_data_into_memory.ipynb)
 * [Meter selection and basic statistics](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/user_guide/elecmeter_and_metergroup.ipynb)
