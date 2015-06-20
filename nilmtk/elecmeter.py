@@ -510,7 +510,7 @@ class ElecMeter(Hashable, Electric):
             return [(physical_quantity, best_ac_type)]
 
     def _convert_physical_quantity_and_ac_type_to_cols(
-            self, physical_quantity=None, ac_type=None, cols=None, 
+            self, physical_quantity=None, ac_type=None, cols=None,
             **kwargs):
         """Returns kwargs dict with physical_quantity and ac_type removed
         and cols populated appropriately."""
