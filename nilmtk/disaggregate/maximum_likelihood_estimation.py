@@ -576,7 +576,9 @@ class MLE(Disaggregator):
 
 	def featuresHist(self, **kwargs):
 		"""
-		Visualization tool to check if feature model distributions fit to samples for feature training (onpower_train, offpower_train and duration_train)  
+		Visualization tool to check if feature model distributions fit 
+		to samples for feature training (onpower_train, offpower_train 
+		 and duration_train)  
 
 		Parameters
 		----------
@@ -607,7 +609,7 @@ class MLE(Disaggregator):
 			elif key == 'bins_offpower': 
 				bins_offpower = kwargs[key]
 			elif key == 'bins_duration': 
-				bin_duration = kwargs[key]
+				bins_duration = kwargs[key]
 			else: 
 				print "Non valid kwarg" 
 
