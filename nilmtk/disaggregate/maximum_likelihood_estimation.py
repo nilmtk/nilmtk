@@ -447,10 +447,11 @@ class MLE(Disaggregator):
 
     def no_overfitting(self):
         """
-        Crops feature_train (onpower_train, offpower_train and duration_train) to get same samples from different appliances (same model-appliance) and avoids overfittings to a many samples appliance.
+        Crops feature_train(onpower_train, offpower_train and duration_train)
+        to get same samples from different appliances(same model-appliance) 
+        and avoids overfittings to a many samples appliance.
         Updates stats attribute.
         Does the retraining.
-
         """
 
         # Instance with minimun length should be the maximum length
@@ -704,7 +705,7 @@ class MLE(Disaggregator):
 
         # Duration
         x = np.arange(bins_duration.min(), bins_duration.max()
-            +np.diff(bins_duration)[0], np.diff(bins_duration)[0] / float(1000)).reshape(-1, 1)
+                      + np.diff(bins_duration)[0], np.diff(bins_duration)[0] / float(1000)).reshape(-1, 1)
         if self.duration['name'] == 'norm':
             y = self.duration['model'].pdf(x)
         elif self.duration['name'] == 'gmm':
@@ -723,6 +724,7 @@ class MLE(Disaggregator):
         ax3.set_title("Feature: Duration")
         ax3.set_ylabel("Counts")
         ax3.set_xlabel("Seconds")
+    
 
     def featuresHist_colors(self, **kwargs):
         """
