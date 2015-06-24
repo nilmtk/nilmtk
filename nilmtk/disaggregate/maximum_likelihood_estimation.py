@@ -142,10 +142,10 @@ class MLE(Disaggregator):
                 else:
                     print "Training on chunk"
                     self.train_on_chunk(pd.DataFrame(chunk.resample(
-                                                    self.sample_period,
-                                                    how=self.sampling_method)),
-                                                    identifier
-                                                    )
+                        self.sample_period,
+                        how=self.sampling_method)),
+                        identifier
+                    )
                 # self.train_on_chunk(pd.DataFrame(chunk),identifier)
 
             instance += 1
@@ -185,8 +185,8 @@ class MLE(Disaggregator):
         if len(edges) > 1:
             offpower = edges[edges.apply(np.sign).diff() == -2]
             onpower = edges[edges.apply(np.sign).diff(-1) == 2]
-            duration = offpower.reset_index().date_time -
-            onpower.reset_index().date_time
+            duration = offpower.reset_index().date_time - \
+                onpower.reset_index().date_time
             duration = duration.astype('timedelta64[s]')
 
             # Set consistent index for concatenation:
@@ -204,12 +204,12 @@ class MLE(Disaggregator):
 
             number_of_events = len(onpower)
             # Features (concatenation)
-            self.onpower_train = pd.concat([self.onpower_train, onpower]).
-            reset_index(drop=True)
-            self.offpower_train = pd.concat([self.offpower_train, offpower]).
-            reset_index(drop=True)
-            self.duration_train = pd.concat([self.duration_train, duration]).
-            reset_index(drop=True)
+            self.onpower_train = pd.concat(
+                [self.onpower_train, onpower]).reset_index(drop=True)
+            self.offpower_train = pd.concat(
+                [self.offpower_train, offpower]).reset_index(drop=True)
+            self.duration_train = pd.concat(
+                [self.duration_train, duration]).reset_index(drop=True)
 
         else:
             number_of_events = 0
@@ -281,8 +281,8 @@ class MLE(Disaggregator):
         output_datastore : instance of nilmtk.DataStore or str of datastore location
 
         """
-         dis_main = pd.DataFrame()
-         chunk_number = 0
+        dis_main = pd.DataFrame()
+        chunk_number = 0
 
         for chunk in mains.power_series():
             dis_chunk = self.disaggregate_chunk(
@@ -331,8 +331,8 @@ class MLE(Disaggregator):
             if units_mismatched:
                 stringError = self.appliance + " cannot be disaggregated. " + self.appliance + \
                     " is a non-resistive elementa and  units mismatches: disaggregated data is in " + \
-                        str(self.units) + \
-                            " and aggregated data is " + str(units)
+                    str(self.units) + \
+                    " and aggregated data is " + str(units)
                 raise ValueError(stringError)
         else:
             units = chunk.columns[0]
@@ -372,7 +372,7 @@ class MLE(Disaggregator):
                     pon = self.onpower['model'].pmf(deltaOn)
                 else:
                     raise AttributeError("Wrong model for onpower: " + self.onpower['name'] +
-                        " It must be: gmm, norm or poisson")
+                                         " It must be: gmm, norm or poisson")
                 for offevent in offevents.iterrows():
                     offTime = offevent[0]
                     deltaOff = offevent[1][1]
@@ -388,7 +388,7 @@ class MLE(Disaggregator):
                         poff = self.offpower['model'].pmf(deltaOff)
                     else:
                         raise AttributeError("Wrong model for offpower: " + self.offpower['name'] +
-                            " It must be: gmm, norm or poisson")
+                                             " It must be: gmm, norm or poisson")
 
                     duration = offTime - onTime
 
@@ -404,7 +404,7 @@ class MLE(Disaggregator):
                         pduration = self.duration['model'].pmf(seconds)
                     else:
                         raise AttributeError("Wrong model for duration: " + self.duration['name'] +
-                            " It must be: gmm, norm or poisson")
+                                             " It must be: gmm, norm or poisson")
 
                     likelihood = pon * poff * pduration
                     detection_list.append(
@@ -626,55 +626,51 @@ class MLE(Disaggregator):
 
         # Selecting bins automatically:
         bins_onpower = np.arange(self.onpower_train.min().values[0],
-                                self.onpower_train.min().values[0],
-                                (self.onpower_train.max().values[0] -
-                                    self.onpower_train.min().values[0]) / 50)
-                                )
+                                 self.onpower_train.max().values[0],
+                                 (self.onpower_train.max().values[0] -
+                                  self.onpower_train.min().values[0]) / 50)
 
-        bins_offpower=np.arange(self.offpower_train.min().values[0],
-                                self.offpower_train.min().values[0],
-                                (self.offpower_train.max().values[0] -
-                                    self.offpower_train.min().values[0]) / 50)
-                                )
+        bins_offpower = np.arange(self.offpower_train.min().values[0],
+                                  self.offpower_train.max().values[0],
+                                  (self.offpower_train.max().values[0] -
+                                   self.offpower_train.min().values[0]) / 50)
 
-        bins_duration=np.arange(self.duration_train.min().values[0],
-                                self.duration_train.min().values[0],
-                                (self.duration_train.max().values[0] -
-                                    self.duration_train.min().values[0]) / 50)
-                                )
+        bins_duration = np.arange(self.duration_train.min().values[0],
+                                  self.duration_train.max().values[0],
+                                  (self.duration_train.max().values[0] -
+                                   self.duration_train.min().values[0]) / 50)
 
         # If a bin has been specified update the bin sizes.
         for key in kwargs:
             if key == 'bins_onpower':
-                bins_onpower=kwargs[key]
+                bins_onpower = kwargs[key]
             elif key == 'bins_offpower':
-                bins_offpower=kwargs[key]
+                bins_offpower = kwargs[key]
             elif key == 'bins_duration':
-                bins_duration=kwargs[key]
+                bins_duration = kwargs[key]
             else:
                 print "Non valid kwarg"
 
         # Plot structure:
-        fig=plt.figure()
-        ax1=fig.add_subplot(311)
-        ax2=fig.add_subplot(312)
-        ax3=fig.add_subplot(313)
-
+        fig = plt.figure()
+        ax1 = fig.add_subplot(311)
+        ax2 = fig.add_subplot(312)
+        ax3 = fig.add_subplot(313)
 
         # Evaluating score for:
         # Onpower
-        x=np.arange(bins_onpower.min(), bins_onpower.max(
-            )+np.diff(bins_onpower)[0], np.diff(bins_onpower)[0] / float(1000)).reshape(-1, 1)
+        x = np.arange(bins_onpower.min(), bins_onpower.max()
+            +np.diff(bins_onpower)[0], np.diff(bins_onpower)[0] / float(1000)).reshape(-1, 1)
         if self.onpower['name'] == 'norm':
-            y=self.onpower['model'].pdf(x)
+            y = self.onpower['model'].pdf(x)
         elif self.onpower['name'] == 'gmm':
-            y=np.exp(self.onpower['model'].score(x))
+            y = np.exp(self.onpower['model'].score(x))
         elif self.onpower['name'] == 'poisson':
-            x=np.round(x)      # Decimal values produce odd y values
-            y=self.onpower['model'].pmf(x)
+            x = np.round(x)      # Decimal values produce odd y values
+            y = self.onpower['model'].pmf(x)
         else:
             raise AttributeError("Wrong model " + self.onpower['name'])
-        norm=pd.cut(
+        norm = pd.cut(
             self.onpower_train.onpower, bins=bins_onpower).value_counts().max() / max(y)
         # Plots for Onpower
         ax1.hist(
@@ -685,19 +681,19 @@ class MLE(Disaggregator):
         ax1.set_xlabel("Watts")
 
         # Offpower
-        x=np.arange(bins_offpower.min(), bins_offpower.max(
-            )+np.diff(bins_offpower)[0], np.diff(bins_offpower)[0] / float(1000)).reshape(-1, 1)
+        x = np.arange(bins_offpower.min(), bins_offpower.max()
+            +np.diff(bins_offpower)[0], np.diff(bins_offpower)[0] / float(1000)).reshape(-1, 1)
         if self.offpower['name'] == 'norm':
-            y=self.offpower['model'].pdf(x)
+            y = self.offpower['model'].pdf(x)
         elif self.offpower['name'] == 'gmm':
-            y=np.exp(self.offpower['model'].score(x))
+            y = np.exp(self.offpower['model'].score(x))
         elif self.offpower['name'] == 'poisson':
-            x=np.round(x)      # Decimal values produce odd y values
-            y=self.offpower['model'].pmf(x)
+            x = np.round(x)      # Decimal values produce odd y values
+            y = self.offpower['model'].pmf(x)
         else:
             raise AttributeError("Wrong model " + self.offpower['name'])
-        norm=pd.cut(self.offpower_train.offpower,
-                    bins=bins_offpower).value_counts().max() / max(y)
+        norm = pd.cut(self.offpower_train.offpower,
+                      bins=bins_offpower).value_counts().max() / max(y)
         # Plots for Offpower
         ax2.hist(self.offpower_train.offpower.values,
                  bins=bins_offpower, alpha=0.5)
@@ -707,19 +703,19 @@ class MLE(Disaggregator):
         ax2.set_xlabel("Watts")
 
         # Duration
-        x=np.arange(bins_duration.min(), bins_duration.max(
-            )+np.diff(bins_duration)[0], np.diff(bins_duration)[0] / float(1000)).reshape(-1, 1)
+        x = np.arange(bins_duration.min(), bins_duration.max()
+            +np.diff(bins_duration)[0], np.diff(bins_duration)[0] / float(1000)).reshape(-1, 1)
         if self.duration['name'] == 'norm':
-            y=self.duration['model'].pdf(x)
+            y = self.duration['model'].pdf(x)
         elif self.duration['name'] == 'gmm':
-            y=np.exp(self.duration['model'].score(x))
+            y = np.exp(self.duration['model'].score(x))
         elif self.duration['name'] == 'poisson':
-            x=np.round(x)      # Decimal values produce odd y values
-            y=self.duration['model'].pmf(x)
+            x = np.round(x)      # Decimal values produce odd y values
+            y = self.duration['model'].pmf(x)
         else:
             raise AttributeError("Wrong model " + self.duration['name'])
-        norm=pd.cut(self.duration_train.duration,
-                    bins=bins_duration).value_counts().max() / max(y)
+        norm = pd.cut(self.duration_train.duration,
+                      bins=bins_duration).value_counts().max() / max(y)
         # Plots for duration
         ax3.hist(self.duration_train.duration.values,
                  bins=bins_duration, alpha=0.5)
@@ -739,47 +735,47 @@ class MLE(Disaggregator):
             bins_feature: numpy.arange for plotting the hist with specified bin sizes.
         """
         # Selecting bins automatically:
-        bin_max=self.onpower_train.max().values[0]
-        bin_min=self.onpower_train.min().values[0]
-        step=(bin_max - bin_min) / 50
-        bins_onpower=np.arange(bin_min, bin_max, step)
+        bin_max = self.onpower_train.max().values[0]
+        bin_min = self.onpower_train.min().values[0]
+        step = (bin_max - bin_min) / 50
+        bins_onpower = np.arange(bin_min, bin_max, step)
 
-        bin_max=self.offpower_train.max().values[0]
-        bin_min=self.offpower_train.min().values[0]
-        step=(bin_max - bin_min) / 50
-        bins_offpower=np.arange(bin_min, bin_max, step)
+        bin_max = self.offpower_train.max().values[0]
+        bin_min = self.offpower_train.min().values[0]
+        step = (bin_max - bin_min) / 50
+        bins_offpower = np.arange(bin_min, bin_max, step)
 
-        bin_max=self.duration_train.max().values[0]
-        bin_min=self.duration_train.min().values[0]
-        step=(bin_max - bin_min) / 50
-        bins_duration=np.arange(bin_min, bin_max, step)
+        bin_max = self.duration_train.max().values[0]
+        bin_min = self.duration_train.min().values[0]
+        step = (bin_max - bin_min) / 50
+        bins_duration = np.arange(bin_min, bin_max, step)
 
         # Updating bins with specified values.
         for key in kwargs:
             if key == 'bins_onpower':
-                bins_onpower=kwargs[key]
+                bins_onpower = kwargs[key]
             elif key == 'bins_offpower':
-                bins_offpower=kwargs[key]
+                bins_offpower = kwargs[key]
             elif key == 'bins_duration':
-                bin_duration=kwargs[key]
+                bin_duration = kwargs[key]
             else:
                 print "Non valid kwarg"
 
         # Plot:
-        fig1=plt.figure()
-        ax1=fig1.add_subplot(311)
-        ax2=fig1.add_subplot(312)
-        ax3=fig1.add_subplot(313)
+        fig1 = plt.figure()
+        ax1 = fig1.add_subplot(311)
+        ax2 = fig1.add_subplot(312)
+        ax3 = fig1.add_subplot(313)
 
-        start=0
-        end=0
+        start = 0
+        end = 0
         for ind in np.arange(len(self.stats)):
 
             if self.stats[ind]['Nevents'] != 0:
                 if ind == 0:
-                    start=0
+                    start = 0
                 else:
-                    start=end
+                    start = end
                 end += self.stats[ind]['Nevents']
                 ax1.hist(
                     self.onpower_train[start:end].onpower.values, bins=bins_onpower, alpha=0.5)
@@ -799,4 +795,3 @@ class MLE(Disaggregator):
         ax3.set_title("Feature: Duration")
         ax3.set_xlabel("Seconds")
         ax3.set_ylabel("Counts")
-
