@@ -757,7 +757,7 @@ class MLE(Disaggregator):
             elif key == 'bins_offpower':
                 bins_offpower = kwargs[key]
             elif key == 'bins_duration':
-                bin_duration = kwargs[key]
+                bins_duration = kwargs[key]
             else:
                 print "Non valid kwarg"
 
