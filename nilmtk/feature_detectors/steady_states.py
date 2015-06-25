@@ -55,17 +55,17 @@ def find_steady_states(dataframe, min_n_samples=2, stateThreshold=15,
     """
     # Tells whether we have both real and reactive power or only real power
     num_measurements = len(dataframe.columns)
-    estimatedSteadyPower = np.array([0] * num_measurements)
-    lastSteadyPower = np.array([0] * num_measurements)
-    previousMeasurement = np.array([0] * num_measurements)
+    estimated_steady_power = np.array([0] * num_measurements)
+    last_steady_power = np.array([0] * num_measurements)
+    previous_measurement = np.array([0] * num_measurements)
 
     # These flags store state of power
 
-    instantaneousChange = False  # power changing this second
-    ongoingChange = False  # power change in progress over multiple seconds
+    instantaneous_change = False  # power changing this second
+    ongoing_change = False  # power change in progress over multiple seconds
 
     index_transitions = []  # Indices to use in returned Dataframe
-    index_steadystates = []
+    index_steady_states = []
     transitions = []  # holds information on transitions
     steady_states = []  # steadyStates to store in returned Dataframe
     N = 0  # N stores the number of samples in state
@@ -83,89 +83,87 @@ def find_steady_states(dataframe, min_n_samples=2, stateThreshold=15,
 
         # Step 2: this does the threshold test and then we sum the boolean
         # array.
-        thisMeasurement = row[1:3]
+        this_measurement = row[1:3]
         # logging.debug('The current measurement is: %s' % (thisMeasurement,))
         # logging.debug('The previous measurement is: %s' %
         # (previousMeasurement,))
 
-        stateChange = np.fabs(
-            np.subtract(thisMeasurement, previousMeasurement))
+        state_change = np.fabs(
+            np.subtract(this_measurement, previous_measurement))
         # logging.debug('The State Change is: %s' % (stateChange,))
 
-        if np.sum(stateChange > stateThreshold):
-            instantaneousChange = True
+        if np.sum(state_change > stateThreshold):
+            instantaneous_change = True
         else:
-            instantaneousChange = False
+            instantaneous_change = False
 
         # Step 3: Identify if transition is just starting, if so, process it
-        if (instantaneousChange and (not ongoingChange)):
+        if instantaneous_change and (not ongoing_change):
 
             # Calculate transition size
-            lastTransition = np.subtract(estimatedSteadyPower, lastSteadyPower)
+            last_transition = np.subtract(estimated_steady_power, last_steady_power)
             # logging.debug('The steady state transition is: %s' %
             # (lastTransition,))
 
             # Sum Boolean array to verify if transition is above noise level
-            if np.sum(np.fabs(lastTransition) > noise_level):
+            if np.sum(np.fabs(last_transition) > noise_level):
                 # 3A, C: if so add the index of the transition start and the
                 # power information
 
                 # Avoid outputting first transition from zero
                 index_transitions.append(time)
                 # logging.debug('The current row time is: %s' % (time))
-                transitions.append(lastTransition)
+                transitions.append(last_transition)
 
                 # I think we want this, though not specifically in Hart's algo notes
                 # We don't want to append a steady state if it's less than min samples in length.
                 # if N > min_n_samples:
-                index_steadystates.append(time)
+                index_steady_states.append(time)
                 # logging.debug('The ''time'' stored is: %s' % (time))
                 # last states steady power
-                steady_states.append(estimatedSteadyPower)
+                steady_states.append(estimated_steady_power)
 
             # 3B
-            lastSteadyPower = estimatedSteadyPower
+            last_steady_power = estimated_steady_power
             # 3C
             time = row[0]
 
         # Step 4: if a new steady state is starting, zero counter
-        if instantaneousChange:
+        if instantaneous_change:
             N = 0
 
         # Hart step 5: update our estimate for steady state's energy
-        estimatedSteadyPower = np.divide(
-            np.add(np.multiply(N, estimatedSteadyPower),
-                   thisMeasurement), (N + 1))
+        estimated_steady_power = np.divide(
+            np.add(np.multiply(N, estimated_steady_power),
+                   this_measurement), (N + 1))
         # logging.debug('The steady power estimate is: %s' %
         #    (estimatedSteadyPower,))
         # Step 6: increment counter
-        N = N + 1
+        N += 1
 
         # Step 7
-        ongoingChange = instantaneousChange
+        ongoing_change = instantaneous_change
 
         # Step 8
-        previousMeasurement = thisMeasurement
+        previous_measurement = this_measurement
 
-
-
-    #Appending last edge
-    lastTransition = np.subtract(estimatedSteadyPower, lastSteadyPower)
-    if np.sum(np.fabs(lastTransition) > noise_level):
+    # Appending last edge
+    last_transition = np.subtract(estimated_steady_power, last_steady_power)
+    if np.sum(np.fabs(last_transition) > noise_level):
         index_transitions.append(time)
-        transitions.append(lastTransition)
-        index_steadystates.append(time)
-        steady_states.append(estimatedSteadyPower)
+        transitions.append(last_transition)
+        index_steady_states.append(time)
+        steady_states.append(estimated_steady_power)
 
-    #Removing first edge if the starting steady state power is more
+    # Removing first edge if the starting steady state power is more
     # than the noise threshold
     #  https://github.com/nilmtk/nilmtk/issues/400
 
-    if np.sum(steady_states[0] > noise_level) and index_transitions[0] == index_steadystates[0] == dataframe.iloc[0].name:
+    if np.sum(steady_states[0] > noise_level) and index_transitions[0] == index_steady_states[0] == dataframe.iloc[0].name:
         transitions = transitions[1:]
         index_transitions = index_transitions[1:]
         steady_states = steady_states[1:]
-        index_steadystates = index_steadystates[1:]
+        index_steady_states = index_steady_states[1:]
 
     print("Edge detection complete.")
 
@@ -189,15 +187,15 @@ def find_steady_states(dataframe, min_n_samples=2, stateThreshold=15,
 
         print("Creating states frame ...")
         sys.stdout.flush()
-        steady_states = pd.DataFrame(data=steady_states, index=index_steadystates,
-                                    columns=cols_steady[num_measurements])
+        steady_states = pd.DataFrame(data=steady_states, index=index_steady_states,
+                                     columns=cols_steady[num_measurements])
         print("States frame created.")
         print("Finished.")
         return steady_states, transitions
 
 
-def cluster(X, max_num_clusters=3):
-    '''Applies clustering on reduced data, 
+def cluster(x, max_num_clusters=3):
+    """Applies clustering on reduced data,
     i.e. data where power is greater than threshold.
 
     Parameters
@@ -209,9 +207,9 @@ def cluster(X, max_num_clusters=3):
     -------
     centroids : ndarray of int32s
         Power in different states of an appliance, sorted
-    '''
+    """
     # Find where power consumption is greater than 10
-    data = _transform_data(X)
+    data = _transform_data(x)
 
     # Find clusters
     centroids = _apply_clustering(data, max_num_clusters)
@@ -223,7 +221,8 @@ def cluster(X, max_num_clusters=3):
 
 
 def _transform_data(data):
-    '''Subsamples if needed and converts to column vector (which is what
+    """
+    Subsamples if needed and converts to column vector (which is what
     scikit-learn requires).
 
     Parameters
@@ -234,7 +233,7 @@ def _transform_data(data):
     -------
     data_above_thresh : ndarray
         column vector
-    '''
+    """
 
     MAX_NUMBER_OF_SAMPLES = 2000
     MIN_NUMBER_OF_SAMPLES = 20

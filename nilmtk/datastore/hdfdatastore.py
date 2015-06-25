@@ -37,8 +37,7 @@ class HDFDataStore(DataStore):
     @doc_inherit
     def load(self, key, cols=None, sections=None, n_look_ahead_rows=0,
              chunksize=MAX_MEM_ALLOWANCE_IN_BYTES, verbose=False):
-        
-        # TODO: calculate chunksize default based on physical 
+        # TODO: calculate chunksize default based on physical
         # memory installed and number of columns
 
         # Make sure key has a slash at the front but not at the end.
@@ -54,8 +53,14 @@ class HDFDataStore(DataStore):
         sections = [TimeFrame()] if sections is None else sections
         sections = TimeFrameGroup(sections)
 
+        # Make replace any Nones with '' in cols:
+        cols = [('' if pq is None else pq, '' if ac is None else ac)
+                for pq, ac in cols]
+
         if verbose:
-            print("HDFDataStore.load. key='{}'".format(key))
+            print("HDFDataStore.load(key='{}', cols='{}', sections='{}',"
+                  " n_look_ahead_rows='{}', chunksize='{}')"
+                  .format(key, cols, sections, n_look_ahead_rows, chunksize))
 
         self.all_sections_smaller_than_chunksize = True
 
@@ -112,7 +117,7 @@ class HDFDataStore(DataStore):
                     chunk_end_i = section_end_i
                 chunk_end_i += 1
 
-                data = self.store.select(key=key, columns=cols, 
+                data = self.store.select(key=key, columns=cols,
                                          start=chunk_start_i, stop=chunk_end_i)
 
                 # if len(data) <= 2:

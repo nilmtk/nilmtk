@@ -11,6 +11,7 @@ Subpackages
     nilmtk.dataset_converters.dataport
     nilmtk.dataset_converters.eco
     nilmtk.dataset_converters.greend
+    nilmtk.dataset_converters.hes
     nilmtk.dataset_converters.iawe
     nilmtk.dataset_converters.redd
     nilmtk.dataset_converters.ukdale

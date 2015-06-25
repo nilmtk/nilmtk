@@ -16,9 +16,6 @@ elec_meters:
   9: *jplug
   10: *jplug
   11: *jplug
-  12: &current_cost
-      submeter_of: 0
-      device_model: current_cost
 
 appliances:
 - original_name: fridge
@@ -72,8 +69,3 @@ appliances:
   type: wet appliance
   instance: 1
   meters: [11]
-
-- original_name: water motor
-  type: motor
-  instance: 1
-  meters: [12]

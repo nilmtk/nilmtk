@@ -20,14 +20,6 @@ nilmtk.datastore.datastore module
     :undoc-members:
     :show-inheritance:
 
-nilmtk.datastore.flycheck_hdfdatastore module
----------------------------------------------
-
-.. automodule:: nilmtk.datastore.flycheck_hdfdatastore
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 nilmtk.datastore.hdfdatastore module
 ------------------------------------
 
