@@ -53,9 +53,10 @@ class HDFDataStore(DataStore):
         sections = [TimeFrame()] if sections is None else sections
         sections = TimeFrameGroup(sections)
 
-        # Make replace any Nones with '' in cols:
-        cols = [('' if pq is None else pq, '' if ac is None else ac)
-                for pq, ac in cols]
+        # Replace any Nones with '' in cols:
+        if cols is not None:
+            cols = [('' if pq is None else pq, '' if ac is None else ac)
+                    for pq, ac in cols]
 
         if verbose:
             print("HDFDataStore.load(key='{}', cols='{}', sections='{}',"
