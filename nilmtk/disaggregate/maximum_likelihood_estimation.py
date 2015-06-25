@@ -295,7 +295,7 @@ class MLE(Disaggregator):
         else:
             for stat in self.stats:
                 if ((stat['appliance'] == stat_dict['appliance']) and
-                    (stat['instance'] == stat_dict['instance'])):
+                        (stat['instance'] == stat_dict['instance'])):
                     index = self.stats.index(stat)
                     self.stats[index]['Nevents'] = self.stats[
                         index]['Nevents'] + number_of_events
@@ -391,9 +391,9 @@ class MLE(Disaggregator):
                     # poff = self.__pdf(self.offpower, offevent[1][1])
                     # duration = offevent[0] - onTime
                     # pduration = self.__pdf(self.duration, (offevent[0] - onTime).total_seconds())
-                    likelihood = self.__pdf(self.onpower, onevent[1][1]) * 
-                                self.__pdf(self.offpower, offevent[1][1]) * 
-                                self.__pdf(self.duration, (offevent[0] - \ 
+                    likelihood = self.__pdf(self.onpower, onevent[1][1]) * \
+                                    self.__pdf(self.offpower, offevent[1][1]) * \
+                                    self.__pdf(self.duration, (offevent[0] - \ 
                                     onevent[0]).total_seconds())
                     detection_list.append(
                         {'likelihood': likelihood, 'onTime': onevent[0], 
@@ -421,7 +421,7 @@ class MLE(Disaggregator):
         for row in detections.iterrows():
             # onTime = row[1][0] offTime = row[1][1] deltaOn = row[1][3]
             if ((dis_chunk[(dis_chunk.index >= row[1][0]) and
-                (dis_chunk.index < row[1][1])].sum().values[0]) == 0):
+                    (dis_chunk.index < row[1][1])].sum().values[0]) == 0):
                 # delta = chunk[chunk.index == onTime][column_name].values[0]
                 dis_chunk[(dis_chunk.index >= row[1][0]) & (
                     dis_chunk.index < row[1][1])] = row[1][3]
