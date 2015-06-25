@@ -92,6 +92,71 @@ class MLE(Disaggregator):
         self.powerPair = 0  # Max diff between onpower and offpower
         self.timeWindow = 0        # To avoid high computation
 
+    def __retrain(self, feature, feature_train):
+
+        print "Training " + feature_train.columns[0]
+        if feature['name'] == 'gmm':
+            feature['model'].fit(feature_train)
+        elif feature['name'] == 'norm':
+            mu, std = norm.fit(feature_train)
+            feature['model'] = norm(loc=mu, scale=std)
+        elif feature['name'] == 'poisson':
+            self.onpower['model'] = poisson(feature_train.mean())
+        else:
+            raise NameError(
+                "Name of the model for " + 
+                str(feature_train.columns[0]) + 
+                " unknown or not implemented")        
+
+    def __physical_quantity(self, chunk): 
+
+        if not self.resistive:
+            print "Checking units"
+            units_mismatched = True
+            for name in chunk.columns:
+                if name == self.units:
+                    units = name
+                    units_mismatched = False
+            if units_mismatched:
+                stringError = self.appliance + " cannot be disaggregated. " + self.appliance + \
+                    " is a non-resistive element and  units mismatches: disaggregated data is in " + \
+                    str(self.units) + \
+                    " and aggregated data is " + str(units)
+                raise ValueError(stringError)
+        else:
+            units = chunk.columns[0]
+        return units
+
+    def __pdf(self, feature, delta):
+
+        if feature['name'] == 'norm':
+            score = feature['model'].pdf(delta)
+        elif feature['name'] == 'gmm':
+            score = np.exp(feature['model'].score([delta]))[0]
+        elif feature['name'] == 'poisson':
+            # Decimal values produce odd values in poisson (bug)
+            delta = np.round(delta)
+            score = feature['model'].pmf(delta)
+        else:
+            raise AttributeError("Wrong model for" + feature['name'] +
+                                 " It must be: gmm, norm or poisson")
+        return score   
+
+    def __pdf2(self, feature, delta):
+
+        if feature['name'] == 'norm':
+            score = feature['model'].pdf(delta)
+        elif feature['name'] == 'gmm':
+            score = np.exp(feature['model'].score([delta]))
+        elif feature['name'] == 'poisson':
+            # Decimal values produce odd values in poisson (bug)
+            delta = np.round(delta)
+            score = feature['model'].pmf(delta)
+        else:
+            raise AttributeError("Wrong model for" + feature['name'] +
+                                 " It must be: gmm, norm or poisson")
+        return score   
+
     def update(self, **kwargs):
         """
         This method will update attributes of the model passed by kwargs.
@@ -217,41 +282,9 @@ class MLE(Disaggregator):
             Is it thDelta too high?"""
 
         # RE-TRAIN FEATURE MODELS:
-        print "Training onpower"
-        if self.onpower['name'] == 'gmm':
-            self.onpower['model'].fit(self.onpower_train)
-        elif self.onpower['name'] == 'norm':
-            mu, std = norm.fit(self.onpower_train)
-            self.onpower['model'] = norm(loc=mu, scale=std)
-        elif self.onpower['name'] == 'poisson':
-            self.onpower['model'] = poisson(self.onpower_train.mean())
-        else:
-            raise NameError(
-                'Name of the model for onpower unknown or not implemented')
-
-        print "Training offpower"
-        if self.offpower['name'] == 'gmm':
-            self.offpower['model'].fit(self.offpower_train)
-        elif self.offpower['name'] == 'norm':
-            mu, std = norm.fit(self.offpower_train)
-            self.offpower['model'] = norm(loc=mu, scale=std)
-        elif self.offpower['name'] == 'poisson':
-            self.offpower['model'] = poisson(self.offpower_train.mean())
-        else:
-            raise NameError(
-                'Name of the model for offpower unknown or not implemented')
-
-        print "Training duration"
-        if self.duration['name'] == 'gmm':
-            self.duration['model'].fit(self.duration_train)
-        elif self.duration['name'] == 'norm':
-            mu, std = norm.fit(self.duration_train)
-            self.duration['model'] = norm(loc=mu, scale=std)
-        elif self.duration['name'] == 'poisson':
-            self.duration['model'] = poisson(self.duration_train.mean())
-        else:
-            raise NameError(
-                'Name of the model for duration unknown or not implemented')
+        self.__retrain(self.onpower, self.onpower_train)
+        self.__retrain(self.offpower, self.offpower_train)
+        self.__retrain(self.duration, self.duration_train)
 
         # UPDATE STATS:
         stat_dict = {'appliance': identifier[
@@ -261,7 +294,8 @@ class MLE(Disaggregator):
             self.stats.append(stat_dict)
         else:
             for stat in self.stats:
-                if (stat['appliance'] == stat_dict['appliance']) & (stat['instance'] == stat_dict['instance']):
+                if ((stat['appliance'] == stat_dict['appliance']) and
+                    (stat['instance'] == stat_dict['instance'])):
                     index = self.stats.index(stat)
                     self.stats[index]['Nevents'] = self.stats[
                         index]['Nevents'] + number_of_events
@@ -271,9 +305,11 @@ class MLE(Disaggregator):
 
     def disaggregate(self, mains, output_datastore):
         """
-        Passes each chunk from mains generator to disaggregate_chunk() and passes the output to _write_disaggregated_chunk_to_datastore()
+        Passes each chunk from mains generator to disaggregate_chunk()
+        and passes the output to _write_disaggregated_chunk_to_datastore()
         Will have a default implementation in super class.
-        Can be overridden for more simple in-memory disaggregation, or more complex out-of-core disaggregation.
+        Can be overridden for more simple in-memory disaggregation,
+        or more complex out-of-core disaggregation.
 
         Parameters
         ----------
@@ -321,21 +357,7 @@ class MLE(Disaggregator):
 
         # An resistive element has active power equal to apparent power.
         # Checking power units.
-        if not self.resistive:
-            print "Checking units"
-            units_mismatched = True
-            for name in chunk.columns:
-                if name == self.units:
-                    units = name
-                    units_mismatched = False
-            if units_mismatched:
-                stringError = self.appliance + " cannot be disaggregated. " + self.appliance + \
-                    " is a non-resistive elementa and  units mismatches: disaggregated data is in " + \
-                    str(self.units) + \
-                    " and aggregated data is " + str(units)
-                raise ValueError(stringError)
-        else:
-            units = chunk.columns[0]
+        units = self.__physical_quantity()
 
         # EVENTS OUT OF THE CHUNK:
         # Delta values:
@@ -351,64 +373,31 @@ class MLE(Disaggregator):
         singleOnevent = 0
         # Max Likelihood algorithm (optimized):
         for onevent in events[events.onpower == True].iterrows():
-            onTime = onevent[0]
-            deltaOn = onevent[1][1]
+            # onTime = onevent[0]
+            # deltaOn = onevent[1][1]
             # windowning:
-            offevents = events[(events.offpower == True) & (events.index > onTime) & (
-                events.index < onTime + timedelta(seconds=self.timeWindow))]
+            offevents = events[(events.offpower == True) & (events.index > onevent[0]) & (
+                events.index < onevent[0] + timedelta(seconds=self.timeWindow))]
             # Filter paired events:
             offevents = offevents[
-                abs(deltaOn - offevents[column_name].abs()) < self.powerPair]
+                abs(onevent[1][1] - offevents[column_name].abs()) < self.powerPair]
 
             # Max likelihood computation:
             if not offevents.empty:
-                if self.onpower['name'] == 'norm':
-                    pon = self.onpower['model'].pdf(deltaOn)
-                elif self.onpower['name'] == 'gmm':
-                    pon = np.exp(self.onpower['model'].score([deltaOn]))[0]
-                elif self.onpower['name'] == 'poisson':
-                    # Decimal values produce odd y values
-                    deltaOn = np.round(deltaOn)
-                    pon = self.onpower['model'].pmf(deltaOn)
-                else:
-                    raise AttributeError("Wrong model for onpower: " + self.onpower['name'] +
-                                         " It must be: gmm, norm or poisson")
+                # pon = self.__pdf(self.onpower, onevent[1][1])
                 for offevent in offevents.iterrows():
-                    offTime = offevent[0]
-                    deltaOff = offevent[1][1]
-
-                    if self.offpower['name'] == 'norm':
-                        poff = self.offpower['model'].pdf(deltaOff)
-                    elif self.offpower['name'] == 'gmm':
-                        poff = np.exp(
-                            self.offpower['model'].score([deltaOff]))[0]
-                    elif self.offpower['name'] == 'poisson':
-                        # Decimal values produce odd y values
-                        deltaOff = np.round(deltaOff)
-                        poff = self.offpower['model'].pmf(deltaOff)
-                    else:
-                        raise AttributeError("Wrong model for offpower: " + self.offpower['name'] +
-                                             " It must be: gmm, norm or poisson")
-
-                    duration = offTime - onTime
-
-                    if self.duration['name'] == 'norm':
-                        pduration = self.duration['model'].pdf(
-                            duration.total_seconds())
-                    elif self.duration['name'] == 'gmm':
-                        pduration = np.exp(
-                            self.duration['model'].score([duration.total_seconds()]))[0]
-                    elif self.duration['name'] == 'poisson':
-                        # Decimal values produce odd y values
-                        seconds = np.round(duration.total_seconds())
-                        pduration = self.duration['model'].pmf(seconds)
-                    else:
-                        raise AttributeError("Wrong model for duration: " + self.duration['name'] +
-                                             " It must be: gmm, norm or poisson")
-
-                    likelihood = pon * poff * pduration
+                    # offTime = offevent[0]
+                    # deltaOff = offevent[1][1]
+                    # poff = self.__pdf(self.offpower, offevent[1][1])
+                    # duration = offevent[0] - onTime
+                    # pduration = self.__pdf(self.duration, (offevent[0] - onTime).total_seconds())
+                    likelihood = self.__pdf(self.onpower, onevent[1][1]) * 
+                                self.__pdf(self.offpower, offevent[1][1]) * 
+                                self.__pdf(self.duration, (offevent[0] - \ 
+                                    onevent[0]).total_seconds())
                     detection_list.append(
-                        {'likelihood': likelihood, 'onTime': onTime, 'offTime': offTime, 'deltaOn': deltaOn})
+                        {'likelihood': likelihood, 'onTime': onevent[0], 
+                        'offTime': offevent[0], 'deltaOn': onevent[1][1]})
             else:
                 singleOnevent += 1
 
@@ -430,13 +419,12 @@ class MLE(Disaggregator):
         # Ruling out overlapped detecttions ordering by likelihood value.
         detections = detections.sort('likelihood', ascending=False)
         for row in detections.iterrows():
-            onTime = row[1][0]
-            offTime = row[1][1]
-            deltaOn = row[1][3]
-            if ((dis_chunk[(dis_chunk.index >= onTime) & (dis_chunk.index < offTime)].sum().values[0]) == 0):
+            # onTime = row[1][0] offTime = row[1][1] deltaOn = row[1][3]
+            if ((dis_chunk[(dis_chunk.index >= row[1][0]) and
+                (dis_chunk.index < row[1][1])].sum().values[0]) == 0):
                 # delta = chunk[chunk.index == onTime][column_name].values[0]
-                dis_chunk[(dis_chunk.index >= onTime) & (
-                    dis_chunk.index < offTime)] = deltaOn
+                dis_chunk[(dis_chunk.index >= row[1][0]) & (
+                    dis_chunk.index < row[1][1])] = row[1][3]
 
         # Stat information:
         print str(len(events)) + " events found."
@@ -447,10 +435,11 @@ class MLE(Disaggregator):
 
     def no_overfitting(self):
         """
-        Crops feature_train (onpower_train, offpower_train and duration_train) to get same samples from different appliances (same model-appliance) and avoids overfittings to a many samples appliance.
+        Crops feature_train(onpower_train, offpower_train and duration_train)
+        to get same samples from different appliances(same model-appliance) 
+        and avoids overfittings to a many samples appliance.
         Updates stats attribute.
         Does the retraining.
-
         """
 
         # Instance with minimun length should be the maximum length
@@ -493,41 +482,9 @@ class MLE(Disaggregator):
         self.duration_train = duration_train
 
         # RE-TRAINS FEATURES:
-        print "Retraining onpower"
-        if self.onpower['name'] == 'gmm':
-            self.onpower['model'].fit(self.onpower_train)
-        elif self.onpower['name'] == 'norm':
-            mu, std = norm.fit(self.onpower_train)
-            self.onpower['model'] = norm(loc=mu, scale=std)
-        elif self.onpower['name'] == 'poisson':
-            self.onpower['model'] = poisson(self.onpower_train.mean())
-        else:
-            raise NameError(
-                'Name of the model for onpower unknown or not implemented')
-
-        print "Retraining offpower"
-        if self.offpower['name'] == 'gmm':
-            self.offpower['model'].fit(self.offpower_train)
-        elif self.offpower['name'] == 'norm':
-            mu, std = norm.fit(self.offpower_train)
-            self.offpower['model'] = norm(loc=mu, scale=std)
-        elif self.offpower['name'] == 'poisson':
-            self.offpower['model'] = poisson(self.offpower_train.mean())
-        else:
-            raise NameError(
-                'Name of the model for offpower unknown or not implemented')
-
-        print "Retraining duration"
-        if self.duration['name'] == 'gmm':
-            self.duration['model'].fit(self.duration_train)
-        elif self.duration['name'] == 'norm':
-            mu, std = norm.fit(self.duration_train)
-            self.duration['model'] = norm(loc=mu, scale=std)
-        elif self.duration['name'] == 'poisson':
-            self.duration['model'] = poisson(self.duration_train.mean())
-        else:
-            raise NameError(
-                'Name of the model for duration unknown or not implemented')
+        self.__retrain(self.onpower, self.onpower_train)
+        self.__retrain(self.offpower, self.offpower_train)
+        self.__retrain(self.duration, self.duration_train)
 
     def check_cdfIntegrity(self, step):
         """
@@ -556,39 +513,15 @@ class MLE(Disaggregator):
 
         # Evaluating score for:
         # Onpower
-        if self.onpower['name'] == 'norm':
-            y_onpower = self.onpower['model'].pdf(x_onpower)
-        elif self.onpower['name'] == 'gmm':
-            y_onpower = np.exp(self.onpower['model'].score(x_onpower))
-        elif self.onpower['name'] == 'poisson':
-            y_onpower = self.onpower['model'].pmf(x_onpower)
-        else:
-            raise AttributeError("Wrong model " + self.onpower['name'])
-
+        y_onpower = self.__pdf2(self.onpower, x_onpower)
         print "Onpower cdf: " + str(y_onpower.sum())
 
         # Offpower
-        if self.offpower['name'] == 'norm':
-            y_offpower = self.offpower['model'].pdf(x_offpower)
-        elif self.offpower['name'] == 'gmm':
-            y_offpower = np.exp(self.offpower['model'].score(x_offpower))
-        elif self.offpower['name'] == 'poisson':
-            y_offpower = self.offpower['model'].pmf(x_offpower)
-        else:
-            raise AttributeError("Wrong model " + self.offpower['name'])
-
+        y_offpower = self.__pdf2(self.offpower, x_offpower)
         print "Offpower cdf: " + str(y_offpower.sum())
 
         # duration
-        if self.duration['name'] == 'norm':
-            y_duration = self.duration['model'].pdf(x_duration)
-        elif self.duration['name'] == 'gmm':
-            y_duration = np.exp(self.duration['model'].score(x_duration))
-        elif self.duration['name'] == 'poisson':
-            y_duration = self.duration['model'].pmf(x_duration)
-        else:
-            raise AttributeError("Wrong model " + self.duration['name'])
-
+        y_duration = self.__pdf2(self.duration, x_duration)
         print "Duration cdf: " + str(y_duration.sum())
 
         # Plots:
@@ -659,17 +592,9 @@ class MLE(Disaggregator):
 
         # Evaluating score for:
         # Onpower
-        x = np.arange(bins_onpower.min(), bins_onpower.max()
-            +np.diff(bins_onpower)[0], np.diff(bins_onpower)[0] / float(1000)).reshape(-1, 1)
-        if self.onpower['name'] == 'norm':
-            y = self.onpower['model'].pdf(x)
-        elif self.onpower['name'] == 'gmm':
-            y = np.exp(self.onpower['model'].score(x))
-        elif self.onpower['name'] == 'poisson':
-            x = np.round(x)      # Decimal values produce odd y values
-            y = self.onpower['model'].pmf(x)
-        else:
-            raise AttributeError("Wrong model " + self.onpower['name'])
+        x = np.arange(bins_onpower.min(), bins_onpower.max() + \
+            np.diff(bins_onpower)[0], np.diff(bins_onpower)[0] / float(1000)).reshape(-1, 1)
+        y = self.__pdf2(self.onpower, x)
         norm = pd.cut(
             self.onpower_train.onpower, bins=bins_onpower).value_counts().max() / max(y)
         # Plots for Onpower
@@ -681,17 +606,9 @@ class MLE(Disaggregator):
         ax1.set_xlabel("Watts")
 
         # Offpower
-        x = np.arange(bins_offpower.min(), bins_offpower.max()
-            +np.diff(bins_offpower)[0], np.diff(bins_offpower)[0] / float(1000)).reshape(-1, 1)
-        if self.offpower['name'] == 'norm':
-            y = self.offpower['model'].pdf(x)
-        elif self.offpower['name'] == 'gmm':
-            y = np.exp(self.offpower['model'].score(x))
-        elif self.offpower['name'] == 'poisson':
-            x = np.round(x)      # Decimal values produce odd y values
-            y = self.offpower['model'].pmf(x)
-        else:
-            raise AttributeError("Wrong model " + self.offpower['name'])
+        x = np.arange(bins_offpower.min(), bins_offpower.max() + \
+            np.diff(bins_offpower)[0], np.diff(bins_offpower)[0] / float(1000)).reshape(-1, 1)
+        y = self.__pdf2(self.offpower, x)
         norm = pd.cut(self.offpower_train.offpower,
                       bins=bins_offpower).value_counts().max() / max(y)
         # Plots for Offpower
@@ -703,17 +620,9 @@ class MLE(Disaggregator):
         ax2.set_xlabel("Watts")
 
         # Duration
-        x = np.arange(bins_duration.min(), bins_duration.max()
-            +np.diff(bins_duration)[0], np.diff(bins_duration)[0] / float(1000)).reshape(-1, 1)
-        if self.duration['name'] == 'norm':
-            y = self.duration['model'].pdf(x)
-        elif self.duration['name'] == 'gmm':
-            y = np.exp(self.duration['model'].score(x))
-        elif self.duration['name'] == 'poisson':
-            x = np.round(x)      # Decimal values produce odd y values
-            y = self.duration['model'].pmf(x)
-        else:
-            raise AttributeError("Wrong model " + self.duration['name'])
+        x = np.arange(bins_duration.min(), bins_duration.max() + \
+            np.diff(bins_duration)[0], np.diff(bins_duration)[0] / float(1000)).reshape(-1, 1)
+        y = self.__pdf2(self.duration, x)
         norm = pd.cut(self.duration_train.duration,
                       bins=bins_duration).value_counts().max() / max(y)
         # Plots for duration
@@ -723,10 +632,13 @@ class MLE(Disaggregator):
         ax3.set_title("Feature: Duration")
         ax3.set_ylabel("Counts")
         ax3.set_xlabel("Seconds")
+    
 
     def featuresHist_colors(self, **kwargs):
         """
-        Visualization tool to check if samples for feature training (onpower_train, offpower_train and duration_train) are equal for each appliance (same model appliance).
+        Visualization tool to check if samples for feature training 
+        (onpower_train, offpower_train and duration_train) are equal 
+        for each appliance (same model appliance).
         Each appliance represented by a different color.
 
         Parameters
