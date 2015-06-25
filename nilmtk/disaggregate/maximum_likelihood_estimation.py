@@ -647,21 +647,22 @@ class MLE(Disaggregator):
             bins_feature: numpy.arange for plotting the hist with specified bin sizes.
         """
         # Selecting bins automatically:
-        bin_max = self.onpower_train.max().values[0]
-        bin_min = self.onpower_train.min().values[0]
-        step = (bin_max - bin_min) / 50
-        bins_onpower = np.arange(bin_min, bin_max, step)
+        bins_onpower = np.arange(self.onpower_train.min().values[0],
+                                 self.onpower_train.max().values[0],
+                                 (self.onpower_train.max().values[0] -
+                                  self.onpower_train.min().values[0]) / 50)
 
-        bin_max = self.offpower_train.max().values[0]
-        bin_min = self.offpower_train.min().values[0]
-        step = (bin_max - bin_min) / 50
-        bins_offpower = np.arange(bin_min, bin_max, step)
+        bins_offpower = np.arange(self.offpower_train.min().values[0],
+                                  self.offpower_train.max().values[0],
+                                  (self.offpower_train.max().values[0] -
+                                   self.offpower_train.min().values[0]) / 50)
 
-        bin_max = self.duration_train.max().values[0]
-        bin_min = self.duration_train.min().values[0]
-        step = (bin_max - bin_min) / 50
-        bins_duration = np.arange(bin_min, bin_max, step)
+        bins_duration = np.arange(self.duration_train.min().values[0],
+                                  self.duration_train.max().values[0],
+                                  (self.duration_train.max().values[0] -
+                                   self.duration_train.min().values[0]) / 50)
 
+        # If a bin has been specified update the bin sizes.
         # Updating bins with specified values.
         for key in kwargs:
             if key == 'bins_onpower':
