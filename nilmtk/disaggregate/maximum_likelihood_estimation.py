@@ -261,7 +261,8 @@ class MLE(Disaggregator):
             self.stats.append(stat_dict)
         else:
             for stat in self.stats:
-                if (stat['appliance'] == stat_dict['appliance']) & (stat['instance'] == stat_dict['instance']):
+                if (stat['appliance'] == stat_dict['appliance']) 
+                    & (stat['instance'] == stat_dict['instance']):
                     index = self.stats.index(stat)
                     self.stats[index]['Nevents'] = self.stats[
                         index]['Nevents'] + number_of_events
@@ -660,8 +661,8 @@ class MLE(Disaggregator):
 
         # Evaluating score for:
         # Onpower
-        x = np.arange(bins_onpower.min(), bins_onpower.max()
-            +np.diff(bins_onpower)[0], np.diff(bins_onpower)[0] / float(1000)).reshape(-1, 1)
+        x = np.arange(bins_onpower.min(), bins_onpower.max() + \
+            np.diff(bins_onpower)[0], np.diff(bins_onpower)[0] / float(1000)).reshape(-1, 1)
         if self.onpower['name'] == 'norm':
             y = self.onpower['model'].pdf(x)
         elif self.onpower['name'] == 'gmm':
@@ -682,8 +683,8 @@ class MLE(Disaggregator):
         ax1.set_xlabel("Watts")
 
         # Offpower
-        x = np.arange(bins_offpower.min(), bins_offpower.max()
-            +np.diff(bins_offpower)[0], np.diff(bins_offpower)[0] / float(1000)).reshape(-1, 1)
+        x = np.arange(bins_offpower.min(), bins_offpower.max() + \
+            np.diff(bins_offpower)[0], np.diff(bins_offpower)[0] / float(1000)).reshape(-1, 1)
         if self.offpower['name'] == 'norm':
             y = self.offpower['model'].pdf(x)
         elif self.offpower['name'] == 'gmm':
@@ -704,8 +705,8 @@ class MLE(Disaggregator):
         ax2.set_xlabel("Watts")
 
         # Duration
-        x = np.arange(bins_duration.min(), bins_duration.max()
-                      + np.diff(bins_duration)[0], np.diff(bins_duration)[0] / float(1000)).reshape(-1, 1)
+        x = np.arange(bins_duration.min(), bins_duration.max() + \
+            np.diff(bins_duration)[0], np.diff(bins_duration)[0] / float(1000)).reshape(-1, 1)
         if self.duration['name'] == 'norm':
             y = self.duration['model'].pdf(x)
         elif self.duration['name'] == 'gmm':
@@ -728,7 +729,9 @@ class MLE(Disaggregator):
 
     def featuresHist_colors(self, **kwargs):
         """
-        Visualization tool to check if samples for feature training (onpower_train, offpower_train and duration_train) are equal for each appliance (same model appliance).
+        Visualization tool to check if samples for feature training 
+        (onpower_train, offpower_train and duration_train) are equal 
+        for each appliance (same model appliance).
         Each appliance represented by a different color.
 
         Parameters
