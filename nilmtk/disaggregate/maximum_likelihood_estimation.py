@@ -261,8 +261,8 @@ class MLE(Disaggregator):
             self.stats.append(stat_dict)
         else:
             for stat in self.stats:
-                if (stat['appliance'] == stat_dict['appliance']) 
-                    & (stat['instance'] == stat_dict['instance']):
+                if ((stat['appliance'] == stat_dict['appliance']) and
+                    (stat['instance'] == stat_dict['instance'])):
                     index = self.stats.index(stat)
                     self.stats[index]['Nevents'] = self.stats[
                         index]['Nevents'] + number_of_events
