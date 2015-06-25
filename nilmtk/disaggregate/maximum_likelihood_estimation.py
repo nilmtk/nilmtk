@@ -393,8 +393,8 @@ class MLE(Disaggregator):
                     # pduration = self.__pdf(self.duration, (offevent[0] - onTime).total_seconds())
                     likelihood = self.__pdf(self.onpower, onevent[1][1]) * \
                                     self.__pdf(self.offpower, offevent[1][1]) * \
-                                    self.__pdf(self.duration, (offevent[0] - \ 
-                                    onevent[0]).total_seconds())
+                                    self.__pdf(self.duration, (offevent[0] - \
+                                        onevent[0]).total_seconds())
                     detection_list.append(
                         {'likelihood': likelihood, 'onTime': onevent[0], 
                         'offTime': offevent[0], 'deltaOn': onevent[1][1]})
