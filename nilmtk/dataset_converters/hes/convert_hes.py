@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 from os import remove
-from os.path import join
+from os.path import join, isdir, isfile, dirname, abspath
 import pandas as pd
 from datetime import datetime
 from pytz import UTC
@@ -11,6 +11,8 @@ from nilmtk import DataSet
 from nilmtk.utils import get_datastore
 from nilmtk.datastore import Key
 from nilm_metadata import convert_yaml_to_hdf5
+from inspect import currentframe, getfile, getsourcefile
+import yaml
 
 """
 TODO
@@ -186,6 +188,50 @@ def convert_hes(data_dir, output_filename, format='HDF', max_chunks=None):
     print('houses with some data loaded:', house_appliance_codes.keys())
     
     store.close()
+    
+    # generate building yaml metadata
+    for hes_house_id in house_codes:
+        nilmtk_building_id = house_codes.index(hes_house_id)+1
+        building_metadata = {}
+        building_metadata['instance'] = nilmtk_building_id
+        building_metadata['original_name'] = int(hes_house_id) # use python int
+        building_metadata['elec_meters'] = {}
+        building_metadata['appliances'] = []
+        for appliance_code in house_appliance_codes[hes_house_id]:
+            nilmtk_meter_id = house_appliance_codes[hes_house_id].index(appliance_code)+1
+            is_temperature = False
+            # meter metadata
+            if appliance_code in MAINS_CODES:
+                meter_metadata = {'device_model': 'multivoies',
+                                  'site_meter': True}
+            elif appliance_code in CIRCUIT_CODES:
+                meter_metadata = {'device_model': 'multivoies'}
+            elif appliance_code in TEMPERATURE_CODES:
+                is_temperature = True
+            else: # is appliance
+                meter_metadata = {'device_model': 'wattmeter'}
+            if not is_temperature:
+                building_metadata['elec_meters'][nilmtk_meter_id] = meter_metadata
+            # appliance metadata
+            lookup_row = hes_to_nilmtk_appliance_lookup[hes_to_nilmtk_appliance_lookup.Code==appliance_code].iloc[0]
+            appliance_metadata = {'original_name': lookup_row.Name, 
+                                      'meters': [nilmtk_meter_id] }
+            # appliance type
+            appliance_metadata.update({'type': lookup_row.nilmtk_name})
+            # TODO appliance room
+            # TODO appliance instance number
+            
+            building_metadata['appliances'].append(appliance_metadata)
+        building = 'building{:d}'.format(nilmtk_building_id)
+        yaml_full_filename = join(_get_module_directory(), 'metadata', building + '.yaml')
+        with open(yaml_full_filename, 'w') as outfile:
+            #print(building_metadata)
+            outfile.write(yaml.dump(building_metadata))
+            
+    
+    # write yaml metadata to hdf5
+    convert_yaml_to_hdf5(join(_get_module_directory(), 'metadata'),
+                         output_filename)
 
 def _process_meter_in_chunk(nilmtk_house_id, meter_id, chunk, store, appliance_code):
 
@@ -207,3 +253,16 @@ def _process_meter_in_chunk(nilmtk_house_id, meter_id, chunk, store, appliance_c
     else: # is appliance
         key = Key(building=nilmtk_house_id, meter=meter_id)
         store.append(str(key), df)
+        
+def _get_module_directory():
+    # Taken from http://stackoverflow.com/a/6098238/732596
+    path_to_this_file = dirname(getfile(currentframe()))
+    if not isdir(path_to_this_file):
+        encoding = getfilesystemencoding()
+        path_to_this_file = dirname(unicode(__file__, encoding))
+    if not isdir(path_to_this_file):
+        abspath(getsourcefile(lambda _: None))
+    if not isdir(path_to_this_file):
+        path_to_this_file = getcwd()
+    assert isdir(path_to_this_file), path_to_this_file + ' is not a directory'
+    return path_to_this_file
