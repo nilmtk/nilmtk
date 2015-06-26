@@ -121,23 +121,22 @@ def convert_hes(data_dir, output_filename, format='HDF', max_chunks=None):
     store = get_datastore(output_filename, format, mode='w')
     
     # load list of appliances
-    full_filename = join(data_dir, 'appliance_data.csv')
-    hes_appliance_data = pd.read_csv(full_filename)
-    import ipdb
-    ipdb.set_trace()
-    hes_appliance_data[['ApplianceText']].drop_duplicates().sort(columns='ApplianceText').to_csv(join(data_dir, 'hes_to_nilmtk_appliance_lookup.csv'), index=False)
-    
+    hes_to_nilmtk_appliance_lookup = pd.read_csv(join(get_module_directory(), 
+                                        'dataset_converters', 
+                                        'hes', 
+                                        'hes_to_nilmtk_appliance_lookup.csv'))
 
     # load list of houses
-    house_ids = load_list_of_house_ids(data_dir)
-    for house_id in house_ids:
-        #building = Building()
-        #building.metadata['original_name'] = house_id
-        #buildings[house_id] = building
-        pass
+    hes_house_ids = load_list_of_house_ids(data_dir)
+    nilmtk_house_ids = np.arange(1,len(hes_house_ids)+1)
+    hes_to_nilmtk_house_ids = dict(zip(hes_house_ids, nilmtk_house_ids))
 
-    houses_loaded = set()
+    # array of hes_house_codes: nilmtk_building_code = house_codes.index(hes_house_code)
+    house_codes = []
+    # map 
+    house_appliance_codes = dict()
 
+    # Iterate over files
     for filename in FILENAMES:
         # Load appliance energy data chunk-by-chunk
         full_filename = join(data_dir, filename)
@@ -149,13 +148,13 @@ def convert_hes(data_dir, output_filename, format='HDF', max_chunks=None):
             print(e, file=stderr)
             continue
 
-        # Process each chunks
+        # Iterate over chunks in file
         chunk_i = 0
         for chunk in reader:
             if max_chunks is not None and chunk_i >= max_chunks:
                 break
 
-            print('processing chunk', chunk_i, 'of', filename)
+            print(' processing chunk', chunk_i, 'of', filename)
             # Convert date and time columns to np.datetime64 objects
             dt = chunk['date'] + ' ' + chunk['time']
             del chunk['date']
@@ -166,46 +165,45 @@ def convert_hes(data_dir, output_filename, format='HDF', max_chunks=None):
             chunk['data'] *= 10
             chunk['data'] = chunk['data'].astype(np.float32)
 
-            # Process each house in chunk
-            houses_in_chunk = chunk['house id'].unique() #TODO: use groupby?!?
-            houses_loaded = houses_loaded.union(set(houses_in_chunk))
-            for house_id in houses_in_chunk:
-                print(house_id)
-                _process_house_in_chunk(house_id, chunk, store)
-
+            # Iterate over houses in chunk
+            for hes_house_id, hes_house_id_df in chunk.groupby('house id'):
+                if hes_house_id not in house_codes:
+                    house_codes.append(hes_house_id)
+                    
+                if hes_house_id not in house_appliance_codes.keys():
+                    house_appliance_codes[hes_house_id] = []
+                
+                nilmtk_house_id = house_codes.index(hes_house_id)+1
+                
+                # Iterate over appliances in house
+                for appliance_code, appliance_df in chunk.groupby('appliance code'):
+                    if appliance_code not in house_appliance_codes[hes_house_id]:
+                        house_appliance_codes[hes_house_id].append(appliance_code)
+                    nilmtk_meter_id = house_appliance_codes[hes_house_id].index(appliance_code)+1
+                    _process_meter_in_chunk(nilmtk_house_id, nilmtk_meter_id, hes_house_id_df, store, appliance_code)
+                    
             chunk_i += 1
-    print('houses with some data loaded:', houses_loaded)
+    print('houses with some data loaded:', house_appliance_codes.keys())
     
     store.close()
 
-def _process_house_in_chunk(house_id, chunk, store):
-    #building = buildings[house_id]
-    #electric = building.utility.electric
-    house_data = chunk[chunk['house id'] == house_id]
-    for appliance_code, appliance_data in house_data.groupby('appliance code'):
-        print('\t' + str(appliance_code))
-        data = appliance_data['data'].values
-        index = appliance_data['datetime']
-        df = pd.DataFrame(data=data, index=index,
-                          columns=[('power', 'active')])
+def _process_meter_in_chunk(nilmtk_house_id, meter_id, chunk, store, appliance_code):
 
-        is_temperature = False
-        if appliance_code in MAINS_CODES:
-            dict_ = electric.mains
-            split = MAINS_CODES.index(appliance_code) + 1
-            key = MainsName(split=split, meter=1)
-        elif appliance_code in CIRCUIT_CODES:
-            dict_ = electric.circuits
-            split = CIRCUIT_CODES.index(appliance_code) + 1
-            key = CircuitName(name='sockets', split=split, meter=1)
-        elif appliance_code in TEMPERATURE_CODES:
-            is_temperature = True
-            # TODO
-        else:
-            #dict_ = electric.appliances
-            #key = appliance_code # TODO use nilmtk ApplianceNames
-            pass
+    data = chunk['data'].values
+    index = chunk['datetime']
+    df = pd.DataFrame(data=data, index=index,
+                      columns=[('power', 'active')])
 
-        if not is_temperature:
-            key = Key(building=house_id, meter=1)
-            store.append(str(key), df)
+    is_temperature = False
+    if appliance_code in MAINS_CODES:
+        pass
+        # TODO
+    elif appliance_code in CIRCUIT_CODES:
+        pass
+        # TODO
+    elif appliance_code in TEMPERATURE_CODES:
+        is_temperature = True
+        # TODO
+    else: # is appliance
+        key = Key(building=nilmtk_house_id, meter=meter_id)
+        store.append(str(key), df)

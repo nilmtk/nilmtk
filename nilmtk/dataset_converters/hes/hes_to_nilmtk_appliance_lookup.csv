@@ -1,96 +1,257 @@
-ApplianceText,NILMTKName
-AVProjector,projector
-AVReceiver,AV recorder
-Alarm,security alarm
-BeerWinechiller,fridge
-BoilerCirculationPump,water pump
-Breadmaker,breadmaker
-CDPlayer,CD player
-CoffeeMaker,coffee maker
-ComputersDesktop,desktop computer
-ComputersHomeTheatreBox,home theatre
-ComputersLaptop,laptop computer
-ComputersMonitor,computer monitor
-ComputersSpeakers,active speaker
-Cooker,cooker
-CookerhoodExtractorFan,fan
-CordlessPhoneBaseStation,appliance
-CordlessPhoneOutpost,appliance
-DVDPlayer,DVD player
-DVDRecorder,DVD player
-Dishwasher,dish washer
-DrinksMachine,appliance
-ExternalPowerSupplies,appliance
-Facsimile,appliance
-Fan,fan
-FreezerChest,freezer
-FreezerUpright,freezer
-FridgeFreezer,freezer
-GamesConsole,games console
-HairStraightenerTongs,hair straighteners
-Hairdryer,hair dryer
-HardDiskRecorder,external hard disk
-HeaterElectricportable,electric furnace
-Hi_Fi,audio system
-HomeEntertaimentOther,home theatre
-HomeTheatreSystem,home theatre
-Iron
-Juicer
-KETTLE
-Kettle
-LAMP
-Lamp
-Microwave
-MobilePhone
-Modem
-Other
-Oven
-Photoframe
-PowerTool
-PrinterInkjet
-PrinterLaser
-PrinterScannerCopierMFD
-Radio
-Refrigerator
-Router
-SetTopBox
-SettopBox
-SpinDryer
-StereoPortable
-Subwoofer
-TVCRT
-TVLCD
-TVPlasma
-TV_DVD
-TV_Monitor
-TV_VCR
-TV_VCR_DVD
-TabletopCooker
-Toaster
-TumbleDryer
-Tumbledryer
-VCR
-VacuumCleaner
-WasherDryer
-WashingMachineFrontLoader
-WashingMachineTopLoader
-dishwasher
-dvdplayer
-fridgefreezer
-gamesconsole
-hairdryer
-iron
-kettle
-lamp
-microwave
-modem
-other
-router
-settopbox
-toaster
-tumbledryer
-tvcrt
-tvlcd
-vacuumcleaner
-vcr
-washingmachinefrontloader
+Code,Name,nilmtk_name
+0,upright freezer 1,freezer
+1,upright freezer 2,freezer
+2,chest freezer 1,freezer
+3,chest freezer 2,freezer
+4,fridge 1,fridge
+5,fridge 2,fridge
+6,fridge freezer 1,fridge freezer
+7,fridge freezer 2,fridge freezer
+8,wine cooler 1,fridge
+9,fridge+freezer 1,fridge freezer
+10,Unknown kitchen,unknown
+11,To be defined 11,unknown
+12,To be defined 12,unknown
+13,To be defined 13,unknown
+14,To be defined 14,unknown
+15,Unknown,unknown
+16,cooker 1,cooker
+17,kettle 1,kettle
+18,microwave 1,microwave
+19,oven 1,electric oven
+20,toaster 1,toaster
+21,frier 1,fryer
+22,hob 1,stove
+23,microwave+grill 1,microwave
+24,bread maker 1,breadmaker
+25,coffee maker 1,coffee maker
+26,kettle 2,kettle
+27,oven+cooker 1,cooker
+28,food mixer 1,food processor
+29,cooker 2,cooker
+30,fryer 1,fryer
+31,grill 1,grill
+32,extractor hood 1,fan
+33,coffee maker 2,coffee maker
+34,microwave 2,microwave
+35,food steamer 1,food steamer
+36,bottle warmer 1,appliance
+37,toaster 2,toaster
+38,cooker 3,cooker
+39,hob 2,stove
+40,oven 2,oven
+41,Other cooking,cooker
+42,Slow cooker 1,slow cooker
+43,To be defined 43,unknown
+44,To be defined 44,unknown
+45,To be defined 45,unknown
+46,To be defined 46,unknown
+47,Spin Dryer 1,spin dryer
+48,dishwasher 1,dish washer
+49,tumble dryer 1,tumble dryer
+50,washing/drying machine 1,washer dryer
+51,washing machine 1,washing machine
+52,tumble dryer 2,tumble dryer
+53,washing/drying machine 2,washer dryer
+54,tv 5,television
+55,tv crt 2,television
+56,tv crt 3,television
+57,dvd+xbox360 1,DVD player
+58,aerial 1,RF booster
+59,dvd+vcr 2,DVD player
+60,audiovisual site 2,audio system
+61,audiovisual site 3,audio system
+62,audiovisual site 4,audio system
+63,video center 1,video sender
+64,central heating 1,electric space heater
+65,heater 1,electric space heater
+66,heater 2,electric space heater
+67,heater 3,electric space heater
+68,heater 4,electric space heater
+69,heater 5,electric space heater
+70,shower 1,electric shower heater
+71,water heater 1,electric water heating appliance
+72,floor heating 1,heating appliance
+73,shower 2,electric shower heater
+74,hot tub 1,electric hot tub heater
+75,circulation pump 1,shower pump
+76,heater 6,electric space heater
+77,air conditionning 1,air conditioner
+78,To be defined 78,unknown
+79,To be defined 79,unknown
+80,audiovisual site 1,audio system
+81,dvd 1,DVD player
+82,dvd recorder 1,AV recorder
+83,fax/printer 1,multi-function device
+84,hi-fi 1,audio system
+85,ps2 1,games console
+86,xbox360 1,games console
+87,game cube 1,games console
+88,wii 1,games console
+89,xbox 1,games console
+90,ps3 1,games console
+91,game console 1,games console
+92,game console+hifi 1,games console
+93,set top box 1,set top box
+94,sky box 1,set top box
+95,tv 1,television
+96,tv crt 1,television
+97,tv lcd 1,television
+98,tv plasma 1,television
+99,tv+vcr 1,television
+100,tv+dvd 1,television
+101,tv+settopbox 1,television
+102,vcr 1,AV recorder
+103,dvd+vcr 1,DVD player
+104,tv+vcr+dvd 1,television
+105,tv+dvd+set top box 1,television
+106,blueray player 1,DVD player
+107,av receiver 1,audio system
+108,home cinema sound 1,audio amplifier
+109,cd player 1,audio system
+110,radio 1,audio system
+111,tv booster 1,RF booster
+112,tv+vcr 2,television
+113,tv 2,television
+114,tv 3,television
+115,tv lcd 2,television
+116,tv+dvd 2,television
+117,dvd 2,DVD player
+118,game console 2,games console
+119,set top box 2,set top box
+120,tv lcd 3,television
+121,vcr 2,AV recorder
+122,vcr 3,AV recorder
+123,tv+dvd+hifi 1,television
+124,dvd/vcr+settopbox+router 1,AV recorder
+125,hi-fi 2,audio system
+126,set top box 3,set top box
+127,tv 4,television
+128,laptop 1,laptop computer
+129,desktop 1,desktop computer
+130,monitor+printer 1,computer monitor
+131,monitor 1,computer monitor
+132,printer 1,printer
+133,router 1,broadband router
+134,computer equipment 1,USB hub
+135,multifunction printer 1,multi-function device
+136,wordprocessor 1,desktop computer
+137,computer site 1,desktop computer
+138,scanner 1,scanner
+139,speakers 1,active speaker
+140,modem 1,modem
+141,desktop 2,desktop computer
+142,monitor+printer 2,computer monitor
+143,monitor 2,computer monitor
+144,printer 2,printer
+145,laptop 2,laptop computer
+146,laptop 3,laptop computer
+147,monitor crt 1,computer monitor
+148,harddrive 1,ICT appliance
+149,media player 1,set top box
+150,ups 1,UPS
+151,harddrive 2,ICT appliance
+152,multifunction printer + router 1,multi-function device
+153,computer site 2,desktop computer
+154,router 2,broadband router
+155,multifunction printer 2,multi-function device
+156,multifunction printer 3,multi-function device
+157,computer site 3,desktop computer
+158,computer site 4,desktop computer
+159,Not monitored,appliance
+160,light 1,light
+161,light 2,light
+162,light 3,light
+163,light 4,light
+164,light 5,light
+165,light 6,light
+166,light 7,light
+167,light 8,light
+168,light 9,light
+169,light 10,light
+170,light 11,light
+171,light 12,light
+172,light distribution 1,light
+173,light distribution 2,light
+174,light distribution 3,light
+175,light distribution 4,light
+176,hair dryer 1,hair dryer
+177,hair straightener 1,hair straighteners
+178,immersion heater 1,immersion heater
+179,picture frame 1,digital picture frame
+180,hair dryer+hair straightener 1,hair dryer
+181,iron 1,clothes iron
+182,trouser press 1,trouser press
+183,vaccum cleaner 1,vacuum cleaner
+184,aviary 1,appliance
+185,clock radio 1,audio system
+186,vaccum cleaner 2,vacuum cleaner
+187,sunbed 1,sun bed
+188,charger 1,charger
+189,garage 1,sockets
+190,aquarium 1,appliance
+191,pond pump 1,swimming pool pump
+192,alarm 1,security alarm
+193,electric chair 1,motorised chair
+194,alarm+other 1,security alarm
+195,fan 1,fan
+196,electric blanket 1,electric blanket
+197,door bell 1,door bell
+198,organ 1,musical instrument
+199,sewing machine 1,sewing machine
+200,massage bed 1,massage bed
+201,other 1,unknown
+202,paper shredder 1,paper shredder
+203,hair dryer 2,hair dryer
+204,other 2,unknown
+205,sewing machine 2,sewing machine
+206,sewing machine 3,sewing machine
+207,steriliser 1,appliance
+208,sockets 1,sockets
+209,sockets 2,sockets
+210,sockets 3,sockets
+211,sockets 4,sockets
+212,sockets 5,sockets
+213,sockets 6,sockets
+214,sockets 7,sockets
+215,sockets 8,sockets
+216,sockets 9,sockets
+217,sockets 10,sockets
+218,vaccum cleaner 3,vacuum cleaner
+219,light distribution 5,light
+220,immersion heater 2,immersion heater
+221,light distribution 6,light
+222,sockets 11,sockets
+223,other 3,unknown
+224,baby monitor 1,baby monitor
+225,fire 1,electric space heater
+226,steriliser 2,appliance
+227,vivarium 1,appliance
+228,vivarium 2,appliance
+229,yoghurt maker 1,yoghurt maker
+230,smoke detectors 1,smoke alarm
+231,aquarium 2,appliance
+232,dehumidifier 1,dehumidifier
+233,cordless phone 1,appliance
+234,motorhome 1,electric vehicle
+235,jacuzzi 1,jacuzzi pump
+236,aquarium 3,appliance
+237,aquarium 4,appliance
+238,electric blanket 2,electric blanket
+239,iron 2,clothes iron
+240,main 1,unknown
+241,main 2,unknown
+242,audiovisual equipment 1,audio system
+243,tv+settopbox 1,television
+244,audiovisual site 5,audio system
+245,audiovisual site 6,audio system
+246,video sender 1,video sende
+247,cordless phone 2,appliance
+248,fan 2,fan
+249,fan 3,fan
+250,fan 4,fan
+251,Outside T degrees 1,unknown
+252,Inside T degrees 1,unknown
+253,Inside T degrees 2,unknown
+254,Inside T degrees 3,unknown
+255,Inside T degrees 4,unknown
