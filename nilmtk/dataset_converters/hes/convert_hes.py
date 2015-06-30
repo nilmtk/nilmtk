@@ -10,6 +10,7 @@ from nilmtk.utils import get_module_directory
 from nilmtk import DataSet
 from nilmtk.utils import get_datastore
 from nilmtk.datastore import Key
+from nilmtk.measurement import LEVEL_NAMES
 from nilm_metadata import convert_yaml_to_hdf5
 from inspect import currentframe, getfile, getsourcefile
 import yaml
@@ -197,21 +198,27 @@ def convert_hes(data_dir, output_filename, format='HDF', max_chunks=None):
         building_metadata['original_name'] = int(hes_house_id) # use python int
         building_metadata['elec_meters'] = {}
         building_metadata['appliances'] = []
+        
+        # initialise dict of instances of each appliance type
+        instance_counter = {}
+        
         for appliance_code in house_appliance_codes[hes_house_id]:
             nilmtk_meter_id = house_appliance_codes[hes_house_id].index(appliance_code)+1
-            is_temperature = False
             # meter metadata
             if appliance_code in MAINS_CODES:
                 meter_metadata = {'device_model': 'multivoies',
                                   'site_meter': True}
+                break
             elif appliance_code in CIRCUIT_CODES:
                 meter_metadata = {'device_model': 'multivoies'}
+                break
             elif appliance_code in TEMPERATURE_CODES:
-                is_temperature = True
+                break
             else: # is appliance
                 meter_metadata = {'device_model': 'wattmeter'}
-            if not is_temperature:
-                building_metadata['elec_meters'][nilmtk_meter_id] = meter_metadata
+                
+            # only appliance meters at this point
+            building_metadata['elec_meters'][nilmtk_meter_id] = meter_metadata
             # appliance metadata
             lookup_row = hes_to_nilmtk_appliance_lookup[hes_to_nilmtk_appliance_lookup.Code==appliance_code].iloc[0]
             appliance_metadata = {'original_name': lookup_row.Name, 
@@ -219,7 +226,12 @@ def convert_hes(data_dir, output_filename, format='HDF', max_chunks=None):
             # appliance type
             appliance_metadata.update({'type': lookup_row.nilmtk_name})
             # TODO appliance room
-            # TODO appliance instance number
+            
+            # appliance instance number
+            if instance_counter.get(lookup_row.nilmtk_name) == None:
+                instance_counter[lookup_row.nilmtk_name] = 0
+            instance_counter[lookup_row.nilmtk_name] += 1 
+            appliance_metadata['instance'] = instance_counter[lookup_row.nilmtk_name]
             
             building_metadata['appliances'].append(appliance_metadata)
         building = 'building{:d}'.format(nilmtk_building_id)
@@ -237,22 +249,14 @@ def _process_meter_in_chunk(nilmtk_house_id, meter_id, chunk, store, appliance_c
 
     data = chunk['data'].values
     index = chunk['datetime']
-    df = pd.DataFrame(data=data, index=index,
-                      columns=[('power', 'active')])
+    df = pd.DataFrame(data=data, index=index)
+    df.columns = pd.MultiIndex.from_tuples([('power', 'active')])
+    
+    # Modify the column labels to reflect the power measurements recorded.
+    df.columns.set_names(LEVEL_NAMES, inplace=True)
 
-    is_temperature = False
-    if appliance_code in MAINS_CODES:
-        pass
-        # TODO
-    elif appliance_code in CIRCUIT_CODES:
-        pass
-        # TODO
-    elif appliance_code in TEMPERATURE_CODES:
-        is_temperature = True
-        # TODO
-    else: # is appliance
-        key = Key(building=nilmtk_house_id, meter=meter_id)
-        store.append(str(key), df)
+    key = Key(building=nilmtk_house_id, meter=meter_id)
+    store.append(str(key), df)
         
 def _get_module_directory():
     # Taken from http://stackoverflow.com/a/6098238/732596
