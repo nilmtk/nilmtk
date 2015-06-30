@@ -1,0 +1,22 @@
+name: HES
+long_name: Household Electricity Survey
+creators:
+- DECC
+- DEFRA
+- EST
+publication_date: 2012
+institution: UK Department of Energy and Climate Change
+contact: Efficient.Products@icfi.com
+description: Electricity and temperature data collected from 250 homes in England.
+subject: Disaggregated power from residential buildings.
+number_of_buildings: 250
+timezone: Europe/London
+geo_location: #of London. Data is from across England
+  locality: Austin   # village, town, city or state
+  country: GB   # standard two-letter country code defined by ISO 3166-1 alpha-2
+  latitude: 51.505986 # Pecan Street lab's coorindates
+  longitude: -0.126082
+related_documents:
+- https://www.gov.uk/government/uploads/system/uploads/attachment_data/file/208097/10043_R66141HouseholdElectricitySurveyFinalReportissue4.pdf
+- http://www.energysavingtrust.org.uk/sites/default/files/reports/PoweringthenationreportCO332.pdf
+- https://www.gov.uk/government/uploads/system/uploads/attachment_data/file/325741/Powering_the_Nation_2_260614.pdf

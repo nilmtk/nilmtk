@@ -1,0 +1,29 @@
+wattmeter:
+  model: serial wattmeter
+  manufacturer: Enertech
+  manufacturer_url: http://www.enertech.net/
+  description: >
+    Measures appliance-level power demand.
+  sample_period: 120   # the interval between samples. In seconds.
+  max_sample_period: 240   # Max allowable interval between samples. Seconds.
+  measurements:
+  - physical_quantity: power   # power, voltage, energy, current?
+    type: active   # active (real power), reactive or apparent?
+    upper_limit: 3000
+    lower_limit: 0
+  wireless: false
+
+multivoies:
+  model: Multivoies system
+  manufacturer: OmegaWatt
+  manufacturer_url: http://mv.omegawatt.fr/
+  description: >
+    Measures circuit-level power demand. 
+  sample_period: 120   # the interval between samples. In seconds.
+  max_sample_period: 240   # Max allowable interval between samples. Seconds.
+  measurements:
+  - physical_quantity: power   # power, voltage, energy, current?
+    type: active   # active (real power), reactive or apparent?
+    upper_limit: 3000
+    lower_limit: 0
+  wireless: true
