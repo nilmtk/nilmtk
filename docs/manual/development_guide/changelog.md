@@ -7,6 +7,7 @@ This file describes major changes to NILMTK between versions.
 
 ### New features
 
+* [Ability to specify the number of states to use for modeling each appliance](http://nipunbatra.github.io/2015/07/nilmtk-states/)
 * `MeterGroup.plot()`
 * Correlation between different Elecmeters and corresponding plot; Issue #160
 * Finding number of simultaneous appliance switches; Issue #163
