@@ -8,7 +8,7 @@ SEED = 42
 np.random.seed(SEED)
 
 
-def cluster(X, max_num_clusters=3):
+def cluster(X, max_num_clusters=3, exact_num_clusters=None):
     '''Applies clustering on reduced data, 
     i.e. data where power is greater than threshold.
 
@@ -26,7 +26,7 @@ def cluster(X, max_num_clusters=3):
     data = _transform_data(X)
 
     # Find clusters
-    centroids = _apply_clustering(data, max_num_clusters)
+    centroids = _apply_clustering(data, max_num_clusters, exact_num_clusters)
     centroids = np.append(centroids, 0)  # add 'off' state
     centroids = np.round(centroids).astype(np.int32)
     centroids = np.unique(centroids)  # np.unique also sorts
@@ -66,7 +66,19 @@ def _transform_data(data):
         return data_above_thresh.reshape(n_samples, 1)
 
 
-def _apply_clustering(X, max_num_clusters):
+def _apply_clustering_n_clusters(X, n_clusters):
+    """
+    :param X: ndarray
+    :param n_clusters: exact number of clusters to use
+    :return:
+    """
+    from sklearn.cluster import KMeans
+    k_means = KMeans(init='k-means++', n_clusters=n_clusters)
+    k_means.fit(X)
+    return k_means.labels_, k_means.cluster_centers_
+
+
+def _apply_clustering(X, max_num_clusters, exact_num_clusters=None):
     '''
     Parameters
     ----------
@@ -79,7 +91,7 @@ def _apply_clustering(X, max_num_clusters):
         List of power in different states of an appliance
     '''
     # If we import sklearn at the top of the file then it makes autodoc fail
-    from sklearn.cluster import KMeans
+
     from sklearn import metrics
 
     # sklearn produces lots of DepreciationWarnings with PyTables
@@ -94,14 +106,21 @@ def _apply_clustering(X, max_num_clusters):
     k_means_labels = {}
     k_means_cluster_centers = {}
     k_means_labels_unique = {}
+
+    # If the exact number of clusters are specified, then use that
+    if exact_num_clusters is not None:
+        labels, centers = _apply_clustering_n_clusters(X, exact_num_clusters)
+        return centers.flatten()
+
+    # Exact number of clusters are not specified, use the cluster validity measures
+    # to find the optimal number
     for n_clusters in range(1, max_num_clusters):
 
         try:
-            k_means = KMeans(init='k-means++', n_clusters=n_clusters)
-            k_means.fit(X)
-            k_means_labels[n_clusters] = k_means.labels_
-            k_means_cluster_centers[n_clusters] = k_means.cluster_centers_
-            k_means_labels_unique[n_clusters] = np.unique(k_means_labels)
+            labels, centers = _apply_clustering_n_clusters(X, n_clusters)
+            k_means_labels[n_clusters] = labels
+            k_means_cluster_centers[n_clusters] = centers
+            k_means_labels_unique[n_clusters] = np.unique(labels)
             try:
                 sh_n = metrics.silhouette_score(
                     X, k_means_labels[n_clusters], metric='euclidean')
