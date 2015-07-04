@@ -1,13 +1,15 @@
 from __future__ import print_function, division
-import pandas as pd
 import itertools
-import numpy as np
-from hmmlearn import hmm
 from datetime import datetime
-from ..timeframe import merge_timeframes, list_of_timeframe_dicts, TimeFrame
-
 from copy import deepcopy
 from collections import OrderedDict
+
+import pandas as pd
+import numpy as np
+from hmmlearn import hmm
+
+from ..timeframe import merge_timeframes, TimeFrame
+from ..feature_detectors import cluster
 
 SEED = 42
 
@@ -147,7 +149,6 @@ def decode_hmm(length_sequence, centroids, appliance_list, states):
     total_num_combinations = 1
 
     for appliance in appliance_list:
-
         total_num_combinations *= len(centroids[appliance])
 
     for appliance in appliance_list:
@@ -158,7 +159,6 @@ def decode_hmm(length_sequence, centroids, appliance_list, states):
 
         factor = total_num_combinations
         for appliance in appliance_list:
-
             # assuming integer division (will cause errors in Python 3x)
             factor = factor // len(centroids[appliance])
 
@@ -170,12 +170,11 @@ def decode_hmm(length_sequence, centroids, appliance_list, states):
 
 
 class FHMM(object):
-
     def __init__(self):
         self.model = {}
         self.predictions = pd.DataFrame()
 
-    def train(self, metergroup, **load_kwargs):
+    def train(self, metergroup, num_states_dict={}, **load_kwargs):
         """
         Train using 1d FHMM. Places the learnt model in `model` attribute
         The current version performs training ONLY on the first chunk.
@@ -183,16 +182,34 @@ class FHMM(object):
         Assumes all pre-processing has been done.
         """
         learnt_model = OrderedDict()
-        for i, meter in enumerate(metergroup.submeters().meters):
-            print("Training model for submeter '{}'".format(meter))
-            learnt_model[meter] = hmm.GaussianHMM(2, "full")
+        num_meters = len(metergroup.meters)
+        if num_meters > 12:
+            max_num_clusters = 2
+        else:
+            max_num_clusters = 3
 
-            # Data to fit
+        for i, meter in enumerate(metergroup.submeters().meters):
+
             X = []
             meter_data = meter.power_series(**load_kwargs).next().dropna()
             length = len(meter_data.index)
             X = meter_data.values.reshape(length, 1)
             self.X = X
+
+            if num_states_dict.get(meter) is not None:
+                # User has specified the number of states for this appliance
+                num_total_states = num_states_dict.get(meter)
+
+            else:
+                # Find the optimum number of states
+                states = cluster(meter_data, max_num_clusters)
+                num_total_states = len(states)
+
+            print("Training model for submeter '{}'".format(meter))
+            learnt_model[meter] = hmm.GaussianHMM(num_total_states, "full")
+
+            # Data to fit
+
             learnt_model[meter].fit([X])
 
         # Combining to make a AFHMM
@@ -268,6 +285,7 @@ class FHMM(object):
             Passed to `mains.power_series(**kwargs)`
         '''
         import warnings
+
         warnings.filterwarnings("ignore", category=Warning)
         MIN_CHUNK_LENGTH = 100
         if not self.model:
@@ -418,4 +436,3 @@ class FHMM(object):
         }
 
         output_datastore.save_metadata(building_path, building_metadata)
-

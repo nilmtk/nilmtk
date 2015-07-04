@@ -1,10 +1,13 @@
 from __future__ import print_function, division
+from datetime import datetime
+
 import pandas as pd
 import numpy as np
-from datetime import datetime
+
 from ..utils import find_nearest
 from ..feature_detectors import cluster
-from ..timeframe import merge_timeframes, list_of_timeframe_dicts, TimeFrame
+from ..timeframe import merge_timeframes, TimeFrame
+
 
 # Fix the seed for repeatability of experiments
 SEED = 42
@@ -12,7 +15,6 @@ np.random.seed(SEED)
 
 
 class CombinatorialOptimisation(object):
-
     """1 dimensional combinatorial optimisation NILM algorithm.
 
     Attributes
@@ -29,7 +31,7 @@ class CombinatorialOptimisation(object):
     def __init__(self):
         self.model = []
 
-    def train(self, metergroup, num_states_dict = {}, **load_kwargs):
+    def train(self, metergroup, num_states_dict={}, **load_kwargs):
         """Train using 1D CO. Places the learnt model in the `model` attribute.
 
         Parameters
@@ -57,7 +59,7 @@ class CombinatorialOptimisation(object):
             for chunk in meter.power_series(**load_kwargs):
                 num_total_states = num_states_dict.get(meter)
                 if num_total_states is not None:
-                    num_on_states = num_total_states-1
+                    num_on_states = num_total_states - 1
                 else:
                     num_on_states = None
                 states = cluster(chunk, max_num_clusters, num_on_states)
@@ -97,6 +99,7 @@ class CombinatorialOptimisation(object):
 
         # sklearn produces lots of DepreciationWarnings with PyTables
         import warnings
+
         warnings.filterwarnings("ignore", category=DeprecationWarning)
 
         # Extract optional parameters from load_kwargs
@@ -266,24 +269,24 @@ class CombinatorialOptimisation(object):
 
         output_datastore.save_metadata(building_path, building_metadata)
 
-    # TODO: fix export and import!
-    # https://github.com/nilmtk/nilmtk/issues/193
-    #
-    # def export_model(self, filename):
-    #     model_copy = {}
-    #     for appliance, appliance_states in self.model.iteritems():
-    #         model_copy[
-    #             "{}_{}".format(appliance.name, appliance.instance)] = appliance_states
-    #     j = json.dumps(model_copy)
-    #     with open(filename, 'w+') as f:
-    #         f.write(j)
+        # TODO: fix export and import!
+        # https://github.com/nilmtk/nilmtk/issues/193
+        #
+        # def export_model(self, filename):
+        #     model_copy = {}
+        #     for appliance, appliance_states in self.model.iteritems():
+        #         model_copy[
+        #             "{}_{}".format(appliance.name, appliance.instance)] = appliance_states
+        #     j = json.dumps(model_copy)
+        #     with open(filename, 'w+') as f:
+        #         f.write(j)
 
-    # def import_model(self, filename):
-    #     with open(filename, 'r') as f:
-    #         temp = json.loads(f.read())
-    #     for appliance, centroids in temp.iteritems():
-    #         appliance_name = appliance.split("_")[0].encode("ascii")
-    #         appliance_instance = int(appliance.split("_")[1])
-    #         appliance_name_instance = ApplianceID(
-    #             appliance_name, appliance_instance)
-    #         self.model[appliance_name_instance] = centroids
+        # def import_model(self, filename):
+        #     with open(filename, 'r') as f:
+        #         temp = json.loads(f.read())
+        #     for appliance, centroids in temp.iteritems():
+        #         appliance_name = appliance.split("_")[0].encode("ascii")
+        #         appliance_instance = int(appliance.split("_")[1])
+        #         appliance_name_instance = ApplianceID(
+        #             appliance_name, appliance_instance)
+        #         self.model[appliance_name_instance] = centroids
