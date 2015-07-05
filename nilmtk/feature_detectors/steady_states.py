@@ -9,7 +9,13 @@ SEED = 42
 np.random.seed(SEED)
 
 
-def find_steady_states_transients(metergroup, cols, noise_level, state_threshold,  **load_kwargs):
+def find_steady_states_transients(metergroup, cols, noise_level,
+                                  state_threshold, **load_kwargs):
+    """
+    Returns
+    -------
+    steady_states, transients : pd.DataFrame
+    """
     steady_states_list = []
     transients_list = []
 
@@ -22,10 +28,11 @@ def find_steady_states_transients(metergroup, cols, noise_level, state_threshold
             # Active, reactive and apparent are available
             power_dataframe = power_df[[('power', 'active'), ('power', 'reactive')]]
         """
-
         power_dataframe = power_df.dropna()
 
-        x, y = find_steady_states(power_dataframe, noise_level=noise_level, stateThreshold=state_threshold)
+        x, y = find_steady_states(
+            power_dataframe, noise_level=noise_level,
+            stateThreshold=state_threshold)
         steady_states_list.append(x)
         transients_list.append(y)
     return [pd.concat(steady_states_list), pd.concat(transients_list)]
@@ -33,25 +40,22 @@ def find_steady_states_transients(metergroup, cols, noise_level, state_threshold
 
 def find_steady_states(dataframe, min_n_samples=2, stateThreshold=15,
                        noise_level=70):
-    """
-    Finds steady states given a DataFrame of power
+    """Finds steady states given a DataFrame of power.
 
     Parameters
     ----------
-
     dataframe: pd.DataFrame with DateTimeIndex
     min_n_samples(int): number of samples to consider constituting a
-             steady state.
-    stateThreshold: maximum difference between highest and lowest 
+        steady state.
+    stateThreshold: maximum difference between highest and lowest
         value in steady state.
-    noise_level: the level used to define significant 
-        appliances, transitions below this level will be ignored. 
+    noise_level: the level used to define significant
+        appliances, transitions below this level will be ignored.
         See Hart 1985. p27.
-
 
     Returns
     -------
-
+    steady_states, transitions
     """
     # Tells whether we have both real and reactive power or only real power
     num_measurements = len(dataframe.columns)

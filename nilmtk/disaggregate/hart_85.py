@@ -256,7 +256,17 @@ class Hart85(object):
 
     def hart85_disaggregate_single_chunk(self, chunk, prev, transients):
         """
+        Parameters
+        ----------
+        chunk : pd.DataFrame
+            mains power
+        prev
+        transients : returned by find_steady_state_transients
 
+        Returns
+        -------
+        states : pd.DataFrame
+            with same index as `chunk`.
         """
 
         states = pd.DataFrame(
@@ -264,7 +274,7 @@ class Hart85(object):
         for transient_tuple in transients.itertuples():
             if transient_tuple[0] < chunk.index[0]:
                 # Transient occurs before chunk has started; do nothing
-                pass 
+                pass
             elif transient_tuple[0] > chunk.index[-1]:
                 # Transient occurs after chunk has ended; do nothing
                 pass
@@ -372,7 +382,7 @@ class Hart85(object):
             For storing power predictions from disaggregation algorithm.
         output_name : string, optional
             The `name` to use in the metadata for the `output_datastore`.
-            e.g. some sort of name for this experiment.  Defaults to 
+            e.g. some sort of name for this experiment.  Defaults to
             "NILMTK_Hart85_<date>"
         resample_seconds : number, optional
             The desired sample period in seconds.
@@ -387,7 +397,7 @@ class Hart85(object):
         building_path = '/building{}'.format(mains.building())
         mains_data_location = '{}/elec/meter1'.format(building_path)
 
-        [temp, transients] = find_steady_states_transients(
+        [_, transients] = find_steady_states_transients(
             mains, cols=self.cols, state_threshold=self.state_threshold,
             noise_level=self.noise_level, **load_kwargs)
 
