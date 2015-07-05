@@ -293,7 +293,7 @@ class CombinatorialOptimisation(object):
 
         # Add vampire power to the model
         if vampire_power is None:
-            vampire_power = mains.min()
+            vampire_power = mains.values.min()
         if vampire_power > 0:
             print("Including vampire_power = {} watts to model..."
                   .format(vampire_power))

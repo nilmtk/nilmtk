@@ -294,7 +294,7 @@ class MeterGroup(Electric):
     def select(self, **kwargs):
         """Select a group of meters based on meter metadata.
 
-        e.g. 
+        e.g.
         * select(building=1, sample_period=6)
         * select(room='bathroom')
 
