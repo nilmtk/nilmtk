@@ -7,7 +7,7 @@ import numpy as np
 from ..utils import find_nearest
 from ..feature_detectors import cluster
 from ..timeframe import merge_timeframes, TimeFrame
-
+from nilmtk.exceptions import VampirePowerAlreadyInModelError
 
 # Fix the seed for repeatability of experiments
 SEED = 42
@@ -30,6 +30,8 @@ class CombinatorialOptimisation(object):
 
     def __init__(self):
         self.model = []
+        self.state_combinations = None
+        self.MIN_CHUNK_LENGTH = 100
 
     def train(self, metergroup, num_states_dict={}, **load_kwargs):
         """Train using 1D CO. Places the learnt model in the `model` attribute.
@@ -67,6 +69,18 @@ class CombinatorialOptimisation(object):
                     'states': states,
                     'training_metadata': meter})
                 break  # TODO handle multiple chunks per appliance
+
+        # Get centroids
+        # If we import sklearn at the top of the file then auto doc fails.
+        from sklearn.utils.extmath import cartesian
+        centroids = [model['states'] for model in self.model]
+        self.state_combinations = cartesian(centroids)
+        # self.state_combinations is a 2D array
+        # each column is a chan
+        # each row is a possible combination of power demand values e.g.
+        # [[0, 0, 0, 0], [0, 0, 0, 100], [0, 0, 50, 0],
+        #  [0, 0, 50, 100], ...]
+
         print("Done training!")
 
     def disaggregate(self, mains, output_datastore, **load_kwargs):
@@ -86,49 +100,15 @@ class CombinatorialOptimisation(object):
         **load_kwargs : key word arguments
             Passed to `mains.power_series(**kwargs)`
         '''
-        MIN_CHUNK_LENGTH = 100
-
-        if not self.model:
-            raise RuntimeError(
-                "The model needs to be instantiated before"
-                " calling `disaggregate`.  For example, the"
-                " model can be instantiated by running `train`.")
-
-        # If we import sklearn at the top of the file then auto doc fails.
-        from sklearn.utils.extmath import cartesian
-
-        # sklearn produces lots of DepreciationWarnings with PyTables
-        import warnings
-
-        warnings.filterwarnings("ignore", category=DeprecationWarning)
+        # Vampire power
+        vampire_power = mains.vampire_power()
 
         # Extract optional parameters from load_kwargs
         date_now = datetime.now().isoformat().split('.')[0]
         output_name = load_kwargs.pop('output_name', 'NILMTK_CO_' + date_now)
         resample_seconds = load_kwargs.pop('resample_seconds', 60)
-
-        # Get centroids
-        centroids = [model['states'] for model in self.model]
-        state_combinations = cartesian(centroids)
-        # state_combinations is a 2D array
-        # each column is a chan
-        # each row is a possible combination of power demand values e.g.
-        # [[0, 0, 0, 0], [0, 0, 0, 100], [0, 0, 50, 0], [0, 0, 50, 100], ...]
-
-        # Add vampire power to the model
-        vampire_power = mains.vampire_power()
-        print("vampire_power = {} watts".format(vampire_power))
-        n_rows = state_combinations.shape[0]
-        vampire_power_array = np.zeros((n_rows, 1)) + vampire_power
-        state_combinations = np.hstack(
-            (state_combinations, vampire_power_array))
-
-        summed_power_of_each_combination = np.sum(state_combinations, axis=1)
-        # summed_power_of_each_combination is now an array where each
-        # value is the total power demand for each combination of states.
-
-        load_kwargs['sections'] = load_kwargs.pop('sections',
-                                                  mains.good_sections())
+        load_kwargs['sections'] = load_kwargs.pop(
+            'sections', mains.good_sections())
         load_kwargs.setdefault('resample', True)
         load_kwargs.setdefault('sample_period', resample_seconds)
         timeframes = []
@@ -137,32 +117,26 @@ class CombinatorialOptimisation(object):
         data_is_available = False
 
         for chunk in mains.power_series(**load_kwargs):
-
             # Check that chunk is sensible size before resampling
-            if len(chunk) < MIN_CHUNK_LENGTH:
+            if len(chunk) < self.MIN_CHUNK_LENGTH:
                 continue
 
             # Record metadata
             timeframes.append(chunk.timeframe)
             measurement = chunk.name
 
-            # Start disaggregation
-            indices_of_state_combinations, residual_power = find_nearest(
-                summed_power_of_each_combination, chunk.values)
+            appliance_powers = self.disaggregate_chunk(chunk, vampire_power)
 
             for i, model in enumerate(self.model):
-                print("Estimating power demand for '{}'"
-                      .format(model['training_metadata']))
+                appliance_power = appliance_powers[i]
                 data_is_available = True
-                predicted_power = state_combinations[
-                    indices_of_state_combinations, i].flatten()
                 cols = pd.MultiIndex.from_tuples([chunk.name])
                 meter_instance = model['training_metadata'].instance()
-                output_datastore.append('{}/elec/meter{}'
-                                        .format(building_path, meter_instance),
-                                        pd.DataFrame(predicted_power,
-                                                     index=chunk.index,
-                                                     columns=cols))
+                df = pd.DataFrame(
+                    appliance_power.values, index=appliance_power.index,
+                    columns=cols)
+                key = '{}/elec/meter{}'.format(building_path, meter_instance)
+                output_datastore.append(key, df)
 
             # Copy mains data to disag output
             output_datastore.append(key=mains_data_location,
@@ -290,3 +264,62 @@ class CombinatorialOptimisation(object):
         #         appliance_name_instance = ApplianceID(
         #             appliance_name, appliance_instance)
         #         self.model[appliance_name_instance] = centroids
+
+    def disaggregate_chunk(self, mains, vampire_power=None):
+        """In-memory disaggregation.
+
+        Parameters
+        ----------
+        mains : pd.DataFrame
+
+        Returns
+        -------
+        appliance_powers : pd.DataFrame where each column represents a
+            disaggregated appliance.  Column names are the integer index
+            into `self.model` for the appliance in question.
+        """
+        if not self.model:
+            raise RuntimeError(
+                "The model needs to be instantiated before"
+                " calling `disaggregate`.  The model"
+                " can be instantiated by running `train`.")
+
+        if len(mains) < self.MIN_CHUNK_LENGTH:
+            raise RuntimeError("Chunk is too short.")
+
+        # sklearn produces lots of DepreciationWarnings with PyTables
+        import warnings
+        warnings.filterwarnings("ignore", category=DeprecationWarning)
+
+        # Add vampire power to the model
+        if vampire_power is None:
+            vampire_power = mains.min()
+        if vampire_power > 0:
+            print("Including vampire_power = {} watts to model..."
+                  .format(vampire_power))
+            n_rows = self.state_combinations.shape[0]
+            vampire_power_array = np.zeros((n_rows, 1)) + vampire_power
+            state_combinations = np.hstack(
+                (self.state_combinations, vampire_power_array))
+        else:
+            state_combinations = self.state_combinations
+
+        summed_power_of_each_combination = np.sum(state_combinations, axis=1)
+        # summed_power_of_each_combination is now an array where each
+        # value is the total power demand for each combination of states.
+
+        # Start disaggregation
+        indices_of_state_combinations, residual_power = find_nearest(
+            summed_power_of_each_combination, mains.values)
+
+        appliance_powers_dict = {}
+        for i, model in enumerate(self.model):
+            print("Estimating power demand for '{}'"
+                  .format(model['training_metadata']))
+            predicted_power = state_combinations[
+                indices_of_state_combinations, i].flatten()
+            column = pd.Series(predicted_power, index=mains.index, name=i)
+            appliance_powers_dict[i] = column
+
+        appliance_powers = pd.DataFrame(appliance_powers_dict)
+        return appliance_powers

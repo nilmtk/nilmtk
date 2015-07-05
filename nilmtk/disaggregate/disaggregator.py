@@ -53,16 +53,16 @@ class Disaggregator(object):
         """
         raise NotImplementedError()
 
-    def disaggregate_chunk(self, chunk):
+    def disaggregate_chunk(self, mains):
         """In-memory disaggregation.
 
         Parameters
         ----------
-        chunk : pd.DataFrame
+        mains : pd.DataFrame
 
         Returns
         -------
-        chunk : pd.DataFrame where each column represents a
+        appliances : pd.DataFrame where each column represents a
             disaggregated appliance
         """
         raise NotImplementedError()
