@@ -196,7 +196,7 @@ class Hart85(object):
     Attributes
     ----------
     model : dict
-        Each key is either the instance integer for an ElecMeter, 
+        Each key is either the instance integer for an ElecMeter,
         or a tuple of instances for a MeterGroup.
         Each value is a sorted list of power in different states.
     """
@@ -204,9 +204,10 @@ class Hart85(object):
     def __init__(self):
         self.model = {}
 
-    def train(self, metergroup, cols=[('power','active')],
-                buffer_size=20, noise_level=70, state_threshold=15,  min_tolerance=100, percent_tolerance=0.035,
-                large_transition=1000, **kwargs):
+    def train(self, metergroup, cols=[('power', 'active')],
+              buffer_size=20, noise_level=70, state_threshold=15,
+              min_tolerance=100, percent_tolerance=0.035,
+              large_transition=1000, **kwargs):
         """
         Train using Hart85. Places the learnt model in `model` attribute.
 
@@ -223,23 +224,28 @@ class Hart85(object):
         min_tolerance: int, optional
             variance in power draw allowed for pairing a match
         percent_tolerance: float, optional
-            if transition is greater than large_transition, then use percent of large_transition
+            if transition is greater than large_transition,
+            then use percent of large_transition
         large_transition: float, optional
             power draw of a Large transition
         """
         self.cols = cols
         self.state_threshold = state_threshold
         self.noise_level = noise_level
-        [self.steady_states, self.transients] = find_steady_states_transients(metergroup,  cols, noise_level, state_threshold, **kwargs)
-        self.pair_df = self.pair(buffer_size, min_tolerance, percent_tolerance, large_transition)
+        [self.steady_states, self.transients] = find_steady_states_transients(
+            metergroup,  cols, noise_level, state_threshold, **kwargs)
+        self.pair_df = self.pair(
+            buffer_size, min_tolerance, percent_tolerance, large_transition)
         self.centroids = hart85_means_shift_cluster(self.pair_df, cols)
 
-    def pair(self, buffer_size, min_tolerance, percent_tolerance, large_transition):
+    def pair(self, buffer_size, min_tolerance, percent_tolerance,
+             large_transition):
         subset = list(self.transients.itertuples())
-        buffer = PairBuffer(min_tolerance=min_tolerance,
-                            buffer_size=buffer_size, percent_tolerance=percent_tolerance,
-                            large_transition=large_transition,
-                            num_measurements=len(self.transients.columns) + 1)
+        buffer = PairBuffer(
+            min_tolerance=min_tolerance, buffer_size=buffer_size,
+            percent_tolerance=percent_tolerance,
+            large_transition=large_transition,
+            num_measurements=len(self.transients.columns) + 1)
         for s in subset:
             # if len(buffer.transitionList) < bsize
             if len(buffer.transition_list) == buffer_size:
@@ -248,14 +254,13 @@ class Hart85(object):
             buffer.pair_transitions()
         return buffer.matched_pairs
 
-  
-
     def hart85_disaggregate_single_chunk(self, chunk, prev, transients):
         """
 
         """
 
-        states = pd.DataFrame(-1, index=chunk.index, columns=self.centroids.index.values)
+        states = pd.DataFrame(
+            -1, index=chunk.index, columns=self.centroids.index.values)
         for transient_tuple in transients.itertuples():
             if transient_tuple[0] < chunk.index[0]:
                 # Transient occurs before chunk has started; do nothing
@@ -267,16 +272,23 @@ class Hart85(object):
                 # Absolute value of transient
                 abs_value = np.abs(transient_tuple[1:])
                 positive = transient_tuple[1] > 0
-                absolute_value_transient_minus_centroid = pd.DataFrame((self.centroids - abs_value).abs())
+                abs_value_transient_minus_centroid = pd.DataFrame(
+                    (self.centroids - abs_value).abs())
                 if len(transient_tuple) == 2:
                     # 1d data
-                    index_least_delta = absolute_value_transient_minus_centroid.idxmin().values[0]
+                    index_least_delta = (
+                        abs_value_transient_minus_centroid.idxmin().values[0])
                 else:
-                    # 2d data. Need to find absolute value before computing minimum
-                    columns = absolute_value_transient_minus_centroid.columns
-                    absolute_value_transient_minus_centroid["multidim"] = absolute_value_transient_minus_centroid[[columns[0]]]*absolute_value_transient_minus_centroid[[columns[0]]] + absolute_value_transient_minus_centroid[[columns[1]]]*absolute_value_transient_minus_centroid[[columns[1]]]
-                    index_least_delta = absolute_value_transient_minus_centroid["multidim"].argmin()
-                #print("Index_least",index_least_delta)
+                    # 2d data.
+                    # Need to find absolute value before computing minimum
+                    columns = abs_value_transient_minus_centroid.columns
+                    abs_value_transient_minus_centroid["multidim"] = (
+                        abs_value_transient_minus_centroid[[columns[0]]] *
+                        abs_value_transient_minus_centroid[[columns[0]]] +
+                        abs_value_transient_minus_centroid[[columns[1]]] *
+                        abs_value_transient_minus_centroid[[columns[1]]])
+                    index_least_delta = (
+                        abs_value_transient_minus_centroid["multidim"].argmin())
                 if positive:
                     # Turned on
                     states.loc[transient_tuple[0]][index_least_delta] = 1
@@ -287,72 +299,67 @@ class Hart85(object):
         return states
 
     def assign_power_from_states(self, states_chunk, prev):
-        """
-
-        """
         self.schunk = states_chunk
         di = {}
         ndim = len(self.centroids.columns)
         for appliance in states_chunk.columns:
-            df = pd.DataFrame(index = states_chunk.index)
             values = states_chunk[[appliance]].values.flatten()
-            if ndim==1:
+            if ndim == 1:
                 power = np.zeros(len(values), dtype=int)
             else:
                 power = np.zeros((len(values), 2), dtype=int)
-            on = False
+            # on = False
             i = 0
-            while i <len(values)-1:                     
+            while i < len(values)-1:
                 if values[i] == 1:
-                    #print("A", values[i], i)
+                    # print("A", values[i], i)
                     on = True
-                    i = i +1 
+                    i = i + 1
                     power[i] = self.centroids.ix[appliance].values
-                    while values[i]!=0 and i<len(values)-1:
-                        #print("B", values[i], i)
+                    while values[i] != 0 and i < len(values)-1:
+                        # print("B", values[i], i)
                         power[i] = self.centroids.ix[appliance].values
                         i = i + 1
                 elif values[i] == 0:
-                    #print("C", values[i], i)
+                    # print("C", values[i], i)
                     on = False
-                    i = i +1 
+                    i = i + 1
                     power[i] = 0
-                    while values[i]!=1 and i<len(values)-1:
-                        #print("D", values[i], i)
+                    while values[i] != 1 and i < len(values)-1:
+                        # print("D", values[i], i)
                         if ndim == 1:
                             power[i] = 0
                         else:
                             power[i] = [0, 0]
                         i = i + 1
                 else:
-                    #print("E", values[i], i)
-                    # Unknown state. If previously we know about this appliance's state, we can 
+                    # print("E", values[i], i)
+                    # Unknown state. If previously we know about this
+                    # appliance's state, we can
                     # use that. Else, it defaults to 0
-                    if prev[appliance]==-1 or prev[appliance]==0:
-                        #print("F", values[i], i)
+                    if prev[appliance] == -1 or prev[appliance] == 0:
+                        # print("F", values[i], i)
                         on = False
                         power[i] = 0
-                        while values[i]!=1 and i<len(values)-1:
-                            #print("G", values[i], i)
-                            if ndim==1:
+                        while values[i] != 1 and i < len(values)-1:
+                            # print("G", values[i], i)
+                            if ndim == 1:
                                 power[i] = 0
                             else:
                                 power[i] = [0, 0]
                             i = i + 1
                     else:
-                        #print("H", values[i], i)
+                        # print("H", values[i], i)
                         on = True
                         power[i] = self.centroids.ix[appliance].values
-                        while values[i]!=0 and i<len(values)-1:
-                            #print("I", values[i], i)
+                        while values[i] != 0 and i < len(values)-1:
+                            # print("I", values[i], i)
                             power[i] = self.centroids.ix[appliance].values
                             i = i + 1
-                    
 
             di[appliance] = power
-            #print(power.sum())
-        return di          
-
+            # print(power.sum())
+        return di
 
     def disaggregate(self, mains, output_datastore, **load_kwargs):
         """
@@ -380,7 +387,9 @@ class Hart85(object):
         building_path = '/building{}'.format(mains.building())
         mains_data_location = '{}/elec/meter1'.format(building_path)
 
-        [temp, transients] = find_steady_states_transients(mains, cols=self.cols, state_threshold = self.state_threshold, noise_level=self.noise_level, **load_kwargs)
+        [temp, transients] = find_steady_states_transients(
+            mains, cols=self.cols, state_threshold=self.state_threshold,
+            noise_level=self.noise_level, **load_kwargs)
 
         # For now ignoring the first transient
         transients = transients[1:]
@@ -391,25 +400,27 @@ class Hart85(object):
         for meter in learnt_meters:
             prev[meter] = -1
 
-        states_total = [] 
-        timeframes=[]
+        timeframes = []
         # Now iterating over mains data and disaggregating chunk by chunk
         for chunk in mains.power_series(**load_kwargs):
             # Record metadata
             timeframes.append(chunk.timeframe)
             measurement = chunk.name
-            states_chunk = self.hart85_disaggregate_single_chunk(chunk, prev, transients)
+            states_chunk = self.hart85_disaggregate_single_chunk(
+                chunk, prev, transients)
             prev = states_chunk.iloc[-1].to_dict()
-            power_chunk_dict = self.assign_power_from_states(states_chunk, prev)
-            #self.po = power_chunk_dict
+            power_chunk_dict = self.assign_power_from_states(
+                states_chunk, prev)
+            # self.po = power_chunk_dict
             cols = pd.MultiIndex.from_tuples([chunk.name])
+            df = pd.DataFrame(
+                power_chunk_dict[meter],
+                index=states_chunk.index,
+                columns=cols)
+            key = '{}/elec/meter{:d}'.format(building_path, meter+2)
             for meter in power_chunk_dict.keys():
-                output_datastore.append('{}/elec/meter{:d}'
-                                        .format(building_path, meter+2),
-                                        pd.DataFrame(power_chunk_dict[meter],
-                                                     index=states_chunk.index,
-                                                     columns=cols))
-       
+                output_datastore.append(key, df)
+
             output_datastore.append(key=mains_data_location,
                                     value=pd.DataFrame(chunk, columns=cols))
 
@@ -475,7 +486,6 @@ class Hart85(object):
                 }
             })
 
-       
         appliances = []
         for i in range(len(self.centroids.index)):
             appliance = {
