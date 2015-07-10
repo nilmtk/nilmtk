@@ -32,13 +32,13 @@ def find_steady_states_transients(metergroup, cols, noise_level,
 
         x, y = find_steady_states(
             power_dataframe, noise_level=noise_level,
-            stateThreshold=state_threshold)
+            state_threshold=state_threshold)
         steady_states_list.append(x)
         transients_list.append(y)
     return [pd.concat(steady_states_list), pd.concat(transients_list)]
 
 
-def find_steady_states(dataframe, min_n_samples=2, stateThreshold=15,
+def find_steady_states(dataframe, min_n_samples=2, state_threshold=15,
                        noise_level=70):
     """Finds steady states given a DataFrame of power.
 
@@ -98,7 +98,7 @@ def find_steady_states(dataframe, min_n_samples=2, stateThreshold=15,
             np.subtract(this_measurement, previous_measurement))
         # logging.debug('The State Change is: %s' % (stateChange,))
 
-        if np.sum(state_change > stateThreshold):
+        if np.sum(state_change > state_threshold):
             instantaneous_change = True
         else:
             instantaneous_change = False

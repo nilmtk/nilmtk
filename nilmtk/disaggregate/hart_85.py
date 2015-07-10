@@ -259,7 +259,7 @@ class Hart85(object):
             buffer.pair_transitions()
         return buffer.matched_pairs
 
-    def disaggregate_single_chunk(self, chunk, prev, transients):
+    def disaggregate_chunk(self, chunk, prev, transients):
         """
         Parameters
         ----------
@@ -421,7 +421,7 @@ class Hart85(object):
             # Record metadata
             timeframes.append(chunk.timeframe)
             measurement = chunk.name
-            power_df = self.disaggregate_single_chunk(
+            power_df = self.disaggregate_chunk(
                 chunk, prev, transients)
 
             cols = pd.MultiIndex.from_tuples([chunk.name])
