@@ -757,7 +757,6 @@ class Electric(object):
         -------
         list of pd.Series.  Each series contains one activation.
         """
-        kwargs.setdefault('resample', True)
         if on_power_threshold is None:
             on_power_threshold = self.on_power_threshold()
 
@@ -768,10 +767,12 @@ class Electric(object):
             min_on_duration = self.min_on_duration()
 
         activations = []
+        kwargs.setdefault('resample', True)
         for chunk in self.power_series(**kwargs):
             activations_for_chunk = activation_series_for_chunk(
-                chunk, min_off_duration, min_on_duration,
-                border, on_power_threshold)
+                chunk=chunk, min_off_duration=min_off_duration,
+                min_on_duration=min_on_duration, border=border,
+                on_power_threshold=on_power_threshold)
             activations.extend(activations_for_chunk)
 
         return activations
@@ -829,7 +830,7 @@ def activation_series_for_chunk(chunk, min_off_duration=0, min_on_duration=0,
     border : int
         Number of rows to include before and after the detected activation
     on_power_threshold : int or float
-        Defaults to self.on_power_threshold()
+        Watts
 
     Returns
     -------
