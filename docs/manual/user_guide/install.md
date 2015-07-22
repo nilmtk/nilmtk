@@ -45,9 +45,17 @@ python setup.py install
 cd ..
 ```
 
+- Install psycopg2
+First you need to install Postgres:
+```bash
+sudo apt-get install postgresql postgresql-contrib
+sudo apt-get install postgresql-server-dev-all
+pip install psycopg2
+```
+
 - Misc. pip installs
 ```bash
-pip install psycopg2 nose coveralls coverage
+pip install nose coveralls coverage
 ```
 
 - Finally! Install NILMTK
