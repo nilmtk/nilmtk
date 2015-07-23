@@ -760,9 +760,8 @@ class Electric(object):
           `activation_series` will be removed in NILMTK v0.3.
           Please use `get_activations` instead.
         """
-        raise DeprecationWarning(
-            "`activation_series()` is deprecated."
-            "  Please use `get_activations()` instead!")
+        warn("`activation_series()` is deprecated."
+             "  Please use `get_activations()` instead!", DeprecationWarning)
         return self.get_activations(*args, **kwargs)
 
     def get_activations(self, min_off_duration=None, min_on_duration=None,
@@ -876,9 +875,8 @@ def activation_series_for_chunk(*args, **kwargs):
       `activation_series` will be removed in NILMTK v0.3.
       Please use `get_activations` instead.
     """
-    raise DeprecationWarning(
-        "`activation_series_for_chunk()` is deprecated."
-        "  Please use `get_activations()` instead!")
+    warn("`activation_series_for_chunk()` is deprecated."
+         "  Please use `get_activations()` instead!", DeprecationWarning)
     return get_activations(*args, **kwargs)
 
 
