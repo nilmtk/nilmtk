@@ -58,11 +58,6 @@ pip install psycopg2
 pip install nose coveralls coverage
 ```
 
-- Install IPython
-```bash
-pip install ipython
-```
-
 - Finally! Install NILMTK
 ```bash
 git clone https://github.com/nilmtk/nilmtk.git
