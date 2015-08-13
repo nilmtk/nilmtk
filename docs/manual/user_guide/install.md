@@ -26,7 +26,7 @@ sudo apt-get install git
 
 - Install pip and other dependencies which might be missing from Anaconda
 ```bash
-conda install --yes pip numpy scipy six scikit-learn pandas numexpr pytables dateutil matplotlib networkx
+conda install --yes pip numpy scipy six scikit-learn pandas numexpr tables matplotlib networkx
 ```
 
 - Install [NILM Metadata](https://github.com/nilmtk/nilm_metadata).
