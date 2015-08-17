@@ -103,7 +103,7 @@ class Electric(object):
         return False
 
     def power_series_all_data(self, **kwargs):
-        chunks = []        
+        chunks = []
         for series in self.power_series(**kwargs):
             if len(series) > 0:
                 chunks.append(series)
