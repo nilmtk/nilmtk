@@ -49,14 +49,22 @@ class Appliance(Hashable):
 
     @property
     def n_meters(self):
-        """Return number of meters (int) to which this appliance is connected"""
+        """Return number of meters (int) to which this
+        appliance is connected"""
         return len(self.metadata['meters'])
 
     def on_power_threshold(self):
-        threshold_from_appliance_type = self.type.get('on_power_threshold', 
-                                                      DEFAULT_ON_POWER_THRESHOLD)
-        return self.metadata.get('on_power_threshold', 
-                                 threshold_from_appliance_type)
+        try:
+            return self.metadata['on_power_threshold']
+        except KeyError:
+            pass
+
+        try:
+            return self.metadata['nominal_consumption']['on_power']
+        except KeyError:
+            threshold_from_appliance_type = self.type.get(
+                'on_power_threshold', DEFAULT_ON_POWER_THRESHOLD)
+            return threshold_from_appliance_type
 
     def label(self, pretty=False):
         """Return string '(<type>, <identifier>)' e.g. '(fridge, 1)'
