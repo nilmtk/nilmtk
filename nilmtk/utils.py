@@ -23,7 +23,9 @@ def show_versions():
     output["System version"] = "{}.{}".format(system_information.major,
                                               system_information.minor)
 
-    PACKAGES = ["nilmtk", "nilm_metadata", "numpy", "matplotlib", "pandas", "sklearn"]
+    PACKAGES = [
+        "nilmtk", "nilm_metadata", "numpy", "matplotlib", "pandas", "sklearn",
+        "hmmlearn"]
     for package_name in PACKAGES:
         key = package_name + " version"
         try:
