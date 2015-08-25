@@ -189,11 +189,9 @@ class FHMM(object):
             max_num_clusters = 3
 
         for i, meter in enumerate(metergroup.submeters().meters):
-
-            X = []
             meter_data = meter.power_series(**load_kwargs).next().dropna()
-            length = len(meter_data.index)
-            X = meter_data.values.reshape(length, 1)
+            X = meter_data.values.reshape((-1, 1))
+            assert X.ndim == 2
             self.X = X
 
             if num_states_dict.get(meter) is not None:
@@ -208,8 +206,7 @@ class FHMM(object):
             print("Training model for submeter '{}'".format(meter))
             learnt_model[meter] = hmm.GaussianHMM(num_total_states, "full")
 
-            # Data to fit
-
+            # Fit
             learnt_model[meter].fit([X])
 
         # Combining to make a AFHMM
