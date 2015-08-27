@@ -73,7 +73,7 @@ nosetests
 
 - Install pip and other dependencies which might be missing from Anaconda
 ```bash
-conda install --yes pip numpy scipy six scikit-learn pandas numexpr pytables dateutil matplotlib networkx
+conda install --yes pip numpy scipy six scikit-learn pandas numexpr pytables dateutil matplotlib networkx hmmlearn
 ```
 
 - Install [NILM Metadata](https://github.com/nilmtk/nilm_metadata) from git bash
@@ -81,14 +81,6 @@ conda install --yes pip numpy scipy six scikit-learn pandas numexpr pytables dat
 git clone https://github.com/nilmtk/nilm_metadata/
 cd nilm_metadata
 python setup.py develop
-cd ..
-```
-
-- Install [hmmlearn](https://github.com/hmmlearn/hmmlearn)
-```bash
-git clone git://github.com/hmmlearn/hmmlearn.git
-cd hmmlearn
-python setup.py install
 cd ..
 ```
 
