@@ -948,6 +948,9 @@ def get_activations(chunk, min_off_duration=0, min_on_duration=0,
         if on < 0:
             on = 0
         off += border
-        activations.append(chunk.iloc[on:off])
+        activation = chunk.iloc[on:off]
+        # throw away any activation with any NaN values
+        if not activation.isnull().values.any():
+            activations.append(activation)
 
     return activations
