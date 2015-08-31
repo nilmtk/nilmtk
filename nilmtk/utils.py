@@ -9,6 +9,7 @@ from sys import getfilesystemencoding, stdout
 from IPython.core.display import HTML, display
 from collections import OrderedDict
 import datetime
+import pytz
 from nilmtk.datastore import HDFDataStore, CSVDataStore
 
 
@@ -375,3 +376,16 @@ def capitalise_legend(ax):
     labels = capitalise_index(legend_handles[1])
     ax.legend(legend_handles[0], labels)
     return ax
+
+
+def safe_resample(data, **resample_kwargs):
+    try:
+        data = data.resample(**resample_kwargs)
+    except pytz.AmbiguousTimeError:
+        # Work-around for
+        # https://github.com/pydata/pandas/issues/10117
+        tz = data.index.tz.zone
+        data = data.tz_convert('UTC')
+        data = data.resample(**resample_kwargs)
+        data = data.tz_convert(tz)
+    return data

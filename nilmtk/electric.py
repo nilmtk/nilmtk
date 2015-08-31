@@ -18,9 +18,9 @@ import pytz
 
 from .timeframe import TimeFrame
 from .measurement import select_best_ac_type
-from .utils import (offset_alias_to_seconds, convert_to_timestamp, 
+from .utils import (offset_alias_to_seconds, convert_to_timestamp,
                     flatten_2d_list, append_or_extend_list,
-                    timedelta64_to_secs)
+                    timedelta64_to_secs, safe_resample)
 from .plots import plot_series
 from .preprocessing import Apply
 from nilmtk.stats.histogram import histogram_from_generator
@@ -134,16 +134,7 @@ class Electric(object):
 
             def resample_func(df):
                 resample_kwargs['rule'] = '{:d}S'.format(sample_period)
-                try:
-                    df = df.resample(**resample_kwargs)
-                except pytz.AmbiguousTimeError:
-                    # Work-around for
-                    # https://github.com/pydata/pandas/issues/10117
-                    tz = df.index.tz.zone
-                    df = df.tz_convert('UTC')
-                    df = df.resample(**resample_kwargs)
-                    df = df.tz_convert(tz)
-                return df
+                return safe_resample(df, **resample_kwargs)
 
             kwargs.setdefault('preprocessing', []).append(
                 Apply(func=resample_func))
