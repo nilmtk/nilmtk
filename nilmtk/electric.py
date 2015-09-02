@@ -108,6 +108,14 @@ class Electric(object):
             if len(series) > 0:
                 chunks.append(series)
         if chunks:
+            # Get rid of overlapping indicies
+            prev_end = None
+            for i, chunk in enumerate(chunks):
+                if i > 0:
+                    if chunk.index[0] <= prev_end:
+                        chunks[i] = chunk.iloc[1:]
+                prev_end = chunk.index[-1]
+
             all_data = pd.concat(chunks)
         else:
             all_data = None
