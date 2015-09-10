@@ -26,7 +26,7 @@ This file describes major changes to NILMTK between versions.
 * GREEND
 * iAWE
 * UK-DALE
-* WikiEnergy
+* Dataport
 
 
 ### Disaggregation algorithms
