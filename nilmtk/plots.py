@@ -5,8 +5,6 @@ import matplotlib.dates as mdates
 import numpy as np
 from math import sqrt
 
-SPINE_COLOR = 'gray'
-
 _to_ordinalf_np_vectorized = np.vectorize(mdates._to_ordinalf)
 
 
@@ -83,7 +81,7 @@ def plot_pairwise_heatmap(df, labels, edgecolors='w',
     plt.colorbar(heatmap, cax=cax)
 
 
-def latexify(fig_width=None, fig_height=None, columns=1):
+def latexify(fig_width=None, fig_height=None, columns=1, fontsize=8):
     """Set up matplotlib's RC params for LaTeX plotting.
     Call this before plotting a figure.
 
@@ -117,12 +115,12 @@ def latexify(fig_width=None, fig_height=None, columns=1):
     params = {
         'backend': 'ps',
         'text.latex.preamble': ['\usepackage{gensymb}'],
-        'axes.labelsize': 8,  # fontsize for x and y labels (was 10)
-        'axes.titlesize': 8,
-        'font.size': 8,  # was 10
-        'legend.fontsize': 8,  # was 10
-        'xtick.labelsize': 8,
-        'ytick.labelsize': 8,
+        'axes.labelsize': fontsize,  # fontsize for x and y labels (was 10)
+        'axes.titlesize': fontsize,
+        'font.size': fontsize,
+        'legend.fontsize': fontsize,
+        'xtick.labelsize': fontsize,
+        'ytick.labelsize': fontsize,
         'text.usetex': True,
         'figure.figsize': [fig_width, fig_height],
         'font.family': 'serif'
@@ -130,20 +128,20 @@ def latexify(fig_width=None, fig_height=None, columns=1):
     matplotlib.rcParams.update(params)
 
 
-def format_axes(ax):
+def format_axes(ax, spine_color='gray'):
 
     for spine in ['top', 'right']:
         ax.spines[spine].set_visible(False)
 
     for spine in ['left', 'bottom']:
-        ax.spines[spine].set_color(SPINE_COLOR)
+        ax.spines[spine].set_color(spine_color)
         ax.spines[spine].set_linewidth(0.5)
 
     ax.xaxis.set_ticks_position('bottom')
     ax.yaxis.set_ticks_position('left')
 
     for axis in [ax.xaxis, ax.yaxis]:
-        axis.set_tick_params(direction='out', color=SPINE_COLOR)
+        axis.set_tick_params(direction='out', color=spine_color)
 
 #    matplotlib.pyplot.tight_layout()
 
