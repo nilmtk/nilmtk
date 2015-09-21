@@ -298,10 +298,9 @@ class Hart85(object):
                     # Need to find absolute value before computing minimum
                     columns = abs_value_transient_minus_centroid.columns
                     abs_value_transient_minus_centroid["multidim"] = (
-                        abs_value_transient_minus_centroid[[columns[0]]] *
-                        abs_value_transient_minus_centroid[[columns[0]]] +
-                        abs_value_transient_minus_centroid[[columns[1]]] *
-                        abs_value_transient_minus_centroid[[columns[1]]])
+                        abs_value_transient_minus_centroid[columns[0]] ** 2
+                        +
+                        abs_value_transient_minus_centroid[columns[1]] ** 2)
                     index_least_delta = (
                         abs_value_transient_minus_centroid["multidim"].argmin())
                 if positive:
