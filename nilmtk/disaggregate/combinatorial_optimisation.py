@@ -115,7 +115,7 @@ class CombinatorialOptimisation(object):
         load_kwargs.setdefault('sample_period', 60)
         resample_seconds = load_kwargs['sample_period']
         load_kwargs['sections'] = load_kwargs.pop(
-            'sections', mains.good_sections(sample_period=resample_seconds))
+            'sections', mains.good_sections())
 
         timeframes = []
         building_path = '/building{}'.format(mains.building())
