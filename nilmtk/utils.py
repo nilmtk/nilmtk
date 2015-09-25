@@ -2,7 +2,6 @@ from __future__ import print_function, division
 import numpy as np
 import pandas as pd
 import networkx as nx
-from copy import deepcopy
 from os.path import isdir, dirname, abspath
 from os import getcwd
 from inspect import currentframe, getfile, getsourcefile
@@ -10,20 +9,24 @@ from sys import getfilesystemencoding, stdout
 from IPython.core.display import HTML, display
 from collections import OrderedDict
 import datetime
-from nilmtk.datastore import DataStore, HDFDataStore, CSVDataStore, Key
+import pytz
+from nilmtk.datastore import HDFDataStore, CSVDataStore
+
 
 def show_versions():
     """Prints versions of various dependencies"""
     output = OrderedDict()
     output["Date"] = str(datetime.datetime.now())
-    import sys 
+    import sys
     import platform
     output["Platform"] = str(platform.platform())
     system_information = sys.version_info
     output["System version"] = "{}.{}".format(system_information.major,
                                               system_information.minor)
 
-    PACKAGES = ["nilmtk", "nilm_metadata", "numpy", "matplotlib", "pandas", "sklearn"]
+    PACKAGES = [
+        "nilmtk", "nilm_metadata", "numpy", "matplotlib", "pandas", "sklearn",
+        "hmmlearn"]
     for package_name in PACKAGES:
         key = package_name + " version"
         try:
@@ -70,11 +73,12 @@ def tree_root(graph):
     """
     # from http://stackoverflow.com/a/4123177/732596
     assert isinstance(graph, nx.Graph)
-    roots = [node for node,in_degree in graph.in_degree_iter() if in_degree==0]
+    roots = [node for node, in_degree in graph.in_degree_iter()
+             if in_degree == 0]
     n_roots = len(roots)
-    if n_roots > 1: 
+    if n_roots > 1:
         raise RuntimeError('Tree has more than one root!')
-    if n_roots == 0: 
+    if n_roots == 0:
         raise RuntimeError('Tree has no root!')
     return roots[0]
 
@@ -168,7 +172,7 @@ def get_index(data):
     Parameters
     ----------
     data : pandas.DataFrame or Series or DatetimeIndex
-    
+
     Returns
     -------
     index : the index for the DataFrame or Series
@@ -236,7 +240,7 @@ def dict_to_html(dictionary):
     html += '</ul>'
     return html
 
-    
+
 def print_dict(dictionary):
     html = dict_to_html(dictionary)
     display(HTML(html))
@@ -316,7 +320,7 @@ def get_datastore(filename, format, mode='a'):
             raise ValueError('format not recognised')
     else:
         ValueError('filename is None')
-        
+
 
 def normalise_timestamp(timestamp, freq):
     """Returns the nearest Timestamp to `timestamp` which would be
@@ -341,6 +345,7 @@ def append_or_extend_list(lst, value):
     else:
         lst.append(value)
 
+
 def convert_to_list(list_like):
     return [] if list_like is None else list(list_like)
 
@@ -348,7 +353,7 @@ def convert_to_list(list_like):
 def most_common(lst):
     """Returns the most common entry in lst."""
     lst = list(lst)
-    counts = {item:lst.count(item) for item in set(lst)}
+    counts = {item: lst.count(item) for item in set(lst)}
     counts = pd.Series(counts)
     counts.sort()
     most_common = counts.index[-1]
@@ -371,3 +376,16 @@ def capitalise_legend(ax):
     labels = capitalise_index(legend_handles[1])
     ax.legend(legend_handles[0], labels)
     return ax
+
+
+def safe_resample(data, **resample_kwargs):
+    try:
+        data = data.resample(**resample_kwargs)
+    except pytz.AmbiguousTimeError:
+        # Work-around for
+        # https://github.com/pydata/pandas/issues/10117
+        tz = data.index.tz.zone
+        data = data.tz_convert('UTC')
+        data = data.resample(**resample_kwargs)
+        data = data.tz_convert(tz)
+    return data

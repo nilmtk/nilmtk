@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 from collections import OrderedDict, deque
 from datetime import datetime
+from warnings import warn
 
 import pandas as pd
 
@@ -298,10 +299,9 @@ class Hart85(object):
                     # Need to find absolute value before computing minimum
                     columns = abs_value_transient_minus_centroid.columns
                     abs_value_transient_minus_centroid["multidim"] = (
-                        abs_value_transient_minus_centroid[[columns[0]]] *
-                        abs_value_transient_minus_centroid[[columns[0]]] +
-                        abs_value_transient_minus_centroid[[columns[1]]] *
-                        abs_value_transient_minus_centroid[[columns[1]]])
+                        abs_value_transient_minus_centroid[columns[0]] ** 2
+                        +
+                        abs_value_transient_minus_centroid[columns[1]] ** 2)
                     index_least_delta = (
                         abs_value_transient_minus_centroid["multidim"].argmin())
                 if positive:
@@ -389,7 +389,7 @@ class Hart85(object):
             The `name` to use in the metadata for the `output_datastore`.
             e.g. some sort of name for this experiment.  Defaults to
             "NILMTK_Hart85_<date>"
-        resample_seconds : number, optional
+        sample_period : number, optional
             The desired sample period in seconds.
         **load_kwargs : key word arguments
             Passed to `mains.power_series(**kwargs)`
@@ -397,7 +397,14 @@ class Hart85(object):
 
         date_now = datetime.now().isoformat().split('.')[0]
         output_name = load_kwargs.pop('output_name', 'Hart85_' + date_now)
-        resample_seconds = load_kwargs.pop('resample_seconds', 60)
+
+        if 'resample_seconds' in load_kwargs:
+            warn("'resample_seconds' is deprecated."
+                 "  Please use 'sample_period' instead.")
+            load_kwargs['sample_period'] = load_kwargs.pop('resample_seconds')
+
+        load_kwargs.setdefault('sample_period', 60)
+        resample_seconds = load_kwargs['sample_period']
 
         building_path = '/building{}'.format(mains.building())
         mains_data_location = '{}/elec/meter1'.format(building_path)

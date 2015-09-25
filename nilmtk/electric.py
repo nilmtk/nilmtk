@@ -18,9 +18,9 @@ import pytz
 
 from .timeframe import TimeFrame
 from .measurement import select_best_ac_type
-from .utils import (offset_alias_to_seconds, convert_to_timestamp, 
+from .utils import (offset_alias_to_seconds, convert_to_timestamp,
                     flatten_2d_list, append_or_extend_list,
-                    timedelta64_to_secs)
+                    timedelta64_to_secs, safe_resample)
 from .plots import plot_series
 from .preprocessing import Apply
 from nilmtk.stats.histogram import histogram_from_generator
@@ -103,11 +103,19 @@ class Electric(object):
         return False
 
     def power_series_all_data(self, **kwargs):
-        chunks = []        
+        chunks = []
         for series in self.power_series(**kwargs):
             if len(series) > 0:
                 chunks.append(series)
         if chunks:
+            # Get rid of overlapping indicies
+            prev_end = None
+            for i, chunk in enumerate(chunks):
+                if i > 0:
+                    if chunk.index[0] <= prev_end:
+                        chunks[i] = chunk.iloc[1:]
+                prev_end = chunk.index[-1]
+
             all_data = pd.concat(chunks)
         else:
             all_data = None
@@ -134,16 +142,7 @@ class Electric(object):
 
             def resample_func(df):
                 resample_kwargs['rule'] = '{:d}S'.format(sample_period)
-                try:
-                    df = df.resample(**resample_kwargs)
-                except pytz.AmbiguousTimeError:
-                    # Work-around for
-                    # https://github.com/pydata/pandas/issues/10117
-                    tz = df.index.tz.zone
-                    df = df.tz_convert('UTC')
-                    df = df.resample(**resample_kwargs)
-                    df = df.tz_convert(tz)
-                return df
+                return safe_resample(df, **resample_kwargs)
 
             kwargs.setdefault('preprocessing', []).append(
                 Apply(func=resample_func))
@@ -957,6 +956,9 @@ def get_activations(chunk, min_off_duration=0, min_on_duration=0,
         if on < 0:
             on = 0
         off += border
-        activations.append(chunk.iloc[on:off])
+        activation = chunk.iloc[on:off]
+        # throw away any activation with any NaN values
+        if not activation.isnull().values.any():
+            activations.append(activation)
 
     return activations
