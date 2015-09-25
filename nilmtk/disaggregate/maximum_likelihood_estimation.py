@@ -1,5 +1,7 @@
+from datetime import datetime
 import pandas as pd
 import numpy as np
+from ..timeframe import merge_timeframes, TimeFrame
 from disaggregator import Disaggregator
 from matplotlib import pyplot as plt
 from datetime import timedelta
@@ -78,8 +80,8 @@ class MLE(Disaggregator):
         self.sample_period = None
         self.sampling_method = None
         # FEATURES:
-        self.onpower = {'name': 'gmm', 'model': mixture.GMM(n_components=2)}
-        self.offpower = {'name': 'gmm', 'model': mixture.GMM(n_components=2)}
+        self.onpower = {'name': 'gmm', 'model': mixture.GMM(n_components=1)}
+        self.offpower = {'name': 'gmm', 'model': mixture.GMM(n_components=1)}
         self.duration = {'name': 'poisson', 'model': poisson(0)}
 
         # Trainings:
@@ -95,7 +97,9 @@ class MLE(Disaggregator):
     def __retrain(self, feature, feature_train):
 
         print "Training " + feature_train.columns[0]
-        if feature['name'] == 'gmm':
+        mu, std = norm.fit(feature_train)
+        feature['model'] = norm(loc=mu, scale=std)
+        '''if feature['name'] == 'gmm':
             feature['model'].fit(feature_train)
         elif feature['name'] == 'norm':
             mu, std = norm.fit(feature_train)
@@ -106,7 +110,7 @@ class MLE(Disaggregator):
             raise NameError(
                 "Name of the model for " + 
                 str(feature_train.columns[0]) + 
-                " unknown or not implemented")        
+                " unknown or not implemented")       ''' 
 
     def __physical_quantity(self, chunk): 
 
@@ -132,11 +136,13 @@ class MLE(Disaggregator):
         if feature['name'] == 'norm':
             score = feature['model'].pdf(delta)
         elif feature['name'] == 'gmm':
-            score = np.exp(feature['model'].score([delta]))[0]
+            #score = np.exp(feature['model'].score([delta]))[0]
+            score = feature['model'].pdf(delta)
         elif feature['name'] == 'poisson':
             # Decimal values produce odd values in poisson (bug)
             delta = np.round(delta)
-            score = feature['model'].pmf(delta)
+            #score = feature['model'].pmf(delta)
+            score = feature['model'].pdf(delta)
         else:
             raise AttributeError("Wrong model for" + feature['name'] +
                                  " It must be: gmm, norm or poisson")
@@ -247,6 +253,7 @@ class MLE(Disaggregator):
         chunk.delta.fillna(0, inplace=True)
         edges = chunk[np.abs(chunk['delta']) > thDelta].delta
         # Pairing on/off events
+        print(chunk)
         if len(edges) > 1:
             offpower = edges[edges.apply(np.sign).diff() == -2]
             onpower = edges[edges.apply(np.sign).diff(-1) == 2]
@@ -275,11 +282,13 @@ class MLE(Disaggregator):
                 [self.offpower_train, offpower]).reset_index(drop=True)
             self.duration_train = pd.concat(
                 [self.duration_train, duration]).reset_index(drop=True)
-
+        
         else:
             number_of_events = 0
             print """WARNING: No paired events found on this chunk.
             Is it thDelta too high?"""
+        
+        self.duration_train = self.duration_train[self.duration_train.duration<400]
 
         # RE-TRAIN FEATURE MODELS:
         self.__retrain(self.onpower, self.onpower_train)
@@ -317,18 +326,135 @@ class MLE(Disaggregator):
         output_datastore : instance of nilmtk.DataStore or str of datastore location
 
         """
-        dis_main = pd.DataFrame()
+        
+        building_path = '/building{}'.format(mains.building())
+        # only writes one appliance and meter per building
+        meter_instance = 2
+        mains_data_location = '{}/elec/meter1'.format(building_path)
+        
+        #dis_main = pd.DataFrame()
         chunk_number = 0
+        timeframes = []
 
         for chunk in mains.power_series():
+        
+            # Record metadata
+            timeframes.append(chunk.timeframe)
+            measurement = chunk.name
+            cols = pd.MultiIndex.from_tuples([chunk.name])
+            
             dis_chunk = self.disaggregate_chunk(
                 pd.DataFrame(chunk.resample(self.sample_period, how=self.sampling_method)))
-            dis_main = pd.concat([dis_main, dis_chunk])
+            #dis_main = pd.concat([dis_main, dis_chunk])
             chunk_number += 1
             print str(chunk_number) + " chunks disaggregated"
+            
+            # Write appliance data to disag output
+            key = '{}/elec/meter{}'.format(building_path, meter_instance)
+            df = pd.DataFrame(
+                    dis_chunk.values, index=dis_chunk.index,
+                    columns=cols)
+            output_datastore.append(key, df)
+
+            # Copy mains data to disag output
+            output_datastore.append(key=mains_data_location,
+                                    value=pd.DataFrame(chunk, columns=cols))
 
         # Saving output datastore:
-        output_datastore.append(key=mains.key, value=dis_main)
+        #output_datastore.append(key=mains.key, value=dis_main)
+        
+        ##################################
+        # Add metadata to output_datastore
+
+        # TODO: `preprocessing_applied` for all meters
+        # TODO: split this metadata code into a separate function
+        # TODO: submeter measurement should probably be the mains
+        #       measurement we used to train on, not the mains measurement.
+        
+        date_now = datetime.now().isoformat().split('.')[0]
+        output_name = 'NILMTK_MLE_' + date_now
+        resample_seconds = 10
+        mains_data_location = '{}/elec/meter1'.format(building_path)
+
+        # DataSet and MeterDevice metadata:
+        meter_devices = {
+            'MLE': {
+                'model': 'MLE',
+                'sample_period': resample_seconds,
+                'max_sample_period': resample_seconds,
+                'measurements': [{
+                    'physical_quantity': measurement[0],
+                    'type': measurement[1]
+                }]
+            },
+            'mains': {
+                'model': 'mains',
+                'sample_period': resample_seconds,
+                'max_sample_period': resample_seconds,
+                'measurements': [{
+                    'physical_quantity': measurement[0],
+                    'type': measurement[1]
+                }]
+            }
+        }
+
+        merged_timeframes = merge_timeframes(timeframes, gap=resample_seconds)
+        total_timeframe = TimeFrame(merged_timeframes[0].start,
+                                    merged_timeframes[-1].end)
+
+        dataset_metadata = {'name': output_name, 'date': date_now,
+                            'meter_devices': meter_devices,
+                            'timeframe': total_timeframe.to_dict()}
+        output_datastore.save_metadata('/', dataset_metadata)
+
+        # Building metadata
+
+        # Mains meter:
+        elec_meters = {
+            1: {
+                'device_model': 'mains',
+                'site_meter': True,
+                'data_location': mains_data_location,
+                'preprocessing_applied': {},  # TODO
+                'statistics': {
+                    'timeframe': total_timeframe.to_dict()
+                }
+            }
+        }
+
+        # Appliances and submeters:
+        appliances = []
+        appliance = {
+            'meters': [meter_instance],
+            'type': 'kettle',
+            'instance': 1
+            # TODO this `instance` will only be correct when the
+            # model is trained on the same house as it is tested on.
+            # https://github.com/nilmtk/nilmtk/issues/194
+        }
+        appliances.append(appliance)
+
+        elec_meters.update({
+            meter_instance: {
+                'device_model': 'MLE',
+                'submeter_of': 1,
+                'data_location': ('{}/elec/meter{}'
+                                      .format(building_path, meter_instance)),
+                'preprocessing_applied': {},  # TODO
+                'statistics': {
+                    'timeframe': total_timeframe.to_dict()
+                }
+            }
+        })
+        elec_meters[meter_instance]['name'] = 'kettle'
+
+        building_metadata = {
+            'instance': mains.building(),
+            'elec_meters': elec_meters,
+            'appliances': appliances
+        }
+
+        output_datastore.save_metadata(building_path, building_metadata)
 
     def disaggregate_chunk(self, chunk):
         """
@@ -357,7 +483,7 @@ class MLE(Disaggregator):
 
         # An resistive element has active power equal to apparent power.
         # Checking power units.
-        units = self.__physical_quantity()
+        units = self.__physical_quantity(chunk)
 
         # EVENTS OUT OF THE CHUNK:
         # Delta values:
@@ -420,7 +546,9 @@ class MLE(Disaggregator):
         detections = detections.sort('likelihood', ascending=False)
         for row in detections.iterrows():
             # onTime = row[1][0] offTime = row[1][1] deltaOn = row[1][3]
-            if ((dis_chunk[(dis_chunk.index >= row[1][0]) and
+            #import ipdb
+            #ipdb.set_trace()
+            if ((dis_chunk[(dis_chunk.index >= row[1][0]) &
                     (dis_chunk.index < row[1][1])].sum().values[0]) == 0):
                 # delta = chunk[chunk.index == onTime][column_name].values[0]
                 dis_chunk[(dis_chunk.index >= row[1][0]) & (
