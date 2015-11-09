@@ -35,7 +35,7 @@ explaining the need for a NILM toolkit:
   > variety of accuracy metrics employed.
 
 
-# What nilmtk provides
+# What NILMTK provides
 
 To address this challenge, we present the Non-intrusive Load Monitoring
 Toolkit (NILMTK); an open source toolkit designed specifically to enable

@@ -21,7 +21,11 @@ class Appliance(Hashable):
 
     #: Static (AKA class) variable. Maps from appliance_type (string) to a dict
     #: describing metadata about each appliance type.
-    appliance_types = {} 
+    appliance_types = {}
+
+    #: Static variable.  Controls whether Appliance.matches() allows synonyms
+    #: for appliance type names.
+    allow_synonyms = True
 
     def __init__(self, metadata=None):
         self.metadata = {} if metadata is None else metadata
@@ -31,8 +35,8 @@ class Appliance(Hashable):
             Appliance.appliance_types = get_appliance_types()
 
         # Check appliance type
-        if (self.identifier.type and 
-            not Appliance.appliance_types.has_key(self.identifier.type)):
+        if (self.identifier.type and
+                self.identifier.type not in Appliance.appliance_types):
             warn("'{}' is not a recognised appliance type."
                  .format(self.identifier.type), RuntimeWarning)
 
@@ -49,14 +53,22 @@ class Appliance(Hashable):
 
     @property
     def n_meters(self):
-        """Return number of meters (int) to which this appliance is connected"""
+        """Return number of meters (int) to which this
+        appliance is connected"""
         return len(self.metadata['meters'])
 
     def on_power_threshold(self):
-        threshold_from_appliance_type = self.type.get('on_power_threshold', 
-                                                      DEFAULT_ON_POWER_THRESHOLD)
-        return self.metadata.get('on_power_threshold', 
-                                 threshold_from_appliance_type)
+        try:
+            return self.metadata['on_power_threshold']
+        except KeyError:
+            pass
+
+        try:
+            return self.metadata['nominal_consumption']['on_power']
+        except KeyError:
+            threshold_from_appliance_type = self.type.get(
+                'on_power_threshold', DEFAULT_ON_POWER_THRESHOLD)
+            return threshold_from_appliance_type
 
     def label(self, pretty=False):
         """Return string '(<type>, <identifier>)' e.g. '(fridge, 1)'
@@ -81,7 +93,14 @@ class Appliance(Hashable):
         return flatten_2d_list(self.type.get('categories').values())
 
     def matches(self, key):
-        """
+        """Returns True if all key:value pairs in `key` match 
+        `appliance.metadata` or
+        `Appliance.appliance_types[appliance.metadata['type']]`.
+        Returns True if key is empty dict.
+
+        By default, matches synonyms.  Set `Appliance.allow_synonyms = False`
+        if you do not want to allow synonyms.
+
         Parameters
         ----------
         key : dict
@@ -89,9 +108,6 @@ class Appliance(Hashable):
         Returns
         -------
         Bool
-            True if all key:value pairs in `key` match `appliance.metadata`
-            or `Appliance.appliance_types[appliance.metadata['type']]`.
-            Returns True if key is empty dict.
         """
         if not key:
             return True
@@ -102,10 +118,15 @@ class Appliance(Hashable):
         match = True
         for k, v in key.iteritems():
             if hasattr(self.identifier, k):
-                if getattr(self.identifier, k) != v:
+                if Appliance.allow_synonyms and k == 'type':
+                    synonyms = self.type.get('synonyms', [])
+                    synonyms.append(self.identifier.type)
+                    if v not in synonyms:
+                        match = False
+                elif getattr(self.identifier, k) != v:
                     match = False
 
-            elif self.metadata.has_key(k):
+            elif k in self.metadata:
                 if self.metadata[k] != v:
                     match = False
 
@@ -113,10 +134,10 @@ class Appliance(Hashable):
                 if v not in self.categories():
                     match = False
 
-            elif self.type.has_key(k):
+            elif k in self.type:
                 metadata_value = self.type[k]
-                if (isinstance(metadata_value, list) and 
-                    not isinstance(v, list)):
+                if (isinstance(metadata_value, list) and
+                        not isinstance(v, list)):
                     # for example, 'control' is a list in metadata
                     if v not in metadata_value:
                         match = False

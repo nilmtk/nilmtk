@@ -341,21 +341,34 @@ class MeterGroup(Electric):
           * https://github.com/pydata/pandas/blob/master/pandas/computation/eval.py#L119
         """
         selected_meters = []
-        exception_raised_every_time = True
-        exception = None
         func = kwargs.pop('func', 'matches')
-        for meter in self.meters:
-            try:
-                match = getattr(meter, func)(kwargs)
-            except KeyError as e:
-                exception = e
-            else:
-                exception_raised_every_time = False
-                if match:
-                    selected_meters.append(meter)
 
-        if exception_raised_every_time and exception is not None:
-            raise exception
+        def get(_kwargs):
+            exception_raised_every_time = True
+            exception = None
+            no_match = True
+            for meter in self.meters:
+                try:
+                    match = getattr(meter, func)(_kwargs)
+                except KeyError as e:
+                    exception = e
+                else:
+                    exception_raised_every_time = False
+                    if match:
+                        selected_meters.append(meter)
+                        no_match = False
+            if no_match:
+                raise KeyError("'No match for {}'".format(_kwargs))
+            if exception_raised_every_time and exception is not None:
+                raise exception
+
+        if len(kwargs) == 1 and isinstance(kwargs.values()[0], list):
+            attribute = kwargs.keys()[0]
+            list_of_values = kwargs.values()[0]
+            for value in list_of_values:
+                get({attribute: value})
+        else:
+            get(kwargs)
 
         return MeterGroup(selected_meters)
 
@@ -363,10 +376,11 @@ class MeterGroup(Electric):
         """Select a group of meters based on appliance metadata.
 
         e.g. 
-        * select(category='lighting')
-        * select(type='fridge')
-        * select(building=1, category='lighting')
-        * select(room='bathroom')
+        * select_using_appliances(category='lighting')
+        * select_using_appliances(type='fridge')
+        * select_using_appliances(type=['fridge', 'kettle', 'toaster'])
+        * select_using_appliances(building=1, category='lighting')
+        * select_using_appliances(room='bathroom')
 
         If multiple criteria are supplied then these are ANDed together.
 

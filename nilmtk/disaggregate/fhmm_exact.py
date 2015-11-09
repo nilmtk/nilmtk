@@ -3,6 +3,7 @@ import itertools
 from datetime import datetime
 from copy import deepcopy
 from collections import OrderedDict
+from warnings import warn
 
 import pandas as pd
 import numpy as np
@@ -189,11 +190,9 @@ class FHMM(object):
             max_num_clusters = 3
 
         for i, meter in enumerate(metergroup.submeters().meters):
-
-            X = []
             meter_data = meter.power_series(**load_kwargs).next().dropna()
-            length = len(meter_data.index)
-            X = meter_data.values.reshape(length, 1)
+            X = meter_data.values.reshape((-1, 1))
+            assert X.ndim == 2
             self.X = X
 
             if num_states_dict.get(meter) is not None:
@@ -208,8 +207,7 @@ class FHMM(object):
             print("Training model for submeter '{}'".format(meter))
             learnt_model[meter] = hmm.GaussianHMM(num_total_states, "full")
 
-            # Data to fit
-
+            # Fit
             learnt_model[meter].fit([X])
 
         # Combining to make a AFHMM
@@ -279,7 +277,7 @@ class FHMM(object):
             The `name` to use in the metadata for the `output_datastore`.
             e.g. some sort of name for this experiment.  Defaults to
             "NILMTK_FHMM_<date>"
-        resample_seconds : number, optional
+        sample_period : number, optional
             The desired sample period in seconds.
         **load_kwargs : key word arguments
             Passed to `mains.power_series(**kwargs)`
@@ -297,9 +295,14 @@ class FHMM(object):
         # Extract optional parameters from load_kwargs
         date_now = datetime.now().isoformat().split('.')[0]
         output_name = load_kwargs.pop('output_name', 'NILMTK_FHMM_' + date_now)
-        resample_seconds = load_kwargs.pop('resample_seconds', 60)
 
-        resample_rule = '{:d}S'.format(resample_seconds)
+        if 'resample_seconds' in load_kwargs:
+            warn("'resample_seconds' is deprecated."
+                 "  Please use 'sample_period' instead.")
+            load_kwargs['sample_period'] = load_kwargs.pop('resample_seconds')
+
+        load_kwargs.setdefault('sample_period', 60)
+        resample_seconds = load_kwargs['sample_period']
         timeframes = []
         building_path = '/building{}'.format(mains.building())
         mains_data_location = '{}/elec/meter1'.format(building_path)
@@ -313,11 +316,6 @@ class FHMM(object):
             # Record metadata
             timeframes.append(chunk.timeframe)
             measurement = chunk.name
-
-            chunk = chunk.resample(rule=resample_rule)
-            # Check chunk size *again* after resampling
-            if len(chunk) < MIN_CHUNK_LENGTH:
-                continue
 
             # Start disaggregation
             predictions = self.disaggregate_chunk(chunk)

@@ -1,5 +1,6 @@
 from __future__ import print_function, division
 from datetime import datetime
+from warnings import warn
 
 import pandas as pd
 import numpy as np
@@ -7,7 +8,6 @@ import numpy as np
 from ..utils import find_nearest
 from ..feature_detectors import cluster
 from ..timeframe import merge_timeframes, TimeFrame
-from nilmtk.exceptions import VampirePowerAlreadyInModelError
 
 # Fix the seed for repeatability of experiments
 SEED = 42
@@ -95,7 +95,7 @@ class CombinatorialOptimisation(object):
             The `name` to use in the metadata for the `output_datastore`.
             e.g. some sort of name for this experiment.  Defaults to
             "NILMTK_CO_<date>"
-        resample_seconds : number, optional
+        sample_period : number, optional
             The desired sample period in seconds.
         **load_kwargs : key word arguments
             Passed to `mains.power_series(**kwargs)`
@@ -106,11 +106,17 @@ class CombinatorialOptimisation(object):
         # Extract optional parameters from load_kwargs
         date_now = datetime.now().isoformat().split('.')[0]
         output_name = load_kwargs.pop('output_name', 'NILMTK_CO_' + date_now)
-        resample_seconds = load_kwargs.pop('resample_seconds', 60)
+
+        if 'resample_seconds' in load_kwargs:
+            warn("'resample_seconds' is deprecated."
+                 "  Please use 'sample_period' instead.")
+            load_kwargs['sample_period'] = load_kwargs.pop('resample_seconds')
+
+        load_kwargs.setdefault('sample_period', 60)
+        resample_seconds = load_kwargs['sample_period']
         load_kwargs['sections'] = load_kwargs.pop(
             'sections', mains.good_sections())
-        load_kwargs.setdefault('resample', True)
-        load_kwargs.setdefault('sample_period', resample_seconds)
+
         timeframes = []
         building_path = '/building{}'.format(mains.building())
         mains_data_location = '{}/elec/meter1'.format(building_path)
