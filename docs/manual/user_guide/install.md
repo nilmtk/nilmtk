@@ -33,16 +33,16 @@ Note that, if you are using `pip` instead of `conda` then remove
 
 Please also note that there is
 [a bug in Pandas 0.17](https://github.com/pydata/pandas/issues/11626)
-which causes serious issues with data which crossed a daylight saving
-boundary.  As such, please either install Pandas 0.16.2 or install
-pandas 0.17.0+210.g91407ff from git using something like this:
+which causes serious issues with data where the datetime index crosses
+a daylight saving boundary.  As such, please either install Pandas
+0.16.2 or Pandas 0.17.0+210.g91407ff.  Of course, once Pandas >=
+0.17.1 is available, then you should use that.  To install Pandas
+0.17.0+210.g91407ff from git, use something like this:
 
 ```bash
 pip uninstall pandas
 pip install -e git+https://github.com/pydata/pandas.git@91407ffd5f6d497949239b2ab956368dec2ac32b#egg=pandas
 ```
-
-Of course, once Pandas 0.17.1 is available, you should use that.
 
 - Install [NILM Metadata](https://github.com/nilmtk/nilm_metadata).
 ```bash
