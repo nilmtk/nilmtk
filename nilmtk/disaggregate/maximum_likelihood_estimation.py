@@ -253,7 +253,7 @@ class MLE(Disaggregator):
         chunk.delta.fillna(0, inplace=True)
         edges = chunk[np.abs(chunk['delta']) > thDelta].delta
         # Pairing on/off events
-        print(chunk)
+        #print(chunk)
         if len(edges) > 1:
             offpower = edges[edges.apply(np.sign).diff() == -2]
             onpower = edges[edges.apply(np.sign).diff(-1) == 2]
@@ -722,44 +722,47 @@ class MLE(Disaggregator):
         # Onpower
         x = np.arange(bins_onpower.min(), bins_onpower.max() + \
             np.diff(bins_onpower)[0], np.diff(bins_onpower)[0] / float(1000)).reshape(-1, 1)
-        y = self.__pdf2(self.onpower, x)
+        y = self.__pdf(self.onpower, x)
         norm = pd.cut(
             self.onpower_train.onpower, bins=bins_onpower).value_counts().max() / max(y)
         # Plots for Onpower
         ax1.hist(
             self.onpower_train.onpower.values, bins=bins_onpower, alpha=0.5)
         ax1.plot(x, y * norm)
-        ax1.set_title("Feature: Onpower")
-        ax1.set_ylabel("Counts")
-        ax1.set_xlabel("Watts")
+        #ax1.set_title("Feature: Onpower")
+        #ax1.set_ylabel("Counts")
+        #ax1.set_xlabel("On power (W)")
+        ax1.set_ylabel("On power counts")
 
         # Offpower
         x = np.arange(bins_offpower.min(), bins_offpower.max() + \
             np.diff(bins_offpower)[0], np.diff(bins_offpower)[0] / float(1000)).reshape(-1, 1)
-        y = self.__pdf2(self.offpower, x)
+        y = self.__pdf(self.offpower, x)
         norm = pd.cut(self.offpower_train.offpower,
                       bins=bins_offpower).value_counts().max() / max(y)
         # Plots for Offpower
         ax2.hist(self.offpower_train.offpower.values,
                  bins=bins_offpower, alpha=0.5)
         ax2.plot(x, y * norm)
-        ax2.set_title("Feature: Offpower")
-        ax2.set_ylabel("Counts")
-        ax2.set_xlabel("Watts")
+        #ax2.set_title("Feature: Offpower")
+        #ax2.set_ylabel("Counts")
+        #ax2.set_xlabel("Off power (W)")
+        ax2.set_ylabel("Off power counts")
 
         # Duration
         x = np.arange(bins_duration.min(), bins_duration.max() + \
             np.diff(bins_duration)[0], np.diff(bins_duration)[0] / float(1000)).reshape(-1, 1)
-        y = self.__pdf2(self.duration, x)
+        y = self.__pdf(self.duration, x)
         norm = pd.cut(self.duration_train.duration,
                       bins=bins_duration).value_counts().max() / max(y)
         # Plots for duration
         ax3.hist(self.duration_train.duration.values,
                  bins=bins_duration, alpha=0.5)
         ax3.plot(x, y * norm)
-        ax3.set_title("Feature: Duration")
-        ax3.set_ylabel("Counts")
-        ax3.set_xlabel("Seconds")
+        #ax3.set_title("Feature: Duration")
+        #ax3.set_ylabel("Counts")
+        #ax3.set_xlabel("Duration (seconds)")
+        ax3.set_ylabel("Duration counts")
     
 
     def featuresHist_colors(self, **kwargs):
