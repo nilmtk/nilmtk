@@ -68,10 +68,7 @@ class CombinatorialOptimisation(Disaggregator):
                     num_on_states = num_total_states - 1
                 else:
                     num_on_states = None
-                states = cluster(chunk, max_num_clusters, num_on_states)
-                self.model.append({
-                    'states': states,
-                    'training_metadata': meter})
+                self.train_on_chunk(chunk, meter, max_num_clusters, num_on_states)
                 break  # TODO handle multiple chunks per appliance
 
         # Get centroids
@@ -86,6 +83,12 @@ class CombinatorialOptimisation(Disaggregator):
         #  [0, 0, 50, 100], ...]
 
         print("Done training!")
+        
+    def train_on_chunk(self, chunk, meter, max_num_clusters, num_on_states):
+        states = cluster(chunk, max_num_clusters, num_on_states)
+        self.model.append({
+            'states': states,
+            'training_metadata': meter})
 
     def disaggregate(self, mains, output_datastore, **load_kwargs):
         '''Disaggregate mains according to the model learnt previously.

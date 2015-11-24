@@ -202,12 +202,10 @@ class MLE(Disaggregator):
         self.offpower_train = pd.DataFrame(columns=['offpower'])
         self.duration_train = pd.DataFrame(columns=['duration'])
 
-        # Calling train_on_chunk by instance and identifier:
+        # Calling train_on_chunk by meter:
         instance = 1    # initial instance.
         for meter in metergroup.meters:
             for chunk in meter.power_series():
-                identifier = (meter.appliances[0].type['type'], instance)
-                print identifier
                 if chunk.empty:
                     print "Chunk empty"
                 else:
@@ -215,13 +213,12 @@ class MLE(Disaggregator):
                     self.train_on_chunk(pd.DataFrame(chunk.resample(
                         self.sample_period,
                         how=self.sampling_method)),
-                        identifier
+                        meter
                     )
-                # self.train_on_chunk(pd.DataFrame(chunk),identifier)
 
             instance += 1
 
-    def train_on_chunk(self, chunk, identifier):
+    def train_on_chunk(self, chunk, meter):
         """
         Extracts features  from chunk, concatenates feature_train
         (onpower_train, offpower_train and duration_train) with new features
@@ -232,8 +229,7 @@ class MLE(Disaggregator):
         Parameters
         ----------
         chunk : pd.DataFrame where each column represents a disaggregated
-        appliance identifier : tuple of (nilmtk.appliance, int) representing
-        instance of that appliance for this chunk
+        meter : ElecMeter for this chunk
 
         Notes
         -----
@@ -296,8 +292,8 @@ class MLE(Disaggregator):
         self.__retrain(self.duration, self.duration_train)
 
         # UPDATE STATS:
-        stat_dict = {'appliance': identifier[
-            0], 'instance': identifier[1], 'Nevents': number_of_events}
+        stat_dict = {'appliance': meter.identifier[
+            0], 'instance': meter.identifier[1], 'Nevents': number_of_events}
         instanceFound = False
         if len(self.stats) == 0:
             self.stats.append(stat_dict)

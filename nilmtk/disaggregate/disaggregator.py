@@ -1,7 +1,9 @@
 class Disaggregator(object):
     """
     Provides a common interface to all disaggregation classes.
-    See https://github.com/nilmtk/nilmtk/issues/271 for discussion.
+    See https://github.com/nilmtk/nilmtk/issues/271 for discussion, and
+    https://github.com/nilmtk/nilmtk/blob/master/docs/manual/development_guide/writing_a_disaggregation_algorithm.md
+    for the development guide.
 
     Attributes
     ----------
@@ -21,7 +23,7 @@ class Disaggregator(object):
         """
         raise NotImplementedError()
 
-    def train_on_chunk(self, chunk, identifier):
+    def train_on_chunk(self, chunk, meter):
         """Signature is fine for site meter dataframes (unsupervised
         learning). Would need to be called for each appliance meter
         along with appliance identifier for supervised learning.
@@ -32,8 +34,7 @@ class Disaggregator(object):
         ----------
         chunk : pd.DataFrame where each column represents a
             disaggregated appliance
-        identifier : tuple of (nilmtk.appliance, int) representing
-            instance of that appliance for this chunk
+        meter : ElecMeter for this chunk
         """
         raise NotImplementedError()
 
