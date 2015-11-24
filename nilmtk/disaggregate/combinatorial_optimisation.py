@@ -4,17 +4,21 @@ from warnings import warn
 
 import pandas as pd
 import numpy as np
+import pickle
+import copy
 
 from ..utils import find_nearest
 from ..feature_detectors import cluster
 from ..timeframe import merge_timeframes, TimeFrame
+from ..disaggregate import Disaggregator
+from ..datastore import HDFDataStore
 
 # Fix the seed for repeatability of experiments
 SEED = 42
 np.random.seed(SEED)
 
 
-class CombinatorialOptimisation(object):
+class CombinatorialOptimisation(Disaggregator):
     """1 dimensional combinatorial optimisation NILM algorithm.
 
     Attributes
@@ -249,28 +253,6 @@ class CombinatorialOptimisation(object):
 
         output_datastore.save_metadata(building_path, building_metadata)
 
-        # TODO: fix export and import!
-        # https://github.com/nilmtk/nilmtk/issues/193
-        #
-        # def export_model(self, filename):
-        #     model_copy = {}
-        #     for appliance, appliance_states in self.model.iteritems():
-        #         model_copy[
-        #             "{}_{}".format(appliance.name, appliance.instance)] = appliance_states
-        #     j = json.dumps(model_copy)
-        #     with open(filename, 'w+') as f:
-        #         f.write(j)
-
-        # def import_model(self, filename):
-        #     with open(filename, 'r') as f:
-        #         temp = json.loads(f.read())
-        #     for appliance, centroids in temp.iteritems():
-        #         appliance_name = appliance.split("_")[0].encode("ascii")
-        #         appliance_instance = int(appliance.split("_")[1])
-        #         appliance_name_instance = ApplianceID(
-        #             appliance_name, appliance_instance)
-        #         self.model[appliance_name_instance] = centroids
-
     def disaggregate_chunk(self, mains, vampire_power=None):
         """In-memory disaggregation.
 
@@ -329,3 +311,20 @@ class CombinatorialOptimisation(object):
 
         appliance_powers = pd.DataFrame(appliance_powers_dict)
         return appliance_powers
+        
+    def import_model(self, filename):
+        imported_model = pickle.load(open(filename, 'r'))
+        self.model = imported_model.model
+        # recreate datastores from filenames
+        for pair in self.model:
+            pair['training_metadata'].store=HDFDataStore(pair['training_metadata'].store)
+        self.state_combinations = imported_model.state_combinations
+        self.MIN_CHUNK_LENGTH = imported_model.MIN_CHUNK_LENGTH
+        
+    def export_model(self, filename):
+        # cant pickle datastore, so convert to filenames
+        exported_model = copy.deepcopy(self)
+        for pair in exported_model.model:
+            pair['training_metadata'].store=pair['training_metadata'].store.store.filename
+        pickle.dump(exported_model, open(filename, 'wb'))
+            
