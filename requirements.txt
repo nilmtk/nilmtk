@@ -16,4 +16,3 @@ nose
 sh
 coveralls
 coverage
--e git+https://github.com/nilmtk/nilm_metadata.git#egg=nilm_metadata
