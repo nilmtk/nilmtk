@@ -30,7 +30,7 @@ class TestCO(unittest.TestCase):
         co.train(elec)
         mains = elec.mains()
         output = HDFDataStore('output.h5', 'w')
-        co.disaggregate(mains, output, resample_seconds=1)
+        co.disaggregate(mains, output, sample_period=1)
 
         for meter in range(2, 4):
             df1 = output.store.get('/building1/elec/meter{}'.format(meter))
