@@ -68,7 +68,8 @@ class CombinatorialOptimisation(Disaggregator):
                     num_on_states = num_total_states - 1
                 else:
                     num_on_states = None
-                self.train_on_chunk(chunk, meter, max_num_clusters, num_on_states)
+                self.train_on_chunk(
+                    chunk, meter, max_num_clusters, num_on_states)
                 break  # TODO handle multiple chunks per appliance
 
         # Get centroids
@@ -83,7 +84,7 @@ class CombinatorialOptimisation(Disaggregator):
         #  [0, 0, 50, 100], ...]
 
         print("Done training!")
-        
+
     def train_on_chunk(self, chunk, meter, max_num_clusters, num_on_states):
         states = cluster(chunk, max_num_clusters, num_on_states)
         self.model.append({
@@ -314,20 +315,21 @@ class CombinatorialOptimisation(Disaggregator):
 
         appliance_powers = pd.DataFrame(appliance_powers_dict)
         return appliance_powers
-        
+
     def import_model(self, filename):
         imported_model = pickle.load(open(filename, 'r'))
         self.model = imported_model.model
         # recreate datastores from filenames
         for pair in self.model:
-            pair['training_metadata'].store=HDFDataStore(pair['training_metadata'].store)
+            pair['training_metadata'].store = HDFDataStore(
+                pair['training_metadata'].store)
         self.state_combinations = imported_model.state_combinations
         self.MIN_CHUNK_LENGTH = imported_model.MIN_CHUNK_LENGTH
-        
+
     def export_model(self, filename):
-        # cant pickle datastore, so convert to filenames
+        # Can't pickle datastore, so convert to filenames
         exported_model = copy.deepcopy(self)
         for pair in exported_model.model:
-            pair['training_metadata'].store=pair['training_metadata'].store.store.filename
+            pair['training_metadata'].store = (
+                pair['training_metadata'].store.store.filename)
         pickle.dump(exported_model, open(filename, 'wb'))
-            
