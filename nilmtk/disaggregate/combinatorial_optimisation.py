@@ -136,19 +136,19 @@ class CombinatorialOptimisation(Disaggregator):
             from data.  If you do not want to use vampire power then
             set vampire_power = 0.
         sample_period : number, optional
-            The desired sample period in seconds.
+            The desired sample period in seconds.  Set to 60 by default.
+        sections : TimeFrameGroup, optional
+            Set to mains.good_sections() by default.
         **load_kwargs : key word arguments
             Passed to `mains.power_series(**kwargs)`
         '''
         if 'resample_seconds' in load_kwargs:
-            warn("'resample_seconds' is deprecated."
-                 "  Please use 'sample_period' instead.")
+            DeprecationWarning("'resample_seconds' is deprecated."
+                               "  Please use 'sample_period' instead.")
             load_kwargs['sample_period'] = load_kwargs.pop('resample_seconds')
 
         load_kwargs.setdefault('sample_period', 60)
-        sample_period = load_kwargs['sample_period']
-        load_kwargs['sections'] = load_kwargs.pop(
-            'sections', mains.good_sections())
+        load_kwargs.setdefault('sections', mains.good_sections())
 
         timeframes = []
         building_path = '/building{}'.format(mains.building())
@@ -156,7 +156,7 @@ class CombinatorialOptimisation(Disaggregator):
         data_is_available = False
 
         for chunk in mains.power_series(**load_kwargs):
-            # Check that chunk is sensible size before resampling
+            # Check that chunk is sensible size
             if len(chunk) < self.MIN_CHUNK_LENGTH:
                 continue
 
@@ -168,6 +168,8 @@ class CombinatorialOptimisation(Disaggregator):
 
             for i, model in enumerate(self.model):
                 appliance_power = appliance_powers[i]
+                if len(appliance_power) == 0:
+                    continue
                 data_is_available = True
                 cols = pd.MultiIndex.from_tuples([chunk.name])
                 meter_instance = model['training_metadata'].instance()
@@ -184,7 +186,7 @@ class CombinatorialOptimisation(Disaggregator):
         if data_is_available:
             self._save_metadata_for_disaggregation(
                 output_datastore=output_datastore,
-                sample_period=sample_period,
+                sample_period=load_kwargs['sample_period'],
                 measurement=measurement,
                 timeframes=timeframes,
                 building=mains.building(),
