@@ -7,7 +7,8 @@ togther most of the required packages. Please download Anaconda for
 Python 2.7.x. We do not currently support Python 3.
 
 After installing Anaconda, please do the following.  We have two
-sections below: one for Linux or OSX and another section for Windows.
+sections below: [one for Linux or OSX](#install-on-windows) and
+another section for Windows.
 
 ### Install on Ubuntu like Linux variants (debian based) or OSX
 
@@ -147,7 +148,7 @@ nosetests
 - Install [git](http://git-scm.com/download/win) client. You may need to add `git.exe` to your path in order to run nilmtk tests. 
 
 - Now, we recommend trying
-  [the experimental but simple installation instructions above](#experimental-but-probably-easiest-installation-procedure).
+  [the experimental but simple installation instructions above](#experimental-but-probably-easiest-installation-procedure-for-unix-or-osx).
   If they don't work then let us know on [the issue queue](https://github.com/nilmtk/nilmtk/issues) and then try
   the old windows installation procedure below:
 
