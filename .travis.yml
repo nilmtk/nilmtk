@@ -34,8 +34,9 @@ install:
   - pip install coveralls coverage
   - python setup.py install
 script:
-   - nosetests --with-coverage
-   #- nosetests --with-doctest --with-coverage
+  - python -c 'from nilmtk.utils import show_versions; show_versions()'
+  - nosetests --with-coverage
+  #- nosetests --with-doctest --with-coverage
 after_success:
   - coveralls
 
