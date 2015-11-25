@@ -62,15 +62,26 @@ class CombinatorialOptimisation(Disaggregator):
 
         for i, meter in enumerate(metergroup.submeters().meters):
             print("Training model for submeter '{}'".format(meter))
-            for chunk in meter.power_series(**load_kwargs):
-                num_total_states = num_states_dict.get(meter)
-                if num_total_states is not None:
-                    num_on_states = num_total_states - 1
-                else:
-                    num_on_states = None
-                self.train_on_chunk(
-                    chunk, meter, max_num_clusters, num_on_states)
-                break  # TODO handle multiple chunks per appliance
+            power_series = meter.power_series(**load_kwargs)
+            chunk = power_series.next()
+            num_total_states = num_states_dict.get(meter)
+            if num_total_states is not None:
+                num_on_states = num_total_states - 1
+            else:
+                num_on_states = None
+            self.train_on_chunk(chunk, meter, max_num_clusters, num_on_states)
+
+            # Check to see if there are any more chunks.
+            # TODO handle multiple chunks per appliance.
+            try:
+                power_series.next()
+            except StopIteration:
+                pass
+            else:
+                warn("The current implementation of CombinatorialOptimisation"
+                     " can only handle a single chunk.  But there are multiple"
+                     " chunks available.  So have only trained on the"
+                     " first chunk!")
 
         # Get centroids
         # If we import sklearn at the top of the file then auto doc fails.
