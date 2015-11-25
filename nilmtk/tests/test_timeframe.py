@@ -28,7 +28,7 @@ class TestTimeFrame(unittest.TestCase):
 
     def test_time_delta(self):
         tf = TimeFrame("2012-01-01 00:00:00", "2013-01-01 00:00:00")        
-        self.assertEqual(tf.timedelta.total_seconds(), 60*60*24*366)
+        self.assertAlmostEqual(tf.timedelta.total_seconds(), 60*60*24*366)
 
     def test_intersection(self):
         tf = TimeFrame("2012-01-01 00:00:00", "2013-01-01 00:00:00")

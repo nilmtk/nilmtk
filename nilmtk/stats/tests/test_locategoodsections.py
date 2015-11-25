@@ -74,7 +74,7 @@ class TestLocateGoodSections(unittest.TestCase):
         locate._process_chunk(df, metadata)
         results = locate.results.combined()
         self.assertEqual(len(results), 4)
-        self.assertEqual(results[0].timedelta.total_seconds(), 30)
+        self.assertAlmostEqual(results[0].timedelta.total_seconds(), 30)
         self.assertEqual(results[1].timedelta.total_seconds(), 10)
         self.assertEqual(results[2].timedelta.total_seconds(), 50)
         self.assertEqual(results[3].timedelta.total_seconds(), 20)
@@ -105,7 +105,7 @@ class TestLocateGoodSections(unittest.TestCase):
 
             results = locate.results.combined()
             self.assertEqual(len(results), 4)
-            self.assertEqual(results[0].timedelta.total_seconds(), 30)
+            self.assertAlmostEqual(results[0].timedelta.total_seconds(), 30)
             self.assertEqual(results[1].timedelta.total_seconds(), 10)
             self.assertEqual(results[2].timedelta.total_seconds(), 50)
             self.assertEqual(results[3].timedelta.total_seconds(), 20)
