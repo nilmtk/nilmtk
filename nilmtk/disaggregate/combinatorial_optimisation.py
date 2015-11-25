@@ -1,5 +1,4 @@
 from __future__ import print_function, division
-from datetime import datetime
 from warnings import warn
 
 import pandas as pd
@@ -7,11 +6,10 @@ import numpy as np
 import pickle
 import copy
 
-from ..utils import find_nearest
-from ..feature_detectors import cluster
-from ..timeframe import merge_timeframes, TimeFrame
-from ..disaggregate import Disaggregator
-from ..datastore import HDFDataStore
+from nilmtk.utils import find_nearest
+from nilmtk.feature_detectors import cluster
+from nilmtk.disaggregate import Disaggregator
+from nilmtk.datastore import HDFDataStore
 from nilmtk.electric import get_vampire_power
 
 # Fix the seed for repeatability of experiments
@@ -39,12 +37,15 @@ class CombinatorialOptimisation(Disaggregator):
              [0, 0,  0, 100],
              [0, 0, 50,   0],
              [0, 0, 50, 100], ...]
+
+    MIN_CHUNK_LENGTH : int
     """
 
     def __init__(self):
         self.model = []
         self.state_combinations = None
         self.MIN_CHUNK_LENGTH = 100
+        self.MODEL_NAME = 'CO'
 
     def train(self, metergroup, num_states_dict=None, **load_kwargs):
         """Train using 1D CO. Places the learnt model in the `model` attribute.
@@ -121,7 +122,7 @@ class CombinatorialOptimisation(Disaggregator):
             centroids = [model['states'] for model in self.model]
             self.state_combinations = cartesian(centroids)
 
-    def disaggregate(self, mains, output_datastore, output_name=None,
+    def disaggregate(self, mains, output_datastore,
                      vampire_power=None, **load_kwargs):
         '''Disaggregate mains according to the model learnt previously.
 
@@ -130,10 +131,6 @@ class CombinatorialOptimisation(Disaggregator):
         mains : nilmtk.ElecMeter or nilmtk.MeterGroup
         output_datastore : instance of nilmtk.DataStore subclass
             For storing power predictions from disaggregation algorithm.
-        output_name : string, optional
-            The `name` to use in the metadata for the `output_datastore`.
-            e.g. some sort of name for this experiment.  Defaults to
-            "NILMTK_CO_<date>"
         vampire_power : None or number (watts)
             If None then will automatically determine vampire power
             from data.  If you do not want to use vampire power then
@@ -143,23 +140,19 @@ class CombinatorialOptimisation(Disaggregator):
         **load_kwargs : key word arguments
             Passed to `mains.power_series(**kwargs)`
         '''
-        date_now = datetime.now().isoformat().split('.')[0]
-        if output_name is None:
-            output_name = 'NILMTK_CO_' + date_now
-
         if 'resample_seconds' in load_kwargs:
             warn("'resample_seconds' is deprecated."
                  "  Please use 'sample_period' instead.")
             load_kwargs['sample_period'] = load_kwargs.pop('resample_seconds')
 
         load_kwargs.setdefault('sample_period', 60)
-        resample_seconds = load_kwargs['sample_period']
+        sample_period = load_kwargs['sample_period']
         load_kwargs['sections'] = load_kwargs.pop(
             'sections', mains.good_sections())
 
         timeframes = []
         building_path = '/building{}'.format(mains.building())
-        mains_data_location = '{}/elec/meter1'.format(building_path)
+        mains_data_location = building_path + '/elec/meter1'
         data_is_available = False
 
         for chunk in mains.power_series(**load_kwargs):
@@ -185,109 +178,18 @@ class CombinatorialOptimisation(Disaggregator):
                 output_datastore.append(key, df)
 
             # Copy mains data to disag output
-            output_datastore.append(key=mains_data_location,
-                                    value=pd.DataFrame(chunk, columns=cols))
+            mains_df = pd.DataFrame(chunk, columns=cols)
+            output_datastore.append(key=mains_data_location, value=mains_df)
 
-        if not data_is_available:
-            return
-
-        ##################################
-        # Add metadata to output_datastore
-
-        # TODO: `preprocessing_applied` for all meters
-        # TODO: split this metadata code into a separate function
-        # TODO: submeter measurement should probably be the mains
-        #       measurement we used to train on, not the mains measurement.
-
-        # DataSet and MeterDevice metadata:
-        meter_devices = {
-            'CO': {
-                'model': 'CO',
-                'sample_period': resample_seconds,
-                'max_sample_period': resample_seconds,
-                'measurements': [{
-                    'physical_quantity': measurement[0],
-                    'type': measurement[1]
-                }]
-            },
-            'mains': {
-                'model': 'mains',
-                'sample_period': resample_seconds,
-                'max_sample_period': resample_seconds,
-                'measurements': [{
-                    'physical_quantity': measurement[0],
-                    'type': measurement[1]
-                }]
-            }
-        }
-
-        merged_timeframes = merge_timeframes(timeframes, gap=resample_seconds)
-        total_timeframe = TimeFrame(merged_timeframes[0].start,
-                                    merged_timeframes[-1].end)
-
-        dataset_metadata = {'name': output_name, 'date': date_now,
-                            'meter_devices': meter_devices,
-                            'timeframe': total_timeframe.to_dict()}
-        output_datastore.save_metadata('/', dataset_metadata)
-
-        # Building metadata
-
-        # Mains meter:
-        elec_meters = {
-            1: {
-                'device_model': 'mains',
-                'site_meter': True,
-                'data_location': mains_data_location,
-                'preprocessing_applied': {},  # TODO
-                'statistics': {
-                    'timeframe': total_timeframe.to_dict()
-                }
-            }
-        }
-
-        # Appliances and submeters:
-        appliances = []
-        for model in self.model:
-            meter = model['training_metadata']
-
-            meter_instance = meter.instance()
-
-            for app in meter.appliances:
-                appliance = {
-                    'meters': [meter_instance],
-                    'type': app.identifier.type,
-                    'instance': app.identifier.instance
-                    # TODO this `instance` will only be correct when the
-                    # model is trained on the same house as it is tested on.
-                    # https://github.com/nilmtk/nilmtk/issues/194
-                }
-                appliances.append(appliance)
-
-            elec_meters.update({
-                meter_instance: {
-                    'device_model': 'CO',
-                    'submeter_of': 1,
-                    'data_location': ('{}/elec/meter{}'
-                                      .format(building_path, meter_instance)),
-                    'preprocessing_applied': {},  # TODO
-                    'statistics': {
-                        'timeframe': total_timeframe.to_dict()
-                    }
-                }
-            })
-
-            # Setting the name if it exists
-            if meter.name:
-                if len(meter.name) > 0:
-                    elec_meters[meter_instance]['name'] = meter.name
-
-        building_metadata = {
-            'instance': mains.building(),
-            'elec_meters': elec_meters,
-            'appliances': appliances
-        }
-
-        output_datastore.save_metadata(building_path, building_metadata)
+        if data_is_available:
+            self._save_metadata_for_disaggregation(
+                output_datastore=output_datastore,
+                sample_period=sample_period,
+                measurement=measurement,
+                timeframes=timeframes,
+                building=mains.building(),
+                meters=[d['training_metadata'] for d in self.model]
+            )
 
     def disaggregate_chunk(self, mains, vampire_power=None):
         """In-memory disaggregation.
