@@ -15,8 +15,7 @@ before_install:
   - conda update -q conda
   # Useful for debugging any issues with conda
   - conda info -a
-  - sudo apt-get install libhdf5-serial-dev python-dev
-  - sudo apt-get install git
+  - sudo apt-get install libhdf5-serial-dev python-dev git
   - conda install --yes pip
   #- git clone https://github.com/nilmtk/nilm_metadata/
   #- cd nilm_metadata; python setup.py develop; cd ..
@@ -28,6 +27,7 @@ install:
   - sudo ln -s /run/shm /dev/shm
   #- sudo apt-get build-dep python-psycopg2
   - pip install -r requirements.txt
+  - pip install -e 'git+git@github.com:nilmtk/nilmtk.git#egg=nilmtk'
   #- python setup.py install
 script:
   - python -c 'from nilmtk.utils import show_versions; show_versions()'

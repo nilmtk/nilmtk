@@ -17,4 +17,3 @@ sh
 coveralls
 coverage
 -e git+git@github.com:nilmtk/nilm_metadata.git#egg=nilm_metadata
--e git+git@github.com:nilmtk/nilmtk.git#egg=nilmtk
