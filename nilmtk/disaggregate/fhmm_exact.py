@@ -9,8 +9,9 @@ import pandas as pd
 import numpy as np
 from hmmlearn import hmm
 
-from ..timeframe import merge_timeframes, TimeFrame
-from ..feature_detectors import cluster
+from nilmtk.timeframe import merge_timeframes, TimeFrame
+from nilmtk.feature_detectors import cluster
+from nilmtk.disaggregate import Disaggregator
 
 SEED = 42
 
@@ -170,14 +171,26 @@ def decode_hmm(length_sequence, centroids, appliance_list, states):
     return [hmm_states, hmm_power]
 
 
-class FHMM(object):
+class FHMM(Disaggregator):
+    """
+    Attributes
+    ----------
+    model : dict
+    predictions : pd.DataFrame()
+    meters : list
+    MIN_CHUNK_LENGTH : int
+    """
+
     def __init__(self):
         self.model = {}
         self.predictions = pd.DataFrame()
+        self.MIN_CHUNK_LENGTH = 100
+        self.MODEL_NAME = 'FHMM'
 
     def train(self, metergroup, num_states_dict={}, **load_kwargs):
-        """
-        Train using 1d FHMM. Places the learnt model in `model` attribute
+        """Train using 1d FHMM.
+
+        Places the learnt model in `model` attribute
         The current version performs training ONLY on the first chunk.
         Online HMMs are welcome if someone can contribute :)
         Assumes all pre-processing has been done.
@@ -190,7 +203,8 @@ class FHMM(object):
             max_num_clusters = 3
 
         for i, meter in enumerate(metergroup.submeters().meters):
-            meter_data = meter.power_series(**load_kwargs).next().dropna()
+            power_series = meter.power_series(**load_kwargs)
+            meter_data = power_series.next().dropna()
             X = meter_data.values.reshape((-1, 1))
             assert X.ndim == 2
             self.X = X
@@ -209,6 +223,18 @@ class FHMM(object):
 
             # Fit
             learnt_model[meter].fit([X])
+
+            # Check to see if there are any more chunks.
+            # TODO handle multiple chunks per appliance.
+            try:
+                power_series.next()
+            except StopIteration:
+                pass
+            else:
+                warn("The current implementation of FHMM"
+                     " can only handle a single chunk.  But there are multiple"
+                     " chunks available.  So have only trained on the"
+                     " first chunk!")
 
         # Combining to make a AFHMM
         self.meters = []
@@ -229,8 +255,8 @@ class FHMM(object):
         self.model = learnt_model_combined
 
     def disaggregate_chunk(self, test_mains):
-        """
-        Disaggregate the test data according to the model learnt previously
+        """Disaggregate the test data according to the model learnt previously
+
         Performs 1D FHMM disaggregation.
 
         For now assuming there is no missing data at this stage.
@@ -261,8 +287,9 @@ class FHMM(object):
             decoded_states_array.append(decoded_states)
             decoded_power_array.append(decoded_power)
 
-        prediction = pd.DataFrame(decoded_power_array[0],
-                                  index=test_mains.index)
+        prediction = pd.DataFrame(
+            decoded_power_array[0], index=test_mains.index)
+
         return prediction
 
     def disaggregate(self, mains, output_datastore, **load_kwargs):
@@ -273,44 +300,27 @@ class FHMM(object):
         mains : nilmtk.ElecMeter or nilmtk.MeterGroup
         output_datastore : instance of nilmtk.DataStore subclass
             For storing power predictions from disaggregation algorithm.
-        output_name : string, optional
-            The `name` to use in the metadata for the `output_datastore`.
-            e.g. some sort of name for this experiment.  Defaults to
-            "NILMTK_FHMM_<date>"
         sample_period : number, optional
             The desired sample period in seconds.
         **load_kwargs : key word arguments
             Passed to `mains.power_series(**kwargs)`
         '''
-        import warnings
-
-        warnings.filterwarnings("ignore", category=Warning)
-        MIN_CHUNK_LENGTH = 100
-        if not self.model:
-            raise RuntimeError(
-                "The model needs to be instantiated before"
-                " calling `disaggregate`.  For example, the"
-                " model can be instantiated by running `train`.")
-
-        # Extract optional parameters from load_kwargs
-        date_now = datetime.now().isoformat().split('.')[0]
-        output_name = load_kwargs.pop('output_name', 'NILMTK_FHMM_' + date_now)
-
-        if 'resample_seconds' in load_kwargs:
-            warn("'resample_seconds' is deprecated."
-                 "  Please use 'sample_period' instead.")
-            load_kwargs['sample_period'] = load_kwargs.pop('resample_seconds')
+        load_kwargs = self._pre_disaggregation_checks(load_kwargs)
 
         load_kwargs.setdefault('sample_period', 60)
-        resample_seconds = load_kwargs['sample_period']
+        load_kwargs.setdefault('sections', mains.good_sections())
+
         timeframes = []
         building_path = '/building{}'.format(mains.building())
-        mains_data_location = '{}/elec/meter1'.format(building_path)
+        mains_data_location = building_path + '/elec/meter1'
         data_is_available = False
+
+        import warnings
+        warnings.filterwarnings("ignore", category=Warning)
 
         for chunk in mains.power_series(**load_kwargs):
             # Check that chunk is sensible size before resampling
-            if len(chunk) < MIN_CHUNK_LENGTH:
+            if len(chunk) < self.MIN_CHUNK_LENGTH:
                 continue
 
             # Record metadata
@@ -321,116 +331,28 @@ class FHMM(object):
             predictions = self.disaggregate_chunk(chunk)
 
             for meter in predictions.columns:
-                data_is_available = True
                 meter_instance = meter.instance()
                 cols = pd.MultiIndex.from_tuples([chunk.name])
 
                 predicted_power = predictions[[meter]]
+                if len(predicted_power) == 0:
+                    continue
+                data_is_available = True
                 output_df = pd.DataFrame(predicted_power)
                 output_df.columns = pd.MultiIndex.from_tuples([chunk.name])
-                output_datastore.append('{}/elec/meter{}'
-                                        .format(building_path, meter_instance),
-                                        output_df)
+                key = '{}/elec/meter{}'.format(building_path, meter_instance)
+                output_datastore.append(key, output_df)
 
             # Copy mains data to disag output
             output_datastore.append(key=mains_data_location,
                                     value=pd.DataFrame(chunk, columns=cols))
 
-        if not data_is_available:
-            return
-
-        ##################################
-        # Add metadata to output_datastore
-
-        # TODO: `preprocessing_applied` for all meters
-        # TODO: split this metadata code into a separate function
-        # TODO: submeter measurement should probably be the mains
-        #       measurement we used to train on, not the mains measurement.
-
-        # DataSet and MeterDevice metadata:
-        meter_devices = {
-            'FHMM': {
-                'model': 'FHMM',
-                'sample_period': resample_seconds,
-                'max_sample_period': resample_seconds,
-                'measurements': [{
-                    'physical_quantity': measurement[0],
-                    'type': measurement[1]
-                }]
-            },
-            'mains': {
-                'model': 'mains',
-                'sample_period': resample_seconds,
-                'max_sample_period': resample_seconds,
-                'measurements': [{
-                    'physical_quantity': measurement[0],
-                    'type': measurement[1]
-                }]
-            }
-        }
-
-        merged_timeframes = merge_timeframes(timeframes, gap=resample_seconds)
-        total_timeframe = TimeFrame(merged_timeframes[0].start,
-                                    merged_timeframes[-1].end)
-
-        dataset_metadata = {'name': output_name, 'date': date_now,
-                            'meter_devices': meter_devices,
-                            'timeframe': total_timeframe.to_dict()}
-        output_datastore.save_metadata('/', dataset_metadata)
-
-        # Building metadata
-
-        # Mains meter:
-        elec_meters = {
-            1: {
-                'device_model': 'mains',
-                'site_meter': True,
-                'data_location': mains_data_location,
-                'preprocessing_applied': {},  # TODO
-                'statistics': {
-                    'timeframe': total_timeframe.to_dict()
-                }
-            }
-        }
-
-        # TODO: FIX THIS! Ugly hack for now
-        # Appliances and submeters:
-        appliances = []
-        for i, meter in enumerate(self.meters):
-            meter_instance = meter.instance()
-
-            for app in meter.appliances:
-                appliance = {
-                    'meters': [meter_instance],
-                    'type': app.identifier.type,
-                    'instance': app.identifier.instance
-                    # TODO this `instance` will only be correct when the
-                    # model is trained on the same house as it is tested on.
-                    # https://github.com/nilmtk/nilmtk/issues/194
-                }
-                appliances.append(appliance)
-
-            elec_meters.update({
-                meter_instance: {
-                    'device_model': 'FHMM',
-                    'submeter_of': 1,
-                    'data_location': ('{}/elec/meter{}'
-                                      .format(building_path, meter_instance)),
-                    'preprocessing_applied': {},  # TODO
-                    'statistics': {
-                        'timeframe': total_timeframe.to_dict()
-                    }
-                }
-            })
-
-            # Setting the name if it exists
-            if meter.name:
-                if len(meter.name) > 0:
-                    elec_meters[meter_instance]['name'] = meter.name
-        building_metadata = {
-            'instance': mains.building(),
-            'elec_meters': elec_meters,
-            'appliances': appliances
-        }
-
-        output_datastore.save_metadata(building_path, building_metadata)
+        if data_is_available:
+            self._save_metadata_for_disaggregation(
+                output_datastore=output_datastore,
+                sample_period=load_kwargs['sample_period'],
+                measurement=measurement,
+                timeframes=timeframes,
+                building=mains.building(),
+                meters=self.meters
+            )

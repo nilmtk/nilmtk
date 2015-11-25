@@ -6,10 +6,10 @@ from os import remove
 from testingtools import data_dir
 from nilmtk.datastore import HDFDataStore
 from nilmtk import DataSet
-from nilmtk.disaggregate import CombinatorialOptimisation
+from nilmtk.disaggregate import FHMM
 
 
-class TestCO(unittest.TestCase):
+class TestFHMM(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -22,11 +22,11 @@ class TestCO(unittest.TestCase):
 
     def test_co_correctness(self):
         elec = self.dataset.buildings[1].elec
-        co = CombinatorialOptimisation()
-        co.train(elec)
+        fhmm = FHMM()
+        fhmm.train(elec)
         mains = elec.mains()
         output = HDFDataStore('output.h5', 'w')
-        co.disaggregate(mains, output, sample_period=1)
+        fhmm.disaggregate(mains, output, sample_period=1)
 
         for meter in range(2, 4):
             df1 = output.store.get('/building1/elec/meter{}'.format(meter))

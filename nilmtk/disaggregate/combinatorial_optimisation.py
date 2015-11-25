@@ -142,10 +142,7 @@ class CombinatorialOptimisation(Disaggregator):
         **load_kwargs : key word arguments
             Passed to `mains.power_series(**kwargs)`
         '''
-        if 'resample_seconds' in load_kwargs:
-            DeprecationWarning("'resample_seconds' is deprecated."
-                               "  Please use 'sample_period' instead.")
-            load_kwargs['sample_period'] = load_kwargs.pop('resample_seconds')
+        load_kwargs = self._pre_disaggregation_checks(load_kwargs)
 
         load_kwargs.setdefault('sample_period', 60)
         load_kwargs.setdefault('sections', mains.good_sections())

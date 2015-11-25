@@ -79,6 +79,20 @@ class Disaggregator(object):
         """
         raise NotImplementedError()
 
+    def _pre_disaggregation_checks(self, load_kwargs):
+        if not self.model:
+            raise RuntimeError(
+                "The model needs to be instantiated before"
+                " calling `disaggregate`.  For example, the"
+                " model can be instantiated by running `train`.")
+
+        if 'resample_seconds' in load_kwargs:
+            DeprecationWarning("'resample_seconds' is deprecated."
+                               "  Please use 'sample_period' instead.")
+            load_kwargs['sample_period'] = load_kwargs.pop('resample_seconds')
+
+        return load_kwargs
+
     def _save_metadata_for_disaggregation(self, output_datastore,
                                           sample_period, measurement,
                                           timeframes, building, meters):
@@ -160,10 +174,11 @@ class Disaggregator(object):
 
             elec_meters.update({
                 meter_instance: {
-                    'device_model': 'CO',
+                    'device_model': self.MODEL_NAME,
                     'submeter_of': 1,
-                    'data_location': ('{}/elec/meter{}'
-                                      .format(building_path, meter_instance)),
+                    'data_location': (
+                        '{}/elec/meter{}'.format(
+                            building_path, meter_instance)),
                     'preprocessing_applied': {},  # TODO
                     'statistics': {
                         'timeframe': total_timeframe.to_dict()
