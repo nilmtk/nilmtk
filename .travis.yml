@@ -1,16 +1,22 @@
 sudo: false  # use new container infrastructure on Travis CI
 
+language: python
+
+python: 2.7
+
 before_install:
-  # Install miniconda
-  - wget http://repo.continuum.io/miniconda/Miniconda-3.7.3-Linux-x86_64.sh -O miniconda.sh;
-  - bash miniconda.sh -b -p $HOME/miniconda
+  # Install miniconda.  First check if it exists in the cache
+  - if [ ! -d "$HOME/miniconda" ]; then
+      wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh;
+      bash miniconda.sh -b -p $HOME/miniconda
+      rm miniconda.sh
+      conda install -c conda conda-env
+    fi
   - export PATH="$HOME/miniconda/bin:$PATH"
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
+  - conda update conda
   - conda info -a  # Useful for debugging any issues with conda
-  
-  # Install conda-env
-  - conda install -c conda conda-env
 
 install:
   # create and activate env using NILMTK's environment.yml
@@ -33,3 +39,8 @@ after_success:
 
 after_script:
   - source deactivate
+
+cache:
+  directories:
+    - $HOME/.cache/pip
+    - $HOME/miniconda
