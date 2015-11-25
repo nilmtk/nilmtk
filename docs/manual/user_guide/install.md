@@ -34,15 +34,17 @@ git clone https://github.com/nilmtk/nilmtk.git
 cd nilmtk
 ```
 
-Use conda-env to install an environment for NILMTK, using NILMTK's
-`environment.yml` text file to define which packages are required:
+Use [conda-env](https://github.com/conda/conda-env) to install an
+environment for NILMTK, using NILMTK's `environment.yml` text file to
+define which packages need to be installed:
 
 ```bash
 conda env create
 source activate nilmtk-env
 ```
 
-Install nilm_metadata (can't yet install using pip / conda)
+Install [nilm_metadata](https://github.com/nilmtk/nilm_metadata)
+(can't yet install using pip / conda):
 
 ```bash
 cd ~
