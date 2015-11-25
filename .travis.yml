@@ -13,7 +13,7 @@ before_install:
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
-  #- conda install -c conda conda-env
+  - conda install -c conda conda-env
   # Useful for debugging any issues with conda
   - conda info -a
   - sudo apt-get install libhdf5-serial-dev python-dev git
@@ -29,8 +29,8 @@ install:
   #- sudo apt-get build-dep python-psycopg2
   #- pip install cython
   #- pip install -r requirements.txt
-  - conda install --file environment.yml # create using NILMTK's environment.yml
-  #- source activate nilmtk-env
+  - conda env install # create using NILMTK's environment.yml
+  - source activate nilmtk-env
   - pip install -e 'git+https://github.com/nilmtk/nilmtk.git#egg=nilmtk'
   #- python setup.py install
 script:

@@ -21,4 +21,4 @@ dependencies:
 - pip:
     - coveralls
     - hmmlearn==0.1.1    
-    - -e git+https://github.com/nilmtk/nilm_metadata.git#egg=nilm_metadata
+    - git+https://github.com/nilmtk/nilm_metadata.git#egg=nilm_metadata
