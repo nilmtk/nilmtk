@@ -26,6 +26,7 @@ install:
   - sudo rm -rf /dev/shm
   - sudo ln -s /run/shm /dev/shm
   #- sudo apt-get build-dep python-psycopg2
+  - pip install cython
   - pip install -r requirements.txt
   - pip install -e 'git+git@github.com:nilmtk/nilmtk.git#egg=nilmtk'
   #- python setup.py install
