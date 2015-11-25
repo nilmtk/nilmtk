@@ -4,6 +4,7 @@ import unittest
 import pandas as pd
 from nilmtk.timeframe import TimeFrame, merge_timeframes
 
+
 class TestTimeFrame(unittest.TestCase):
     def test_date_setting(self):
         TimeFrame()
@@ -27,7 +28,7 @@ class TestTimeFrame(unittest.TestCase):
             tf.start = "2012-01-01"
 
     def test_time_delta(self):
-        tf = TimeFrame("2012-01-01 00:00:00", "2013-01-01 00:00:00")        
+        tf = TimeFrame("2012-01-01 00:00:00", "2013-01-01 00:00:00")
         self.assertAlmostEqual(tf.timedelta.total_seconds(), 60*60*24*366)
 
     def test_intersection(self):
@@ -43,11 +44,11 @@ class TestTimeFrame(unittest.TestCase):
         self.assertFalse(new_tf.empty)
 
         new_tf = tf.intersection(TimeFrame(start="1990-01-01"))
-        self.assertEqual(tf, new_tf)        
+        self.assertEqual(tf, new_tf)
         self.assertFalse(new_tf.empty)
 
         new_tf = tf.intersection(TimeFrame(end="2100-01-01"))
-        self.assertEqual(tf, new_tf)        
+        self.assertEqual(tf, new_tf)
         self.assertFalse(new_tf.empty)
 
         small_tf = TimeFrame("2012-01-05 00:00:00", "2012-01-06 00:00:00")
@@ -85,10 +86,10 @@ class TestTimeFrame(unittest.TestCase):
         new_end = "2012-01-07 04:05:06"
         new_tf = tf.intersection(TimeFrame(start="2011-01-01", end=new_end))
         self.assertEqual(new_tf, TimeFrame(start=tf.start, end=new_end))
-        self.assertFalse(new_tf.empty)        
+        self.assertFalse(new_tf.empty)
 
     def test_adjacent(self):
-        # overlap 
+        # overlap
         tf1 = TimeFrame("2011-01-01 00:00:00", "2011-02-01 00:00:00")
         tf2 = TimeFrame("2011-02-01 00:00:00", "2011-03-01 00:00:00")
         self.assertTrue(tf1.adjacent(tf2))
@@ -109,7 +110,7 @@ class TestTimeFrame(unittest.TestCase):
         self.assertTrue(tf2.adjacent(tf1, gap=100))
 
     def test_union(self):
-        # overlap 
+        # overlap
         def test_u(ts1, ts2, ts3, ts4):
             ts1 = pd.Timestamp(ts1)
             ts2 = pd.Timestamp(ts2)
@@ -121,21 +122,21 @@ class TestTimeFrame(unittest.TestCase):
             self.assertEqual(union.start, ts1)
             self.assertEqual(union.end, ts4)
 
-        test_u("2011-01-01 00:00:00", "2011-02-01 00:00:00", 
+        test_u("2011-01-01 00:00:00", "2011-02-01 00:00:00",
                "2011-02-01 00:00:00", "2011-03-01 00:00:00")
-        test_u("2011-01-01 00:00:00", "2011-01-15 00:00:00", 
+        test_u("2011-01-01 00:00:00", "2011-01-15 00:00:00",
                "2011-02-01 00:00:00", "2011-03-01 00:00:00")
 
     def test_merge_timeframes(self):
-        tfs = [TimeFrame("2010-01-01", "2011-01-01"), 
-               TimeFrame("2011-01-01", "2011-06-01"), 
+        tfs = [TimeFrame("2010-01-01", "2011-01-01"),
+               TimeFrame("2011-01-01", "2011-06-01"),
                TimeFrame("2012-01-01", "2013-01-01")]
 
         merged = merge_timeframes(tfs)
         correct_answer = [TimeFrame("2010-01-01", "2011-06-01"),
                           TimeFrame("2012-01-01", "2013-01-01")]
         self.assertEqual(merged, correct_answer)
-        
-        
+
+
 if __name__ == '__main__':
     unittest.main()
