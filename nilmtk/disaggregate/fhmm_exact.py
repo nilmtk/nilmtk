@@ -1,6 +1,5 @@
 from __future__ import print_function, division
 import itertools
-from datetime import datetime
 from copy import deepcopy
 from collections import OrderedDict
 from warnings import warn
@@ -9,7 +8,6 @@ import pandas as pd
 import numpy as np
 from hmmlearn import hmm
 
-from nilmtk.timeframe import merge_timeframes, TimeFrame
 from nilmtk.feature_detectors import cluster
 from nilmtk.disaggregate import Disaggregator
 

@@ -5,9 +5,11 @@ from warnings import warn
 
 import pandas as pd
 
-from ..feature_detectors.cluster import hart85_means_shift_cluster
-from ..feature_detectors.steady_states import find_steady_states_transients
-from ..timeframe import merge_timeframes, TimeFrame
+from nilmtk.feature_detectors.cluster import hart85_means_shift_cluster
+from nilmtk.feature_detectors.steady_states import (
+    find_steady_states_transients)
+from nilmtk.timeframe import merge_timeframes, TimeFrame
+from nilmtk.disaggregate import Disaggregator
 
 
 # Fix the seed for repeatability of experiments
@@ -195,9 +197,8 @@ class PairBuffer(object):
         return pairmatched
 
 
-class Hart85(object):
-    """
-    1 or 2 dimensional Hart 1985 algorithm.
+class Hart85(Disaggregator):
+    """1 or 2 dimensional Hart 1985 algorithm.
 
     Attributes
     ----------
@@ -209,6 +210,7 @@ class Hart85(object):
 
     def __init__(self):
         self.model = {}
+        self.MODEL_NAME = "Hart85"
 
     def train(self, metergroup, cols=[('power', 'active')],
               buffer_size=20, noise_level=70, state_threshold=15,
@@ -377,37 +379,27 @@ class Hart85(object):
         return di
 
     def disaggregate(self, mains, output_datastore, **load_kwargs):
-        """
-        Disaggregate mains according to the model learnt previously.
+        """Disaggregate mains according to the model learnt previously.
 
         Parameters
         ----------
         mains : nilmtk.ElecMeter or nilmtk.MeterGroup
         output_datastore : instance of nilmtk.DataStore subclass
             For storing power predictions from disaggregation algorithm.
-        output_name : string, optional
-            The `name` to use in the metadata for the `output_datastore`.
-            e.g. some sort of name for this experiment.  Defaults to
-            "NILMTK_Hart85_<date>"
         sample_period : number, optional
             The desired sample period in seconds.
         **load_kwargs : key word arguments
             Passed to `mains.power_series(**kwargs)`
         """
-
-        date_now = datetime.now().isoformat().split('.')[0]
-        output_name = load_kwargs.pop('output_name', 'Hart85_' + date_now)
-
-        if 'resample_seconds' in load_kwargs:
-            warn("'resample_seconds' is deprecated."
-                 "  Please use 'sample_period' instead.")
-            load_kwargs['sample_period'] = load_kwargs.pop('resample_seconds')
+        load_kwargs = self._pre_disaggregation_checks(load_kwargs)
 
         load_kwargs.setdefault('sample_period', 60)
-        resample_seconds = load_kwargs['sample_period']
+        load_kwargs.setdefault('sections', mains.good_sections())
 
+        timeframes = []
         building_path = '/building{}'.format(mains.building())
-        mains_data_location = '{}/elec/meter1'.format(building_path)
+        mains_data_location = building_path + '/elec/meter1'
+        data_is_available = False
 
         [_, transients] = find_steady_states_transients(
             mains, cols=self.cols, state_threshold=self.state_threshold,
@@ -434,6 +426,7 @@ class Hart85(object):
             cols = pd.MultiIndex.from_tuples([chunk.name])
 
             for meter in learnt_meters:
+                data_is_available = True
                 df = power_df[[meter]]
                 df.columns = cols
                 key = '{}/elec/meter{:d}'.format(building_path, meter + 2)
@@ -442,90 +435,18 @@ class Hart85(object):
             output_datastore.append(key=mains_data_location,
                                     value=pd.DataFrame(chunk, columns=cols))
 
-        # DataSet and MeterDevice metadata:
-        meter_devices = {
-            'Hart85': {
-                'model': 'Hart85',
-                'sample_period': resample_seconds,
-                'max_sample_period': resample_seconds,
-                'measurements': [{
-                    'physical_quantity': measurement[0],
-                    'type': measurement[1]
-                }]
-            },
-            'mains': {
-                'model': 'mains',
-                'sample_period': resample_seconds,
-                'max_sample_period': resample_seconds,
-                'measurements': [{
-                    'physical_quantity': measurement[0],
-                    'type': measurement[1]
-                }]
-            }
-        }
-
-        merged_timeframes = merge_timeframes(timeframes, gap=resample_seconds)
-        total_timeframe = TimeFrame(merged_timeframes[0].start,
-                                    merged_timeframes[-1].end)
-
-        dataset_metadata = {'name': output_name, 'date': date_now,
-                            'meter_devices': meter_devices,
-                            'timeframe': total_timeframe.to_dict()}
-        output_datastore.save_metadata('/', dataset_metadata)
-
-        # Building metadata
-
-        # Mains meter:
-        elec_meters = {
-            mains.instance(): {
-                'device_model': 'mains',
-                'site_meter': True,
-                'data_location': mains_data_location,
-                'preprocessing_applied': {},  # TODO
-                'statistics': {
-                    'timeframe': total_timeframe.to_dict()
-                }
-            }
-        }
-
-        # Submeters:
-        # Starts at 2 because meter 1 is mains.
-        for chan in range(2, len(self.centroids) + 2):
-            elec_meters.update({
-                chan: {
-                    'device_model': 'Hart85',
-                    'submeter_of': 1,
-                    'data_location': ('{}/elec/meter{:d}'
-                                      .format(building_path, chan)),
-                    'preprocessing_applied': {},  # TODO
-                    'statistics': {
-                        'timeframe': total_timeframe.to_dict()
-                    }
-                }
-            })
-
-        appliances = []
-        for i in range(len(self.centroids.index)):
-            appliance = {
-                'meters': [i + 2],
-                'type': 'unknown',
-                'instance': i
-                # TODO this `instance` will only be correct when the
-                # model is trained on the same house as it is tested on.
-                # https://github.com/nilmtk/nilmtk/issues/194
-            }
-            appliances.append(appliance)
-
-        building_metadata = {
-            'instance': mains.building(),
-            'elec_meters': elec_meters,
-            'appliances': appliances
-        }
-
-        output_datastore.save_metadata(building_path, building_metadata)
+        if data_is_available:
+            self._save_metadata_for_disaggregation(
+                output_datastore=output_datastore,
+                sample_period=load_kwargs['sample_period'],
+                measurement=measurement,
+                timeframes=timeframes,
+                building=mains.building(),
+                supervised=False,
+                num_meters=len(self.centroids)
+            )
 
     """
-        
     def export_model(self, filename):
         model_copy = {}
         for appliance, appliance_states in self.model.iteritems():

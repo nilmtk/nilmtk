@@ -20,7 +20,7 @@ class TestFHMM(unittest.TestCase):
     def tearDownClass(cls):
         cls.dataset.store.close()
 
-    def test_co_correctness(self):
+    def test_fhmm_correctness(self):
         elec = self.dataset.buildings[1].elec
         fhmm = FHMM()
         fhmm.train(elec)

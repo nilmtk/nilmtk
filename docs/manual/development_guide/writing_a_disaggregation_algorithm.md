@@ -1,6 +1,17 @@
 # Writing a disaggregation algorithm
 
-Disaggegration algorithms in NILMTK reside in the `nilmtk/nilmtk/disaggregate/` directory and are implemented as python classes. Each algorithm should extend the `Disaggregator` superclass, and implement all required methods. Algorithms should implement lazy-loading functionality via the `train_on_chunk` and `disaggregate_chunk` methods. Algorithms should specify whether they support supervised and/or unsupervised training. See the `CombinatorialOptimisation` algorithm for a simple implementation of the `Disaggregator` superclass.
+Disaggegration algorithms in NILMTK reside in the
+`nilmtk/nilmtk/disaggregate/` directory and are implemented as python
+classes. Each algorithm should extend the `Disaggregator` superclass,
+and implement all required methods. Algorithms should implement
+lazy-loading functionality via the `train_on_chunk` and
+`disaggregate_chunk` methods. Algorithms should specify whether they
+support supervised and/or unsupervised training. See the
+`CombinatorialOptimisation` algorithm for a simple implementation of
+the `Disaggregator` superclass.
+
+In the `__init__` function, set `self.MODEL_NAME` to a short string
+describing your algorithm.  e.g. we use 'CO' for combinatorial optimisation.
 
 ## Training
 

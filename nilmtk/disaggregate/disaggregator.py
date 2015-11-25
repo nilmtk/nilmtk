@@ -95,11 +95,12 @@ class Disaggregator(object):
 
     def _save_metadata_for_disaggregation(self, output_datastore,
                                           sample_period, measurement,
-                                          timeframes, building, meters):
+                                          timeframes, building,
+                                          meters=None, num_meters=None,
+                                          supervised=True):
         """Add metadata to output_datastore"""
 
         # TODO: `preprocessing_applied` for all meters
-        # TODO: split this metadata code into a separate function
         # TODO: submeter measurement should probably be the mains
         #       measurement we used to train on, not the mains measurement.
 
@@ -156,22 +157,7 @@ class Disaggregator(object):
             }
         }
 
-        # Appliances and submeters:
-        appliances = []
-        for meter in meters:
-            meter_instance = meter.instance()
-
-            for app in meter.appliances:
-                appliance = {
-                    'meters': [meter_instance],
-                    'type': app.identifier.type,
-                    'instance': app.identifier.instance
-                    # TODO this `instance` will only be correct when the
-                    # model is trained on the same house as it is tested on.
-                    # https://github.com/nilmtk/nilmtk/issues/194
-                }
-                appliances.append(appliance)
-
+        def update_elec_meters(meter_instance):
             elec_meters.update({
                 meter_instance: {
                     'device_model': self.MODEL_NAME,
@@ -186,10 +172,42 @@ class Disaggregator(object):
                 }
             })
 
-            # Setting the name if it exists
-            if meter.name:
-                if len(meter.name) > 0:
-                    elec_meters[meter_instance]['name'] = meter.name
+        # Appliances and submeters:
+        appliances = []
+        if supervised:
+            for meter in meters:
+                meter_instance = meter.instance()
+                update_elec_meters(meter_instance)
+
+                for app in meter.appliances:
+                    appliance = {
+                        'meters': [meter_instance],
+                        'type': app.identifier.type,
+                        'instance': app.identifier.instance
+                        # TODO this `instance` will only be correct when the
+                        # model is trained on the same house as it is tested on
+                        # https://github.com/nilmtk/nilmtk/issues/194
+                    }
+                    appliances.append(appliance)
+
+                # Setting the name if it exists
+                if meter.name:
+                    if len(meter.name) > 0:
+                        elec_meters[meter_instance]['name'] = meter.name
+        else:  # Unsupervised
+            # Submeters:
+            # Starts at 2 because meter 1 is mains.
+            for chan in range(2, num_meters + 2):
+                update_elec_meters(meter_instance=chan)
+                appliance = {
+                    'meters': [chan],
+                    'type': 'unknown',
+                    'instance': chan - 1
+                    # TODO this `instance` will only be correct when the
+                    # model is trained on the same house as it is tested on
+                    # https://github.com/nilmtk/nilmtk/issues/194
+                }
+                appliances.append(appliance)
 
         building_metadata = {
             'instance': building,
