@@ -7,8 +7,9 @@ togther most of the required packages. Please download Anaconda for
 Python 2.7.x. We do not currently support Python 3.
 
 After installing Anaconda, please do the following.  We have two
-sections below: [one for Linux or OSX](#install-on-windows) and
-another section for Windows.
+sections below:
+[one for Linux or OSX](#install-on-ubuntu-like-linux-variants-debian-based-or-osx)
+and another [section for Windows](#install-on-windows).
 
 ### Install on Ubuntu like Linux variants (debian based) or OSX
 
