@@ -5,14 +5,11 @@ language: python
 python: 2.7
 
 before_install:
-  # Install miniconda.  First check if it exists in the cache
-  - if [ ! -d "$HOME/miniconda" ]
-    then
-      wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
-      bash miniconda.sh -b -p $HOME/miniconda
-      rm miniconda.sh
-      conda install -c conda conda-env
-    fi
+  # Install miniconda.
+  - wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - rm miniconda.sh
+  - conda install -c conda conda-env
   - export PATH="$HOME/miniconda/bin:$PATH"
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
@@ -44,4 +41,3 @@ after_script:
 cache:
   directories:
     - $HOME/.cache/pip
-    - $HOME/miniconda
