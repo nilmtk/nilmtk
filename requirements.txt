@@ -10,8 +10,6 @@ scipy
 scikit-learn>=0.14
 ipython
 six
-coveralls
-coverage
 hmmlearn==0.1.1
 psycopg2
 nose
