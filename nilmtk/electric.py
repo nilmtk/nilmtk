@@ -222,7 +222,8 @@ class Electric(object):
 
     def vampire_power(self, **load_kwargs):
         # TODO: this might be a naive approach to calculating vampire power.
-        return self.power_series_all_data(**load_kwargs).min()
+        power_series = self.power_series_all_data(**load_kwargs)
+        return get_vampire_power(power_series)
 
     def uptime(self, **load_kwargs):
         """
@@ -962,3 +963,13 @@ def get_activations(chunk, min_off_duration=0, min_on_duration=0,
             activations.append(activation)
 
     return activations
+
+
+def get_vampire_power(power_series):
+    # This is a very simple function at the moment but
+    # in the future we may want to implement a more
+    # sophisticated vampire power function, so it is worth
+    # calling `get_vampire_power` instead of just doing
+    # power_series.min() in case we get round to building
+    # a better vampire power function!
+    return power_series.min()

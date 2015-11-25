@@ -12,6 +12,7 @@ from ..feature_detectors import cluster
 from ..timeframe import merge_timeframes, TimeFrame
 from ..disaggregate import Disaggregator
 from ..datastore import HDFDataStore
+from nilmtk.electric import get_vampire_power
 
 # Fix the seed for repeatability of experiments
 SEED = 42
@@ -32,7 +33,7 @@ class CombinatorialOptimisation(Disaggregator):
                for each model.
 
     state_combinations : 2D array
-        Each column is a channel.
+        Each column is an appliance.
         Each row is a possible combination of power demand values e.g.
             [[0, 0,  0,   0],
              [0, 0,  0, 100],
@@ -120,7 +121,8 @@ class CombinatorialOptimisation(Disaggregator):
             centroids = [model['states'] for model in self.model]
             self.state_combinations = cartesian(centroids)
 
-    def disaggregate(self, mains, output_datastore, **load_kwargs):
+    def disaggregate(self, mains, output_datastore, output_name=None,
+                     vampire_power=None, **load_kwargs):
         '''Disaggregate mains according to the model learnt previously.
 
         Parameters
@@ -132,17 +134,18 @@ class CombinatorialOptimisation(Disaggregator):
             The `name` to use in the metadata for the `output_datastore`.
             e.g. some sort of name for this experiment.  Defaults to
             "NILMTK_CO_<date>"
+        vampire_power : None or number (watts)
+            If None then will automatically determine vampire power
+            from data.  If you do not want to use vampire power then
+            set vampire_power = 0.
         sample_period : number, optional
             The desired sample period in seconds.
         **load_kwargs : key word arguments
             Passed to `mains.power_series(**kwargs)`
         '''
-        # Vampire power
-        vampire_power = mains.vampire_power()
-
-        # Extract optional parameters from load_kwargs
         date_now = datetime.now().isoformat().split('.')[0]
-        output_name = load_kwargs.pop('output_name', 'NILMTK_CO_' + date_now)
+        if output_name is None:
+            output_name = 'NILMTK_CO_' + date_now
 
         if 'resample_seconds' in load_kwargs:
             warn("'resample_seconds' is deprecated."
@@ -291,8 +294,11 @@ class CombinatorialOptimisation(Disaggregator):
 
         Parameters
         ----------
-        mains : pd.DataFrame
+        mains : pd.Series
         vampire_power : None or number (watts)
+            If None then will automatically determine vampire power
+            from data.  If you do not want to use vampire power then
+            set vampire_power = 0.
 
         Returns
         -------
@@ -320,7 +326,7 @@ class CombinatorialOptimisation(Disaggregator):
 
         # Add vampire power to the model
         if vampire_power is None:
-            vampire_power = mains.values.min()
+            vampire_power = get_vampire_power(mains)
         if vampire_power > 0:
             print("Including vampire_power = {} watts to model..."
                   .format(vampire_power))
