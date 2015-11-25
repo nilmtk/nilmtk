@@ -98,6 +98,14 @@ class CombinatorialOptimisation(Disaggregator):
         print("Done training!")
 
     def train_on_chunk(self, chunk, meter, max_num_clusters, num_on_states):
+        # Check if we've already trained on this meter
+        meters_in_model = [d['training_metadata'] for d in self.model]
+        if meter in meters_in_model:
+            raise RuntimeError(
+                "Meter {} is already in model!"
+                "  Can't train twice on the same meter!"
+                .format(meter))
+
         states = cluster(chunk, max_num_clusters, num_on_states)
         self.model.append({
             'states': states,
