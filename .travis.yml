@@ -18,8 +18,6 @@ before_install:
   - conda info -a
   - sudo apt-get install libhdf5-serial-dev python-dev git
   #- conda install --yes pip
-  #- git clone https://github.com/nilmtk/nilm_metadata/
-  #- cd nilm_metadata; python setup.py develop; cd ..
 
 install:
   #- conda install --yes pip python=$TRAVIS_PYTHON_VERSION
@@ -31,6 +29,8 @@ install:
   #- pip install -r requirements.txt
   - conda env create # create using NILMTK's environment.yml
   - source activate nilmtk-env
+  - git clone https://github.com/nilmtk/nilm_metadata/
+  - cd nilm_metadata; python setup.py develop; cd ..  
   - pip install -e 'git+https://github.com/nilmtk/nilmtk.git#egg=nilmtk'
   #- python setup.py install
 script:
