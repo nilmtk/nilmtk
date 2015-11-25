@@ -1,13 +1,73 @@
 
 # Install NILMTK
 
-### Install on Ubuntu like Linux variants (debian based) or OSX
-
-NB: The following procedure is for Ubuntu like Linux variants (debian based). Please adapt accordingly for your OS. We would welcome installation instructions for other OSes as well.
-
-We recommend using [Anaconda](https://store.continuum.io/cshop/anaconda/), which bundles togther most of the required packages. Please download Anaconda for Python 2.7.x. We do not currently support Python 3.
+We recommend using
+[Anaconda](https://store.continuum.io/cshop/anaconda/), which bundles
+togther most of the required packages. Please download Anaconda for
+Python 2.7.x. We do not currently support Python 3.
 
 After installing Anaconda, please do the following:
+
+### Install on Ubuntu like Linux variants (debian based) or OSX
+
+NB: The following procedure is for Ubuntu like Linux variants (Debian
+based). Please adapt accordingly for your OS. We would welcome
+installation instructions for other OSes as well.
+
+#### Experimental but probably easiest installation procedure
+
+In this section we will describe a fast and simple, but fairly
+untested installation procedure.  Please give this a go and tell us in
+the issue queue if this process doesn't work for you.
+
+Install git, if necessary:
+
+```bash
+sudo apt-get install git
+```
+
+Download NILMTK:
+
+```bash
+cd ~
+git clone https://github.com/nilmtk/nilmtk.git
+cd nilmtk
+```
+
+Use conda-env to install an environment for NILMTK, using NILMTK's
+`environment.yml` text file to define which packages are required:
+
+```bash
+conda env create
+source activate nilmtk-env
+```
+
+Install nilm_metadata (can't yet install using pip / conda)
+
+```bash
+cd ~
+git clone https://github.com/nilmtk/nilm_metadata/
+cd nilm_metadata; python setup.py develop; cd ..
+```
+
+Change back to your nilmtk directory and install NILMTK:
+
+```bash
+cd ~/nilmtk
+python setup.py develop
+```
+
+Run the unit tests:
+
+```bash
+nosetests
+```
+
+Then, work away on NILMTK :).  When you are done, just do `source
+deactivate` to deactivate the nilmtk-env.
+
+
+#### Old installation procedure
 
 - Update anaconda
 ```bash
