@@ -28,7 +28,7 @@ install:
   #- sudo apt-get build-dep python-psycopg2
   - pip install cython
   - pip install -r requirements.txt
-  - pip install -e 'git+git@github.com:nilmtk/nilmtk.git#egg=nilmtk'
+  - pip install -e 'git+https://github.com/nilmtk/nilmtk.git#egg=nilmtk'
   #- python setup.py install
 script:
   - python -c 'from nilmtk.utils import show_versions; show_versions()'
