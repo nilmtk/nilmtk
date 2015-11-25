@@ -6,7 +6,8 @@ We recommend using
 togther most of the required packages. Please download Anaconda for
 Python 2.7.x. We do not currently support Python 3.
 
-After installing Anaconda, please do the following:
+After installing Anaconda, please do the following.  We have two
+sections below: one for Linux or OSX and another section for Windows.
 
 ### Install on Ubuntu like Linux variants (debian based) or OSX
 
@@ -14,11 +15,13 @@ NB: The following procedure is for Ubuntu like Linux variants (Debian
 based). Please adapt accordingly for your OS. We would welcome
 installation instructions for other OSes as well.
 
-#### Experimental but probably easiest installation procedure
+#### Experimental but probably easiest installation procedure for Unix or OSX
 
 In this section we will describe a fast and simple, but fairly
 untested installation procedure.  Please give this a go and tell us in
-the issue queue if this process doesn't work for you.
+[the issue queue](https://github.com/nilmtk/nilmtk/issues) if this
+process doesn't work for you.  The old Unix and OSX instructions are
+further down this page if you need to try them.
 
 Install git, if necessary:
 
@@ -34,17 +37,18 @@ git clone https://github.com/nilmtk/nilmtk.git
 cd nilmtk
 ```
 
-Use [conda-env](https://github.com/conda/conda-env) to install an
-environment for NILMTK, using NILMTK's `environment.yml` text file to
-define which packages need to be installed:
+The next step uses [conda-env](https://github.com/conda/conda-env) to
+install an environment for NILMTK, using NILMTK's `environment.yml`
+text file to define which packages need to be installed:
 
 ```bash
 conda env create
 source activate nilmtk-env
 ```
 
-Install [nilm_metadata](https://github.com/nilmtk/nilm_metadata)
-(can't yet install using pip / conda):
+Next we will install
+[nilm_metadata](https://github.com/nilmtk/nilm_metadata) (can't yet
+install using pip / conda):
 
 ```bash
 cd ~
@@ -69,7 +73,7 @@ Then, work away on NILMTK :).  When you are done, just do `source
 deactivate` to deactivate the nilmtk-env.
 
 
-#### Old installation procedure
+#### Old installation procedure for Unix or OSX
 
 - Update anaconda
 ```bash
@@ -141,6 +145,13 @@ nosetests
 - Install [Anaconda](https://store.continuum.io/cshop/anaconda/), which bundles togther most of the required packages. Please download Anaconda for Python 2.7.x. We do not currently support Python 3.
 
 - Install [git](http://git-scm.com/download/win) client. You may need to add `git.exe` to your path in order to run nilmtk tests. 
+
+- Now, we recommend trying
+  [the experimental but simple installation instructions above](#experimental-but-probably-easiest-installation-procedure).
+  If they don't work then let us know on [the issue queue](https://github.com/nilmtk/nilmtk/issues) and then try
+  the old windows installation procedure below:
+
+#### Old Windows installation procedure
 
 - Install pip and other dependencies which might be missing from Anaconda
 ```bash
