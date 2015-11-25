@@ -45,19 +45,21 @@ class CombinatorialOptimisation(Disaggregator):
         self.state_combinations = None
         self.MIN_CHUNK_LENGTH = 100
 
-    def train(self, metergroup, num_states_dict={}, **load_kwargs):
+    def train(self, metergroup, num_states_dict=None, **load_kwargs):
         """Train using 1D CO. Places the learnt model in the `model` attribute.
 
         Parameters
         ----------
         metergroup : a nilmtk.MeterGroup object
         num_states_dict : dict
-        **load_kwargs : key work arguments passed to `power_series()`
+        **load_kwargs : keyword arguments passed to `meter.power_series()`
 
         Notes
         -----
         * only uses first chunk for each meter (TODO: handle all chunks).
         """
+        if num_states_dict is None:
+            num_states_dict = {}
 
         if self.model:
             raise RuntimeError(
@@ -98,7 +100,6 @@ class CombinatorialOptimisation(Disaggregator):
         from sklearn.utils.extmath import cartesian
         centroids = [model['states'] for model in self.model]
         self.state_combinations = cartesian(centroids)
-
         print("Done training!")
 
     def train_on_chunk(self, chunk, meter, max_num_clusters, num_on_states):
