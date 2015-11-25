@@ -29,7 +29,7 @@ install:
   #- sudo apt-get build-dep python-psycopg2
   #- pip install cython
   #- pip install -r requirements.txt
-  - conda env install # create using NILMTK's environment.yml
+  - conda env create # create using NILMTK's environment.yml
   - source activate nilmtk-env
   - pip install -e 'git+https://github.com/nilmtk/nilmtk.git#egg=nilmtk'
   #- python setup.py install
