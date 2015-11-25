@@ -1,5 +1,6 @@
 cython>=0.19.1
 bottleneck>=0.6.0
+dateutil
 numpy>=1.8.0
 numexpr>=2.2.2
 tables
@@ -14,4 +15,10 @@ nose
 coveralls
 coverage
 hmmlearn==0.1.1
--e git+git@github.com:nilmtk/nilm_metadata.git#egg=nilm_metadata-master
+psycopg2
+nose
+sh
+coveralls
+coverage
+-e git+git@github.com:nilmtk/nilm_metadata.git#egg=nilm_metadata
+-e git+git@github.com:nilmtk/nilmtk.git#egg=nilmtk
