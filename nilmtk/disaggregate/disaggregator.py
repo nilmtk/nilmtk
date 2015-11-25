@@ -98,7 +98,36 @@ class Disaggregator(object):
                                           timeframes, building,
                                           meters=None, num_meters=None,
                                           supervised=True):
-        """Add metadata to output_datastore"""
+        """Add metadata for disaggregated appliance estimates to datastore.
+
+        This method returns nothing.  It sets the metadata
+        in `output_datastore`.
+
+        Note that `self.MODEL_NAME` needs to be set to a string before
+        calling this method.  For example, we use `self.MODEL_NAME = 'CO'`
+        for Combinatorial Optimisation.
+
+        Parameters
+        ----------
+        output_datastore : nilmtk.DataStore subclass object
+            The datastore to write metadata into.
+        sample_period : int
+            The sample period, in seconds, used for both the
+            mains and the disaggregated appliance estimates.
+        measurement : 2-tuple of strings
+            In the form (<physical_quantity>, <type>) e.g.
+            ("power", "active")
+        timeframes : list of nilmtk.TimeFrames or nilmtk.TimeFrameGroup
+            The TimeFrames over which this data is valid for.
+        building : int
+            The building instance number (starting from 1)
+        supervised : bool, defaults to True
+            Is this a supervised NILM algorithm?
+        meters : list of nilmtk.ElecMeters, optional
+            Required if `supervised=True`
+        num_meters : int
+            Required if `supervised=False`
+        """
 
         # TODO: `preprocessing_applied` for all meters
         # TODO: submeter measurement should probably be the mains
