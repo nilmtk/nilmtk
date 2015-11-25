@@ -30,6 +30,14 @@ class CombinatorialOptimisation(Disaggregator):
                this set of states.  We need this information because we
                need the appliance type (and perhaps some other metadata)
                for each model.
+
+    state_combinations : 2D array
+        Each column is a channel.
+        Each row is a possible combination of power demand values e.g.
+            [[0, 0,  0,   0],
+             [0, 0,  0, 100],
+             [0, 0, 50,   0],
+             [0, 0, 50, 100], ...]
     """
 
     def __init__(self):
@@ -43,6 +51,8 @@ class CombinatorialOptimisation(Disaggregator):
         Parameters
         ----------
         metergroup : a nilmtk.MeterGroup object
+        num_states_dict : dict
+        **load_kwargs : key work arguments passed to `power_series()`
 
         Notes
         -----
@@ -88,11 +98,6 @@ class CombinatorialOptimisation(Disaggregator):
         from sklearn.utils.extmath import cartesian
         centroids = [model['states'] for model in self.model]
         self.state_combinations = cartesian(centroids)
-        # self.state_combinations is a 2D array
-        # each column is a chan
-        # each row is a possible combination of power demand values e.g.
-        # [[0, 0, 0, 0], [0, 0, 0, 100], [0, 0, 50, 0],
-        #  [0, 0, 50, 100], ...]
 
         print("Done training!")
 
