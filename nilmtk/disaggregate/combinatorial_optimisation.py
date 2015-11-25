@@ -95,11 +95,6 @@ class CombinatorialOptimisation(Disaggregator):
                      " chunks available.  So have only trained on the"
                      " first chunk!")
 
-        # Get centroids
-        # If we import sklearn at the top of the file then auto doc fails.
-        from sklearn.utils.extmath import cartesian
-        centroids = [model['states'] for model in self.model]
-        self.state_combinations = cartesian(centroids)
         print("Done training!")
 
     def train_on_chunk(self, chunk, meter, max_num_clusters, num_on_states):
@@ -107,6 +102,14 @@ class CombinatorialOptimisation(Disaggregator):
         self.model.append({
             'states': states,
             'training_metadata': meter})
+
+    def _set_state_combinations_if_necessary(self):
+        """Get centroids"""
+        # If we import sklearn at the top of the file then auto doc fails.
+        if self.state_combinations is None:
+            from sklearn.utils.extmath import cartesian
+            centroids = [model['states'] for model in self.model]
+            self.state_combinations = cartesian(centroids)
 
     def disaggregate(self, mains, output_datastore, **load_kwargs):
         '''Disaggregate mains according to the model learnt previously.
@@ -280,6 +283,7 @@ class CombinatorialOptimisation(Disaggregator):
         Parameters
         ----------
         mains : pd.DataFrame
+        vampire_power : None or number (watts)
 
         Returns
         -------
@@ -299,6 +303,11 @@ class CombinatorialOptimisation(Disaggregator):
         # sklearn produces lots of DepreciationWarnings with PyTables
         import warnings
         warnings.filterwarnings("ignore", category=DeprecationWarning)
+
+        # Because CombinatorialOptimisation could have been trained using
+        # either train() or train_on_chunk(), we must
+        # set state_combinations here.
+        self._set_state_combinations_if_necessary()
 
         # Add vampire power to the model
         if vampire_power is None:
