@@ -114,7 +114,8 @@ class CombinatorialOptimisation(Disaggregator):
     def _set_state_combinations_if_necessary(self):
         """Get centroids"""
         # If we import sklearn at the top of the file then auto doc fails.
-        if self.state_combinations is None:
+        if (self.state_combinations is None or
+                self.state_combinations.shape[1] != len(self.model)):
             from sklearn.utils.extmath import cartesian
             centroids = [model['states'] for model in self.model]
             self.state_combinations = cartesian(centroids)
