@@ -13,7 +13,6 @@ dependencies:
 - scikit-learn>=0.14
 - ipython
 - six
-- psycopg2
 - nose
 - sh
 - coverage
@@ -21,3 +20,4 @@ dependencies:
 - pip:
     - coveralls
     - hmmlearn==0.1.1
+    - psycopg2
