@@ -17,7 +17,7 @@ dependencies:
 - sh
 - coverage
 - pip
-- pip:
+- pip:  # Install packages which are not in conda. Install these using pip:
     - coveralls
     - hmmlearn==0.1.1
-    - psycopg2
+    - psycopg2 # not available in conda for Windows.  See issue #462
