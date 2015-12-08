@@ -14,7 +14,6 @@ dependencies:
 - ipython
 - six
 - nose
-- sh
 - coverage
 - pip
 - pip:  # Install packages which are not in conda. Install these using pip:
