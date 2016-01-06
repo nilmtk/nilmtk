@@ -1,0 +1,63 @@
+instance: 1   # this is the first building in the dataset
+original_name: House1   # original name from REFIT dataset
+elec_meters:
+  1: &clamp 
+    site_meter: true
+    device_model: Clamp
+  2: &iam
+    submeter_of: 0 
+    device_model: IAM
+  3: *iam
+  4: *iam
+  5: *iam
+  6: *iam
+  7: *iam
+  8: *iam
+  9: *iam
+  10: *iam
+
+appliances:
+- original_name: Fridge
+  type: fridge
+  instance: 1
+  meters: [2]
+
+- original_name: Freezer(1)
+  type: freezer
+  instance: 1
+  meters: [3]
+
+- original_name: Freezer(2)
+  type: freezer
+  instance: 2
+  meters: [4]
+  
+- original_name: Washer Dryer
+  type: washer dryer
+  instance: 1
+  meters: [5]
+  
+- original_name: Washing Machine
+  type: washing machine
+  instance: 1
+  meters: [6]
+
+- original_name: Dishwaser
+  type: dish washer
+  instance: 1
+  meters: [7]
+  
+- original_name: Computer
+  type: computer
+  instance: 1
+  meters: [8]
+  
+- original_name: Television Site
+  type: television
+  instance: 1
+  meters: [9]
+  
+- original_name: Electric Heater
+  type: electric space heater
+  instance: 1
+  meters: [10]

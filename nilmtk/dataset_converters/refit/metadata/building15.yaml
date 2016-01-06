@@ -1,0 +1,63 @@
+instance: 15
+original_name: House16
+elec_meters:
+  1: &clamp 
+    site_meter: true
+    device_model: Clamp
+  2: &iam
+    submeter_of: 0 
+    device_model: IAM
+  3: *iam
+  4: *iam
+  5: *iam
+  6: *iam
+  7: *iam
+  8: *iam
+  9: *iam
+  10: *iam
+
+appliances:
+- original_name: Fridge-Freezer(1)
+  type: fridge freezer
+  instance: 1
+  meters: [2]
+  
+- original_name: Fridge-Freezer(2)
+  type: fridge freezer
+  instance: 2
+  meters: [3]
+
+- original_name: Electric Heater(1)
+  type: electric space heater
+  instance: 1
+  meters: [4]
+
+- original_name: Electric Heater(2)
+  type: electric space heater
+  instance: 2
+  meters: [5]
+
+- original_name: Washing Machine
+  type: washing machine
+  instance: 1
+  meters: [6]
+  
+- original_name: Dishwasher
+  type: dish washer
+  instance: 1
+  meters: [7]
+  
+- original_name: Computer Site
+  type: computer
+  instance: 1
+  meters: [8]
+
+- original_name: Television Site
+  type: television
+  instance: 1
+  meters: [9]
+  
+- original_name: Dehumidifier
+  type: dehumidifier
+  instance: 1
+  meters: [10]

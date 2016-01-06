@@ -1,0 +1,24 @@
+name: REFIT
+long_name: REFIT Electrical Load Measurements dataset
+creators:
+- Murray, David
+- Stankovic, Lina
+publication_date: 2015
+institution: University of Strathclyde
+contact: david.murray.2013@uni.strath.ac.uk
+description: Up to 2 years of power data for 20 UK homes.
+subject: Disaggregated power demand from domestic buildings.
+number_of_buildings: 20
+timezone: Europe/London
+geo_location:
+  locality: Loughborough   # village, town, city or state
+  country: UK   # standard two-letter country code defined by ISO 3166-1 alpha-2
+  latitude: 52.769655 # Loughborough University's coorindates
+  longitude: -1.225061
+related_documents:
+- http://iet.jrc.ec.europa.eu/energyefficiency/sites/energyefficiency/files/events/EEDAL15/S25_Smart_Meters/eedal15_submission_124.pdf
+- >
+  David Murray, Jing Liao, Lina Stankovic, Vladimir Stankovic, Richard Hauxwell-Baldwin, Charlie Wilson, Michael Coleman, Tom Kane, Steven Firth.
+  A data management platform for personalised real-time energy feedback.
+  In Procededings of the 8th International Conference on Energy Efficiency in Domestic Appliances and Lighting, 2015.
+schema: https://github.com/nilmtk/nilm_metadata/tree/v0.2

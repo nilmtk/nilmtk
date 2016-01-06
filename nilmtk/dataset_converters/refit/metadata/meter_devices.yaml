@@ -1,0 +1,27 @@
+IAM:
+  model: unknown
+  manufacturer: unknown
+  manufacturer_url: unknown
+  description: individual appliance monitor
+  sample_period: 7   # the interval between samples. In seconds.
+  max_sample_period: 120   # Max allowable interval between samples. Seconds.
+  measurements:
+  - physical_quantity: power   # power, voltage, energy, current?
+    type: active   # active (real power), reactive or apparent?
+    upper_limit: 5000
+    lower_limit: 0
+  wireless: true
+
+Clamp:
+  model: unknown
+  manufacturer: unknown
+  manufacturer_url: unknown
+  description: current clamp
+  sample_period: 7   # the interval between samples. In seconds.
+  max_sample_period: 120   # Max allowable interval between samples. Seconds.
+  measurements:
+  - physical_quantity: power   # power, voltage, energy, current?
+    type: active   # active (real power), reactive or apparent?
+    upper_limit: 5000
+    lower_limit: 0
+  wireless: true

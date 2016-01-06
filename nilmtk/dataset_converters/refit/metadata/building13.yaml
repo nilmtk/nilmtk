@@ -1,0 +1,63 @@
+instance: 13
+original_name: House13
+elec_meters:
+  1: &clamp 
+    site_meter: true
+    device_model: Clamp
+  2: &iam
+    submeter_of: 0 
+    device_model: IAM
+  3: *iam
+  4: *iam
+  5: *iam
+  6: *iam
+  7: *iam
+  8: *iam
+  9: *iam
+  10: *iam
+
+appliances:
+- original_name: Television Site
+  type: television
+  instance: 1
+  meters: [2]
+  
+- original_name: Freezer
+  type: freezer
+  instance: 1
+  meters: [3]
+
+- original_name: Washing Machine
+  type: washing machine
+  instance: 1
+  meters: [4]
+
+- original_name: Dishwasher
+  type: dish washer
+  instance: 1
+  meters: [5]
+
+- original_name: ???
+  type: unknown
+  instance: 1
+  meters: [6]
+  
+- original_name: Network Site
+  type: broadband router
+  instance: 1
+  meters: [7]
+  
+- original_name: Microwave
+  type: microwave
+  instance: 1
+  meters: [8]
+
+- original_name: Microwave
+  type: microwave
+  instance: 2
+  meters: [9]
+  
+- original_name: Kettle
+  type: kettle
+  instance: 1
+  meters: [10]
