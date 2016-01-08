@@ -350,12 +350,6 @@ class FHMM(Disaggregator):
 
         return prediction
 
-    def disaggregate(self, *args):
-        if isinstance(args[0], nilmtk.DataSet):
-            self.disaggregate_across(*args)
-        if isinstance(args[0], nilmtk.MeterGroup):
-            self.disaggregate_same(*args)
-
 
     def disaggregate(self, mains, output_datastore, **load_kwargs):
         '''Disaggregate mains according to the model learnt previously.
