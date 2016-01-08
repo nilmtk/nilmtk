@@ -10,7 +10,10 @@ try:
 except ImportError:
     print("Not found mosek")
 
-from multipledispatch import dispatch
+try:
+    from multipledispatch import dispatch
+except ImportError:
+    pass
 import nilmtk
 import pandas as pd
 import numpy as np
