@@ -4,7 +4,6 @@ from copy import deepcopy
 from collections import OrderedDict
 from warnings import warn
 
-from multipledispatch import dispatch
 import nilmtk
 import pandas as pd
 import numpy as np
@@ -187,14 +186,9 @@ class FHMM(Disaggregator):
         self.MIN_CHUNK_LENGTH = 100
         self.MODEL_NAME = 'FHMM'
 
-    def train(self, *args, **kwargs):
-        print(args, kwargs)
-        if isinstance(args[0], nilmtk.DataSet):
-            self.train_across(*args)
-        if isinstance(args[0], nilmtk.MeterGroup):
-            self.train_same(*args)
 
-    def train_across(self, ds, list_of_buildings, list_of_appliances,
+
+    def train_across_buildings(self, ds, list_of_buildings, list_of_appliances,
               min_activation=0.05, **load_kwargs):
 
         """
@@ -251,7 +245,7 @@ class FHMM(Disaggregator):
         self.meters = [nilmtk.global_meter_group.select_using_appliances(type=appliance).meters[0]
                        for appliance in self.individual.iterkeys()]
 
-    def train_same(self, metergroup, num_states_dict={}, **load_kwargs):
+    def train(self, metergroup, num_states_dict={}, **load_kwargs):
         """Train using 1d FHMM.
 
         Places the learnt model in `model` attribute
@@ -363,7 +357,7 @@ class FHMM(Disaggregator):
             self.disaggregate_same(*args)
 
 
-    def disaggregate_same(self, mains, output_datastore, **load_kwargs):
+    def disaggregate(self, mains, output_datastore, **load_kwargs):
         '''Disaggregate mains according to the model learnt previously.
 
         Parameters
@@ -427,7 +421,7 @@ class FHMM(Disaggregator):
                 meters=self.meters
             )
 
-    def disaggregate_across(self, ds, output_datastore, list_of_buildings, **load_kwargs):
+    def disaggregate_across_buildings(self, ds, output_datastore, list_of_buildings, **load_kwargs):
         """
 
         :param ds:
