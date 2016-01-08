@@ -4,7 +4,7 @@ from copy import deepcopy
 from collections import OrderedDict
 from warnings import warn
 
-from nilmtk import ElecMeter, Appliance
+from multipledispatch import dispatch
 import nilmtk
 import pandas as pd
 import numpy as np
@@ -187,14 +187,20 @@ class FHMM(Disaggregator):
         self.MIN_CHUNK_LENGTH = 100
         self.MODEL_NAME = 'FHMM'
 
+    def train(self, *args, **kwargs):
+        print(args, kwargs)
+        if isinstance(args[0], nilmtk.DataSet):
+            self.train_across(*args)
+        if isinstance(args[0], nilmtk.MeterGroup):
+            self.train_same(*args)
 
-    def train_across_homes(self, ds, list_of_homes, list_of_appliances,
-                           min_activation=0.05, **load_kwargs):
+    def train_across(self, ds, list_of_buildings, list_of_appliances,
+              min_activation=0.05, **load_kwargs):
 
         """
 
         :param ds: nilmtk.Dataset
-        :param list_of_homes: List of homes to use for training
+        :param list_of_buildings: List of buildings to use for training
         :param list_of_appliances: List of appliances (nilm-metadata names)
         :param min_activation: Minimum activation (in fraction) to use a home in training
         :param load_kwargs:
@@ -206,36 +212,36 @@ class FHMM(Disaggregator):
         for appliance in list_of_appliances:
             print("Training for", appliance)
             o = []
-            for building_num in list_of_homes:
+            for building_num in list_of_buildings:
 
                 building = ds.buildings[building_num]
                 elec = building.elec
                 try:
                     df = elec[appliance].load(**load_kwargs).next().squeeze()
-                    appl_power = df.dropna().values.reshape(-1,1)
-                    activation = (df>10).sum()*1.0/len(df)
-                    if activation>min_activation:
+                    appl_power = df.dropna().values.reshape(-1, 1)
+                    activation = (df > 10).sum() * 1.0 / len(df)
+                    if activation > min_activation:
                         o.append(appl_power)
                 except:
                     pass
 
-            if len(o)>1:
+            if len(o) > 1:
                 o = np.array(o)
                 mod = hmm.GaussianHMM(2, "full")
                 mod.fit(o)
                 models[appliance] = mod
-                print("Means for %s are" %appliance)
+                print("Means for %s are" % appliance)
                 print(mod.means_)
             else:
-                print("Not enough samples for %s" %appliance)
+                print("Not enough samples for %s" % appliance)
 
         new_learnt_models = OrderedDict()
         for appliance, appliance_model in models.iteritems():
             startprob, means, covars, transmat = sort_learnt_parameters(
-                            appliance_model.startprob_, appliance_model.means_,
-                            appliance_model.covars_, appliance_model.transmat_)
+                appliance_model.startprob_, appliance_model.means_,
+                appliance_model.covars_, appliance_model.transmat_)
             new_learnt_models[appliance] = hmm.GaussianHMM(
-                        startprob.size, "full", startprob, transmat)
+                startprob.size, "full", startprob, transmat)
             new_learnt_models[appliance].means_ = means
             new_learnt_models[appliance].covars_ = covars
 
@@ -245,7 +251,7 @@ class FHMM(Disaggregator):
         self.meters = [nilmtk.global_meter_group.select_using_appliances(type=appliance).meters[0]
                        for appliance in self.individual.iterkeys()]
 
-    def train(self, metergroup, num_states_dict={}, **load_kwargs):
+    def train_same(self, metergroup, num_states_dict={}, **load_kwargs):
         """Train using 1d FHMM.
 
         Places the learnt model in `model` attribute
@@ -350,9 +356,14 @@ class FHMM(Disaggregator):
 
         return prediction
 
+    def disaggregate(self, *args):
+        if isinstance(args[0], nilmtk.DataSet):
+            self.disaggregate_across(*args)
+        if isinstance(args[0], nilmtk.MeterGroup):
+            self.disaggregate_same(*args)
 
 
-    def disaggregate(self, mains, output_datastore, **load_kwargs):
+    def disaggregate_same(self, mains, output_datastore, **load_kwargs):
         '''Disaggregate mains according to the model learnt previously.
 
         Parameters
@@ -416,12 +427,11 @@ class FHMM(Disaggregator):
                 meters=self.meters
             )
 
-
-    def disaggregate_across_homes(self, output_datastore, ds, list_of_homes, **load_kwargs):
+    def disaggregate_across(self, ds, output_datastore, list_of_buildings, **load_kwargs):
         """
 
         :param ds:
-        :param list_of_homes:
+        :param list_of_buildings:
         :return:
         """
 
@@ -433,10 +443,9 @@ class FHMM(Disaggregator):
                     return meter.instance()
             return -1
 
-
-        for home in list_of_homes:
-            print("Disaggregating for home %d" %home)
-            mains = ds.buildings[home].elec.mains()
+        for building in list_of_buildings:
+            print("Disaggregating for building %d" % building)
+            mains = ds.buildings[building].elec.mains()
             load_kwargs = self._pre_disaggregation_checks(load_kwargs)
 
             load_kwargs.setdefault('sample_period', 60)
@@ -449,17 +458,14 @@ class FHMM(Disaggregator):
 
             import warnings
             warnings.filterwarnings("ignore", category=Warning)
-            home_elec = ds.buildings[home].elec
+            building_elec = ds.buildings[building].elec
             self.meters = []
             for appliance in self.list_of_appliances:
-                m_instance = get_meter_instance(ds, home, appliance)
-                if m_instance!=-1:
-                    self.meters.append(home_elec[m_instance])
+                m_instance = get_meter_instance(ds, building, appliance)
+                if m_instance != -1:
+                    self.meters.append(building_elec[m_instance])
                 else:
                     pass
-
-
-
 
             for chunk in mains.power_series(**load_kwargs):
                 # Check that chunk is sensible size before resampling
@@ -476,8 +482,8 @@ class FHMM(Disaggregator):
 
                     if type(meter) is str:
                         # training done across homes
-                        meter_instance = get_meter_instance(ds, home, meter)
-                        if meter_instance ==-1:
+                        meter_instance = get_meter_instance(ds, building, meter)
+                        if meter_instance == -1:
                             continue
                     else:
                         meter_instance = meter.instance()
@@ -504,6 +510,3 @@ class FHMM(Disaggregator):
                     building=mains.building(),
                     meters=self.meters
                 )
-
-
-
