@@ -365,7 +365,6 @@ class FHMM(Disaggregator):
 
         return prediction
 
-    @dispatch(nilmtk.ElecMeter)
     def disaggregate(self, mains, output_datastore, **load_kwargs):
         '''Disaggregate mains according to the model learnt previously.
 
@@ -430,7 +429,6 @@ class FHMM(Disaggregator):
                 meters=self.meters
             )
 
-    @dispatch(nilmtk.DataSet)
     def disaggregate(self, ds, output_datastore, list_of_buildings, **load_kwargs):
         """
 
