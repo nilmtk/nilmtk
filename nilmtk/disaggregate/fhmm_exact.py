@@ -1,8 +1,14 @@
+
 from __future__ import print_function, division
 import itertools
 from copy import deepcopy
 from collections import OrderedDict
 from warnings import warn
+
+try:
+    import mosek
+except ImportError:
+    print("Not found mosek")
 
 from multipledispatch import dispatch
 import nilmtk
@@ -78,6 +84,7 @@ def compute_A_fhmm(list_A):
     result : Combined Pi for the FHMM
     """
     result = list_A[0]
+    print(mosek)
     for i in range(len(list_A) - 1):
         result = np.kron(result, list_A[i + 1])
     return result
@@ -187,12 +194,11 @@ class FHMM(Disaggregator):
         self.MIN_CHUNK_LENGTH = 100
         self.MODEL_NAME = 'FHMM'
 
-    def train(self, *args, **kwargs):
-        print(args, kwargs)
-        if isinstance(args[0], nilmtk.DataSet):
-            self.train_across(*args)
-        if isinstance(args[0], nilmtk.MeterGroup):
-            self.train_same(*args)
+    def train(self, meter_ds, *args, **kwargs):
+        if isinstance(meter_ds, nilmtk.DataSet):
+            self.train_across(meter_ds, *args, **kwargs)
+        elif isinstance(meter_ds, nilmtk.MeterGroup):
+            self.train_single(meter_ds, *args, **kwargs)
 
     def train_across(self, ds, list_of_buildings, list_of_appliances,
               min_activation=0.05, **load_kwargs):
@@ -251,7 +257,7 @@ class FHMM(Disaggregator):
         self.meters = [nilmtk.global_meter_group.select_using_appliances(type=appliance).meters[0]
                        for appliance in self.individual.iterkeys()]
 
-    def train_same(self, metergroup, num_states_dict={}, **load_kwargs):
+    def train_single(self, metergroup, num_states_dict={}, **load_kwargs):
         """Train using 1d FHMM.
 
         Places the learnt model in `model` attribute
@@ -356,14 +362,8 @@ class FHMM(Disaggregator):
 
         return prediction
 
-    def disaggregate(self, *args):
-        if isinstance(args[0], nilmtk.DataSet):
-            self.disaggregate_across(*args)
-        if isinstance(args[0], nilmtk.MeterGroup):
-            self.disaggregate_same(*args)
-
-
-    def disaggregate_same(self, mains, output_datastore, **load_kwargs):
+    @dispatch(nilmtk.ElecMeter)
+    def disaggregate(self, mains, output_datastore, **load_kwargs):
         '''Disaggregate mains according to the model learnt previously.
 
         Parameters
@@ -427,7 +427,8 @@ class FHMM(Disaggregator):
                 meters=self.meters
             )
 
-    def disaggregate_across(self, ds, output_datastore, list_of_buildings, **load_kwargs):
+    @dispatch(nilmtk.DataSet)
+    def disaggregate(self, ds, output_datastore, list_of_buildings, **load_kwargs):
         """
 
         :param ds:
