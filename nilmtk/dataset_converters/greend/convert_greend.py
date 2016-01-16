@@ -28,27 +28,40 @@ def convert_greend(greend_path, hdf_filename):
         print('loading '+house)
         abs_house = join(greend_path, house)
         dates = [d for d in listdir(abs_house) if d.startswith('dataset')]
-        house_data = pd.DataFrame()
+        house_data = []
         for date in dates:
             print('-----------------------',date)
             try:
-                tmp_pandas = pd.DataFrame.from_csv(join(abs_house, date))
+                tmp_pandas = pd.read_csv(join(abs_house, date), na_values=['na'], error_bad_lines=False)
             except: # A CParserError is returned for malformed files (irregular column number)
-                import StringIO as sio
-                tmp_pandas = pd.DataFrame.from_csv(sio.StringIO(__preprocess_file(abs_house, date)))
-                
-            tmp_pandas = tmp_pandas[tmp_pandas.index != 'timestamp']
-            tmp_pandas = tmp_pandas.sort_index()
-            c = 0 
-            tmp_pandas.index = [__timestamp(t) for t in tmp_pandas.index]
-            house_data = house_data.append(tmp_pandas)
+                pass
+
+            if "timestamp" in tmp_pandas.columns:
+                   pass
+            else:
+                tmp_pandas["timestamp"] = tmp_pandas.index
+            tmp_pandas.index = tmp_pandas["timestamp"].convert_objects(convert_numeric=True).values
+            tmp_pandas = tmp_pandas.drop("timestamp",1)
+
+            tmp_pandas = tmp_pandas.astype("float32")
+
+
+            tmp_pandas.index = pd.to_datetime(tmp_pandas.index, unit='s')
+            tmp_pandas = tmp_pandas.tz_localize("UTC").tz_convert("CET")
+            tmp_pandas = tmp_pandas.drop_duplicates()
+            #tmp_pandas = tmp_pandas.sort_index()
+            house_data.append(tmp_pandas)
+        overall_df = pd.concat(house_data)
+        overall_df = overall_df.drop_duplicates()
+        overall_df = overall_df.sort_index()
+
         m = 1
 
-        for meter in house_data:
-            print("meter" + str(m)+': ')
+        for column in overall_df.columns:
+            print("meter" + str(m)+': '+column)
             key = Key(building = h, meter=m)
             print("Putting into store...")
-            store.put(str(key), house_data[meter], format = 'table')
+            store.put(str(key), overall_df[column], format = 'table')
             m += 1
             print('Flushing store...')
             store.flush()
