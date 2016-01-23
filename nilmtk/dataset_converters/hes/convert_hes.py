@@ -79,7 +79,7 @@ def datetime_converter(s):
 
 def load_list_of_house_ids(data_dir):
     """Returns a list of house IDs in HES (ints)."""
-    filename = join(data_dir, 'ipsos-anonymised-corrected 310713.csv')
+    filename = join(data_dir,'AnonHES/' 'ipsos-anonymised-corrected 310713.csv')
     series = pd.read_csv(filename, usecols=[0], index_col=False, squeeze=True)
     return series.tolist()
 
@@ -254,6 +254,7 @@ def _process_meter_in_chunk(nilmtk_house_id, meter_id, chunk, store, appliance_c
     
     # Modify the column labels to reflect the power measurements recorded.
     df.columns.set_names(LEVEL_NAMES, inplace=True)
+    df  = df.sort()
 
     key = Key(building=nilmtk_house_id, meter=meter_id)
     store.append(str(key), df)

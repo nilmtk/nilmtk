@@ -110,6 +110,6 @@ def _load_csv(filename, columns, tz):
     # Convert the integer index column to timezone-aware datetime 
     df['Timestamp'] = pd.to_datetime(df.Timestamp, unit='s', utc=True)
     df.set_index('Timestamp', inplace=True)
-    #df = df.tz_localize('GMT').tz_convert(tz)
+    df = df.tz_localize('GMT').tz_convert(tz)
 
     return df
