@@ -11,4 +11,8 @@ for key in keys:
 st.close()
 ```
 
-This will sort the 
+This will sort the meters in ascending order.
+
+There is also an issue with data from one of the home (nilmtk id #234). For now, the quick fix would be to ignore this home in the analysis.
+
+Some exploratory analysis of the dataset can be found on [Nipun's blog](http://nipunbatra.github.io/2016/01/nilmtk-hes/)
