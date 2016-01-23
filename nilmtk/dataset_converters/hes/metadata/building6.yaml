@@ -1,0 +1,314 @@
+appliances:
+- instance: 1
+  meters: [1]
+  original_name: upright freezer 1
+  type: freezer
+- instance: 2
+  meters: [2]
+  original_name: chest freezer 1
+  type: freezer
+- instance: 1
+  meters: [3]
+  original_name: fridge 1
+  type: fridge
+- instance: 1
+  meters: [4]
+  original_name: fridge freezer 1
+  type: fridge freezer
+- instance: 2
+  meters: [5]
+  original_name: wine cooler 1
+  type: fridge
+- instance: 2
+  meters: [6]
+  original_name: fridge freezer 2
+  type: fridge freezer
+- instance: 1
+  meters: [7]
+  original_name: kettle 1
+  type: kettle
+- instance: 1
+  meters: [8]
+  original_name: microwave 1
+  type: microwave
+- instance: 1
+  meters: [9]
+  original_name: Slow cooker 1
+  type: slow cooker
+- instance: 1
+  meters: [10]
+  original_name: toaster 1
+  type: toaster
+- instance: 1
+  meters: [11]
+  original_name: cooker 1
+  type: cooker
+- instance: 1
+  meters: [12]
+  original_name: oven 1
+  type: electric oven
+- instance: 2
+  meters: [13]
+  original_name: cooker 2
+  type: cooker
+- instance: 1
+  meters: [14]
+  original_name: dishwasher 1
+  type: dish washer
+- instance: 1
+  meters: [15]
+  original_name: tumble dryer 1
+  type: tumble dryer
+- instance: 1
+  meters: [16]
+  original_name: washing/drying machine 1
+  type: washer dryer
+- instance: 1
+  meters: [17]
+  original_name: washing machine 1
+  type: washing machine
+- instance: 1
+  meters: [18]
+  original_name: heater 1
+  type: electric space heater
+- instance: 2
+  meters: [19]
+  original_name: heater 2
+  type: electric space heater
+- instance: 3
+  meters: [20]
+  original_name: heater 3
+  type: electric space heater
+- instance: 1
+  meters: [21]
+  original_name: shower 1
+  type: electric shower heater
+- instance: 1
+  meters: [22]
+  original_name: water heater 1
+  type: electric water heating appliance
+- instance: 2
+  meters: [23]
+  original_name: shower 2
+  type: electric shower heater
+- instance: 4
+  meters: [24]
+  original_name: central heating 1
+  type: electric space heater
+- instance: 5
+  meters: [25]
+  original_name: heater 4
+  type: electric space heater
+- instance: 1
+  meters: [26]
+  original_name: dvd 1
+  type: DVD player
+- instance: 1
+  meters: [27]
+  original_name: dvd recorder 1
+  type: AV recorder
+- instance: 1
+  meters: [28]
+  original_name: set top box 1
+  type: set top box
+- instance: 1
+  meters: [29]
+  original_name: tv 1
+  type: television
+- instance: 1
+  meters: [30]
+  original_name: ps3 1
+  type: games console
+- instance: 2
+  meters: [31]
+  original_name: ps2 1
+  type: games console
+- instance: 3
+  meters: [32]
+  original_name: xbox360 1
+  type: games console
+- instance: 2
+  meters: [33]
+  original_name: sky box 1
+  type: set top box
+- instance: 2
+  meters: [34]
+  original_name: tv lcd 1
+  type: television
+- instance: 2
+  meters: [35]
+  original_name: vcr 1
+  type: AV recorder
+- instance: 3
+  meters: [36]
+  original_name: tv+dvd+set top box 1
+  type: television
+- instance: 4
+  meters: [37]
+  original_name: tv crt 1
+  type: television
+- instance: 5
+  meters: [38]
+  original_name: tv+vcr 1
+  type: television
+- instance: 6
+  meters: [39]
+  original_name: tv+dvd 1
+  type: television
+- instance: 1
+  meters: [40]
+  original_name: cd player 1
+  type: audio system
+- instance: 1
+  meters: [41]
+  original_name: tv booster 1
+  type: RF booster
+- instance: 2
+  meters: [42]
+  original_name: radio 1
+  type: audio system
+- instance: 7
+  meters: [43]
+  original_name: tv plasma 1
+  type: television
+- instance: 2
+  meters: [44]
+  original_name: dvd+vcr 1
+  type: DVD player
+- instance: 1
+  meters: [45]
+  original_name: home cinema sound 1
+  type: audio amplifier
+- instance: 8
+  meters: [46]
+  original_name: tv+settopbox 1
+  type: television
+- instance: 1
+  meters: [47]
+  original_name: laptop 1
+  type: laptop computer
+- instance: 1
+  meters: [48]
+  original_name: desktop 1
+  type: desktop computer
+- instance: 1
+  meters: [49]
+  original_name: printer 1
+  type: printer
+- instance: 1
+  meters: [50]
+  original_name: router 1
+  type: broadband router
+- instance: 1
+  meters: [51]
+  original_name: modem 1
+  type: modem
+- instance: 1
+  meters: [52]
+  original_name: monitor 1
+  type: computer monitor
+- instance: 1
+  meters: [53]
+  original_name: Unknown
+  type: unknown
+- instance: 1
+  meters: [54]
+  original_name: light 1
+  type: light
+- instance: 2
+  meters: [55]
+  original_name: light 3
+  type: light
+- instance: 3
+  meters: [56]
+  original_name: light distribution 1
+  type: light
+- instance: 4
+  meters: [57]
+  original_name: light distribution 2
+  type: light
+- instance: 5
+  meters: [58]
+  original_name: light 2
+  type: light
+- instance: 6
+  meters: [59]
+  original_name: light 4
+  type: light
+- instance: 7
+  meters: [60]
+  original_name: light 5
+  type: light
+- instance: 1
+  meters: [61]
+  original_name: hair dryer 1
+  type: hair dryer
+- instance: 1
+  meters: [62]
+  original_name: vaccum cleaner 1
+  type: vacuum cleaner
+elec_meters:
+  1: {device_model: wattmeter}
+  2: {device_model: wattmeter}
+  3: {device_model: wattmeter}
+  4: {device_model: wattmeter}
+  5: {device_model: wattmeter}
+  6: {device_model: wattmeter}
+  7: {device_model: wattmeter}
+  8: {device_model: wattmeter}
+  9: {device_model: wattmeter}
+  10: {device_model: wattmeter}
+  11: {device_model: wattmeter}
+  12: {device_model: wattmeter}
+  13: {device_model: wattmeter}
+  14: {device_model: wattmeter}
+  15: {device_model: wattmeter}
+  16: {device_model: wattmeter}
+  17: {device_model: wattmeter}
+  18: {device_model: wattmeter}
+  19: {device_model: wattmeter}
+  20: {device_model: wattmeter}
+  21: {device_model: wattmeter}
+  22: {device_model: wattmeter}
+  23: {device_model: wattmeter}
+  24: {device_model: wattmeter}
+  25: {device_model: wattmeter}
+  26: {device_model: wattmeter}
+  27: {device_model: wattmeter}
+  28: {device_model: wattmeter}
+  29: {device_model: wattmeter}
+  30: {device_model: wattmeter}
+  31: {device_model: wattmeter}
+  32: {device_model: wattmeter}
+  33: {device_model: wattmeter}
+  34: {device_model: wattmeter}
+  35: {device_model: wattmeter}
+  36: {device_model: wattmeter}
+  37: {device_model: wattmeter}
+  38: {device_model: wattmeter}
+  39: {device_model: wattmeter}
+  40: {device_model: wattmeter}
+  41: {device_model: wattmeter}
+  42: {device_model: wattmeter}
+  43: {device_model: wattmeter}
+  44: {device_model: wattmeter}
+  45: {device_model: wattmeter}
+  46: {device_model: wattmeter}
+  47: {device_model: wattmeter}
+  48: {device_model: wattmeter}
+  49: {device_model: wattmeter}
+  50: {device_model: wattmeter}
+  51: {device_model: wattmeter}
+  52: {device_model: wattmeter}
+  53: {device_model: wattmeter}
+  54: {device_model: wattmeter}
+  55: {device_model: wattmeter}
+  56: {device_model: wattmeter}
+  57: {device_model: wattmeter}
+  58: {device_model: wattmeter}
+  59: {device_model: wattmeter}
+  60: {device_model: wattmeter}
+  61: {device_model: wattmeter}
+  62: {device_model: wattmeter}
+instance: 6
+original_name: 202171
