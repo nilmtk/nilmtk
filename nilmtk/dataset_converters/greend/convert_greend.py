@@ -8,6 +8,7 @@ from nilmtk.datastore import Key
 import warnings
 from nilm_metadata import convert_yaml_to_hdf5
 import csv
+import numpy as np
 
 warnings.filterwarnings("ignore")
 
@@ -23,7 +24,7 @@ def convert_greend(greend_path, hdf_filename):
     store = pd.HDFStore(hdf_filename, 'w', complevel=9, complib='zlib')
     houses = sorted(__get_houses(greend_path))
     print(houses)
-    h = 1
+    h = 1 # nilmtk counts buildings from 1 not from 0 as we do, so everything is shifted by 1
     for house in houses:
         print('loading '+house)
         abs_house = join(greend_path, house)
@@ -34,18 +35,19 @@ def convert_greend(greend_path, hdf_filename):
             try:
                 tmp_pandas = pd.read_csv(join(abs_house, date), na_values=['na'], error_bad_lines=False)
             except: # A CParserError is returned for malformed files (irregular column number)
-                pass
-
-            if "timestamp" in tmp_pandas.columns:
-                   pass
-            else:
-                tmp_pandas["timestamp"] = tmp_pandas.index
+                pass 
+                # for building0 either remove the first days (with less nodes) or use __preprocess_file
+                #import StringIO as sio
+                #tmp_pandas = pd.DataFrame.from_csv(sio.StringIO(__preprocess_file(abs_house, date)))
+            
+            # if the timestamp is not correctly parsed then it's an object dtype (string), else a float64
+            if tmp_pandas.timestamp.dtype != np.float64:
+				tmp_pandas = tmp_pandas[tmp_pandas.timestamp != 'timestamp'] # remove all error rows
+			# use the cleaned column as the index
             tmp_pandas.index = tmp_pandas["timestamp"].convert_objects(convert_numeric=True).values
-            tmp_pandas = tmp_pandas.drop("timestamp",1)
-
-            tmp_pandas = tmp_pandas.astype("float32")
-
-
+            tmp_pandas = tmp_pandas.drop('timestamp', 1) # remove timestamp from the columns (it's the index already)
+            tmp_pandas = tmp_pandas.astype("float32") # convert everything back to float32
+			# convert the index to datetime
             tmp_pandas.index = pd.to_datetime(tmp_pandas.index, unit='s')
             tmp_pandas = tmp_pandas.tz_localize("UTC").tz_convert("CET")
             tmp_pandas = tmp_pandas.drop_duplicates()
@@ -68,10 +70,10 @@ def convert_greend(greend_path, hdf_filename):
         h += 1
 
     store.close()
-
-    #needs to be edited
-    convert_yaml_to_hdf5('/path/to/metadata', hdf_filename)
-
+	
+	# retrieve the dataset metadata in the metadata subfolder
+    import inspect
+    convert_yaml_to_hdf5(dirname(inspect.getfile(convert_greend))+'/metadata/', hdf_filename)
 
 def __timestamp(t):
     res = 1

@@ -1,172 +1,151 @@
-instance: 5
-original_name: House#4
+instance: 4
+original_name: House#3
 
 elec_meters:
   1:
     device_model: circle
     submeter_of: 0
-    site_meter: true # outlets meter
     room: hall
   2:
     device_model: circle
     submeter_of: 0
-    site_meter: true # light meter
-    room: hall
+    room: kitchen
   3:
     device_model: circle
-    submeter_of: 1
+    submeter_of: 0
     room: kitchen
   4:
     device_model: circle
-    submeter_of: 1
-    room: lounge
+    submeter_of: 0
+    room: kitchen
   5:
     device_model: circle
-    submeter_of: 1
-    room: kitchen
+    submeter_of: 0
+    room: bathroom
   6:
     device_model: circle
-    submeter_of: 1
-    room: kitchen
+    submeter_of: 0
+    room: bathroom
   7:
     device_model: circle
-    submeter_of: 1
+    submeter_of: 0
     room: lounge
   8:
     device_model: circle
-    submeter_of: 1
-    room: hall
+    submeter_of: 0
+    room: kitchen
   9:
     device_model: circle
-    submeter_of: 1
-    room: kitchen
+    submeter_of: 0
+    room: lounge
 
 appliances:
-- type: television
+- type: vacuum cleaner
+  instance: 1
+  meters: [1]
+  room: hall
+  multiple: false
+  manufacturer: Dyson
+  model: Root Cyclone
+  control:
+    - manual
+
+- type: dish washer
+  instance: 1
+  meters: [2]
+  room: kitchen
+  multiple: false
+  control:
+    - manual
+  model: ADG 555IX
+  manufacturer: Whirlpool
+
+- type: kettle
   instance: 1
   meters: [3]
   room: kitchen
+  manufacturer: Braun
+  model: 3217/ WK210
+  nominal_consumption: 2280
   control:
-    - manual
-  model: 24T1E
-  manufacturer: Asus
-  year_of_purchase: 2011
-  
-- type: television
-  instance: 2
-  meters: [4]
-  room: lounge
-  control:
-    - manual
-  model: BS4216H1
-  manufacturer: Bluesky
-  year_of_purchase: 2002
-  
-- type: set top box # decoder
+    - manuel
+
+- type: fridge
   instance: 1
   meters: [4]
-  room: lounge
-  control:
-    - manual
-  model: SMTT1041
-  manufacturer: Samsung
-  year_of_purchase: 2013
-  
-- type: fridge freezer
-  instance: 1
-  meters: [5]
   room: kitchen
+  manufacturer: Siemens
+  model: top-line
   control:
     - thermostat
-  manufacturer: Carma
-  year_of_purchase: 2002
-    
-- type: electric oven
-  instance: 1
-  meters: [6]
-  room: kitchen
-  control:
-    - manual
-  model: A9650/128
-  manufacturer: REX
-  year_of_purchase: 2002
 
-- type: laptop computer
-  instance: 1
-  meters: [7]
-  room: lounge
-  control:
-    - manual
-  model: T430
-  manufacturer: Lenovo
-  year_of_purchase: 2013
-      
-- type: charger # in-home-display thermostat controller
-  instance: 1
-  meters: [7]
-  room: lounge
-  control:
-    - always on
-  model: EVOHOME
-  manufacturer: Honeywell
-  year_of_purchase: 2013
-    
 - type: washing machine
   instance: 1
-  meters: [8]
-  room: hall
+  meters: [5]
+  room: bathroom
   control:
     - manual
-  model: HYDRAX 413
-  manufacturer: San Giorgio
-  year_of_purchase: 2002
+  manufacturer: Eudora
+  model: Sparmeister W
+
+- type: hair dryer
+  instance: 1
+  meters: [6]
+  room: bathroom
+  multiple: false
+  control:
+    - manual
+  manufacturer: Remington
+  model: D-3700
+  year_of_purchase: 2010
+  nominal_consumption: 2200
   
-- type: hood
+- type: desktop computer
+  instance: 1
+  meters: [7]
+  room: lounge
+  year_of_purchase: 2013
+  year_of_manufacture: 2013
+  control:
+    - manuel
+  manufacturer: dimotion PC
+  model: QuietONE Q2
+  
+- type: coffee maker
+  instance: 1
+  meters: [8]
+  room: kitchen
+  multiple: false
+  control:
+    - manual
+  nominal_consumption: 1260
+  model: Delonghi Pixie
+  manufacturer: Delonghi
+  
+- type: television
   instance: 1
   meters: [9]
-  room: kitchen
+  room: lounge
   control:
     - manual
-  model: AQUA STIXF/120
-  manufacturer: Elica
-  year_of_purchase: 2008
+  manufacturer: Samsung
+  model: LE32C650
   
-description: Two floor apartment at the 12th and 13th floor of a building of 13 floors. Total of 170sqm.
+description: House with two floors, 97sqm (except basement)
 rooms:
-  - name: hall
-    instance: 1
-    floor: 12
   - name: lounge
     instance: 1
-    floor: 12
-  - name: bathroom
-    instance: 1
-    floor: 12
-  - name: bathroom
-    instance: 2
-    floor: 12
-  - name: bathroom
-    instance: 3
-    floor: 12
-  - name: bedroom
-    instance: 1
-    floor: 12
-  - name: bedroom
-    instance: 2
-    floor: 12
-  - name: bedroom
-    instance: 3
-    floor: 12
+    floor: 0 
   - name: kitchen
     instance: 1
-    floor: 12
-  - name: bedroom
-    instance: 4
-    floor: 13
+    floor: 0
+  - name: hall #is a storage room
+    instance: 1
+    floor: 0
   - name: bathroom
-    instance: 4
-    floor: 13
-n_occupants: 2
-#timeframe: keine Ahnung
-periods_unoccupied: 19 april 2014 - 21 april 2014, 12 may 2014 - 16 may 2014, 1 july 2014 - 06 july 2014
-construction_year: 1970
+    instance: 1
+    floor: 1
+
+n_occupants: 4
+#timeframe:
+periods_unoccupied: 19.6.2014 to 21.6.2014 and 26.7.2014 to 7.8.2014
