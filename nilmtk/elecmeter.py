@@ -421,7 +421,7 @@ class ElecMeter(Hashable, Electric):
             print("ElecMeter.load")
             print(self)
 
-        if 'sample_period' in kwargs:
+        if 'sample_period' in kwargs and kwargs['resample'] != False:
             kwargs['resample'] = True
 
         if kwargs.get('resample'):
