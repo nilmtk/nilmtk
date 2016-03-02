@@ -422,7 +422,7 @@ class ElecMeter(Hashable, Electric):
             print(self)
 
         if 'sample_period' in kwargs:
-            kwargs['resample'] = True
+            kwargs.setdefault('resample', True)
 
         if kwargs.get('resample'):
             # Set default key word arguments for resampling.

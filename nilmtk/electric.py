@@ -132,7 +132,7 @@ class Electric(object):
 
         if sample_period is None:
             sample_period = self.sample_period()
-        else:
+        elif resample != False:
             resample = True
         sample_period = int(round(sample_period))
 

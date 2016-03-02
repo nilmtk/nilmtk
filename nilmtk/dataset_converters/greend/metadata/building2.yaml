@@ -1,27 +1,27 @@
-instance: 3
-original_name: House#2
+instance: 2
+original_name: House#1
 
 elec_meters:
   1:
     device_model: circle
     submeter_of: 0
-    room: lounge
+    room: kitchen
   2:
     device_model: circle
     submeter_of: 0
-    room: lounge
+    room: kitchen
   3:
     device_model: circle
     submeter_of: 0
-    room: utility
+    room: kitchen
   4:
     device_model: circle
     submeter_of: 0
-    room: utility
+    room: kitchen
   5:
     device_model: circle
     submeter_of: 0
-    room: kitchen
+    room: bathroom
   6:
     device_model: circle
     submeter_of: 0
@@ -29,7 +29,7 @@ elec_meters:
   7:
     device_model: circle
     submeter_of: 0
-    room: kitchen
+    room: bathroom
   8:
     device_model: circle
     submeter_of: 0
@@ -37,146 +37,148 @@ elec_meters:
   9:
     device_model: circle
     submeter_of: 0
-    room: hall #wrong 'cause there's no storage room
+    room: bedroom
 
 appliances:
-- type: television
+- type: fridge
   instance: 1
   meters: [1]
-  room: lounge
-  multiple: false
+  control:
+    - thermostat
+  efficiency_rating: A+
+  nominal_consumption: 26
+  model: ARG 737
+  manufacturer: Whirpool
+  year_of_purchase: 2011
+  year_of_manufacture: 2011
+  
+- type: dish washer
+  instance: 1
+  meters: [2]
   control:
     - manual
-  manufacturer: Panasonic
-  year_of_purchase: 2007
-  year_of_manufacture: 2007
-  part_number: TH-42PZ70E
-
-- type: UPS
+  nominal_consumption: 2100
+  model: ADG 555 IX
+  manufacturer: Whirpool
+  year_of_purchase: 2011
+  year_of_manufacture: 2011
+  
+- type: microwave
   instance: 1
-  meters: [2]
-  room: lounge
-  year_of_purchase: 2012
-  year_of_manufacture: 2012
-  control:
-    - always_on
-
-- type: games console
-  instance: 1
-  meters: [2]
-  room: lounge
-  year_of_purchase: 2007
-  year_of_manufacture: 2007
+  meters: [3]
   control:
     - manual
-
-- type: computer
+  nominal_consumption: 1300
+  model: AMW 494/IX
+  manufacturer: Whirpool
+  year_of_purchase: 2011
+  year_of_manufacture: 2011  
+  
+- type: kettle
   instance: 1
-  meters: [2]
-  room: lounge
-  cpu: {type: Intel Atom D2700}
-  description: 5x WD red 3TB 
-  part_number: DS1512+
-  manufacturer: Synology
-  year_of_purchase: 2012
-  year_of_manufacture: 2012
+  meters: [4]
   control:
-    - always_on
+    - manual
+  nominal_consumption: 900
+  model: HD 4619
+  manufacturer: Philips
+  year_of_purchase: 2012
+  year_of_manufacture: 2010 
   
 - type: washing machine
   instance: 1
-  meters: [3]
-  room: utility
-  multiple: false
-  control:
-    - manual
-
-- type: spin dryer
-  instance: 1
-  meters: [4]
-  room: utility
-  multiple: false
-  control:
-    - manual
-
-- type: dish washer
-  instance: 1
   meters: [5]
-  room: kitchen
-  multiple: false
   control:
     - manual
+  efficiency_rating: A
+  nominal_consumption: 2200
+  model: F1215
+  manufacturer: Zanussi
+  year_of_purchase: 2006
+  year_of_manufacture: 2006
 
-- type: laptop computer
+- type: audio amplifier
   instance: 1
   meters: [6]
-  room: lounge
   control:
     - manual
-  manufacturer: Apple
-  year_of_purchase: 2012
-  year_of_manufacture: 2012
-  part_number: MacBook Pro 10.1
+  model: DRA-275RD
+  manufacturer: Denon
 
-- type: laptop computer
-  instance: 2
-  meters: [6]
-  room: lounge
+- type: hair dryer
+  instance: 1
+  meters: [7]
   control:
     - manual
-  manufacturer: Acer
+  nominal_consumption: 1800
+  model: 3522
+  manufacturer: Braun
   year_of_purchase: 2008
-  year_of_manufacture: 2008
-  part_number: Travelmate 6593
+  year_of_manufacture: 2000
+
+- type: charger # tootbrusher
+  instance: 1
+  meters: [7]
+  control:
+    - manual
+  nominal_consumption: 2
+  model: 4729
+  manufacturer: Braun
+  year_of_purchase: 2005
+  year_of_manufacture: 2005
 
 - type: food processor
   instance: 1
-  meters: [7]
-  room: kitchen
-  multiple: false
-  control:
-    - manual
-
-- type: coffee maker
-  instance: 1
   meters: [8]
-  room: kitchen
-  multiple: false
   control:
     - manual
-  year_of_purchase: 2011
-  year_of_manufacture: 2011
-
-- type: small cooking appliance
+  nominal_consumption: 450
+  model: CNHR 18
+  manufacturer: Bosch
+  year_of_purchase: 2010
+  year_of_manufacture: 2010
+  
+- type: incandescent lamp
   instance: 1
   meters: [9]
-  room: hall #wrong 'cause there's no storage room
-  multiple: false
   control:
     - manual
-
-description: 2 stores; brickets; 130sqm
+  manufacturer: Philips
+  
+description: A flat within an appartment house
 rooms:
-  - name: lounge
-    instance: 1
-    floor: 0 
   - name: kitchen
     instance: 1
-    floor: 0
-  - name: hall #is a storage room
+    floor: 2
+  - name: bedroom
     instance: 1
-    description: between kitchen and washing room (to extend wireless signal of measurement equipment)
-    floor: 0
+    floor: 2
+  - name: bathroom
+    instance: 1
+    floor: 2
+  - name: bathroom
+    description: it is only a toilette
+    instance: 2
+    floor: 2
+  - name: bedroom
+    description: guests room
+    instance: 1
+    floor: 2
+  - name: hall
+    instance: 1
+    floor: 2
   - name: utility
+    description: storage room
     instance: 1
-    floor: 0
-
-n_occupants: 3
-#timeframe:
-#periods_unoccupied:
+    floor: 2
+  - name: outdoors
+    description: balcony with a light and an outlet
+    instance: 1
+    floor: 2
+n_occupants: 2
+#timeframe: keine Ahnung
+periods_unoccupied: Jan 2014
 construction_year: 1991
 energy_improvements:
-  - solar thermal
-  - loft insulation
-  - solid wall insulation
+  - thermal insulation
   - double glazing

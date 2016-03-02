@@ -8,6 +8,7 @@ from nilmtk.datastore import Key
 import warnings
 from nilm_metadata import convert_yaml_to_hdf5
 import csv
+import numpy as np
 
 warnings.filterwarnings("ignore")
 
@@ -23,42 +24,56 @@ def convert_greend(greend_path, hdf_filename):
     store = pd.HDFStore(hdf_filename, 'w', complevel=9, complib='zlib')
     houses = sorted(__get_houses(greend_path))
     print(houses)
-    h = 1
+    h = 1 # nilmtk counts buildings from 1 not from 0 as we do, so everything is shifted by 1
     for house in houses:
         print('loading '+house)
         abs_house = join(greend_path, house)
         dates = [d for d in listdir(abs_house) if d.startswith('dataset')]
-        house_data = pd.DataFrame()
+        house_data = []
         for date in dates:
             print('-----------------------',date)
             try:
-                tmp_pandas = pd.DataFrame.from_csv(join(abs_house, date))
+                tmp_pandas = pd.read_csv(join(abs_house, date), na_values=['na'], error_bad_lines=False)
             except: # A CParserError is returned for malformed files (irregular column number)
-                import StringIO as sio
-                tmp_pandas = pd.DataFrame.from_csv(sio.StringIO(__preprocess_file(abs_house, date)))
-                
-            tmp_pandas = tmp_pandas[tmp_pandas.index != 'timestamp']
-            tmp_pandas = tmp_pandas.sort_index()
-            c = 0 
-            tmp_pandas.index = [__timestamp(t) for t in tmp_pandas.index]
-            house_data = house_data.append(tmp_pandas)
+                pass 
+                # for building0 either remove the first days (with less nodes) or use __preprocess_file
+                #import StringIO as sio
+                #tmp_pandas = pd.DataFrame.from_csv(sio.StringIO(__preprocess_file(abs_house, date)))
+            
+            # if the timestamp is not correctly parsed then it's an object dtype (string), else a float64
+            if tmp_pandas.timestamp.dtype != np.float64:
+				tmp_pandas = tmp_pandas[tmp_pandas.timestamp != 'timestamp'] # remove all error rows
+			# use the cleaned column as the index
+            tmp_pandas.index = tmp_pandas["timestamp"].convert_objects(convert_numeric=True).values
+            tmp_pandas = tmp_pandas.drop('timestamp', 1) # remove timestamp from the columns (it's the index already)
+            tmp_pandas = tmp_pandas.astype("float32") # convert everything back to float32
+			# convert the index to datetime
+            tmp_pandas.index = pd.to_datetime(tmp_pandas.index, unit='s')
+            tmp_pandas = tmp_pandas.tz_localize("UTC").tz_convert("CET")
+            tmp_pandas = tmp_pandas.drop_duplicates()
+            #tmp_pandas = tmp_pandas.sort_index()
+            house_data.append(tmp_pandas)
+        overall_df = pd.concat(house_data)
+        overall_df = overall_df.drop_duplicates()
+        overall_df = overall_df.sort_index()
+
         m = 1
 
-        for meter in house_data:
-            print("meter" + str(m)+': ')
+        for column in overall_df.columns:
+            print("meter" + str(m)+': '+column)
             key = Key(building = h, meter=m)
             print("Putting into store...")
-            store.put(str(key), house_data[meter], format = 'table')
+            store.put(str(key), overall_df[column], format = 'table')
             m += 1
             print('Flushing store...')
             store.flush()
         h += 1
 
     store.close()
-
-    #needs to be edited
-    convert_yaml_to_hdf5('/path/to/metadata', hdf_filename)
-
+	
+	# retrieve the dataset metadata in the metadata subfolder
+    import inspect
+    convert_yaml_to_hdf5(dirname(inspect.getfile(convert_greend))+'/metadata/', hdf_filename)
 
 def __timestamp(t):
     res = 1

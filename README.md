@@ -90,3 +90,4 @@ For more detail, please see our [changelog](https://github.com/nilmtk/nilmtk/blo
 [![Coverage Status](https://coveralls.io/repos/nilmtk/nilmtk/badge.png)](https://coveralls.io/r/nilmtk/nilmtk)
 
 [![Code Health](https://landscape.io/github/nilmtk/nilmtk/master/landscape.png)](https://landscape.io/github/nilmtk/nilmtk/master)
+
