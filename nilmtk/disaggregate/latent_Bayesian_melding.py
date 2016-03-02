@@ -203,6 +203,7 @@ class LatentBayesianMelding(object):
         raise NotImplementedError()
 
     def disaggregate_chunk(self, mains_chunk):
+        print("-----"*20)
         """In-memory disaggregation.
 
         Parameters
@@ -407,7 +408,7 @@ class LatentBayesianMelding(object):
                     1/(self.individual[appliance]['induced density of sac'][1]**2))
                 densityMean = Expr.dot(variableOfNosOfCycles[appliance],
                     np.array(self.individual[appliance] 
-                    ['numberOfCyclesStats']['numberOfCyclesEnergy']))
+                    ['numberOfCyclesStats']['numberOfCyclesEnergy'], dtype=np.float64))
                 jointMean = Expr.sub(Expr.mul(1/self.varSac[appliance],densityMean),
                                      Expr.constTerm(
                     self.individual[appliance]['induced density of sac'][0]/
@@ -432,7 +433,7 @@ class LatentBayesianMelding(object):
                     1/(self.individual[appliance]['induced density of duration'][1]**2))
                 densityMeanDur = Expr.dot(variableOfNosOfCycles[appliance],
                     np.array(self.individual[appliance]
-                    ['numberOfCyclesStats']['numberOfCyclesDuration']))
+                    ['numberOfCyclesStats']['numberOfCyclesDuration'], dtype=np.float64))
                 jointMeanDur = Expr.sub(Expr.mul(1/self.varDuration[appliance],densityMeanDur),
                                      Expr.constTerm(
                     self.individual[appliance]['induced density of duration'][0]/
@@ -454,7 +455,7 @@ class LatentBayesianMelding(object):
                     relaxedVariableOfAppliance[appliance])),
                     Expr.dot(variableOfNosOfCycles[appliance],
                             np.array(self.individual[appliance]
-                            ['numberOfCyclesStats']['numberOfCycles'])))
+                            ['numberOfCyclesStats']['numberOfCycles'], dtype=np.float64)))
                 c_OffOn = M.constraint(diffOffOn,Domain.equalsTo(0.0))
                 
                 ############ The objective functions #########################                    
@@ -490,13 +491,13 @@ class LatentBayesianMelding(object):
                     sumLogCatProb = Expr.dot(variableOfNosOfCycles[appliance],
                         -np.log(np.maximum(1e-300,
                         np.array(self.individual[appliance]
-                        ['numberOfCyclesStats']['numberOfCyclesProb']))))
+                        ['numberOfCyclesStats']['numberOfCyclesProb'], dtype=np.float64))))
                 else:
                     sumLogCatProb = Expr.add(sumLogCatProb,
                         Expr.dot(variableOfNosOfCycles[appliance],
                         -np.log(np.maximum(1e-300,
                         np.array(self.individual[appliance]
-                        ['numberOfCyclesStats']['numberOfCyclesProb'])))))
+                        ['numberOfCyclesStats']['numberOfCyclesProb'], dtype=np.float64)))))
                 
                 # Summation of the latent variables for all appliances accross time
                 if i == 0:
@@ -644,17 +645,17 @@ class LatentBayesianMelding(object):
                 inferred_sac[appliance] = \
                     np.dot(np.array(variableOfNosOfCycles[appliance].level()),
                            np.array(self.individual[appliance] 
-                           ['numberOfCyclesStats']['numberOfCyclesEnergy']))
+                           ['numberOfCyclesStats']['numberOfCyclesEnergy'], dtype=np.float64))
                            
                 inferred_duration[appliance] = \
                     np.dot(np.array(variableOfNosOfCycles[appliance].level()),
                            np.array(self.individual[appliance]
-                           ['numberOfCyclesStats']['numberOfCyclesDuration']))
+                           ['numberOfCyclesStats']['numberOfCyclesDuration'], dtype=np.float64))
                            
                 inferred_nosOfCycle[appliance] = \
                     np.dot(np.array(variableOfNosOfCycles[appliance].level()),
                            np.array(self.individual[appliance]
-                           ['numberOfCyclesStats']['numberOfCycles']))
+                           ['numberOfCyclesStats']['numberOfCycles'], dtype=np.float64))
                 
                 # the inferred variables
                 inferred_states[appliance] = \
@@ -805,7 +806,7 @@ class LatentBayesianMelding(object):
                 + np.dot(inferred_variableOfNosOfCycles[appliance],
                         np.log(np.maximum(1e-300,
                         np.array(self.individual[appliance]
-                        ['numberOfCyclesStats']['numberOfCyclesProb']))))
+                        ['numberOfCyclesStats']['numberOfCyclesProb'], dtype=np.float64))))
             
         # The data likelihood and prior
         optimalObjective = optimalObjective \
