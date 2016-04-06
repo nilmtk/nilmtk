@@ -47,8 +47,7 @@ NILMTK includes:
 -  parsers for a range of existing data sets (8 and counting)
 -  a collection of preprocessing algorithms
 -  a set of statistics for describing data sets
--  3 reference benchmark disaggregation algorithms and a suite of
-   accuracy metrics
+-  a number of [reference benchmark disaggregation algorithms](https://github.com/nilmtk/nilmtk/wiki/NILM-Algorithms)
 -  a common set of accuracy metrics
 -  and much more!
 
