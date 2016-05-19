@@ -1,35 +1,35 @@
-instance: 4
-original_name: House#3
+instance: 3
+original_name: House#2
 
 elec_meters:
   1:
     device_model: circle
     submeter_of: 0
-    room: hall
+    room: lounge
   2:
     device_model: circle
     submeter_of: 0
-    room: kitchen
+    room: lounge
   3:
     device_model: circle
     submeter_of: 0
-    room: kitchen
+    room: utility
   4:
     device_model: circle
     submeter_of: 0
-    room: kitchen
+    room: utility
   5:
     device_model: circle
     submeter_of: 0
-    room: bathroom
+    room: kitchen
   6:
     device_model: circle
     submeter_of: 0
-    room: bathroom
+    room: lounge
   7:
     device_model: circle
     submeter_of: 0
-    room: lounge
+    room: kitchen
   8:
     device_model: circle
     submeter_of: 0
@@ -37,80 +37,106 @@ elec_meters:
   9:
     device_model: circle
     submeter_of: 0
-    room: lounge
+    room: hall #wrong 'cause there's no storage room
 
 appliances:
-- type: vacuum cleaner
+- type: television
   instance: 1
   meters: [1]
-  room: hall
+  room: lounge
   multiple: false
-  manufacturer: Dyson
-  model: Root Cyclone
+  control:
+    - manual
+  manufacturer: Panasonic
+  year_of_purchase: 2007
+  year_of_manufacture: 2007
+  part_number: TH-42PZ70E
+
+- type: UPS
+  instance: 1
+  meters: [2]
+  room: lounge
+  year_of_purchase: 2012
+  year_of_manufacture: 2012
+  control:
+    - always_on
+
+- type: games console
+  instance: 1
+  meters: [2]
+  room: lounge
+  year_of_purchase: 2007
+  year_of_manufacture: 2007
+  control:
+    - manual
+
+- type: computer
+  instance: 1
+  meters: [2]
+  room: lounge
+  cpu: {type: Intel Atom D2700}
+  description: 5x WD red 3TB 
+  part_number: DS1512+
+  manufacturer: Synology
+  year_of_purchase: 2012
+  year_of_manufacture: 2012
+  control:
+    - always_on
+  
+- type: washing machine
+  instance: 1
+  meters: [3]
+  room: utility
+  multiple: false
+  control:
+    - manual
+
+- type: spin dryer
+  instance: 1
+  meters: [4]
+  room: utility
+  multiple: false
   control:
     - manual
 
 - type: dish washer
   instance: 1
-  meters: [2]
+  meters: [5]
   room: kitchen
   multiple: false
   control:
     - manual
-  model: ADG 555IX
-  manufacturer: Whirlpool
 
-- type: kettle
-  instance: 1
-  meters: [3]
-  room: kitchen
-  manufacturer: Braun
-  model: 3217/ WK210
-  nominal_consumption: 2280
-  control:
-    - manuel
-
-- type: fridge
-  instance: 1
-  meters: [4]
-  room: kitchen
-  manufacturer: Siemens
-  model: top-line
-  control:
-    - thermostat
-
-- type: washing machine
-  instance: 1
-  meters: [5]
-  room: bathroom
-  control:
-    - manual
-  manufacturer: Eudora
-  model: Sparmeister W
-
-- type: hair dryer
+- type: laptop computer
   instance: 1
   meters: [6]
-  room: bathroom
+  room: lounge
+  control:
+    - manual
+  manufacturer: Apple
+  year_of_purchase: 2012
+  year_of_manufacture: 2012
+  part_number: MacBook Pro 10.1
+
+- type: laptop computer
+  instance: 2
+  meters: [6]
+  room: lounge
+  control:
+    - manual
+  manufacturer: Acer
+  year_of_purchase: 2008
+  year_of_manufacture: 2008
+  part_number: Travelmate 6593
+
+- type: food processor
+  instance: 1
+  meters: [7]
+  room: kitchen
   multiple: false
   control:
     - manual
-  manufacturer: Remington
-  model: D-3700
-  year_of_purchase: 2010
-  nominal_consumption: 2200
-  
-- type: PC
-  instance: 1
-  meters: [7]
-  room: lounge
-  year_of_purchase: 2013
-  year_of_manufacture: 2013
-  control:
-    - manuel
-  manufacturer: dimotion PC
-  model: QuietONE Q2
-  
+
 - type: coffee maker
   instance: 1
   meters: [8]
@@ -118,20 +144,18 @@ appliances:
   multiple: false
   control:
     - manual
-  nominal_consumption: 1260
-  model: Delonghi Pixie
-  manufacturer: Delonghi
-  
-- type: TV
+  year_of_purchase: 2011
+  year_of_manufacture: 2011
+
+- type: small cooking appliance
   instance: 1
   meters: [9]
-  room: lounge
+  room: hall #wrong 'cause there's no storage room
+  multiple: false
   control:
     - manual
-  manufacturer: Samsung
-  model: LE32C650
-  
-description: House with two floors, 97sqm (except basement)
+
+description: 2 stores; brickets; 130sqm
 rooms:
   - name: lounge
     instance: 1
@@ -141,11 +165,18 @@ rooms:
     floor: 0
   - name: hall #is a storage room
     instance: 1
+    description: between kitchen and washing room (to extend wireless signal of measurement equipment)
     floor: 0
-  - name: bathroom
+  - name: utility
     instance: 1
-    floor: 1
+    floor: 0
 
-n_occupants: 4
+n_occupants: 3
 #timeframe:
-periods_unoccupied: 19.6.2014 to 21.6.2014 and 26.7.2014 to 7.8.2014
+#periods_unoccupied:
+construction_year: 1991
+energy_improvements:
+  - solar thermal
+  - loft insulation
+  - solid wall insulation
+  - double glazing

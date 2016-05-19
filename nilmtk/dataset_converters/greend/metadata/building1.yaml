@@ -1,5 +1,5 @@
-instance: 2
-original_name: House#1
+instance: 1
+original_name: House#0
 
 elec_meters:
   1:
@@ -9,7 +9,7 @@ elec_meters:
   2:
     device_model: circle
     submeter_of: 0
-    room: kitchen
+    room: basement
   3:
     device_model: circle
     submeter_of: 0
@@ -21,164 +21,130 @@ elec_meters:
   5:
     device_model: circle
     submeter_of: 0
-    room: bathroom
+    room: kitchen
   6:
     device_model: circle
     submeter_of: 0
-    room: lounge
+    room: kitchen
   7:
     device_model: circle
     submeter_of: 0
-    room: bathroom
+    room: kitchen
   8:
     device_model: circle
     submeter_of: 0
-    room: kitchen
+    room: lounge
   9:
     device_model: circle
     submeter_of: 0
-    room: bedroom
+    room: hall
 
 appliances:
-- type: fridge
+- type: coffee maker
   instance: 1
   meters: [1]
+  room: kitchen
   control:
-    - thermostat
-  efficiency_rating: A+
-  nominal_consumption: 26
-  model: ARG 737
-  manufacturer: Whirpool
-  year_of_purchase: 2011
-  year_of_manufacture: 2011
-  
-- type: dish washer
+    - manual
+  nominal_consumption: 1450
+  model: ESAM04.110
+  manufacturer: Delonghi
+  year_of_purchase: 2012
+
+- type: washing machine
   instance: 1
   meters: [2]
+  room: basement
   control:
-    - manual
-  nominal_consumption: 2100
-  model: ADG 555 IX
-  manufacturer: Whirpool
-  year_of_purchase: 2011
-  year_of_manufacture: 2011
-  
-- type: microwave
+    - manuel
+  manufacturer: Miele
+  year_of_purchase: 2012
+
+- type: radio
   instance: 1
   meters: [3]
+  room: kitchen
   control:
     - manual
-  nominal_consumption: 1300
-  model: AMW 494/IX
-  manufacturer: Whirpool
-  year_of_purchase: 2011
-  year_of_manufacture: 2011  
-  
+  model: FA162
+  manufacturer: LG
+  year_of_purchase: 2013
+
 - type: kettle
   instance: 1
   meters: [4]
+  room: kitchen
   control:
     - manual
-  nominal_consumption: 900
-  model: HD 4619
-  manufacturer: Philips
-  year_of_purchase: 2012
-  year_of_manufacture: 2010 
+  model: 3271/WK210
+  manufacturer: Braun
+  year_of_purchase: 2007
   
-- type: washing machine
+  
+- type: fridge freezer
   instance: 1
   meters: [5]
+  room: kitchen
   control:
-    - manual
-  efficiency_rating: A
-  nominal_consumption: 2200
-  model: F1215
-  manufacturer: Zanussi
-  year_of_purchase: 2006
-  year_of_manufacture: 2006
+    - thermostat
+  model: GC-P217LGCV
+  manufacturer: LG
+  year_of_purchase: 2012
 
-- type: audio amplifier
+- type: dish washer
   instance: 1
   meters: [6]
+  room: kitchen
   control:
     - manual
-  model: DRA-275RD
-  manufacturer: Denon
+  model: G578SCVi
+  manufacturer: Miele
+  year_of_purchase: 2012
 
-- type: hair dryer
+- type: lamp
   instance: 1
   meters: [7]
+  room: kitchen
   control:
     - manual
-  nominal_consumption: 1800
-  model: 3522
-  manufacturer: Braun
-  year_of_purchase: 2008
-  year_of_manufacture: 2000
 
-- type: charger # tootbrusher
-  instance: 1
-  meters: [7]
-  control:
-    - manual
-  nominal_consumption: 2
-  model: 4729
-  manufacturer: Braun
-  year_of_purchase: 2005
-  year_of_manufacture: 2005
-
-- type: food processor
+- type: television
   instance: 1
   meters: [8]
+  room: lounge
   control:
     - manual
-  nominal_consumption: 450
-  model: CNHR 18
-  manufacturer: Bosch
-  year_of_purchase: 2010
-  year_of_manufacture: 2010
-  
-- type: incandescent lamp
+  model: 46W905A
+  manufacturer: Sony
+  year_of_purchase: 2014
+ 
+- type: vacuum cleaner
   instance: 1
   meters: [9]
+  room: hall
   control:
     - manual
-  manufacturer: Philips
-  
-description: A flat within an appartment house
+  manufacturer: Dyson
+  year_of_purchase: 2003
+
+description: 2 floors; 140sqm
 rooms:
+  - name: lounge
+    instance: 1
+    floor: 0 
   - name: kitchen
     instance: 1
-    floor: 2
+    floor: 0
+  - name: hall #is a storage room
+    instance: 1
+    floor: 0
   - name: bedroom
     instance: 1
-    floor: 2
-  - name: bathroom
-    instance: 1
-    floor: 2
-  - name: bathroom
-    description: it is only a toilette
-    instance: 2
-    floor: 2
-  - name: bedroom
-    description: guests room
-    instance: 1
-    floor: 2
-  - name: hall
-    instance: 1
-    floor: 2
-  - name: utility
-    description: storage room
-    instance: 1
-    floor: 2
-  - name: outdoors
-    description: balcony with a light and an outlet
-    instance: 1
-    floor: 2
+    floor: 1
+
 n_occupants: 2
-#timeframe: keine Ahnung
-periods_unoccupied: Jan 2014
-construction_year: 1991
+#timeframe:
+#periods_unoccupied:
+construction_year: 2002
 energy_improvements:
-  - thermal insulation
   - double glazing
