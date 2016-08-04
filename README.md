@@ -79,7 +79,7 @@ as a guide to the current API.
 * July 2014: v0.2 released
 * Nov 2014: NILMTK wins best demo award at [ACM BuildSys](http://www.buildsys.org/2014/)
 
-For more detail, please see our [changelog](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/developer_guide/changelog.md).
+For more detail, please see our [changelog](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/development_guide/changelog.md).
 
 
 ##### Code health
