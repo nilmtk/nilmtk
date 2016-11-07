@@ -27,8 +27,7 @@ Each folder has a CSV file as per each day, with each day csv file containing
 	86400 entries.
 """
 
-plugs_column_name = {1:('power', 'active'),
-                    };
+plugs_column_name = {1: ('power', 'active')}
 
 def convert_eco(dataset_loc, hdf_filename, timezone):
     """
@@ -50,15 +49,15 @@ def convert_eco(dataset_loc, hdf_filename, timezone):
     check_directory_exists(dataset_loc)
     directory_list = [i for i in listdir(dataset_loc) if '.txt' not in i]
     directory_list.sort()
-    print directory_list
+    print(directory_list)
 
     # Traversing every folder
     for folder in directory_list:
 
         if folder[0] == '.' or folder[-3:] == '.h5':
-            print 'Skipping ', folder
+            print('Skipping ', folder)
             continue
-        print 'Computing for folder',folder
+        print('Computing for folder', folder)
 
         #Building number and meter_flag
         building_no = int(folder[:2])
@@ -66,11 +65,11 @@ def convert_eco(dataset_loc, hdf_filename, timezone):
 
         dir_list = [i for i in listdir(join(dataset_loc, folder)) if isdir(join(dataset_loc,folder,i))]
         dir_list.sort()
-        print 'Current dir list:',dir_list
+        print('Current dir list:', dir_list)
 
         for fl in dir_list:
             
-            print 'Computing for folder ',fl
+            print('Computing for folder ', fl)
             
             fl_dir_list = [i for i in listdir(join(dataset_loc,folder,fl)) if '.csv' in i]
             fl_dir_list.sort()
@@ -111,7 +110,8 @@ def convert_eco(dataset_loc, hdf_filename, timezone):
                         else:
                             store.append(key, df_phase, format='Table')
                             store.flush()
-                        print 'Building',building_no,', Meter no.',phase,'=> Done for ',fi[:-4]
+                        print('Building', building_no, ', Meter no.', phase,
+                              '=> Done for ', fi[:-4])
                 
             else:
                 #Meter number to be used in key
@@ -136,20 +136,20 @@ def convert_eco(dataset_loc, hdf_filename, timezone):
                     # If table not present in hdf5, create or else append to existing data
                     if not key in store:
                         store.put(key, df, format='Table')
-                        print 'Building',building_no,', Meter no.',meter_num,'=> Done for ',fi[:-4]
+                        print('Building',building_no,', Meter no.',meter_num,'=> Done for ',fi[:-4])
                     else:
                         store.append(key, df, format='Table')
                         store.flush()
-                        print 'Building',building_no,', Meter no.',meter_num,'=> Done for ',fi[:-4]
+                        print('Building',building_no,', Meter no.',meter_num,'=> Done for ',fi[:-4])
             
-    print "Data storage completed."
+    print("Data storage completed.")
     store.close()
 
     # Adding the metadata to the HDF5file
-    print "Proceeding to Metadata conversion..."
+    print("Proceeding to Metadata conversion...")
     meta_path = join(_get_module_directory(), 'metadata')
     convert_yaml_to_hdf5(meta_path, hdf_filename)
-    print "Completed Metadata conversion."
+    print("Completed Metadata conversion.")
 
 def _get_module_directory():
     # Taken from http://stackoverflow.com/a/6098238/732596

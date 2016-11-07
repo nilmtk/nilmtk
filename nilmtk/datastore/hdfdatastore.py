@@ -1,21 +1,13 @@
 from __future__ import print_function, division
 import pandas as pd
-from itertools import repeat, tee
-from time import time
 from copy import deepcopy
-from collections import OrderedDict
 import numpy as np
-import yaml
-from os.path import isdir, isfile, join, exists, dirname
-from os import listdir, makedirs, remove
-from shutil import rmtree
-import re
-from nilm_metadata.convert_yaml_to_hdf5 import _load_file
+from os.path import isfile
 from nilmtk.timeframe import TimeFrame
 from nilmtk.timeframegroup import TimeFrameGroup
-from nilmtk.node import Node
 from .datastore import DataStore, MAX_MEM_ALLOWANCE_IN_BYTES
 from nilmtk.docinherit import doc_inherit
+from builtins import range
 
 # do not edit! added by PythonBreakpoints
 from pdb import set_trace as _breakpoint
@@ -104,7 +96,7 @@ class HDFDataStore(DataStore):
                 section_start_i = coords[0]
                 section_end_i   = coords[-1]
                 del coords
-            slice_starts = xrange(section_start_i, section_end_i, chunksize)
+            slice_starts = range(section_start_i, section_end_i, chunksize)
             n_chunks = int(np.ceil((section_end_i - section_start_i) / chunksize))
 
             if n_chunks > 1:
@@ -131,7 +123,7 @@ class HDFDataStore(DataStore):
                         look_ahead_end_i = look_ahead_start_i + n_look_ahead_rows
                         try:
                             data.look_ahead = self.store.select(
-                                key=key, columns=cols, 
+                                key=key, columns=cols,
                                 start=look_ahead_start_i,
                                 stop=look_ahead_end_i)
                         except ValueError:
@@ -200,7 +192,7 @@ class HDFDataStore(DataStore):
             node = self.store.root
         else:
             node = self.store.get_node(key)
-        return node._v_children.keys()
+        return list(node._v_children.keys())
 
     @doc_inherit
     def close(self):

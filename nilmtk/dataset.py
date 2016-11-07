@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.dates import DateFormatter
+from six import iteritems
 from .building import Building
 from .datastore.datastore import join_key
 from .utils import get_datastore
@@ -55,7 +56,7 @@ class DataSet(object):
         return self
         
     def save(self, destination):
-        for b_id, building in self.buildings.iteritems():
+        for b_id, building in iteritems(self.buildings):
             building.save(destination, '/building' + str(b_id))
 
     def _init_buildings(self, store):
@@ -90,7 +91,7 @@ class DataSet(object):
         keys = self.buildings.keys()
         keys.sort()
         results = pd.DataFrame(columns=keys)
-        for i, building in self.buildings.iteritems():
+        for i, building in iteritems(self.buildings):
             results[i] = building.describe(**kwargs)
         return results
 

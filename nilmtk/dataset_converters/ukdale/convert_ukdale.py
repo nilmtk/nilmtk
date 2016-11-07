@@ -1,9 +1,8 @@
 from __future__ import print_function, division
 from os import remove
 from os.path import join
-import pandas as pd
+from six import iteritems
 from nilmtk.dataset_converters.redd.convert_redd import (_convert, _load_csv)
-from nilmtk.utils import get_module_directory
 from nilmtk import DataSet
 from nilmtk.utils import get_datastore
 from nilmtk.datastore import Key
@@ -76,7 +75,7 @@ def _get_ac_type_map(ukdale_path):
     convert_yaml_to_hdf5(join(ukdale_path, 'metadata'), hdf5_just_metadata)
     ukdale_dataset = DataSet(hdf5_just_metadata)
     ac_type_map = {}
-    for building_i, building in ukdale_dataset.buildings.iteritems():
+    for building_i, building in iteritems(ukdale_dataset.buildings):
         elec = building.elec
         for meter in elec.meters + elec.disabled_meters:
             key = (building_i, meter.instance())
@@ -88,7 +87,7 @@ def _get_ac_type_map(ukdale_path):
 
 def _convert_one_sec_data(ukdale_path, store, ac_type_map):
     ids_of_one_sec_data = [
-        identifier for identifier, ac_types in ac_type_map.iteritems()
+        identifier for identifier, ac_types in iteritems(ac_type_map)
         if ac_types == ['active', 'apparent']]
 
     if not ids_of_one_sec_data:

@@ -4,12 +4,16 @@
 We recommend using
 [Anaconda](https://store.continuum.io/cshop/anaconda/), which bundles
 togther most of the required packages. Please download Anaconda for
-Python 2.7.x. We do not currently support Python 3.
+Python 2.7.x.
 
 After installing Anaconda, please do the following.  We have two
 sections below:
 [one for Linux or OSX](#install-on-ubuntu-like-linux-variants-debian-based-or-osx)
 and another [section for Windows](#install-on-windows).
+
+## Python 3
+
+Python 3 support is experimental.  On Ubuntu, run `sudo apt-get install python3-tk`.
 
 ### Install on Ubuntu like Linux variants (debian based) or OSX
 

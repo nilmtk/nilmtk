@@ -12,6 +12,10 @@ from hmmlearn import hmm
 from nilmtk.feature_detectors import cluster
 from nilmtk.disaggregate import Disaggregator
 
+# Python 2/3 compatibility
+from six import iteritems
+from builtins import range
+
 SEED = 42
 
 # Fix the seed for repeatibility of experiments
@@ -23,14 +27,14 @@ def sort_startprob(mapping, startprob):
     """
     num_elements = len(startprob)
     new_startprob = np.zeros(num_elements)
-    for i in xrange(len(startprob)):
+    for i in range(len(startprob)):
         new_startprob[i] = startprob[mapping[i]]
     return new_startprob
 
 
 def sort_covars(mapping, covars):
     new_covars = np.zeros_like(covars)
-    for i in xrange(len(covars)):
+    for i in range(len(covars)):
         new_covars[i] = covars[mapping[i]]
     return new_covars
 
@@ -211,7 +215,7 @@ class FHMM(Disaggregator):
                 building = ds.buildings[building_num]
                 elec = building.elec
                 try:
-                    df = elec[appliance].load(**load_kwargs).next().squeeze()
+                    df = next(elec[appliance].load(**load_kwargs)).squeeze()
                     appl_power = df.dropna().values.reshape(-1, 1)
                     activation = (df > 10).sum() * 1.0 / len(df)
                     if activation > min_activation:
@@ -230,7 +234,7 @@ class FHMM(Disaggregator):
                 print("Not enough samples for %s" % appliance)
 
         new_learnt_models = OrderedDict()
-        for appliance, appliance_model in models.iteritems():
+        for appliance, appliance_model in iteritems(models):
             startprob, means, covars, transmat = sort_learnt_parameters(
                 appliance_model.startprob_, appliance_model.means_,
                 appliance_model.covars_, appliance_model.transmat_)
@@ -262,7 +266,7 @@ class FHMM(Disaggregator):
 
         for i, meter in enumerate(metergroup.submeters().meters):
             power_series = meter.power_series(**load_kwargs)
-            meter_data = power_series.next().dropna()
+            meter_data = next(power_series).dropna()
             X = meter_data.values.reshape((-1, 1))
             assert X.ndim == 2
             self.X = X
@@ -285,7 +289,7 @@ class FHMM(Disaggregator):
             # Check to see if there are any more chunks.
             # TODO handle multiple chunks per appliance.
             try:
-                power_series.next()
+                next(power_series)
             except StopIteration:
                 pass
             else:
@@ -331,7 +335,7 @@ class FHMM(Disaggregator):
 
         # Model
         means = OrderedDict()
-        for elec_meter, model in self.individual.iteritems():
+        for elec_meter, model in iteritems(self.individual):
             means[elec_meter] = (
                 model.means_.round().astype(int).flatten().tolist())
             means[elec_meter].sort()

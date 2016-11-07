@@ -1,14 +1,10 @@
 from __future__ import print_function, division
 from collections import OrderedDict, deque
-from datetime import datetime
-from warnings import warn
-
 import pandas as pd
 
 from nilmtk.feature_detectors.cluster import hart85_means_shift_cluster
 from nilmtk.feature_detectors.steady_states import (
     find_steady_states_transients)
-from nilmtk.timeframe import merge_timeframes, TimeFrame
 from nilmtk.disaggregate import Disaggregator
 
 

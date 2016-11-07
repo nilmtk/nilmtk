@@ -77,7 +77,7 @@ class CombinatorialOptimisation(Disaggregator):
         for i, meter in enumerate(metergroup.submeters().meters):
             print("Training model for submeter '{}'".format(meter))
             power_series = meter.power_series(**load_kwargs)
-            chunk = power_series.next()
+            chunk = next(power_series)
             num_total_states = num_states_dict.get(meter)
             if num_total_states is not None:
                 num_on_states = num_total_states - 1
@@ -88,7 +88,7 @@ class CombinatorialOptimisation(Disaggregator):
             # Check to see if there are any more chunks.
             # TODO handle multiple chunks per appliance.
             try:
-                power_series.next()
+                next(power_series)
             except StopIteration:
                 pass
             else:

@@ -138,14 +138,14 @@ class TestMeterGroup(unittest.TestCase):
         filename = join(data_dir(), 'energy.h5')
         ds = DataSet(filename)
         elec = ds.buildings[1].elec
-        df = elec.load().next()
+        df = next(elec.load())
         self.assertEqual(len(df), 13)
-        df = elec.load(chunksize=5).next()
+        df = next(elec.load(chunksize=5))
         self.assertEqual(len(df), 5)
-        df = elec.load(physical_quantity='energy').next()
+        df = next(elec.load(physical_quantity='energy'))
         self.assertEqual(len(df), 13)
         self.assertEqual(df.columns.levels, [['energy'], ['reactive']])
-        df = elec.load(ac_type='active').next()
+        df = next(elec.load(ac_type='active'))
         self.assertEqual(df.columns.levels, [['power'], ['active']])
         
 

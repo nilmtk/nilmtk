@@ -2,23 +2,16 @@ from __future__ import print_function, division
 from warnings import warn
 from collections import namedtuple
 from copy import deepcopy
-from itertools import izip
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import random
+from six import iteritems
 from .preprocessing import Clip
 from .stats import TotalEnergy, GoodSections, DropoutRate
-from .stats.totalenergyresults import TotalEnergyResults
 from .hashable import Hashable
-from .appliance import Appliance
-from .datastore import Key
-from .measurement import (select_best_ac_type, AC_TYPES, PHYSICAL_QUANTITIES, 
-                          PHYSICAL_QUANTITIES_WITH_AC_TYPES, 
+from .measurement import (select_best_ac_type, PHYSICAL_QUANTITIES,
                           check_ac_type, check_physical_quantity)
 from .node import Node
 from .electric import Electric
-from .timeframe import TimeFrame, list_of_timeframe_dicts
 from nilmtk.exceptions import MeasurementError
 from .utils import flatten_2d_list, capitalise_first_letter
 from nilmtk.timeframegroup import TimeFrameGroup
@@ -148,7 +141,7 @@ class ElecMeter(Hashable, Electric):
 
     def save(self, destination, key):
         """
-        Convert all relevant attributes to a dict to be 
+        Convert all relevant attributes to a dict to be
         saved as metadata in destination at location specified
         by key
         """
@@ -288,7 +281,7 @@ class ElecMeter(Hashable, Electric):
         list of 2-tuples of strings e.g. [('power', 'active')]
         """
         measurements = self.device['measurements']
-        return list(set([(m['physical_quantity'], m.get('type', '')) 
+        return list(set([(m['physical_quantity'], m.get('type', ''))
                          for m in measurements]))
 
     def __repr__(self):
@@ -329,7 +322,7 @@ class ElecMeter(Hashable, Electric):
             raise TypeError()
 
         match = True
-        for k, v in key.iteritems():
+        for k, v in iteritems(key):
             if hasattr(self.identifier, k):
                 if getattr(self.identifier, k) != v:
                     match = False
@@ -355,11 +348,11 @@ class ElecMeter(Hashable, Electric):
     def load(self, **kwargs):
         """Returns a generator of DataFrames loaded from the DataStore.
 
-        By default, `load` will load all available columns from the DataStore.  
+        By default, `load` will load all available columns from the DataStore.
         Specific columns can be selected in one or two mutually exclusive ways:
 
         1. specify a list of column names using the `cols` parameter.
-        2. specify a `physical_quantity` and/or an `ac_type` parameter to ask 
+        2. specify a `physical_quantity` and/or an `ac_type` parameter to ask
            `load` to automatically select columns.
 
         If 'resample' is set to 'True' then the default behaviour is for
@@ -370,18 +363,18 @@ class ElecMeter(Hashable, Electric):
         physical_quantity : string or list of strings
             e.g. 'power' or 'voltage' or 'energy' or ['power', 'energy'].
             If a single string then load columns only for that physical quantity.
-            If a list of strings then load columns for all those physical 
+            If a list of strings then load columns for all those physical
             quantities.
 
         ac_type : string or list of strings, defaults to None
-            Where 'ac_type' is short for 'alternating current type'.  e.g. 
+            Where 'ac_type' is short for 'alternating current type'.  e.g.
             'reactive' or 'active' or 'apparent'.
             If set to None then will load all AC types per physical quantity.
-            If set to 'best' then load the single best AC type per 
+            If set to 'best' then load the single best AC type per
             physical quantity.
-            If set to a single AC type then load just that single AC type per 
+            If set to a single AC type then load just that single AC type per
             physical quantity, else raise an Exception.
-            If set to a list of AC type strings then will load all those 
+            If set to a list of AC type strings then will load all those
             AC types and will raise an Exception if any cannot be found.
 
         cols : list of tuples, using NILMTK's vocabulary for measurements.
@@ -396,10 +389,10 @@ class ElecMeter(Hashable, Electric):
             If True then will resample data using `sample_period`.
             Defaults to True if `sample_period` is not None.
 
-        resample_kwargs : dict of key word arguments (other than 'rule') to 
-            `pass to pd.DataFrame.resample()`.  Defaults to set 'limit' to 
+        resample_kwargs : dict of key word arguments (other than 'rule') to
+            `pass to pd.DataFrame.resample()`.  Defaults to set 'limit' to
             `sample_period / max_sample_period` and sets 'fill_method' to ffill.
-        
+
         preprocessing : list of Node subclass instances
             e.g. [Clip()].
 
@@ -407,7 +400,7 @@ class ElecMeter(Hashable, Electric):
 
         Returns
         -------
-        Always return a generator of DataFrames (even if it only has a single 
+        Always return a generator of DataFrames (even if it only has a single
         column).
 
         Raises
@@ -478,7 +471,7 @@ class ElecMeter(Hashable, Electric):
             cols2d = [self._physical_quantity_to_columns(p_q)
                       for p_q in physical_quantity]
             return list(set(flatten_2d_list(cols2d)))
-                                  
+
         check_physical_quantity(physical_quantity)
         cols_matching = [col for col in self.available_columns()
                          if col[0] == physical_quantity]
@@ -603,7 +596,7 @@ class ElecMeter(Hashable, Electric):
 
         Returns
         -------
-        DropoutRateResults object if `full_results` is True, 
+        DropoutRateResults object if `full_results` is True,
         else float
         """
         nodes = [DropoutRate]
@@ -622,24 +615,24 @@ class ElecMeter(Hashable, Electric):
 
         Returns
         -------
-        if `full_results` is True then return nilmtk.stats.GoodSectionsResults 
+        if `full_results` is True then return nilmtk.stats.GoodSectionsResults
         object otherwise return list of TimeFrame objects.
         """
         loader_kwargs.setdefault('n_look_ahead_rows', 10)
         nodes = [GoodSections]
         results_obj = GoodSections.results_class(self.device['max_sample_period'])
         return self._get_stat_from_cache_or_compute(
-            nodes, results_obj, loader_kwargs)        
+            nodes, results_obj, loader_kwargs)
 
     def _get_stat_from_cache_or_compute(self, nodes, results_obj, loader_kwargs):
-        """General function for computing statistics and/or loading them from 
+        """General function for computing statistics and/or loading them from
         cache.
 
-        Cached statistics lives in the DataStore at 
+        Cached statistics lives in the DataStore at
         'building<I>/elec/cache/meter<K>/<statistic_name>' e.g.
-        'building1/elec/cache/meter1/total_energy'.  We store the 
+        'building1/elec/cache/meter1/total_energy'.  We store the
         'full' statistic... i.e we store a representation of the `Results._data`
-        DataFrame. Some times we need to do some conversion to store 
+        DataFrame. Some times we need to do some conversion to store
         `Results._data` on disk.  The logic for doing this conversion lives
         in the `Results` class or subclass.  The cache can be cleared by calling
         `ElecMeter.clear_cache()`.
@@ -684,13 +677,12 @@ class ElecMeter(Hashable, Electric):
         if loader_kwargs.get('preprocessing') is None:
             cached_stat = self.get_cached_stat(key_for_cached_stat)
             results_obj.import_from_cache(cached_stat, sections)
-        
+
             def find_sections_to_compute():
                 # Get sections_to_compute
                 results_obj_timeframes = results_obj.timeframes()
                 sections_to_compute = set(sections) - set(results_obj_timeframes)
-                sections_to_compute = list(sections_to_compute)
-                sections_to_compute.sort()
+                sections_to_compute = sorted(sections_to_compute)
                 return sections_to_compute
             try:
                 ac_type_keys = results_obj.simple().keys()
@@ -724,7 +716,7 @@ class ElecMeter(Hashable, Electric):
                 # the old table probably had different columns
                 self.store.remove(key_for_cached_stat)
                 self.store.put(key_for_cached_stat, results_obj.export_to_cache())
-                
+
         if full_results:
             return results_obj
         else:
@@ -794,7 +786,7 @@ class ElecMeter(Hashable, Electric):
         --------
         _compute_stat
         _get_stat_from_cache_or_compute
-        key_for_cached_stat        
+        key_for_cached_stat
         get_cached_stat
         """
         if self.store is not None:
@@ -821,7 +813,7 @@ class ElecMeter(Hashable, Electric):
         --------
         _compute_stat
         _get_stat_from_cache_or_compute
-        key_for_cached_stat        
+        key_for_cached_stat
         clear_cache
         """
         if self.store is None:

@@ -30,7 +30,7 @@ class TestLocateGoodSections(unittest.TestCase):
         cls.datastore.close()
 
     def test_pipeline(self):
-        meter = ElecMeter(store=self.datastore, metadata=self.meter_meta, 
+        meter = ElecMeter(store=self.datastore, metadata=self.meter_meta,
                           meter_id=METER_ID)
         source_node = meter.get_source_node()
         dropout_rate = DropoutRate(source_node)
@@ -38,7 +38,7 @@ class TestLocateGoodSections(unittest.TestCase):
 
         # TODO: remove prints and actually test value of dropout rate.
         print(dropout_rate.results)
-        print(meter.power_series().next())
+        print(next(meter.power_series()))
 
         # Now test metergroup
         meter2 = ElecMeter(store=self.datastore, metadata=self.meter_meta, 

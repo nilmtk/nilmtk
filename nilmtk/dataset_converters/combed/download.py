@@ -3,6 +3,7 @@ from os.path import join
 import pandas as pd
 import os
 import time
+from six import iteritems
 
 
 def download():
@@ -46,9 +47,8 @@ def download():
 
     query = """select *  where Metadata/Extra/Block = '{}' and (Metadata/SourceName = '{}') and Metadata/Extra/Type = '{}' and Metadata/Location/Floor = '{}' and Metadata/Extra/PhysicalParameter = '{}'"""
 
-
-    for block_name, block in academic_building.iteritems():
-        for load, floors in block.iteritems():
+    for block_name, block in iteritems(academic_building):
+        for load, floors in iteritems(block):
             for floor in floors:
                 for measurement in MEASUREMENTS:
                     query_instance = query.format(block_name, "Academic Building", load, str(floor), measurement)

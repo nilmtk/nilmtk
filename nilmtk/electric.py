@@ -2,7 +2,7 @@ from __future__ import print_function, division
 import pandas as pd
 import numpy as np
 from collections import Counter
-from itertools import izip
+from builtins import zip
 from warnings import warn
 import scipy.spatial as ss
 from scipy import fft
@@ -360,7 +360,7 @@ class Electric(object):
         y_s = stdev(other, y_bar, y_n)
 
         numerator = 0.0
-        for (x_power, y_power) in izip(self.power_series(**load_kwargs), 
+        for (x_power, y_power) in zip(self.power_series(**load_kwargs), 
                                        other.power_series(**load_kwargs)):
             xi_minus_xbar = x_power - x_bar
             del x_power
@@ -576,18 +576,18 @@ class Electric(object):
             return avg
 
         out = []
-        for power_x, power_y in izip(self.power_series(), other.power_series()):
+        for power_x, power_y in zip(self.power_series(), other.power_series()):
             power_x_val = power_x.values
             power_y_val = power_y.values 
             num_elements = len(power_x_val)
             power_x_val = power_x_val.reshape((num_elements, 1))
             power_y_val = power_y_val.reshape((num_elements, 1))            
-            if num_elements>MAX_SIZE_ENTROPY:
+            if num_elements > MAX_SIZE_ENTROPY:
                 splits = num_elements/MAX_SIZE_ENTROPY + 1
                 x_split = np.array_split(power_x_val, splits)
                 y_split = np.array_split(power_y_val, splits)
-                for x, y  in izip(x_split, y_split):            
-                    out.append(kdtree_mi(x, y, k, base))                    
+                for x, y  in zip(x_split, y_split):
+                    out.append(kdtree_mi(x, y, k, base))
             else:
                 out.append(kdtree_mi(power_x_val, power_y_val, k, base))
         return sum(out)/len(out)

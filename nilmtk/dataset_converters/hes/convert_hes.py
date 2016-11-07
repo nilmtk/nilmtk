@@ -54,8 +54,8 @@ COL_NAMES = ['interval id', 'house id', 'appliance code', 'date',
 LAST_PWR_COLUMN = 250
 NANOSECONDS_PER_TENTH_OF_AN_HOUR = 1E9 * 60 * 6
 MAINS_CODES = [240, 241]
-TEMPERATURE_CODES = range(251,256)
-CIRCUIT_CODES = range(208, 218) + [222]
+TEMPERATURE_CODES = list(range(251, 256))
+CIRCUIT_CODES = list(range(208, 218)) + [222]
 #E_MEASUREMENT = Measurement('energy', 'active')
 
 
@@ -131,7 +131,7 @@ def convert_hes(data_dir, output_filename, format='HDF', max_chunks=None):
 
     # load list of houses
     hes_house_ids = load_list_of_house_ids(data_dir)
-    nilmtk_house_ids = np.arange(1,len(hes_house_ids)+1)
+    nilmtk_house_ids = np.arange(1, len(hes_house_ids) + 1)
     hes_to_nilmtk_house_ids = dict(zip(hes_house_ids, nilmtk_house_ids))
 
     # array of hes_house_codes: nilmtk_building_code = house_codes.index(hes_house_code)

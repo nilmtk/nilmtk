@@ -4,7 +4,11 @@ import pytz
 from datetime import timedelta
 from copy import deepcopy
 from warnings import warn
+from six import iteritems
+from functools import total_ordering
 
+
+@total_ordering
 class TimeFrame(object):
     """A TimeFrame is a single time span or period,
     e.g. from "2013" to "2014".
@@ -15,7 +19,7 @@ class TimeFrame(object):
         if None and empty if False
         then behave as if start is infinitely far into the past
     _end : pd.Timestamp or None
-        if None and empty is False 
+        if None and empty is False
         then behave as if end is infinitely far into the future
     enabled : boolean
         If False then behave as if both _end and _start are None
@@ -39,7 +43,7 @@ class TimeFrame(object):
                     self._end = self._end.tz_localize(tz)
 
     def copy_constructor(self, other):
-        for key, value in other.__dict__.iteritems():
+        for key, value in iteritems(other.__dict__):
             setattr(self, key, value)
 
     def clear(self):
@@ -69,8 +73,8 @@ class TimeFrame(object):
 
     @property
     def empty(self):
-        return self._empty 
-          
+        return self._empty
+
     @start.setter
     def start(self, new_start):
         new_start = convert_nat_to_none(new_start)
@@ -106,10 +110,10 @@ class TimeFrame(object):
         Notes
         -----
         Does not yet handle case where self or other is open-ended.
-        """        
+        """
         assert gap >= 0
         gap_td = timedelta(seconds=gap)
-        
+
         if self.empty or other.empty:
             return False
 
@@ -155,7 +159,7 @@ class TimeFrame(object):
             if other.end is None:
                 end = self.end
             elif self.end is None:
-                end = other.end                
+                end = other.end
             else:
                 end = min(self.end, other.end)
 
@@ -172,7 +176,7 @@ class TimeFrame(object):
                     start = None
                     end = None
                     empty = True
-        
+
         intersect = TimeFrame(start, end)
         intersect._empty = empty
         intersect.include_end = include_end
@@ -202,10 +206,10 @@ class TimeFrame(object):
         """
         if not self.empty:
             if self.include_end:
-                sliced = frame[(frame.index >= self.start) & 
+                sliced = frame[(frame.index >= self.start) &
                                (frame.index <= self.end)]
             else:
-                sliced = frame[(frame.index >= self.start) & 
+                sliced = frame[(frame.index >= self.start) &
                                (frame.index < self.end)]
         sliced.timeframe = self
         return sliced
@@ -221,12 +225,16 @@ class TimeFrame(object):
                 .format(self.start, self.end, self.empty))
 
     def __eq__(self, other):
-        return ((other.start == self.start) and 
+        return ((other.start == self.start) and
                 (other.end == self.end) and
                 (other.empty == self.empty))
 
-    def __ne__(self, other):
-        return not self.__eq__(other)
+    def __lt__(self, other):
+        if self.start is None and other.start is not None:
+            return True
+        if other.start is None and self.start is not None:
+            return False
+        return self.start < other.start
 
     def __hash__(self):
         return hash((self.start, self.end, self.empty))
@@ -240,7 +248,7 @@ class TimeFrame(object):
         return dct
 
     def check_tz(self):
-        if any([isinstance(tf.tz, pytz._FixedOffset) 
+        if any([isinstance(tf.tz, pytz._FixedOffset)
                 for tf in [self.start, self.end]
                 if tf is not None]):
             warn("Using a pytz._FixedOffset timezone may cause issues"
@@ -252,7 +260,7 @@ class TimeFrame(object):
     def check_for_overlap(self, other):
         intersect = self.intersection(other)
         if not intersect.empty:
-            raise ValueError("Periods overlap: " + str(self) + 
+            raise ValueError("Periods overlap: " + str(self) +
                              " " + str(other))
 
     def split(self, duration_threshold):
@@ -302,7 +310,7 @@ def merge_timeframes(timeframes, gap=0):
 
     Returns
     -------
-    merged : list of TimeFrame objects 
+    merged : list of TimeFrame objects
         Where adjacent timeframes have been merged.
     """
     # TODO: put this into TimeFrameGroup. #316

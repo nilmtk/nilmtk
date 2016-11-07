@@ -114,7 +114,7 @@ def latexify(fig_width=None, fig_height=None, columns=1, fontsize=8):
 
     params = {
         'backend': 'ps',
-        'text.latex.preamble': ['\usepackage{gensymb}'],
+        'text.latex.preamble': ['\\usepackage{gensymb}'],
         'axes.labelsize': fontsize,  # fontsize for x and y labels (was 10)
         'axes.titlesize': fontsize,
         'font.size': fontsize,

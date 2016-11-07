@@ -12,6 +12,10 @@ import datetime
 import pytz
 from nilmtk.datastore import HDFDataStore, CSVDataStore
 
+# Python 2/3 compatibility
+from six import iteritems
+from past.builtins import basestring
+
 
 def show_versions():
     """Prints versions of various dependencies"""
@@ -43,7 +47,7 @@ def show_versions():
     else:
         print("")
 
-    for k, v in output.iteritems():
+    for k, v in iteritems(output):
         print("{}: {}".format(k, v))
 
 
@@ -132,7 +136,7 @@ def find_nearest(known_array, test_array):
 
 
 def container_to_string(container, sep='_'):
-    if isinstance(container, str):
+    if isinstance(container, basestring):
         string = container
     else:
         try:
@@ -225,7 +229,7 @@ def dict_to_html(dictionary):
         return html
 
     html = '<ul>'
-    for key, value in dictionary.iteritems():
+    for key, value in iteritems(dictionary):
         html += '<li><strong>{}</strong>: '.format(key)
         if isinstance(value, list):
             html += '<ul>'

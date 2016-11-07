@@ -1,18 +1,7 @@
 from __future__ import print_function, division
-import pandas as pd
-from itertools import repeat, tee
-from time import time
-from copy import deepcopy
-from collections import OrderedDict
-import numpy as np
 import yaml
-from os.path import isdir, isfile, join, exists, dirname
-from os import listdir, makedirs, remove
-from shutil import rmtree
-import re
-from nilm_metadata.convert_yaml_to_hdf5 import _load_file
 from nilmtk.timeframe import TimeFrame
-from nilmtk.node import Node
+from io import open
 
 # do not edit! added by PythonBreakpoints
 from pdb import set_trace as _breakpoint
@@ -20,11 +9,12 @@ from pdb import set_trace as _breakpoint
 
 MAX_MEM_ALLOWANCE_IN_BYTES = 2**28
 
+
 class DataStore(object):
     """
-    Provides a common interface to all physical data stores.  
+    Provides a common interface to all physical data stores.
     Supports hierarchical stores.
-    
+
     The DataStore class lives in the bottom layer of NILMTK.  It loads
     a single chunk at a time from physical location and returns a
     DataFrame.
@@ -52,7 +42,7 @@ class DataStore(object):
         filename : string
         """
         self.window = TimeFrame()
-        
+
     def __getitem__(self, key):
         """Loads all of a DataFrame from disk.
 
@@ -195,10 +185,12 @@ class DataStore(object):
         """
         raise NotImplementedError("NotImplementedError")
 
+
 def write_yaml_to_file(metadata_filename, metadata):
-    metadata_file = file(metadata_filename, 'w')
+    metadata_file = open(metadata_filename, 'w')
     yaml.dump(metadata, metadata_file)
     metadata_file.close()
+
 
 def join_key(*args):
     """

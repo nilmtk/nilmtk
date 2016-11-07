@@ -39,7 +39,7 @@ class TestEnergy(unittest.TestCase):
         data = np.array([0,  0,  0, 100, 100, 100, 150, 150, 200,   0,   0, 100, 5000,    0])
         secs = np.arange(start=0, stop=len(data)*10, step=10)
         true_kwh = ((data[:-1] * np.diff(secs)) / JOULES_PER_KWH).sum()
-        index = [pd.Timestamp('2010-01-01') + timedelta(seconds=sec) for sec in secs]
+        index = [pd.Timestamp('2010-01-01') + timedelta(seconds=int(sec)) for sec in secs]
         df = pd.Series(data=data, index=index)
         kwh = _energy_for_power_series(df, max_sample_period=15)
         self.assertAlmostEqual(true_kwh, kwh)

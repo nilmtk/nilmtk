@@ -7,6 +7,7 @@ from datetime import timedelta
 from nilmtk.consts import SECS_PER_DAY
 from nilmtk.timeframe import TimeFrame
 
+
 class TimeFrameGroup(list):
     """A collection of nilmtk.TimeFrame objects."""
 

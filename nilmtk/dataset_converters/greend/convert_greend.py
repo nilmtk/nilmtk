@@ -42,12 +42,12 @@ def convert_greend(greend_path, hdf_filename):
             
             # if the timestamp is not correctly parsed then it's an object dtype (string), else a float64
             if tmp_pandas.timestamp.dtype != np.float64:
-				tmp_pandas = tmp_pandas[tmp_pandas.timestamp != 'timestamp'] # remove all error rows
-			# use the cleaned column as the index
+                tmp_pandas = tmp_pandas[tmp_pandas.timestamp != 'timestamp'] # remove all error rows
+                # use the cleaned column as the index
             tmp_pandas.index = tmp_pandas["timestamp"].convert_objects(convert_numeric=True).values
             tmp_pandas = tmp_pandas.drop('timestamp', 1) # remove timestamp from the columns (it's the index already)
             tmp_pandas = tmp_pandas.astype("float32") # convert everything back to float32
-			# convert the index to datetime
+            # convert the index to datetime
             tmp_pandas.index = pd.to_datetime(tmp_pandas.index, unit='s')
             tmp_pandas = tmp_pandas.tz_localize("UTC").tz_convert("CET")
             tmp_pandas = tmp_pandas.drop_duplicates()
@@ -107,7 +107,7 @@ def __preprocess_file(building_path, day_file):
 #is only called when this file is the main file... only test purpose
 if __name__ == '__main__':
     t1 = time.time()
-    convert_greend('/home/student/Downloads/GREEND_0-1_311014/', 
+    convert_greend('/home/student/Downloads/GREEND_0-1_311014/',
                    '/home/student/Desktop/greend.h5')
-    dt = time.time()- t1
+    dt = time.time() - t1
     print('\n\nTime passed:\n'+str(int(dt/60))+' : ' + str(dt%60))

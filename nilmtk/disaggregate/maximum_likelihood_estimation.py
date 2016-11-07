@@ -2,7 +2,7 @@ from datetime import datetime
 import pandas as pd
 import numpy as np
 from ..timeframe import merge_timeframes, TimeFrame
-from disaggregator import Disaggregator
+from .disaggregator import Disaggregator
 from matplotlib import pyplot as plt
 from datetime import timedelta
 from scipy.stats import poisson, norm
@@ -96,7 +96,7 @@ class MLE(Disaggregator):
 
     def __retrain(self, feature, feature_train):
 
-        print "Training " + feature_train.columns[0]
+        print("Training " + feature_train.columns[0])
         mu, std = norm.fit(feature_train)
         feature['model'] = norm(loc=mu, scale=std)
         '''if feature['name'] == 'gmm':
@@ -115,7 +115,7 @@ class MLE(Disaggregator):
     def __physical_quantity(self, chunk): 
 
         if not self.resistive:
-            print "Checking units"
+            print("Checking units")
             units_mismatched = True
             for name in chunk.columns:
                 if name == self.units:
@@ -175,8 +175,8 @@ class MLE(Disaggregator):
         -----
 
         """
-        print "Updating model"
-        print kwargs
+        print("Updating model")
+        print(kwargs)
         for key in kwargs:
             setattr(self, key, kwargs[key])
 
@@ -207,9 +207,9 @@ class MLE(Disaggregator):
         for meter in metergroup.meters:
             for chunk in meter.power_series():
                 if chunk.empty:
-                    print "Chunk empty"
+                    print("Chunk empty")
                 else:
-                    print "Training on chunk"
+                    print("Training on chunk")
                     self.train_on_chunk(pd.DataFrame(chunk.resample(
                         self.sample_period,
                         how=self.sampling_method)),
@@ -266,9 +266,9 @@ class MLE(Disaggregator):
             duration.columns = ['duration']
 
             # Len of samples:
-            print "Samples of onpower: " + str(len(onpower))
-            print "Samples of offpower: " + str(len(offpower))
-            print "Samples of duration: " + str(len(duration))
+            print("Samples of onpower: " + str(len(onpower)))
+            print("Samples of offpower: " + str(len(offpower)))
+            print("Samples of duration: " + str(len(duration)))
 
             number_of_events = len(onpower)
             # Features (concatenation)
@@ -281,8 +281,8 @@ class MLE(Disaggregator):
         
         else:
             number_of_events = 0
-            print """WARNING: No paired events found on this chunk.
-            Is it thDelta too high?"""
+            print("""WARNING: No paired events found on this chunk.
+            Is it thDelta too high?""")
         
         self.duration_train = self.duration_train[self.duration_train.duration<400]
 
@@ -343,7 +343,7 @@ class MLE(Disaggregator):
                 pd.DataFrame(chunk.resample(self.sample_period, how=self.sampling_method)))
             #dis_main = pd.concat([dis_main, dis_chunk])
             chunk_number += 1
-            print str(chunk_number) + " chunks disaggregated"
+            print(str(chunk_number) + " chunks disaggregated")
             
             # Write appliance data to disag output
             key = '{}/elec/meter{}'.format(building_path, meter_instance)
@@ -551,9 +551,9 @@ class MLE(Disaggregator):
                     dis_chunk.index < row[1][1])] = row[1][3]
 
         # Stat information:
-        print str(len(events)) + " events found."
-        print str(len(events[events.onpower == True])) + " onEvents found"
-        print str(singleOnevent) + " onEvents no paired."
+        print(str(len(events)) + " events found.")
+        print(str(len(events[events.onpower == True])) + " onEvents found")
+        print(str(singleOnevent) + " onEvents no paired.")
 
         return dis_chunk
 
@@ -638,15 +638,15 @@ class MLE(Disaggregator):
         # Evaluating score for:
         # Onpower
         y_onpower = self.__pdf2(self.onpower, x_onpower)
-        print "Onpower cdf: " + str(y_onpower.sum())
+        print("Onpower cdf: " + str(y_onpower.sum()))
 
         # Offpower
         y_offpower = self.__pdf2(self.offpower, x_offpower)
-        print "Offpower cdf: " + str(y_offpower.sum())
+        print("Offpower cdf: " + str(y_offpower.sum()))
 
         # duration
         y_duration = self.__pdf2(self.duration, x_duration)
-        print "Duration cdf: " + str(y_duration.sum())
+        print("Duration cdf: " + str(y_duration.sum()))
 
         # Plots:
         # fig1 = plt.figure()
@@ -706,7 +706,7 @@ class MLE(Disaggregator):
             elif key == 'bins_duration':
                 bins_duration = kwargs[key]
             else:
-                print "Non valid kwarg"
+                print("Non valid kwarg")
 
         # Plot structure:
         fig = plt.figure()
@@ -799,7 +799,7 @@ class MLE(Disaggregator):
             elif key == 'bins_duration':
                 bins_duration = kwargs[key]
             else:
-                print "Non valid kwarg"
+                print("Non valid kwarg")
 
         # Plot:
         fig1 = plt.figure()

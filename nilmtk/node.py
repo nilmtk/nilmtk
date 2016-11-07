@@ -1,4 +1,5 @@
 from copy import deepcopy
+from six import iteritems
 from nilm_metadata import recursively_update_dict
 
 class Node(object):
@@ -103,14 +104,15 @@ def find_unsatisfied_requirements(state, requirements):
 
     Returns
     -------
-    list of strings describing (for human consumption) which 
+    list of strings describing (for human consumption) which
     conditions are not satisfied.  If all conditions are satisfied
     then returns an empty list.
     """
     unsatisfied = []
+
     def unsatisfied_requirements(st, req):
         # Recursively find requirements
-        for key, value in req.iteritems():
+        for key, value in iteritems(req):
             try:
                 cond_value = st[key]
             except KeyError:

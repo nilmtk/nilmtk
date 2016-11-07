@@ -11,6 +11,7 @@ from collections import Counter
 from copy import copy, deepcopy
 import gc
 from collections import namedtuple
+from six import iteritems
 
 # NILMTK imports
 from .elecmeter import ElecMeter, ElecMeterID
@@ -79,7 +80,7 @@ class MeterGroup(Electric):
         ElecMeter.load_meter_devices(store)
 
         # Load each meter
-        for meter_i, meter_metadata_dict in elec_meters.iteritems():
+        for meter_i, meter_metadata_dict in iteritems(elec_meters):
             meter_id = ElecMeterID(instance=meter_i,
                                    building=building_id.instance,
                                    dataset=building_id.dataset)
@@ -99,7 +100,7 @@ class MeterGroup(Electric):
             if appliance.n_meters == 1:
                 # Attach this appliance to just a single meter
                 meter = self[meter_ids[0]]
-                if isinstance(meter, MeterGroup): # MeterGroup of site_meters
+                if isinstance(meter, MeterGroup):  # MeterGroup of site_meters
                     metergroup = meter
                     for meter in metergroup.meters:
                         meter.appliances.append(appliance)
@@ -362,7 +363,7 @@ class MeterGroup(Electric):
             if exception_raised_every_time and exception is not None:
                 raise exception
 
-        if len(kwargs) == 1 and isinstance(kwargs.values()[0], list):
+        if len(kwargs) == 1 and isinstance(list(kwargs.values())[0], list):
             attribute = kwargs.keys()[0]
             list_of_values = kwargs.values()[0]
             for value in list_of_values:
@@ -590,7 +591,7 @@ class MeterGroup(Electric):
         nx.draw(graph, pos, labels=meter_labels, arrows=False)
         if show_meter_labels:
             meter_labels = {meter: meter.label() for meter in graph.nodes()}
-            for meter, name in meter_labels.iteritems():
+            for meter, name in iteritems(meter_labels):
                 x, y = pos[meter]
                 if meter.is_site_meter():
                     delta_y = 5
@@ -1389,7 +1390,7 @@ class MeterGroup(Electric):
         pos = nx.graphviz_layout(graph, prog='dot')
         #nx.draw(graph, pos, labels=meter_labels, arrows=False)
         meter_labels = {meter: meter.label() for meter in graph.nodes()}
-        for meter, name in meter_labels.iteritems():
+        for meter, name in iteritems(meter_labels):
             x, y = pos[meter]
             if meter.is_site_meter():
                 delta_y = 5
@@ -1537,7 +1538,7 @@ class MeterGroup(Electric):
 
         cumsum = energy.cumsum()
         text_ys = cumsum - (cumsum.diff().fillna(energy['Remainder']) / 2)
-        for kwh, (label, y) in zip(energy.values, text_ys.iteritems()):
+        for kwh, (label, y) in zip(energy.values, iteritems(text_ys)):
             label += " ({:.2f})".format(kwh)
             ax.annotate(label, (0, y), color='white', size=8,
                         horizontalalignment='center', 
@@ -1583,7 +1584,7 @@ class MeterGroup(Electric):
         meters = [self[meter_key] for meter_key in meter_keys]
         for i, (ax, meter) in enumerate(zip(axes, meters)):
             kwargs_copy = deepcopy(kwargs)
-            for parameter, arguments in kwargs_per_meter.iteritems():
+            for parameter, arguments in iteritems(kwargs_per_meter):
                 kwargs_copy[parameter] = arguments[i]
             getattr(meter, plot_func)(ax=ax, **kwargs_copy)
             ax.set_title(meter.label(pretty=pretty_label))
@@ -1734,7 +1735,7 @@ def combine_chunks_from_generators(index, columns, meters, kwargs):
         kwargs_copy = deepcopy(kwargs)
         generator = meter.load(**kwargs_copy)
         try:
-            chunk_from_next_meter = generator.next()
+            chunk_from_next_meter = next(generator)
         except StopIteration:
             continue
 

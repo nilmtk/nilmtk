@@ -111,31 +111,31 @@ class CSVDataStore(DataStore):
 
     @doc_inherit
     def append(self, key, value):
-    
+
         file_path = self._key_to_abs_path(key)
         path = dirname(file_path)
         if not exists(path):
             makedirs(path)
         value.to_csv(file_path,
-                    mode='a',
-                    header=True)
-                    
+                     mode='a',
+                     header=True)
+
     @doc_inherit
     def put(self, key, value):
-    
+
         file_path = self._key_to_abs_path(key)
         path = dirname(file_path)
         if not exists(path):
             makedirs(path)
         value.to_csv(file_path,
-                    mode='w',
-                    header=True)
-                  
+                     mode='w',
+                     header=True)
+
     @doc_inherit
     def remove(self, key):
-    	file_path = self._key_to_abs_path(key)
-    	if isfile(file_path):
-    	    remove(file_path)
+        file_path = self._key_to_abs_path(key)
+        if isfile(file_path):
+            remove(file_path)
         else:
             rmtree(file_path)
 
@@ -157,16 +157,17 @@ class CSVDataStore(DataStore):
                 # set data_location
                 for meter_instance in metadata['elec_meters']:
                     # not sure why I need to use meter_instance-1
-                    data_location = '/building{:d}/elec/meter{:d}'.format(key_object.building, meter_instance)
+                    data_location = '/building{:d}/elec/meter{:d}'.format(
+                        key_object.building, meter_instance)
                     metadata['elec_meters'][meter_instance]['data_location'] = data_location
             else:
-                raise NotImplementedError("NotImplementedError")        
-        
+                raise NotImplementedError("NotImplementedError")
+
         return metadata
 
     @doc_inherit
     def save_metadata(self, key, metadata):
-    
+
         if key == '/':
             # Extract meter_devices
             meter_devices_metadata = metadata['meter_devices']
@@ -176,18 +177,21 @@ class CSVDataStore(DataStore):
             metadata_filename = join(self._get_metadata_path(), 'dataset.yaml')
             write_yaml_to_file(metadata_filename, dataset_metadata)
             # Write meter_devices metadata
-            metadata_filename = join(self._get_metadata_path(), 'meter_devices.yaml')
+            metadata_filename = join(
+                self._get_metadata_path(), 'meter_devices.yaml')
             write_yaml_to_file(metadata_filename, meter_devices_metadata)
         else:
             # Write building metadata
             key_object = Key(key)
             assert key_object.building and not key_object.meter
-            metadata_filename = join(self._get_metadata_path(), 'building{:d}.yaml'.format(key_object.building))
+            metadata_filename = join(
+                self._get_metadata_path(),
+                'building{:d}.yaml'.format(key_object.building))
             write_yaml_to_file(metadata_filename, metadata)
 
     @doc_inherit
     def elements_below_key(self, key='/'):
-        
+
         elements = []
         if key == '/':
             for directory in listdir(self.filename):
