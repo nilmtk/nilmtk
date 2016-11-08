@@ -165,9 +165,10 @@ class DataSet(object):
         Spaces in the appliance type are replaced by underscores.
 
         Each table is of fixed format and stores a pd.Series.
-        Each row represents a single appliance activation.
-        The index is the start time of each appliance activation.
-        The values are the end times of each activation.
+        The index is the datetime of the start time or end time of
+        each appliance activation.  The values are booleans.  True means
+        the start time of an appliance activation; false means the
+        end time of an appliance activation.
 
         Parameters
         ----------
@@ -190,14 +191,17 @@ class DataSet(object):
                 print("Computing activations for", key)
 
                 activations = meter.get_activations()
-                index = []
-                activation_ends = []
+                starts = []
+                ends = []
                 for activation in activations:
-                    index.append(activation.index[0])
-                    activation_ends.append(activation.index[-1])
+                    starts.append(activation.index[0])
+                    ends.append(activation.index[-1])
                 del activations
-                series = pd.Series(activation_ends, index=index)
-                store[key] = series
-                del activation_ends, index
+                starts = pd.Series(True, index=starts)
+                ends = pd.Series(False, index=ends)
+                script = pd.concat([starts, ends])
+                script = script.sort_index()
+                store[key] = script
+                del starts, ends
 
         store.close()
