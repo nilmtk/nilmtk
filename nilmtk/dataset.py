@@ -11,6 +11,7 @@ from .datastore.datastore import join_key
 from .utils import get_datastore
 from .timeframe import TimeFrame
 
+
 class DataSet(object):
     """
     Attributes
@@ -25,7 +26,7 @@ class DataSet(object):
         Metadata describing the dataset name, authors etc.
         (Metadata about specific buildings, meters, appliances etc.
         is stored elsewhere.)
-        See http://nilm-metadata.readthedocs.org/en/latest/dataset_metadata.html#dataset
+        See nilm-metadata.readthedocs.org/en/latest/dataset_metadata.html#dataset
     """
 
     def __init__(self, filename=None, format='HDF'):
@@ -34,7 +35,7 @@ class DataSet(object):
         ----------
         filename : str
             path to data set
-        
+
         format : str
             format of output. Either 'HDF' or 'CSV'. Defaults to 'HDF'
         """
@@ -43,7 +44,7 @@ class DataSet(object):
         self.metadata = {}
         if filename is not None:
             self.import_metadata(get_datastore(filename, format))
-        
+
     def import_metadata(self, store):
         """
         Parameters
@@ -54,7 +55,7 @@ class DataSet(object):
         self.metadata = store.load_metadata()
         self._init_buildings(store)
         return self
-        
+
     def save(self, destination):
         for b_id, building in iteritems(self.buildings):
             building.save(destination, '/building' + str(b_id))
@@ -65,13 +66,14 @@ class DataSet(object):
 
         for b_key in buildings:
             building = Building()
-            building.import_metadata(store, '/'+b_key, self.metadata.get('name'))
+            building.import_metadata(
+                store, '/'+b_key, self.metadata.get('name'))
             self.buildings[building.identifier.instance] = building
 
     def set_window(self, start=None, end=None):
-        """Set the timeframe window on self.store. Used for setting the 
+        """Set the timeframe window on self.store. Used for setting the
         'region of interest' non-destructively for all processing.
-        
+
         Parameters
         ----------
         start, end : str or pd.Timestamp or datetime or None
@@ -86,7 +88,7 @@ class DataSet(object):
         self.store.window = TimeFrame(start, end, tz)
 
     def describe(self, **kwargs):
-        """Returns a DataFrame describing this dataset.  
+        """Returns a DataFrame describing this dataset.
         Each column is a building.  Each row is a feature."""
         keys = self.buildings.keys()
         keys.sort()
@@ -109,21 +111,22 @@ class DataSet(object):
         """
         n = len(self.buildings)
         if axes is None:
-            n_meters_per_building = [len(elec.all_meters()) 
+            n_meters_per_building = [len(elec.all_meters())
                                      for elec in self.elecs()]
             gridspec_kw = dict(height_ratios=n_meters_per_building)
-            fig, axes = plt.subplots(n, 1, sharex=True, gridspec_kw=gridspec_kw)
-                                     
+            fig, axes = plt.subplots(
+                n, 1, sharex=True, gridspec_kw=gridspec_kw)
+
         assert n == len(axes)
         for i, (ax, elec) in enumerate(zip(axes, self.elecs())):
-            elec.plot_good_sections(ax=ax, label_func=label_func, gap=gap, 
+            elec.plot_good_sections(ax=ax, label_func=label_func, gap=gap,
                                     **kwargs)
             ax.set_title('House {}'.format(elec.building()), y=0.4, va='top')
             ax.grid(False)
             for spine in ax.spines.values():
                 spine.set_linewidth(0.5)
             if i == n // 2:
-                ax.set_ylabel('Meter', rotation=0, 
+                ax.set_ylabel('Meter', rotation=0,
                               ha='center', va='center', y=.4)
 
         ax.set_xlabel('Date')
