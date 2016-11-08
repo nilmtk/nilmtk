@@ -154,3 +154,50 @@ class DataSet(object):
             ax = elec.mains().plot_power_histogram(ax=ax, **kwargs)
             ax.set_title('House {}'.format(elec.building()))
         return axes
+
+    def get_activity_script(self, filename):
+        """Extracts an activity script from this dataset.
+
+        Saves the activity script to an HDF5 file.
+        Keys in the HDF5 file take the form:
+        '/building<building_i>/<appliance type>__<appliance instance>'
+        e.g. '/building1/electric_oven__1'
+        Spaces in the appliance type are replaced by underscores.
+
+        Each table is of fixed format and stores a pd.Series.
+        Each row represents a single appliance activation.
+        The index is the start time of each appliance activation.
+        The values are the end times of each activation.
+
+        Parameters
+        ----------
+        filename : str
+            The full filename, including path and suffix, for the HDF5 file
+            for storing the activity script.
+        """
+        store = pd.HDFStore(
+            filename, mode='w', complevel=9, complib='blosc')
+
+        for building in self.buildings.values():
+            submeters = building.elec.submeters().meters
+
+            for meter in submeters:
+                appliance = meter.dominant_appliance()
+                key = '/building{:d}/{:s}__{:d}'.format(
+                    building.identifier.instance,
+                    appliance.identifier.type.replace(' ', '_'),
+                    appliance.identifier.instance)
+                print("Computing activations for", key)
+
+                activations = meter.get_activations()
+                index = []
+                activation_ends = []
+                for activation in activations:
+                    index.append(activation.index[0])
+                    activation_ends.append(activation.index[-1])
+                del activations
+                series = pd.Series(activation_ends, index=index)
+                store[key] = series
+                del activation_ends, index
+
+        store.close()
