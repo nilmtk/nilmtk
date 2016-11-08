@@ -383,6 +383,9 @@ def capitalise_legend(ax):
 
 
 def safe_resample(data, **resample_kwargs):
+    if data.empty:
+        return data
+
     try:
         data = data.resample(**resample_kwargs)
     except pytz.AmbiguousTimeError:
