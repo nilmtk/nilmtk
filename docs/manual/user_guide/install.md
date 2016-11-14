@@ -13,11 +13,14 @@ and another [section for Windows](#install-on-windows).
 
 ## Python 3
 
-Python 3 support is experimental.  On Ubuntu, run `sudo apt-get install python3-tk`.
+Python 3 support is experimental and hence please only attempt to use
+NILMTK on Python 3 if you are experiences with Python.  On Ubuntu,
+please run `sudo apt-get install python3-tk` prior to attempting to
+install NILMTK for Python 3.
 
 ### Install on Ubuntu like Linux variants (debian based) or OSX
 
-NB: The following procedure is for Ubuntu like Linux variants (Debian
+NB: The following procedure is for Ubuntu-like Linux variants (Debian
 based). Please adapt accordingly for your OS. We would welcome
 installation instructions for other OSes as well.
 
@@ -98,7 +101,8 @@ sudo apt-get install git
 
 - Install pip and other dependencies which might be missing from Anaconda
 ```bash
-conda install --yes pip numpy scipy six scikit-learn pandas numexpr pytables dateutil matplotlib networkx hmmlearn
+conda install --yes pip numpy scipy six scikit-learn pandas numexpr
+pytables dateutil matplotlib networkx future
 ```
 Note that, if you are using `pip` instead of `conda` then remove
 `dateutil` and replace `pytables` with `tables`.
@@ -129,7 +133,7 @@ pip install psycopg2
 
 - Misc. pip installs
 ```bash
-pip install nose coveralls coverage
+pip install nose coveralls coverage hmmlearn==0.1.1
 ```
 
 - Finally! Install NILMTK
@@ -148,7 +152,7 @@ nosetests
 
 ### Install on Windows
 
-- Install [Anaconda](https://store.continuum.io/cshop/anaconda/), which bundles togther most of the required packages. Please download Anaconda for Python 2.7.x. We do not currently support Python 3.
+- Install [Anaconda](https://store.continuum.io/cshop/anaconda/), which bundles togther most of the required packages. Please download Anaconda for Python 2.7.x.
 
 - Install [git](http://git-scm.com/download/win) client. You may need to add `git.exe` to your path in order to run nilmtk tests. 
 
@@ -161,7 +165,8 @@ nosetests
 
 - Install pip and other dependencies which might be missing from Anaconda
 ```bash
-conda install --yes pip numpy scipy six scikit-learn pandas numexpr pytables dateutil matplotlib networkx hmmlearn
+conda install --yes pip numpy scipy six scikit-learn pandas numexpr
+pytables dateutil matplotlib networkx future
 ```
 
 - Install [NILM Metadata](https://github.com/nilmtk/nilm_metadata) from git bash
@@ -178,7 +183,7 @@ http://www.stickpeople.com/projects/python/win-psycopg/
 
 - Misc. pip installs
 ```bash
-pip install nose pbs coveralls coverage
+pip install nose pbs coveralls coverage hmmlearn=0.1.1
 ```
 
 - Finally! Install nilmtk from git bash
@@ -210,7 +215,6 @@ In this case, first find where `numpy/arrayobject.h` is stored on your system (f
 
 Now try appending your `C_INCLUDE_PATH` environment variable with the path in which you find `numpy/arrayobject.h` and try building again.
 
-(For reference: [here's the original issue](https://github.com/nilmtk/nilmtk/issues/44) where this problem arose and was solved.)
-
-
-    
+(For reference:
+[here's the original issue](https://github.com/nilmtk/nilmtk/issues/44)
+where this problem arose and was solved.)
