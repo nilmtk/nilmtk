@@ -202,7 +202,16 @@ nosetests
 
 # Installation troubleshooting
 
-### C headers installed in a non-standard location
+## Error when running `nosetests` on Windows: `CalledProcessError: Command 'git checkout -- C:\Users\Cliente\nilmtk\data' returned non-zero exit status 255`
+
+The short answer is: don't worry if you get this issue when running
+`nosetests`.  `NILMTK` is almost certainly installed correctly.  This
+problem is caused because `NILMTK` uses `git pull` during `nosetests`
+to refresh the HDF5 files used during testing.  We have an [issue to
+change this](https://github.com/nilmtk/nilmtk/issues/403).
+
+
+## C headers installed in a non-standard location
 
 If C headers for a required Python library are installed in a non-standard location (for example, because you don't have root access) then installation might fail with an error like this:
 
@@ -218,3 +227,4 @@ Now try appending your `C_INCLUDE_PATH` environment variable with the path in wh
 (For reference:
 [here's the original issue](https://github.com/nilmtk/nilmtk/issues/44)
 where this problem arose and was solved.)
+
