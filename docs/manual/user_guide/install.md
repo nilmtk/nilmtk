@@ -158,7 +158,7 @@ nosetests
 
 - Install pip and other dependencies which might be missing from Anaconda
 ```bash
-conda install --yes pip numpy scipy six scikit-learn pandas numexpr pytables dateutil matplotlib networkx future
+conda install --yes pip numpy scipy six scikit-learn pandas numexpr pytables==3.2.2 dateutil matplotlib networkx future
 ```
 
 - Install [NILM Metadata](https://github.com/nilmtk/nilm_metadata) from git bash
