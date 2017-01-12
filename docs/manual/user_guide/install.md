@@ -156,17 +156,9 @@ nosetests
 
 - Install [git](http://git-scm.com/download/win) client. You may need to add `git.exe` to your path in order to run nilmtk tests. 
 
-- Now, we recommend trying
-  [the experimental but simple installation instructions above](#experimental-but-probably-easiest-installation-procedure-for-unix-or-osx).
-  If they don't work then let us know on [the issue queue](https://github.com/nilmtk/nilmtk/issues) and then try
-  the old windows installation procedure below:
-
-#### Old Windows installation procedure
-
 - Install pip and other dependencies which might be missing from Anaconda
 ```bash
-conda install --yes pip numpy scipy six scikit-learn pandas numexpr
-pytables dateutil matplotlib networkx future
+conda install --yes pip numpy scipy six scikit-learn pandas numexpr pytables dateutil matplotlib networkx future
 ```
 
 - Install [NILM Metadata](https://github.com/nilmtk/nilm_metadata) from git bash
@@ -181,9 +173,11 @@ cd ..
 Download release for your python environment:
 http://www.stickpeople.com/projects/python/win-psycopg/
 
+- [Install VS C++ compiler for Python 2.7](https://www.microsoft.com/en-us/download/details.aspx?id=44266). This is needed for building hmmlearn. 
+
 - Misc. pip installs
 ```bash
-pip install nose pbs coveralls coverage hmmlearn=0.1.1
+pip install nose pbs coveralls coverage hmmlearn==0.1.1
 ```
 
 - Finally! Install nilmtk from git bash
