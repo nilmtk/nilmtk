@@ -194,31 +194,4 @@ cd nilmtk
 nosetests
 ```
 
-# Installation troubleshooting
-
-## Error when running `nosetests` on Windows: `CalledProcessError: Command 'git checkout -- C:\Users\Cliente\nilmtk\data' returned non-zero exit status 255`
-
-The short answer is: don't worry if you get this issue when running
-`nosetests`.  `NILMTK` is almost certainly installed correctly.  This
-problem is caused because `NILMTK` uses `git pull` during `nosetests`
-to refresh the HDF5 files used during testing.  We have an [issue to
-change this](https://github.com/nilmtk/nilmtk/issues/403).
-
-
-## C headers installed in a non-standard location
-
-If C headers for a required Python library are installed in a non-standard location (for example, because you don't have root access) then installation might fail with an error like this:
-
-```bash
-fatal error: numpy/arrayobject.h: No such file or directory compilation terminated.
-error: command 'gcc' failed with exit status 1
-```
-
-In this case, first find where `numpy/arrayobject.h` is stored on your system (for example, by using `locate numpy/arrayobject.h`).  (For reference: the standard location is `/usr/include/python2.7/` which  contains lots of `.h` header files and a `numpy` directory which is also full of `.h` files.)  
-
-Now try appending your `C_INCLUDE_PATH` environment variable with the path in which you find `numpy/arrayobject.h` and try building again.
-
-(For reference:
-[here's the original issue](https://github.com/nilmtk/nilmtk/issues/44)
-where this problem arose and was solved.)
-
+**It must be noted that nosetests give issues on Windows. However, nilmtk works just fine.**
