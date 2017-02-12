@@ -177,7 +177,7 @@ class CombinatorialOptimisation(Disaggregator):
                 output_datastore.append(key, df)
 
             # Copy mains data to disag output
-            mains_df = pd.DataFrame(chunk, columns=cols)
+            mains_df = pd.DataFrame(chunk, columns=cols, dtype='float32')
             output_datastore.append(key=mains_data_location, value=mains_df)
 
         if data_is_available:
