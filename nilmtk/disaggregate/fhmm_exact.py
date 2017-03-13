@@ -382,6 +382,7 @@ class FHMM(Disaggregator):
         warnings.filterwarnings("ignore", category=Warning)
 
         for chunk in mains.power_series(**load_kwargs):
+
             # Check that chunk is sensible size before resampling
             if len(chunk) < self.MIN_CHUNK_LENGTH:
                 continue
