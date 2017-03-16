@@ -10,7 +10,6 @@ from nilmtk.utils import find_nearest
 from nilmtk.feature_detectors import cluster
 from nilmtk.disaggregate import Disaggregator
 from nilmtk.datastore import HDFDataStore
-from nilmtk.electric import get_vampire_power
 
 # Fix the seed for repeatability of experiments
 SEED = 42
@@ -122,8 +121,7 @@ class CombinatorialOptimisation(Disaggregator):
             centroids = [model['states'] for model in self.model]
             self.state_combinations = cartesian(centroids)
 
-    def disaggregate(self, mains, output_datastore,
-                     vampire_power=None, **load_kwargs):
+    def disaggregate(self, mains, output_datastore,**load_kwargs):
         '''Disaggregate mains according to the model learnt previously.
 
         Parameters
@@ -131,10 +129,6 @@ class CombinatorialOptimisation(Disaggregator):
         mains : nilmtk.ElecMeter or nilmtk.MeterGroup
         output_datastore : instance of nilmtk.DataStore subclass
             For storing power predictions from disaggregation algorithm.
-        vampire_power : None or number (watts)
-            If None then will automatically determine vampire power
-            from data.  If you do not want to use vampire power then
-            set vampire_power = 0.
         sample_period : number, optional
             The desired sample period in seconds.  Set to 60 by default.
         sections : TimeFrameGroup, optional
@@ -161,7 +155,7 @@ class CombinatorialOptimisation(Disaggregator):
             timeframes.append(chunk.timeframe)
             measurement = chunk.name
 
-            appliance_powers = self.disaggregate_chunk(chunk, vampire_power)
+            appliance_powers = self.disaggregate_chunk(chunk)
 
             for i, model in enumerate(self.model):
                 appliance_power = appliance_powers[i]
@@ -190,16 +184,13 @@ class CombinatorialOptimisation(Disaggregator):
                 meters=[d['training_metadata'] for d in self.model]
             )
 
-    def disaggregate_chunk(self, mains, vampire_power=None):
+    def disaggregate_chunk(self, mains):
         """In-memory disaggregation.
 
         Parameters
         ----------
         mains : pd.Series
-        vampire_power : None or number (watts)
-            If None then will automatically determine vampire power
-            from data.  If you do not want to use vampire power then
-            set vampire_power = 0.
+
 
         Returns
         -------
@@ -225,7 +216,8 @@ class CombinatorialOptimisation(Disaggregator):
         # set state_combinations here.
         self._set_state_combinations_if_necessary()
 
-        # Add vampire power to the model
+        """
+         # Add vampire power to the model
         if vampire_power is None:
             vampire_power = get_vampire_power(mains)
         if vampire_power > 0:
@@ -237,6 +229,10 @@ class CombinatorialOptimisation(Disaggregator):
                 (self.state_combinations, vampire_power_array))
         else:
             state_combinations = self.state_combinations
+        """
+
+
+        state_combinations = self.state_combinations
 
         summed_power_of_each_combination = np.sum(state_combinations, axis=1)
         # summed_power_of_each_combination is now an array where each
@@ -253,8 +249,7 @@ class CombinatorialOptimisation(Disaggregator):
             predicted_power = state_combinations[
                 indices_of_state_combinations, i].flatten()
             column = pd.Series(predicted_power, index=mains.index, name=i)
-            appliance_powers_dict[i] = column
-
+            appliance_powers_dict[self.model[i]['training_metadata']] = column
         appliance_powers = pd.DataFrame(appliance_powers_dict)
         return appliance_powers
 
