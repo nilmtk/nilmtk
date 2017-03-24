@@ -46,6 +46,7 @@ else:
                   [join(CYTHON_DIR, '_feature_detectors.c')],
                   include_dirs=[numpy.get_include()]),
     ]
+    
 
 """
 
