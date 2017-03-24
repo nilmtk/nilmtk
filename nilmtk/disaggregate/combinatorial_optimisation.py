@@ -250,7 +250,7 @@ class CombinatorialOptimisation(Disaggregator):
                 indices_of_state_combinations, i].flatten()
             column = pd.Series(predicted_power, index=mains.index, name=i)
             appliance_powers_dict[self.model[i]['training_metadata']] = column
-        appliance_powers = pd.DataFrame(appliance_powers_dict)
+        appliance_powers = pd.DataFrame(appliance_powers_dict, dtype='float32')
         return appliance_powers
 
     def import_model(self, filename):

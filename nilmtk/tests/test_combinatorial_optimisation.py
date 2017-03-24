@@ -3,6 +3,7 @@ from __future__ import print_function, division
 import unittest
 from os.path import join
 from os import remove
+import pandas as pd
 from .testingtools import data_dir
 from nilmtk.datastore import HDFDataStore
 from nilmtk import DataSet
@@ -25,18 +26,13 @@ class TestCO(unittest.TestCase):
         co = CombinatorialOptimisation()
         co.train(elec)
         mains = elec.mains()
-        output = HDFDataStore('output.h5', 'w')
-        co.disaggregate(mains, output, sample_period=1)
-
-        for meter in range(2, 4):
-            df1 = output.store.get('/building1/elec/meter{}'.format(meter))
-            df2 = self.dataset.store.store.get(
-                '/building1/elec/meter{}'.format(meter))
-
-            self.assertEqual((df1 == df2).sum().values[0], len(df1.index))
-            self.assertEqual(len(df1.index), len(df2.index))
-        output.close()
-        remove("output.h5")
+        pred = co.disaggregate_chunk(mains.load(sample_period=1).next())
+        gt = {}
+        for meter in elec.submeters().meters:
+            gt[meter] = meter.load(sample_period=1).next().squeeze()
+        gt = pd.DataFrame(gt)
+        pred = pred[gt.columns]
+        self.assertTrue(gt.equals(pred))
 
 
 if __name__ == '__main__':
