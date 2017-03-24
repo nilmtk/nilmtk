@@ -12,7 +12,7 @@ before_install:
   - export PATH="$HOME/miniconda/bin:$PATH"
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
-  - conda install -c conda conda-env  
+  - conda install -c conda
   - conda info -a  # Useful for debugging any issues with conda
 
 install:
@@ -22,17 +22,13 @@ install:
 
   # Install nilm_metadata (can't yet install using pip / conda)
   - pip install -e 'git+https://github.com/nilmtk/nilm_metadata.git#egg=nilm_metadata'
-  - cd nilm_metadata; python setup.py develop; cd ..
 
   # Finally, install nilmtk...
   - pip install -e 'git+https://github.com/nilmtk/nilmtk.git#egg=nilmtk'
 
 script:
   - python -c 'from nilmtk.utils import show_versions; show_versions()'
-  - nosetests --with-coverage
-
-after_success:
-  - coveralls
+  - nosetests
 
 after_script:
   - source deactivate
