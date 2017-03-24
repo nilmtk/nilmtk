@@ -13,8 +13,6 @@
 * [Meter selection and basic statistics](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/user_guide/elecmeter_and_metergroup.ipynb)
 * [Out of core, preprocessing and more stats](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/user_guide/pipeline_preprocessing_more_stats.ipynb)
 * [Disaggregation and Metrics](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/user_guide/disaggregation_and_metrics.ipynb)
-* [Cookbook](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/user_guide/cookbook.md)
-* [IPython notebook demos](https://github.com/nilmtk/nilmtk/tree/master/notebooks)
 
 ### [Development Guide](https://github.com/nilmtk/nilmtk/tree/master/docs/manual/development_guide)
 
