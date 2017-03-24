@@ -21,7 +21,7 @@ install:
   - source activate nilmtk-env
 
   # Install nilm_metadata (can't yet install using pip / conda)
-  - git clone https://github.com/nilmtk/nilm_metadata/
+  - pip install -e nilm_metadata
   - cd nilm_metadata; python setup.py develop; cd ..
 
   # Finally, install nilmtk...
