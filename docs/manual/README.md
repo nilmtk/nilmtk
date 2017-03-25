@@ -10,6 +10,7 @@
 * Installation
 
     [Users](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/user_guide/install_user.md)
+
     [Developers](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/user_guide/install_dev.md)
 * [Data](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/user_guide/data.ipynb): convert and load data.
 * [The Load API: Loading data into memory](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/user_guide/loading_data_into_memory.ipynb)
