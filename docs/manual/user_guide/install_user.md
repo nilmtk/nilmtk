@@ -16,6 +16,7 @@ wget https://raw.githubusercontent.com/nilmtk/nilmtk/master/environment.yml
 conda env create
 source activate nilmtk-env
 
-# 3. Use nilmtk!
+# 3. Create a Jupyter kernel environment
+python -m ipykernel install --user --name nilmtk-env --display-name "Python (nilmtk)"
 ```
 
