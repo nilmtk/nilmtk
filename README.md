@@ -17,12 +17,6 @@ disaggregation (i.e. disaggregation where you do not yet have
 submetered training data), although we hope that it might be some time
 in the future**.
 
-Below is an example of sub-metered appliance-level data, which NILM
-algorithms aim to produce. N.B. this is not the output of a NILMTK
-algorithm!
-
-<img src="https://dl.dropboxusercontent.com/u/75845627/nilmtk/submetered.png" alt="Drawing" style="width: 40% height: 40%;"/>
-
 
 # Why a toolkit for NILM?
 
