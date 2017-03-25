@@ -21,3 +21,5 @@ dependencies:
     - coveralls
     - hmmlearn==0.1.1
     - psycopg2 # not available in conda for Windows.  See issue #462
+    - git+https://github.com/nilmtk/nilm_metadata.git#egg=nilm_metadata
+    - git+https://github.com/nilmtk/nilmtk.git#egg=nilmtk

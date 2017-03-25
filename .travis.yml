@@ -21,10 +21,10 @@ install:
   - source activate nilmtk-env
 
   # Install nilm_metadata (can't yet install using pip / conda)
-  - pip install 'git+https://github.com/nilmtk/nilm_metadata.git#egg=nilm_metadata'
+  #- pip install 'git+https://github.com/nilmtk/nilm_metadata.git#egg=nilm_metadata'
 
   # Finally, install nilmtk...
-  - pip install 'git+https://github.com/nilmtk/nilmtk.git#egg=nilmtk'
+  #- pip install 'git+https://github.com/nilmtk/nilmtk.git#egg=nilmtk'
 
 script:
   - python -c 'from nilmtk.utils import show_versions; show_versions()'
