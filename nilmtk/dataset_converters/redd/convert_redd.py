@@ -41,7 +41,15 @@ def convert_redd(redd_path, output_filename, format='HDF'):
     store = get_datastore(output_filename, format, mode='w')
 
     # Convert raw data to DataStore
-    _convert(redd_path, store, _redd_measurement_mapping_func, 'US/Eastern')
+    #_convert(redd_path, store, _redd_measurement_mapping_func, 'US/Eastern')
+
+    print(get_module_directory())
+    s=join(get_module_directory(),
+                              'dataset_converters',
+                              'redd',
+                              'metadata')
+    print(s)
+    print(isdir(s))
 
     # Add metadata
     save_yaml_to_datastore(join(get_module_directory(), 

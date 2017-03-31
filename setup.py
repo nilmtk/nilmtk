@@ -106,6 +106,7 @@ setup(
     name='nilmtk',
     version=FULLVERSION,
     packages=find_packages(),
+    package_data={'': ['*.yaml']},
     install_requires=[],
     description='Estimate the energy consumed by individual appliances from '
                 'whole-house power meter readings',
