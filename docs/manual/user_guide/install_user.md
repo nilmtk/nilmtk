@@ -8,6 +8,10 @@ Python 2.7.x. Python 3 support is experimental and hence please only attempt to 
 NILMTK on Python 3 if you are experienced with Python.
 
 ```bash
+# 0. For Windows only. Download the appropriate version of VS C++ compiler for Python version.
+# For Python 2.7 https://www.microsoft.com/en-us/download/details.aspx?id=44266
+# This is needed for building hmmlearn.
+
 # 1. Download environment.yml from NILMTK. For Unix like environment, use wget
 # for Windows, download manually
 wget https://raw.githubusercontent.com/nilmtk/nilmtk/master/environment.yml

@@ -55,8 +55,8 @@ Following Segment of this file was taken from the pandas project(https://github.
 
 MAJOR = 0
 MINOR = 2
-MICRO = 0
-ISRELEASED = False
+MICRO = 1
+ISRELEASED = True
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 QUALIFIER = ''
 

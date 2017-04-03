@@ -13,8 +13,9 @@
 * [Data](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/user_guide/data.ipynb): convert and load data.
 * [The Load API: Loading data into memory](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/user_guide/loading_data_into_memory.ipynb)
 * [Meter selection and basic statistics](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/user_guide/elecmeter_and_metergroup.ipynb)
-* [Out of core, preprocessing and more stats](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/user_guide/pipeline_preprocessing_more_stats.ipynb)
 * [Disaggregation and Metrics](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/user_guide/disaggregation_and_metrics.ipynb)
+* [Comparing NILM algorithms](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/user_guide/comparing_nilm_algorithms.ipynb)
+
 
 ### [Development Guide](https://github.com/nilmtk/nilmtk/tree/master/docs/manual/development_guide)
 

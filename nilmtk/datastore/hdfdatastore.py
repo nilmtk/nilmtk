@@ -167,7 +167,7 @@ class HDFDataStore(DataStore):
         self.store.remove(key)
 
     @doc_inherit
-    def load_metadata(self, key='/'):    
+    def load_metadata(self, key='/'):
         if key == '/':
             node = self.store.root
         else:
