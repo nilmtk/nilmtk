@@ -6,11 +6,12 @@ dependencies:
 - numpy>=1.8.0
 - numexpr>=2.2.2
 - pytables
-- pandas>=0.17.1
+- pandas==0.19.2
 - matplotlib
 - networkx
 - scipy>=0.16.1
 - scikit-learn>=0.14
+- jupyter
 - ipython
 - six
 - future
