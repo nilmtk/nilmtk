@@ -5,18 +5,15 @@ energy consumed by individual appliances given just a whole-house
 power meter reading.  In other words, it produces an (estimated)
 itemised energy bill from just a single, whole-house power meter.
 
-NILM is sometimes called:
-
-* "non-intrusive appliance load monitoring (NALM or NIALM)"
-* "[electriciy | energy | smart meter] disaggregation"
-
 NILMTK is a toolkit designed to help *researchers* evaluate the
-accuracy of NILM algorithms. **NILMTK is not yet suitable for end
-users because NILMTK is not yet capable of out-of-the-box
-disaggregation (i.e. disaggregation where you do not yet have
-submetered training data), although we hope that it might be some time
-in the future**.
+accuracy of NILM algorithms. 
 
+**NILMTK is not being actively developed now. However, we believe it does the job it's intended to do! 
+It may take time for the original NILMTK authors to get back to you regarding queries/issues. However, you are more than welcome to propose changes, support!**.
+
+# Documentation
+
+[NILMTK Documentation](https://github.com/nilmtk/nilmtk/tree/master/docs/manual)
 
 # Why a toolkit for NILM?
 
@@ -44,12 +41,6 @@ NILMTK includes:
 -  a number of [reference benchmark disaggregation algorithms](https://github.com/nilmtk/nilmtk/wiki/NILM-Algorithms)
 -  a common set of accuracy metrics
 -  and much more!
-
-
-# Documentation
-
-[NILMTK Documentation](https://github.com/nilmtk/nilmtk/tree/master/docs/manual)
-
 
 # Publications
 
