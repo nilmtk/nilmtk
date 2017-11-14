@@ -1,11 +1,11 @@
-name: GREEND
+﻿name: GREEND
 long_name: GREEND Electrical ENergy Dataset
 creators:
 - Egarter, Dominik
 - Elmenreich, Wilfried
 - Monacchi, Andrea
 - Pöchacker, Manfred
-timezone: Europe/Vienna
+timezone: CET
 #date: 
 #contact:
 institution: Alpen-Adria-Universität
