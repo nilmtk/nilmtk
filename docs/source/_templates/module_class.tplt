@@ -1,0 +1,76 @@
+{{ fullname | escape | underline}}
+
+.. topic:: Module summary
+
+    .. automodule:: {{ fullname }}
+       :no-members:
+       :no-undoc-members:
+       :no-show-inheritance: {% block functions %}{% if functions %}
+
+       .. rubric:: Functions
+
+       .. autosummary::
+{% for item in functions %}
+          {{ item }}{%- endfor %}{% endif %}{% endblock %}
+{% block classes %}
+    {% if classes %}
+       .. rubric:: Classes
+
+       .. autosummary::
+        {% for item in classes %}
+          {{ item }}
+        {%- endfor %}
+    {% endif %}
+{% endblock %}
+{% block exceptions %}
+    {% if exceptions %}
+       .. rubric:: Exceptions
+
+       .. autosummary::
+
+    {% for item in exceptions %}
+          {{ item }}
+        {%- endfor %}
+    {% endif %}
+{% endblock %}
+{% block classes_detail %}
+    {% if classes %}
+        {% for class in classes %}
+
+.. topic:: Class: {{class}}
+
+    .. autoclass:: {{class}}
+       :no-members:
+       :no-undoc-members:
+            {% if inherited_method_flags[class] %}
+       .. Note:: This class has inherited methods, see the base class(es) for additional methods
+            {% endif%}
+            {% if methods[class] != [] %}
+       .. rubric:: Methods
+
+       .. autosummary::
+                {% for method in methods[class] %}
+            {{method}}
+                {%- endfor %}
+            {% endif %}
+            {% if attributes[class] != [] %}
+       .. rubric:: Attributes
+
+       .. autosummary::
+                {% for attribute in attributes[class] %}
+            {{attribute}}
+                {%- endfor %}
+            {% endif %}
+        {%- endfor %}
+    {% endif %}
+{% endblock %}
+
+.. rubric:: Module detail
+
+.. automodule:: {{ fullname }}
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+

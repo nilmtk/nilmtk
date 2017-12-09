@@ -1,22 +1,17 @@
-nilmtk.dataset_converters.dataport package
-==========================================
+nilmtk\.dataset\_converters\.dataport package
+=============================================
+
+Subpackages
+-----------
+
+.. toctree::
+
+    nilmtk.dataset_converters.dataport.metadata
 
 Submodules
 ----------
 
-nilmtk.dataset_converters.dataport.download_dataport module
------------------------------------------------------------
+.. toctree::
 
-.. automodule:: nilmtk.dataset_converters.dataport.download_dataport
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   nilmtk.dataset_converters.dataport.download_dataport
 
-
-Module contents
----------------
-
-.. automodule:: nilmtk.dataset_converters.dataport
-    :members:
-    :undoc-members:
-    :show-inheritance:

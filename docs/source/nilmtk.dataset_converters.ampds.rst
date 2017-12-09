@@ -1,22 +1,17 @@
-nilmtk.dataset_converters.ampds package
-=======================================
+nilmtk\.dataset\_converters\.ampds package
+==========================================
+
+Subpackages
+-----------
+
+.. toctree::
+
+    nilmtk.dataset_converters.ampds.metadata
 
 Submodules
 ----------
 
-nilmtk.dataset_converters.ampds.convert_ampds module
-----------------------------------------------------
+.. toctree::
 
-.. automodule:: nilmtk.dataset_converters.ampds.convert_ampds
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   nilmtk.dataset_converters.ampds.convert_ampds
 
-
-Module contents
----------------
-
-.. automodule:: nilmtk.dataset_converters.ampds
-    :members:
-    :undoc-members:
-    :show-inheritance:

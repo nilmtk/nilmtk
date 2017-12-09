@@ -1,30 +1,11 @@
-nilmtk.feature_detectors package
-================================
+nilmtk\.feature\_detectors package
+==================================
 
 Submodules
 ----------
 
-nilmtk.feature_detectors.cluster module
----------------------------------------
+.. toctree::
 
-.. automodule:: nilmtk.feature_detectors.cluster
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   nilmtk.feature_detectors.cluster
+   nilmtk.feature_detectors.steady_states
 
-nilmtk.feature_detectors.steady_states module
----------------------------------------------
-
-.. automodule:: nilmtk.feature_detectors.steady_states
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: nilmtk.feature_detectors
-    :members:
-    :undoc-members:
-    :show-inheritance:

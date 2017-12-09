@@ -1,5 +1,5 @@
-nilmtk.dataset_converters.combed package
-========================================
+nilmtk\.dataset\_converters\.combed package
+===========================================
 
 Subpackages
 -----------
@@ -11,27 +11,8 @@ Subpackages
 Submodules
 ----------
 
-nilmtk.dataset_converters.combed.convert_combed module
-------------------------------------------------------
+.. toctree::
 
-.. automodule:: nilmtk.dataset_converters.combed.convert_combed
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   nilmtk.dataset_converters.combed.convert_combed
+   nilmtk.dataset_converters.combed.download
 
-nilmtk.dataset_converters.combed.download module
-------------------------------------------------
-
-.. automodule:: nilmtk.dataset_converters.combed.download
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: nilmtk.dataset_converters.combed
-    :members:
-    :undoc-members:
-    :show-inheritance:
