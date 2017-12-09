@@ -1,5 +1,5 @@
-nilmtk.dataset_converters package
-=================================
+nilmtk\.dataset\_converters package
+===================================
 
 Subpackages
 -----------
@@ -14,12 +14,6 @@ Subpackages
     nilmtk.dataset_converters.hes
     nilmtk.dataset_converters.iawe
     nilmtk.dataset_converters.redd
+    nilmtk.dataset_converters.refit
     nilmtk.dataset_converters.ukdale
 
-Module contents
----------------
-
-.. automodule:: nilmtk.dataset_converters
-    :members:
-    :undoc-members:
-    :show-inheritance:

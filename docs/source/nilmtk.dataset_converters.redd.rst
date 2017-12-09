@@ -1,22 +1,17 @@
-nilmtk.dataset_converters.redd package
-======================================
+nilmtk\.dataset\_converters\.redd package
+=========================================
+
+Subpackages
+-----------
+
+.. toctree::
+
+    nilmtk.dataset_converters.redd.metadata
 
 Submodules
 ----------
 
-nilmtk.dataset_converters.redd.convert_redd module
---------------------------------------------------
+.. toctree::
 
-.. automodule:: nilmtk.dataset_converters.redd.convert_redd
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   nilmtk.dataset_converters.redd.convert_redd
 
-
-Module contents
----------------
-
-.. automodule:: nilmtk.dataset_converters.redd
-    :members:
-    :undoc-members:
-    :show-inheritance:

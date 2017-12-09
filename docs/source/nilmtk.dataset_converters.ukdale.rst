@@ -1,22 +1,10 @@
-nilmtk.dataset_converters.ukdale package
-========================================
+nilmtk\.dataset\_converters\.ukdale package
+===========================================
 
 Submodules
 ----------
 
-nilmtk.dataset_converters.ukdale.convert_ukdale module
-------------------------------------------------------
+.. toctree::
 
-.. automodule:: nilmtk.dataset_converters.ukdale.convert_ukdale
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   nilmtk.dataset_converters.ukdale.convert_ukdale
 
-
-Module contents
----------------
-
-.. automodule:: nilmtk.dataset_converters.ukdale
-    :members:
-    :undoc-members:
-    :show-inheritance:

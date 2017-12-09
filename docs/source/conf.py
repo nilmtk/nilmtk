@@ -19,7 +19,9 @@ import sphinx_bootstrap_theme
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('../..'))
+
+print(sys.path)
 
 # -- General configuration ------------------------------------------------
 
@@ -31,26 +33,38 @@ import sphinx_bootstrap_theme
 # ones.
 
 extensions = [
+#    'autodocsumm', # in place of autodoc
     'sphinx.ext.autodoc',
+    'sphinx.ext.doctest',
     'sphinx.ext.mathjax',
-    'sphinx.ext.ifconfig',
-    'sphinx.ext.viewcode',
+#    'sphinx.ext.ifconfig',
     'sphinx.ext.intersphinx',
     'sphinx.ext.todo',
     'sphinx.ext.viewcode',
+#    'sphinx.ext.napoleon',
     'numpydoc',
 #    'inheritance_diagram',
-    'sphinx.ext.autosummary'
+    'sphinx.ext.autosummary',
+#    'sphinx_gallery.gen_gallery',
 ]
 #    'matplotlib.sphinxext.plot_directive']
 #    'matplotlib.sphinxext.ipython_directive']
 
+# autodocsumm settings
+#----------------------------------------------------------
+autodoc_default_flags = ['members','undoc-members','show-inheritance']
+autoclass_content = 'both'
+autodata_content = 'call'
+
+add_module_names = True
+#----------------------------------------------------------
+autosummary_generate = False
 # The line below is necessary to stop thousands of warnings
 # see http://stackoverflow.com/a/15210813/732596
 numpydoc_show_class_members = False
 
 # Add any paths that contain templates here, relative to this directory.
-# templates_path = ['_templates']
+templates_path = ['_templates/']
 
 # The suffix of source filenames.
 source_suffix = '.rst'
@@ -181,7 +195,7 @@ html_theme_options = {
 
     # Choose Bootstrap version.
     # Values: "3" (default) or "2" (in quotes)
-#    'bootstrap_version': "3",    
+#    'bootstrap_version': "3",
 }
 
 # Add any paths that contain custom themes here, relative to this directory.
@@ -207,7 +221,7 @@ html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-# html_static_path = ['_static']
+html_static_path = ['_static']
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied
@@ -406,3 +420,12 @@ epub_exclude_files = ['search.html']
 
 # If false, no index is generated.
 #epub_use_index = True
+
+# incorporate the copybutton
+def setup(app):
+        app.add_javascript('copybutton.js')
+
+
+
+
+

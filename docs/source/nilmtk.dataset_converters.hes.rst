@@ -1,22 +1,17 @@
-nilmtk.dataset_converters.hes package
-=====================================
+nilmtk\.dataset\_converters\.hes package
+========================================
+
+Subpackages
+-----------
+
+.. toctree::
+
+    nilmtk.dataset_converters.hes.metadata
 
 Submodules
 ----------
 
-nilmtk.dataset_converters.hes.convert_hes module
-------------------------------------------------
+.. toctree::
 
-.. automodule:: nilmtk.dataset_converters.hes.convert_hes
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   nilmtk.dataset_converters.hes.convert_hes
 
-
-Module contents
----------------
-
-.. automodule:: nilmtk.dataset_converters.hes
-    :members:
-    :undoc-members:
-    :show-inheritance:

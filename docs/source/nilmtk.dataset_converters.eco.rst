@@ -1,22 +1,17 @@
-nilmtk.dataset_converters.eco package
-=====================================
+nilmtk\.dataset\_converters\.eco package
+========================================
+
+Subpackages
+-----------
+
+.. toctree::
+
+    nilmtk.dataset_converters.eco.metadata
 
 Submodules
 ----------
 
-nilmtk.dataset_converters.eco.convert_eco module
-------------------------------------------------
+.. toctree::
 
-.. automodule:: nilmtk.dataset_converters.eco.convert_eco
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   nilmtk.dataset_converters.eco.convert_eco
 
-
-Module contents
----------------
-
-.. automodule:: nilmtk.dataset_converters.eco
-    :members:
-    :undoc-members:
-    :show-inheritance:

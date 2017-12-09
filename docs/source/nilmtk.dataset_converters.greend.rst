@@ -1,22 +1,17 @@
-nilmtk.dataset_converters.greend package
-========================================
+nilmtk\.dataset\_converters\.greend package
+===========================================
+
+Subpackages
+-----------
+
+.. toctree::
+
+    nilmtk.dataset_converters.greend.metadata
 
 Submodules
 ----------
 
-nilmtk.dataset_converters.greend.convert_greend module
-------------------------------------------------------
+.. toctree::
 
-.. automodule:: nilmtk.dataset_converters.greend.convert_greend
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   nilmtk.dataset_converters.greend.convert_greend
 
-
-Module contents
----------------
-
-.. automodule:: nilmtk.dataset_converters.greend
-    :members:
-    :undoc-members:
-    :show-inheritance:

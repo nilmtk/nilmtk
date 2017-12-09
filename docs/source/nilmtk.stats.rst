@@ -1,5 +1,5 @@
-nilmtk.stats package
-====================
+nilmtk\.stats package
+=====================
 
 Subpackages
 -----------
@@ -11,67 +11,13 @@ Subpackages
 Submodules
 ----------
 
-nilmtk.stats.dropoutrate module
--------------------------------
+.. toctree::
 
-.. automodule:: nilmtk.stats.dropoutrate
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   nilmtk.stats.dropoutrate
+   nilmtk.stats.dropoutrateresults
+   nilmtk.stats.goodsections
+   nilmtk.stats.goodsectionsresults
+   nilmtk.stats.histogram
+   nilmtk.stats.totalenergy
+   nilmtk.stats.totalenergyresults
 
-nilmtk.stats.dropoutrateresults module
---------------------------------------
-
-.. automodule:: nilmtk.stats.dropoutrateresults
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-nilmtk.stats.goodsections module
---------------------------------
-
-.. automodule:: nilmtk.stats.goodsections
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-nilmtk.stats.goodsectionsresults module
----------------------------------------
-
-.. automodule:: nilmtk.stats.goodsectionsresults
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-nilmtk.stats.histogram module
------------------------------
-
-.. automodule:: nilmtk.stats.histogram
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-nilmtk.stats.totalenergy module
--------------------------------
-
-.. automodule:: nilmtk.stats.totalenergy
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-nilmtk.stats.totalenergyresults module
---------------------------------------
-
-.. automodule:: nilmtk.stats.totalenergyresults
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: nilmtk.stats
-    :members:
-    :undoc-members:
-    :show-inheritance:

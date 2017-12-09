@@ -1,5 +1,5 @@
-nilmtk.dataset_converters.iawe package
-======================================
+nilmtk\.dataset\_converters\.iawe package
+=========================================
 
 Subpackages
 -----------
@@ -11,19 +11,7 @@ Subpackages
 Submodules
 ----------
 
-nilmtk.dataset_converters.iawe.convert_iawe module
---------------------------------------------------
+.. toctree::
 
-.. automodule:: nilmtk.dataset_converters.iawe.convert_iawe
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   nilmtk.dataset_converters.iawe.convert_iawe
 
-
-Module contents
----------------
-
-.. automodule:: nilmtk.dataset_converters.iawe
-    :members:
-    :undoc-members:
-    :show-inheritance:
