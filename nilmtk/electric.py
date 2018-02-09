@@ -837,10 +837,10 @@ def align_two_meters(master, slave, func='power_series'):
         slave_chunk = next(slave_generator)
 
         # TODO: do this resampling in the pipeline?
-        slave_chunk = slave_chunk.resample(period_alias)
+        slave_chunk = slave_chunk.resample(period_alias, how='mean')
         if slave_chunk.empty:
             continue
-        master_chunk = master_chunk.resample(period_alias)
+        master_chunk = master_chunk.resample(period_alias, how='mean')
 
         yield pd.DataFrame({'master': master_chunk, 'slave': slave_chunk})
 

@@ -408,7 +408,7 @@ class FHMM(Disaggregator):
 
             # Copy mains data to disag output
             output_datastore.append(key=mains_data_location,
-                                    value=pd.DataFrame(chunk, columns=cols))
+                                    value=pd.DataFrame(chunk, columns=cols, dtype='float32'))
 
         if data_is_available:
             self._save_metadata_for_disaggregation(
