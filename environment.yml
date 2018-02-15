@@ -23,5 +23,5 @@ dependencies:
     - git+https://github.com/hmmlearn/hmmlearn.git#egg=hmmlearn
     - psycopg2 # not available in conda for Windows.  See issue #462
     - git+https://github.com/nilmtk/nilm_metadata.git#egg=nilm_metadata
-    - git+https://github.com/PMeira/nilmtk.git#egg=nilmtk
+    - git+https://github.com/nilmtk/nilmtk.git#egg=nilmtk
     - ipykernel # Needed to get jupyter notebook working with different kernel
