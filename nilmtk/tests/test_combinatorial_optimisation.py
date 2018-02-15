@@ -26,10 +26,11 @@ class TestCO(unittest.TestCase):
         co = CombinatorialOptimisation()
         co.train(elec)
         mains = elec.mains()
-        pred = co.disaggregate_chunk(mains.load(sample_period=1).next())
+
+        pred = co.disaggregate_chunk(next(mains.load(sample_period=1)))
         gt = {}
         for meter in elec.submeters().meters:
-            gt[meter] = meter.load(sample_period=1).next().squeeze()
+            gt[meter] = next(meter.load(sample_period=1)).squeeze()
         gt = pd.DataFrame(gt)
         pred = pred[gt.columns]
         self.assertTrue(gt.equals(pred))

@@ -12,7 +12,7 @@ class TimeFrameGroup(list):
     """A collection of nilmtk.TimeFrame objects."""
 
     def __init__(self, timeframes=None):
-        if isinstance(timeframes, pd.tseries.period.PeriodIndex):
+        if isinstance(timeframes, pd.PeriodIndex):
             periods = timeframes
             timeframes = [TimeFrame(period.start_time, period.end_time)
                           for period in periods]
