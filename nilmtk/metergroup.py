@@ -790,8 +790,7 @@ class MeterGroup(Electric):
 
     def meters_directly_downstream_of_mains(self):
         """Returns new MeterGroup."""
-        meters = nodes_adjacent_to_root(self.wiring_graph())
-        assert isinstance(meters, list)
+        meters = list(nodes_adjacent_to_root(self.wiring_graph()))
         return MeterGroup(meters)
 
     def submeters(self):
