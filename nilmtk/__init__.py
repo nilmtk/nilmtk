@@ -23,7 +23,11 @@ def teardown_package():
     """
     from nilmtk.tests.testingtools import data_dir
     import subprocess
-
+    
+    #Workaround for open .h5 files on Windows
+    from tables.file import _open_files
+    _open_files.close_all()
+    
     cmd = "git checkout -- {}".format(data_dir())
     try:
         subprocess.check_output(cmd, shell=True, cwd=data_dir())
