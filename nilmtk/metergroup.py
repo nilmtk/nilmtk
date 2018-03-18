@@ -363,9 +363,9 @@ class MeterGroup(Electric):
             if exception_raised_every_time and exception is not None:
                 raise exception
 
-        if len(kwargs) == 1 and isinstance(list(kwargs.values())[0], list):
-            attribute = kwargs.keys()[0]
-            list_of_values = kwargs.values()[0]
+        if len(kwargs) == 1 and isinstance(next(iter(kwargs.values())), list):
+            attribute = next(iter(kwargs.keys()))
+            list_of_values = next(iter(kwargs.values()))
             for value in list_of_values:
                 get({attribute: value})
         else:
