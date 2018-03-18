@@ -6,7 +6,7 @@ from builtins import zip
 from warnings import warn
 import scipy.spatial as ss
 from scipy import fft
-from pandas.tools.plotting import lag_plot, autocorrelation_plot
+from pandas.plotting import lag_plot, autocorrelation_plot
 from scipy.special import digamma,gamma
 from math import log,pi
 import numpy.random as nr

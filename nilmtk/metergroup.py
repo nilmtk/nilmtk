@@ -1166,7 +1166,7 @@ class MeterGroup(Electric):
 
         # Calculate remainder
         energy_per_meter['Remainder'] = mains_energy - energy_per_meter.sum()
-        energy_per_meter.sort(ascending=False)
+        energy_per_meter.sort_values(inplace=True, ascending=False)
         return energy_per_meter
 
     def fraction_per_meter(self, **load_kwargs):
@@ -1188,7 +1188,7 @@ class MeterGroup(Electric):
                   .format(i+1, n_meters, meter, proportion), end='')
             stdout.flush()
             prop_per_meter[meter.identifier] = proportion
-        prop_per_meter.sort(ascending=False)
+        prop_per_meter.sort_values(inplace=True, ascending=False)
         return prop_per_meter
 
     def train_test_split(self, train_fraction=0.5):
@@ -1297,7 +1297,7 @@ class MeterGroup(Electric):
         """
         function_map = {'energy': self.fraction_per_meter, 'entropy': self.entropy_per_meter}
         top_k_series = function_map[by](**kwargs)
-        top_k_series.sort(ascending=asc)
+        top_k_series.sort_values(inplace=True, ascending=asc)
         top_k_elec_meter_ids = top_k_series[:k].index
         top_k_metergroup = self.from_list(top_k_elec_meter_ids)
 

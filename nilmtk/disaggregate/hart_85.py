@@ -301,7 +301,7 @@ class Hart85(Disaggregator):
                         +
                         abs_value_transient_minus_centroid[columns[1]] ** 2)
                     index_least_delta = (
-                        abs_value_transient_minus_centroid["multidim"].argmin())
+                        abs_value_transient_minus_centroid["multidim"].idxmin())
                 if positive:
                     # Turned on
                     states.loc[transient_tuple[0]][index_least_delta] = 1

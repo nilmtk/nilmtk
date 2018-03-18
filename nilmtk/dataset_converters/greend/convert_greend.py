@@ -34,7 +34,7 @@ def convert_greend(greend_path, hdf_filename):
             print('-----------------------',date)
             try:
                 tmp_pandas = pd.read_csv(join(abs_house, date), na_values=['na'], error_bad_lines=False)
-            except: # A CParserError is returned for malformed files (irregular column number)
+            except: # A ParserError/ValueError is returned for malformed files (irregular column number)
                 pass 
                 # for building0 either remove the first days (with less nodes) or use __preprocess_file
                 #import StringIO as sio

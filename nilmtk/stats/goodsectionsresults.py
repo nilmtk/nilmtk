@@ -142,4 +142,4 @@ class GoodSectionsResults(Results):
                      'section_start': convert_none_to_nat(section.start),
                      'section_end': convert_none_to_nat(section.end)})
         df = pd.DataFrame(data_for_cache, index=index_for_cache)
-        return df.convert_objects()
+        return df.apply(pd.to_numeric, errors='ignore')
