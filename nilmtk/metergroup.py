@@ -587,7 +587,7 @@ class MeterGroup(Electric):
     def draw_wiring_graph(self, show_meter_labels=True):
         graph = self.wiring_graph()
         meter_labels = {meter: meter.instance() for meter in graph.nodes()}
-        pos = nx.graphviz_layout(graph, prog='dot')
+        pos = nx.drawing.nx_agraph.graphviz_layout(graph, prog='dot')
         nx.draw(graph, pos, labels=meter_labels, arrows=False)
         if show_meter_labels:
             meter_labels = {meter: meter.label() for meter in graph.nodes()}
