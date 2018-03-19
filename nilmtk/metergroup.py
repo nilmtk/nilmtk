@@ -593,19 +593,32 @@ class MeterGroup(Electric):
 
     def draw_wiring_graph(self, show_meter_labels=True):
         graph = self.wiring_graph()
-        meter_labels = {meter: meter.instance() for meter in graph.nodes()}
-        pos = nx.drawing.nx_agraph.graphviz_layout(graph, prog='dot')
-        nx.draw(graph, pos, labels=meter_labels, arrows=False)
+        try:
+            # Try using graphviz layout...
+            pos = nx.drawing.nx_agraph.graphviz_layout(graph, prog='dot')
+            used_graphviz = True
+        except:
+            # ...and fallback to shell layout if graphviz is not installed or
+            # doesn't work
+            pos = nx.shell_layout(graph)
+            used_graphviz = False
+            
+        meter_labels = {meter: meter.label() for meter in graph.nodes()}
         if show_meter_labels:
-            meter_labels = {meter: meter.label() for meter in graph.nodes()}
             for meter, name in iteritems(meter_labels):
                 x, y = pos[meter]
-                if meter.is_site_meter():
-                    delta_y = 5
-                else:
-                    delta_y = -5
-                plt.text(x, y+delta_y, s=name, bbox=dict(facecolor='red', alpha=0.5), horizontalalignment='center')
+
+                if used_graphviz:
+                    if meter.is_site_meter():
+                        delta_y = 5
+                    else:
+                        delta_y = -5
+                    
+                    plt.text(x, y + delta_y, s=name, bbox=dict(facecolor='red', alpha=0.5), horizontalalignment='center')
+        
+        nx.draw(graph, pos, labels=meter_labels, arrows=False)
         ax = plt.gca()
+        
         return graph, ax
 
     def load(self, **kwargs):
@@ -1393,23 +1406,36 @@ class MeterGroup(Electric):
     def _plot_sankey(self):
         graph = self.wiring_graph()
         meter_labels = {meter: meter.instance() for meter in graph.nodes()}
-        pos = nx.graphviz_layout(graph, prog='dot')
-        #nx.draw(graph, pos, labels=meter_labels, arrows=False)
+        try:
+            # Try using graphviz layout...
+            pos = nx.drawing.nx_agraph.graphviz_layout(graph, prog='dot')
+            used_graphviz = True
+        except:
+            # ...and fallback to shell layout if graphviz is not installed or
+            # doesn't work
+            pos = nx.shell_layout(graph)
+            used_graphviz = False
+        
         meter_labels = {meter: meter.label() for meter in graph.nodes()}
         for meter, name in iteritems(meter_labels):
             x, y = pos[meter]
-            if meter.is_site_meter():
-                delta_y = 5
-            else:
-                delta_y = -5
-            plt.text(x, y+delta_y, s=name, bbox=dict(facecolor='red', alpha=0.5), horizontalalignment='center')
+            
+            if used_graphviz:
+                if meter.is_site_meter():
+                    delta_y = 5
+                else:
+                    delta_y = -5
+                
+                plt.text(x, y + delta_y, s=name, bbox=dict(facecolor='red', alpha=0.5), horizontalalignment='center')
+                    
             if not meter.is_site_meter():
                 upstream_meter = meter.upstream_meter()
                 proportion_of_upstream = meter.proportion_of_upstream()
                 print(meter.instance(), upstream_meter.instance(), proportion_of_upstream)
                 graph[upstream_meter][meter]["weight"] = proportion_of_upstream*10
                 graph[upstream_meter][meter]["color"] = "blue"
-            nx.draw(graph, pos, labels=meter_labels, arrows=False)
+            
+        nx.draw(graph, pos, labels=meter_labels, arrows=False)
 
     def _plot_area(self, ax=None, timeframe=None, pretty_labels=True, unit='W',
                    label_kwargs=None, plot_kwargs=None, threshold=None,
