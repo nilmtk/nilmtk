@@ -53,6 +53,13 @@ class MeterGroup(Electric):
         self.meters = convert_to_list(meters)
         self.disabled_meters = convert_to_list(disabled_meters)
         self.name = ""
+    
+    def __hash__(self):
+        """
+        Provide a hash based on the MeterGroup's name, meters and 
+        disabled_meters
+        """ 
+        return hash((self.name, tuple(self.meters), tuple(self.disabled_meters)))
 
     def import_metadata(self, store, elec_meters, appliances, building_id):
         """
