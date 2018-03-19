@@ -65,7 +65,7 @@ class TestMeterGroup(unittest.TestCase):
         self.assertIs(mg.mains(), meter1)
         self.assertEqual(mg.meters_directly_downstream_of_mains().meters, [meter2])
         if PY2:
-            self.assertEqual(wiring_graph.nodes(), [meter2, meter3, meter1])
+            self.assertEqual(list(wiring_graph.nodes()), [meter2, meter3, meter1])
         else:
             self.assertEqual(list(wiring_graph.nodes()), [meter1, meter2, meter3])
 
