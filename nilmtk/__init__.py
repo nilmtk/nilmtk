@@ -2,6 +2,9 @@
 import warnings
 warnings.simplefilter('default')
 
+# Silence ImportWarnings for the time being
+warnings.filterwarnings('ignore', category=ImportWarning)
+
 from nilmtk import *
 from nilmtk.version import version as __version__
 from nilmtk.timeframe import TimeFrame
