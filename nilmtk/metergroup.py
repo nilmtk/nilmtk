@@ -11,7 +11,7 @@ from collections import Counter
 from copy import copy, deepcopy
 import gc
 from collections import namedtuple
-from six import iteritems
+from six import iteritems, integer_types
 
 # NILMTK imports
 from .elecmeter import ElecMeter, ElecMeterID
@@ -267,10 +267,10 @@ class MeterGroup(Electric):
                                 .format(len(meters)))
             else:
                 raise KeyError(key)
-        elif isinstance(key, int) and not isinstance(key, bool):
+        elif isinstance(key, integer_types) and not isinstance(key, bool):
             meters_found = []
             for meter in self.meters:
-                if isinstance(meter.instance(), int):
+                if isinstance(meter.instance(), integer_types):
                     if meter.instance() == key:
                         meters_found.append(meter)
                 elif isinstance(meter.instance(), (tuple, list)):
