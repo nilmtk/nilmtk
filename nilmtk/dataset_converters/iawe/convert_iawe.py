@@ -86,7 +86,7 @@ def convert_iawe(iawe_path, output_filename, format="HDF"):
         df = df.dropna()
         df = df.astype(np.float32)
         df = df.sort_index()
-        df = df.resample("1T")
+        df = df.resample("1T").mean()
         df = reindex_fill_na(df, idx)
         assert df.isnull().sum().sum() == 0
         store.put(str(key), df)

@@ -694,7 +694,7 @@ class Electric(object):
 
             # Trick using resample to 'normalise' start and end dates
             # to natural boundaries of 'period'.
-            resampled_to_period = on_chunk.iloc[[0, -1]].resample(period).index
+            resampled_to_period = on_chunk.iloc[[0, -1]].resample(period).mean().index
             start = resampled_to_period[0]
             end = resampled_to_period[-1] + 1
 
@@ -837,10 +837,10 @@ def align_two_meters(master, slave, func='power_series'):
         slave_chunk = next(slave_generator)
 
         # TODO: do this resampling in the pipeline?
-        slave_chunk = slave_chunk.resample(period_alias)
+        slave_chunk = slave_chunk.resample(period_alias).mean()
         if slave_chunk.empty:
             continue
-        master_chunk = master_chunk.resample(period_alias)
+        master_chunk = master_chunk.resample(period_alias).mean()
 
         yield pd.DataFrame({'master': master_chunk, 'slave': slave_chunk})
 
