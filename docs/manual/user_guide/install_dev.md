@@ -3,8 +3,8 @@
 
 We recommend using
 [Anaconda](https://store.continuum.io/cshop/anaconda/), which bundles
-togther most of the required packages. Please download Anaconda for
-Python 2.7.x.
+togther most of the required packages. We recommend Anaconda for
+Python 3.6.x since Python 2.7 will soon be not supported.
 
 After installing Anaconda, please do the following.  We have two
 sections below:
@@ -13,9 +13,7 @@ and another [section for Windows](#install-on-windows).
 
 ## Python 3
 
-Python 3 support is experimental and hence please only attempt to use
-NILMTK on Python 3 if you are experiences with Python.  On Ubuntu,
-please run `sudo apt-get install python3-tk` prior to attempting to
+On Ubuntu, please run `sudo apt-get install python3-tk` prior to attempting to
 install NILMTK for Python 3.
 
 ### Install on Ubuntu like Linux variants (debian based) or OSX
@@ -133,7 +131,7 @@ pip install psycopg2
 
 - Misc. pip installs
 ```bash
-pip install nose coveralls coverage hmmlearn==0.1.1
+pip install nose coveralls coverage git+https://github.com/hmmlearn/hmmlearn.git@ae1a41e4d03ea61b7a25cba68698e8e2e52880ad#egg=hmmlearn
 ```
 
 - Finally! Install NILMTK
@@ -152,9 +150,9 @@ nosetests
 
 ### Install on Windows
 
-- Install [Anaconda](https://store.continuum.io/cshop/anaconda/), which bundles togther most of the required packages. Please download Anaconda for Python 2.7.x.
+- Install [Anaconda](https://store.continuum.io/cshop/anaconda/), which bundles together most of the required packages. Please download Anaconda for Python 3.6.x.
 
-- Install [git](http://git-scm.com/download/win) client. You may need to add `git.exe` to your path in order to run nilmtk tests. 
+- Install [git](http://git-scm.com/download/win) client. You may need to add `git.exe` to your path in order to run nilmtk tests (or start the tests in a Git CMD instance).
 
 - Install pip and other dependencies which might be missing from Anaconda
 ```bash
@@ -173,11 +171,11 @@ cd ..
 Download release for your python environment:
 http://www.stickpeople.com/projects/python/win-psycopg/
 
-- [Install VS C++ compiler for Python 2.7](https://www.microsoft.com/en-us/download/details.aspx?id=44266). This is needed for building hmmlearn. 
+- [Install Microsoft Build Tools 2015](https://www.microsoft.com/en-us/download/details.aspx?id=48159). This is needed for building hmmlearn. 
 
 - Misc. pip installs
 ```bash
-pip install nose pbs coveralls coverage hmmlearn==0.1.1
+pip install nose pbs coveralls coverage git+https://github.com/hmmlearn/hmmlearn.git@ae1a41e4d03ea61b7a25cba68698e8e2e52880ad#egg=hmmlearn
 ```
 
 - Finally! Install nilmtk from git bash
@@ -193,5 +191,3 @@ cd..
 cd nilmtk
 nosetests
 ```
-
-**It must be noted that nosetests give issues on Windows. However, nilmtk works just fine.**

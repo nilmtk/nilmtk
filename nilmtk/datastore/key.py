@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 # do not edit! added by PythonBreakpoints
 from pdb import set_trace as _breakpoint
-
+from six import integer_types
 
 class Key(object):
     """A location of data or metadata within NILMTK.
@@ -45,10 +45,10 @@ class Key(object):
         self._check()
 
     def _check(self):
-        assert isinstance(self.building, int)
+        assert isinstance(self.building, integer_types)
         assert self.building >= 1
         if self.meter is not None:
-            assert isinstance(self.meter, int)
+            assert isinstance(self.meter, integer_types)
             assert self.meter >= 1
 
     def __repr__(self):

@@ -143,9 +143,9 @@ def mean_normalized_error_power(predictions, ground_truth):
         sum_of_ground_truth_power = 0.0
         for aligned_meters_chunk in align_two_meters(pred_meter, 
                                                      ground_truth_meter):
-            diff = aligned_meters_chunk.icol(0) - aligned_meters_chunk.icol(1)
+            diff = aligned_meters_chunk.iloc[:, 0] - aligned_meters_chunk.iloc[:, 1]
             total_abs_diff += sum(abs(diff.dropna()))
-            sum_of_ground_truth_power += aligned_meters_chunk.icol(1).sum()
+            sum_of_ground_truth_power += aligned_meters_chunk.iloc[:, 1].sum()
 
         mne[pred_meter.instance()] = total_abs_diff / sum_of_ground_truth_power
 
@@ -178,7 +178,7 @@ def rms_error_power(predictions, ground_truth):
         n_samples = 0
         for aligned_meters_chunk in align_two_meters(pred_meter, 
                                                      ground_truth_meter):
-            diff = aligned_meters_chunk.icol(0) - aligned_meters_chunk.icol(1)
+            diff = aligned_meters_chunk.iloc[:, 0] - aligned_meters_chunk.iloc[:, 1]
             diff.dropna(inplace=True)
             sum_of_squared_diff += (diff ** 2).sum()
             n_samples += len(diff)
@@ -225,8 +225,8 @@ def f1_score(predictions, ground_truth):
         for aligned_states_chunk in aligned_meters:
             aligned_states_chunk.dropna(inplace=True)
             aligned_states_chunk = aligned_states_chunk.astype(int)
-            score = sklearn_f1_score(aligned_states_chunk.icol(0),
-                                     aligned_states_chunk.icol(1))
+            score = sklearn_f1_score(aligned_states_chunk.iloc[:, 0],
+                                     aligned_states_chunk.iloc[:, 1])
             scores_for_meter = scores_for_meter.append(
                 {'score': score, 'num_samples': len(aligned_states_chunk)},
                 ignore_index=True)

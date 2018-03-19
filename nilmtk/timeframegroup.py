@@ -12,7 +12,7 @@ class TimeFrameGroup(list):
     """A collection of nilmtk.TimeFrame objects."""
 
     def __init__(self, timeframes=None):
-        if isinstance(timeframes, pd.tseries.period.PeriodIndex):
+        if isinstance(timeframes, pd.PeriodIndex):
             periods = timeframes
             timeframes = [TimeFrame(period.start_time, period.end_time)
                           for period in periods]
@@ -25,7 +25,7 @@ class TimeFrameGroup(list):
         ax.xaxis.axis_date()
         height -= gap * 2
         for timeframe in self:
-            length = timeframe.timedelta.total_seconds() / SECS_PER_DAY
+            length = timeframe.timedelta
             bottom_left_corner = (timeframe.start, y + gap)
             rect = plt.Rectangle(bottom_left_corner, length, height,
                                  color=color, **kwargs)

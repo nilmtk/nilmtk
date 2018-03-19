@@ -3,7 +3,7 @@ import numpy as np
 import sys
 from os import listdir, getcwd
 from os.path import isdir, join, dirname, abspath
-from pandas.tools.merge import concat
+from pandas import concat
 from nilmtk.utils import get_module_directory, check_directory_exists
 from nilmtk.datastore import Key
 from nilmtk.measurement import LEVEL_NAMES

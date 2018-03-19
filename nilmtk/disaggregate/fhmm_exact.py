@@ -126,11 +126,12 @@ def create_combined_hmm(model):
     A_combined = compute_A_fhmm(list_A)
     [mean_combined, cov_combined] = compute_means_fhmm(list_means)
 
-    combined_model = hmm.GaussianHMM(
-        n_components=len(pi_combined), covariance_type='full',
-        startprob=pi_combined, transmat=A_combined)
+    combined_model = hmm.GaussianHMM(n_components=len(pi_combined), covariance_type='full')
+    combined_model.startprob_ = pi_combined
+    combined_model.transmat_ = A_combined
     combined_model.covars_ = cov_combined
     combined_model.means_ = mean_combined
+    
     return combined_model
 
 
@@ -284,7 +285,7 @@ class FHMM(Disaggregator):
             learnt_model[meter] = hmm.GaussianHMM(num_total_states, "full")
 
             # Fit
-            learnt_model[meter].fit([X])
+            learnt_model[meter].fit(X)
 
             # Check to see if there are any more chunks.
             # TODO handle multiple chunks per appliance.
@@ -305,8 +306,10 @@ class FHMM(Disaggregator):
             startprob, means, covars, transmat = sort_learnt_parameters(
                 learnt_model[meter].startprob_, learnt_model[meter].means_,
                 learnt_model[meter].covars_, learnt_model[meter].transmat_)
-            new_learnt_models[meter] = hmm.GaussianHMM(
-                startprob.size, "full", startprob, transmat)
+                
+            new_learnt_models[meter] = hmm.GaussianHMM(startprob.size, "full")
+            new_learnt_models[meter].startprob_ = startprob
+            new_learnt_models[meter].transmat_ = transmat
             new_learnt_models[meter].means_ = means
             new_learnt_models[meter].covars_ = covars
             # UGLY! But works.

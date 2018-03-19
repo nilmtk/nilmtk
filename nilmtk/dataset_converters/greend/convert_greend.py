@@ -34,7 +34,7 @@ def convert_greend(greend_path, hdf_filename):
             print('-----------------------',date)
             try:
                 tmp_pandas = pd.read_csv(join(abs_house, date), na_values=['na'], error_bad_lines=False)
-            except: # A CParserError is returned for malformed files (irregular column number)
+            except: # A ParserError/ValueError is returned for malformed files (irregular column number)
                 pass 
                 # for building0 either remove the first days (with less nodes) or use __preprocess_file
                 #import StringIO as sio
@@ -44,7 +44,7 @@ def convert_greend(greend_path, hdf_filename):
             if tmp_pandas.timestamp.dtype != np.float64:
                 tmp_pandas = tmp_pandas[tmp_pandas.timestamp != 'timestamp'] # remove all error rows
                 # use the cleaned column as the index
-            tmp_pandas.index = tmp_pandas["timestamp"].convert_objects(convert_numeric=True).values
+            tmp_pandas.index = tmp_pandas["timestamp"].apply(pd.to_numeric, errors='ignore').values
             tmp_pandas = tmp_pandas.drop('timestamp', 1) # remove timestamp from the columns (it's the index already)
             tmp_pandas = tmp_pandas.astype("float32") # convert everything back to float32
             # convert the index to datetime

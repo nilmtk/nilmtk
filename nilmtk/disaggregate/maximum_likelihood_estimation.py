@@ -210,9 +210,13 @@ class MLE(Disaggregator):
                     print("Chunk empty")
                 else:
                     print("Training on chunk")
-                    self.train_on_chunk(pd.DataFrame(chunk.resample(
-                        self.sample_period,
-                        how=self.sampling_method)),
+                    if self.sampling_method is not None:
+                        how = lambda df: getattr(df, self.sampling_method)()
+                    else:
+                        how = lambda df: df.mean()
+                        
+                    self.train_on_chunk(how(pd.DataFrame(chunk.resample(
+                        self.sample_period))),
                         meter
                     )
 

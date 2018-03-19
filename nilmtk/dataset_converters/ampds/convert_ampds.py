@@ -83,7 +83,7 @@ def convert_ampds(input_path, output_filename, format='HDF'):
         df = df.tz_localize('GMT').tz_convert(TIMEZONE)
         df.rename(columns=lambda x: columnNameMapping[x], inplace=True)
         df.columns.set_names(LEVEL_NAMES, inplace=True)
-        df = df.convert_objects(convert_numeric=True)
+        df = df.apply(pd.to_numeric, errors='ignore')
         df = df.dropna()
         df = df.astype(np.float32)
         store.put(str(key), df)

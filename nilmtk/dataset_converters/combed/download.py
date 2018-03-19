@@ -1,3 +1,4 @@
+from __future__ import print_function
 import requests
 from os.path import join
 import pandas as pd
@@ -62,7 +63,7 @@ def download():
                     else:
                         load_renamed = load
                     path_to_create = join(BASE_PATH, block_name, load_renamed, str(floor))
-                    print path_to_create
+                    print(path_to_create)
                     if not os.path.exists(path_to_create):
                         os.makedirs(path_to_create)
                     df.to_csv(path_to_create+"/"+measurement+".csv", header=False, index=False)

@@ -106,7 +106,7 @@ def _find_all_houses(input_path):
     list of integers (house instances)
     """
     dir_names = [p for p in listdir(input_path) if isdir(join(input_path, p))]
-    return _matching_ints(dir_names, '^house_(\d)$')
+    return _matching_ints(dir_names, r'^house_(\d)$')
 
 
 def _find_all_chans(input_path, house_id):
@@ -117,7 +117,7 @@ def _find_all_chans(input_path, house_id):
     """
     house_path = join(input_path, 'house_{:d}'.format(house_id))
     filenames = [p for p in listdir(house_path) if isfile(join(house_path, p))]
-    return _matching_ints(filenames, '^channel_(\d\d?).dat$')
+    return _matching_ints(filenames, r'^channel_(\d\d?).dat$')
 
 
 def _matching_ints(strings, regex):

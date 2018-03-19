@@ -2,6 +2,9 @@
 import warnings
 warnings.simplefilter('default')
 
+# Silence ImportWarnings for the time being
+warnings.filterwarnings('ignore', category=ImportWarning)
+
 from nilmtk import *
 from nilmtk.version import version as __version__
 from nilmtk.timeframe import TimeFrame
@@ -23,7 +26,11 @@ def teardown_package():
     """
     from nilmtk.tests.testingtools import data_dir
     import subprocess
-
+    
+    #Workaround for open .h5 files on Windows
+    from tables.file import _open_files
+    _open_files.close_all()
+    
     cmd = "git checkout -- {}".format(data_dir())
     try:
         subprocess.check_output(cmd, shell=True, cwd=data_dir())

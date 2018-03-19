@@ -8,6 +8,7 @@ from nilmtk import (Appliance, MeterGroup, ElecMeter, HDFDataStore,
 from nilmtk.utils import tree_root, nodes_adjacent_to_root
 from nilmtk.elecmeter import ElecMeterID
 from nilmtk.building import BuildingID
+from six import PY2
 
 class TestMeterGroup(unittest.TestCase):
     @classmethod
@@ -63,7 +64,10 @@ class TestMeterGroup(unittest.TestCase):
         
         self.assertIs(mg.mains(), meter1)
         self.assertEqual(mg.meters_directly_downstream_of_mains().meters, [meter2])
-        self.assertEqual(wiring_graph.nodes(), [meter2, meter3, meter1])
+        if PY2:
+            self.assertEqual(list(wiring_graph.nodes()), [meter2, meter3, meter1])
+        else:
+            self.assertEqual(list(wiring_graph.nodes()), [meter1, meter2, meter3])
 
     def test_proportion_of_energy_submetered(self):
         meters = []

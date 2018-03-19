@@ -11,7 +11,7 @@ from collections import Counter
 from copy import copy, deepcopy
 import gc
 from collections import namedtuple
-from six import iteritems
+from six import iteritems, integer_types
 
 # NILMTK imports
 from .elecmeter import ElecMeter, ElecMeterID
@@ -53,6 +53,13 @@ class MeterGroup(Electric):
         self.meters = convert_to_list(meters)
         self.disabled_meters = convert_to_list(disabled_meters)
         self.name = ""
+    
+    def __hash__(self):
+        """
+        Provide a hash based on the MeterGroup's name, meters and 
+        disabled_meters
+        """ 
+        return hash((self.name, tuple(self.meters), tuple(self.disabled_meters)))
 
     def import_metadata(self, store, elec_meters, appliances, building_id):
         """
@@ -260,10 +267,10 @@ class MeterGroup(Electric):
                                 .format(len(meters)))
             else:
                 raise KeyError(key)
-        elif isinstance(key, int) and not isinstance(key, bool):
+        elif isinstance(key, integer_types) and not isinstance(key, bool):
             meters_found = []
             for meter in self.meters:
-                if isinstance(meter.instance(), int):
+                if isinstance(meter.instance(), integer_types):
                     if meter.instance() == key:
                         meters_found.append(meter)
                 elif isinstance(meter.instance(), (tuple, list)):
@@ -363,9 +370,9 @@ class MeterGroup(Electric):
             if exception_raised_every_time and exception is not None:
                 raise exception
 
-        if len(kwargs) == 1 and isinstance(list(kwargs.values())[0], list):
-            attribute = kwargs.keys()[0]
-            list_of_values = kwargs.values()[0]
+        if len(kwargs) == 1 and isinstance(next(iter(kwargs.values())), list):
+            attribute = next(iter(kwargs.keys()))
+            list_of_values = next(iter(kwargs.values()))
             for value in list_of_values:
                 get({attribute: value})
         else:
@@ -586,19 +593,32 @@ class MeterGroup(Electric):
 
     def draw_wiring_graph(self, show_meter_labels=True):
         graph = self.wiring_graph()
-        meter_labels = {meter: meter.instance() for meter in graph.nodes()}
-        pos = nx.graphviz_layout(graph, prog='dot')
-        nx.draw(graph, pos, labels=meter_labels, arrows=False)
+        try:
+            # Try using graphviz layout...
+            pos = nx.drawing.nx_agraph.graphviz_layout(graph, prog='dot')
+            used_graphviz = True
+        except:
+            # ...and fallback to shell layout if graphviz is not installed or
+            # doesn't work
+            pos = nx.shell_layout(graph)
+            used_graphviz = False
+            
+        meter_labels = {meter: meter.label() for meter in graph.nodes()}
         if show_meter_labels:
-            meter_labels = {meter: meter.label() for meter in graph.nodes()}
             for meter, name in iteritems(meter_labels):
                 x, y = pos[meter]
-                if meter.is_site_meter():
-                    delta_y = 5
-                else:
-                    delta_y = -5
-                plt.text(x, y+delta_y, s=name, bbox=dict(facecolor='red', alpha=0.5), horizontalalignment='center')
+
+                if used_graphviz:
+                    if meter.is_site_meter():
+                        delta_y = 5
+                    else:
+                        delta_y = -5
+                    
+                    plt.text(x, y + delta_y, s=name, bbox=dict(facecolor='red', alpha=0.5), horizontalalignment='center')
+        
+        nx.draw(graph, pos, labels=meter_labels, arrows=False)
         ax = plt.gca()
+        
         return graph, ax
 
     def load(self, **kwargs):
@@ -790,8 +810,7 @@ class MeterGroup(Electric):
 
     def meters_directly_downstream_of_mains(self):
         """Returns new MeterGroup."""
-        meters = nodes_adjacent_to_root(self.wiring_graph())
-        assert isinstance(meters, list)
+        meters = list(nodes_adjacent_to_root(self.wiring_graph()))
         return MeterGroup(meters)
 
     def submeters(self):
@@ -1167,7 +1186,7 @@ class MeterGroup(Electric):
 
         # Calculate remainder
         energy_per_meter['Remainder'] = mains_energy - energy_per_meter.sum()
-        energy_per_meter.sort(ascending=False)
+        energy_per_meter.sort_values(inplace=True, ascending=False)
         return energy_per_meter
 
     def fraction_per_meter(self, **load_kwargs):
@@ -1189,7 +1208,7 @@ class MeterGroup(Electric):
                   .format(i+1, n_meters, meter, proportion), end='')
             stdout.flush()
             prop_per_meter[meter.identifier] = proportion
-        prop_per_meter.sort(ascending=False)
+        prop_per_meter.sort_values(inplace=True, ascending=False)
         return prop_per_meter
 
     def train_test_split(self, train_fraction=0.5):
@@ -1298,7 +1317,7 @@ class MeterGroup(Electric):
         """
         function_map = {'energy': self.fraction_per_meter, 'entropy': self.entropy_per_meter}
         top_k_series = function_map[by](**kwargs)
-        top_k_series.sort(ascending=asc)
+        top_k_series.sort_values(inplace=True, ascending=asc)
         top_k_elec_meter_ids = top_k_series[:k].index
         top_k_metergroup = self.from_list(top_k_elec_meter_ids)
 
@@ -1387,23 +1406,36 @@ class MeterGroup(Electric):
     def _plot_sankey(self):
         graph = self.wiring_graph()
         meter_labels = {meter: meter.instance() for meter in graph.nodes()}
-        pos = nx.graphviz_layout(graph, prog='dot')
-        #nx.draw(graph, pos, labels=meter_labels, arrows=False)
+        try:
+            # Try using graphviz layout...
+            pos = nx.drawing.nx_agraph.graphviz_layout(graph, prog='dot')
+            used_graphviz = True
+        except:
+            # ...and fallback to shell layout if graphviz is not installed or
+            # doesn't work
+            pos = nx.shell_layout(graph)
+            used_graphviz = False
+        
         meter_labels = {meter: meter.label() for meter in graph.nodes()}
         for meter, name in iteritems(meter_labels):
             x, y = pos[meter]
-            if meter.is_site_meter():
-                delta_y = 5
-            else:
-                delta_y = -5
-            plt.text(x, y+delta_y, s=name, bbox=dict(facecolor='red', alpha=0.5), horizontalalignment='center')
+            
+            if used_graphviz:
+                if meter.is_site_meter():
+                    delta_y = 5
+                else:
+                    delta_y = -5
+                
+                plt.text(x, y + delta_y, s=name, bbox=dict(facecolor='red', alpha=0.5), horizontalalignment='center')
+                    
             if not meter.is_site_meter():
                 upstream_meter = meter.upstream_meter()
                 proportion_of_upstream = meter.proportion_of_upstream()
                 print(meter.instance(), upstream_meter.instance(), proportion_of_upstream)
                 graph[upstream_meter][meter]["weight"] = proportion_of_upstream*10
                 graph[upstream_meter][meter]["color"] = "blue"
-            nx.draw(graph, pos, labels=meter_labels, arrows=False)
+            
+        nx.draw(graph, pos, labels=meter_labels, arrows=False)
 
     def _plot_area(self, ax=None, timeframe=None, pretty_labels=True, unit='W',
                    label_kwargs=None, plot_kwargs=None, threshold=None,

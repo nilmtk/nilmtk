@@ -11,6 +11,7 @@ from collections import OrderedDict
 import datetime
 import pytz
 from nilmtk.datastore import HDFDataStore, CSVDataStore
+import warnings
 
 # Python 2/3 compatibility
 from six import iteritems
@@ -77,7 +78,7 @@ def tree_root(graph):
     """
     # from http://stackoverflow.com/a/4123177/732596
     assert isinstance(graph, nx.Graph)
-    roots = [node for node, in_degree in graph.in_degree_iter()
+    roots = [node for node, in_degree in graph.in_degree()
              if in_degree == 0]
     n_roots = len(roots)
     if n_roots > 1:
@@ -332,7 +333,7 @@ def normalise_timestamp(timestamp, freq):
     """
     timestamp = pd.Timestamp(timestamp)
     series = pd.Series(np.NaN, index=[timestamp])
-    resampled = series.resample(freq)
+    resampled = series.resample(freq).mean()
     return resampled.index[0]
 
 
@@ -385,14 +386,48 @@ def capitalise_legend(ax):
 def safe_resample(data, **resample_kwargs):
     if data.empty:
         return data
+    
+    def _resample_chain(data, all_resample_kwargs):
+        """_resample_chain provides a compatibility function for 
+        deprecated/removed DataFrame.resample kwargs"""
+        
+
+        rule = all_resample_kwargs.pop('rule')
+        axis = all_resample_kwargs.pop('axis', None)
+        on = all_resample_kwargs.pop('on', None)
+        level = all_resample_kwargs.pop('level', None)
+
+        resample_kwargs = {}
+        if axis is not None: resample_kwargs['axis'] = axis
+        if on is not None: resample_kwargs['on'] = on
+        if level is not None: resample_kwargs['level'] = level
+
+        fill_method_str = all_resample_kwargs.pop('fill_method', None)
+        if fill_method_str:
+            fill_method = lambda df: getattr(df, fill_method_str)()
+        else:
+            fill_method = lambda df: df
+            
+        how_str = all_resample_kwargs.pop('how', None)
+        if how_str:
+            how = lambda df: getattr(df, how_str)()
+        else:
+            how = lambda df: df
+
+        if resample_kwargs:
+            warnings.warn("Not all resample_kwargs were consumed: {}".format(repr(resample_kwargs))) 
+        
+        return how(fill_method(data.resample(rule, **resample_kwargs)))
+       
 
     try:
-        data = data.resample(**resample_kwargs)
+        data = _resample_chain(data, resample_kwargs)
     except pytz.AmbiguousTimeError:
         # Work-around for
         # https://github.com/pydata/pandas/issues/10117
         tz = data.index.tz.zone
         data = data.tz_convert('UTC')
-        data = data.resample(**resample_kwargs)
+        data = _resample_chain(data, resample_kwargs)
+        
         data = data.tz_convert(tz)
     return data

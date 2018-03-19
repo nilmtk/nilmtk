@@ -82,11 +82,11 @@ def convert_iawe(iawe_path, output_filename, format="HDF"):
         df = df.drop(TIMESTAMP_COLUMN_NAME, 1)
         df.rename(columns=lambda x: column_mapping[x], inplace=True)
         df.columns.set_names(LEVEL_NAMES, inplace=True)
-        df = df.convert_objects(convert_numeric=True)
+        df = df.apply(pd.to_numeric, errors='ignore')
         df = df.dropna()
         df = df.astype(np.float32)
         df = df.sort_index()
-        df = df.resample("1T")
+        df = df.resample("1T").mean()
         df = reindex_fill_na(df, idx)
         assert df.isnull().sum().sum() == 0
         store.put(str(key), df)
