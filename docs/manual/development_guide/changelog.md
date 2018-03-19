@@ -16,7 +16,7 @@ This file describes major changes to NILMTK between versions.
 * `ElecMeter.plot_lag()`.  Issue #255.  See [Nipun's blog post](http://nipunbatra.github.io/2014/12/nilmtk-new-plots)
 * `ElecMeter.plot_autocorrelation()`.  See [Nipun's blog post](http://nipunbatra.github.io/2014/12/nilmtk-new-plots)
 * `ElecMeter.plot_spectrum()`.  See [Nipun's blog post](http://nipunbatra.github.io/2014/12/nilmtk-new-plots)
-
+* Support for Python 3.6 and Pandas 0.22. Python 2.7 is still supported for the time being.
 
 ### New dataset converters
 

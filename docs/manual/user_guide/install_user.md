@@ -3,12 +3,13 @@
 
 We recommend using
 [Anaconda](https://store.continuum.io/cshop/anaconda/), which bundles
-togther most of the required packages. Please download Anaconda for
-Python 2.7.x. Python 3 support is experimental and hence please only attempt to use
-NILMTK on Python 3 if you are experienced with Python.
+togther most of the required packages. Since many packages are deprecating 
+Python 2, we are now recommending installing Python 3.6. For the time being, 
+Python 2.7 is still supported but that may change in the near future.
 
 ```bash
 # 0. For Windows only. Download the appropriate version of VS C++ compiler for Python version.
+# For Python 3.6 https://www.microsoft.com/en-us/download/details.aspx?id=48159
 # For Python 2.7 https://www.microsoft.com/en-us/download/details.aspx?id=44266
 # This is needed for building hmmlearn.
 
