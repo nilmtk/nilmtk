@@ -1,5 +1,6 @@
 from ..results import Results
 from ..measurement import AC_TYPES
+import pandas as pd
 
 class TotalEnergyResults(Results):
     """
@@ -38,4 +39,5 @@ class TotalEnergyResults(Results):
         return self.combined()
 
     def export_to_cache(self):
-        return self._data.fillna(0).convert_objects()
+        return self._data.fillna(0).apply(pd.to_numeric, errors='ignore')
+                

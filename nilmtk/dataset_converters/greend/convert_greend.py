@@ -44,7 +44,7 @@ def convert_greend(greend_path, hdf_filename):
             if tmp_pandas.timestamp.dtype != np.float64:
                 tmp_pandas = tmp_pandas[tmp_pandas.timestamp != 'timestamp'] # remove all error rows
                 # use the cleaned column as the index
-            tmp_pandas.index = tmp_pandas["timestamp"].convert_objects(convert_numeric=True).values
+            tmp_pandas.index = tmp_pandas["timestamp"].apply(pd.to_numeric, errors='ignore').values
             tmp_pandas = tmp_pandas.drop('timestamp', 1) # remove timestamp from the columns (it's the index already)
             tmp_pandas = tmp_pandas.astype("float32") # convert everything back to float32
             # convert the index to datetime

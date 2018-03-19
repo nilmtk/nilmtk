@@ -178,14 +178,14 @@ class Results(object):
 
         Notes
         -----
-        Objects are converted using `DataFrame.convert_objects()`.
+        Objects are converted using `pandas.to_numeric()`.
         The reason for doing this is to strip out the timezone
         information from data columns.  We have to do this otherwise
         Pandas complains if we try to put a column with multiple
         timezones (e.g. Europe/London across a daylight saving
         boundary).
         """
-        return self._data.convert_objects()
+        return self._data.apply(pd.to_numeric, errors='ignore')
 
     def timeframes(self):
         """Returns a list of timeframes covered by this Result."""
