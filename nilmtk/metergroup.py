@@ -1318,11 +1318,19 @@ class MeterGroup(Electric):
         function_map = {'energy': self.fraction_per_meter, 'entropy': self.entropy_per_meter}
         top_k_series = function_map[by](**kwargs)
         top_k_series.sort_values(inplace=True, ascending=asc)
-        top_k_elec_meter_ids = top_k_series[:k].index
+        top_k_elec_meter_ids = list(top_k_series[:k].index)
+        
+        #TODO: investigate the root cause for missing namedtuple type, remove this workaround
+        if top_k_elec_meter_ids and type(top_k_elec_meter_ids[0]) is tuple and len(top_k_elec_meter_ids[0]) == 3:
+            top_k_elec_meter_ids = [ElecMeterID(*key) for key in top_k_elec_meter_ids]
+        
         top_k_metergroup = self.from_list(top_k_elec_meter_ids)
 
         if group_remainder:
-            remainder_ids = top_k_series[k:].index
+            remainder_ids = list(top_k_series[k:].index)
+            if remainder_ids and type(remainder_ids[0]) is tuple and len(remainder_ids[0]) == 3:
+                remainder_ids = [ElecMeterID(*key) for key in remainder_ids]
+            
             remainder_metergroup = self.from_list(remainder_ids)
             remainder_metergroup.name = 'others'
             top_k_metergroup.meters.append(remainder_metergroup)
