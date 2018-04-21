@@ -727,7 +727,10 @@ class ElecMeter(Hashable, Electric):
                 except:
                     return res
                 else:
-                    return pd.Series(res[ac_types], index=ac_types)
+                    if res.empty:
+                        return res
+                    else:
+                        return pd.Series(res[ac_types], index=ac_types)
             else:
                 return res
 

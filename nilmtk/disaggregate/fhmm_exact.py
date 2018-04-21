@@ -269,6 +269,11 @@ class FHMM(Disaggregator):
             power_series = meter.power_series(**load_kwargs)
             meter_data = next(power_series).dropna()
             X = meter_data.values.reshape((-1, 1))
+            
+            if not len(X):
+                print("Submeter '{}' has no samples, skipping...".format(meter))
+                continue
+                
             assert X.ndim == 2
             self.X = X
 
