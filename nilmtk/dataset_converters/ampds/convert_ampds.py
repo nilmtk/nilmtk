@@ -24,7 +24,7 @@ columnNameMapping = {'V': ('voltage', ''),
                      'S': ('power', 'apparent'),
                      'St': ('energy', 'apparent')}
 
-TIMESTAMP_COLUMN_NAME = "TIMESTAMP"
+TIMESTAMP_COLUMN_NAME = "TS"
 TIMEZONE = "America/Vancouver"
 
 
@@ -33,7 +33,7 @@ def _get_module_directory():
     path_to_this_file = dirname(getfile(currentframe()))
     if not isdir(path_to_this_file):
         encoding = getfilesystemencoding()
-        path_to_this_file = dirname(unicode(__file__, encoding))
+        path_to_this_file = dirname(__file__)
     if not isdir(path_to_this_file):
         abspath(getsourcefile(lambda _: None))
     if not isdir(path_to_this_file):
@@ -44,6 +44,11 @@ def _get_module_directory():
 
 def convert_ampds(input_path, output_filename, format='HDF'):
     """
+    Convert AMPds R2013 as seen on Dataverse. Download the files
+    as CSVs and put them in the `input_path` folder for conversion.
+    
+    Download URL: https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/MXB7VO
+    
     Parameters: 
     -----------
     input_path: str
@@ -80,7 +85,7 @@ def convert_ampds(input_path, output_filename, format='HDF'):
         df.columns = [x.replace(" ", "") for x in df.columns]
         df.index = pd.to_datetime(df[TIMESTAMP_COLUMN_NAME], unit='s', utc=True)
         df = df.drop(TIMESTAMP_COLUMN_NAME, 1)
-        df = df.tz_localize('GMT').tz_convert(TIMEZONE)
+        df = df.tz_convert(TIMEZONE)
         df.rename(columns=lambda x: columnNameMapping[x], inplace=True)
         df.columns.set_names(LEVEL_NAMES, inplace=True)
         df = df.apply(pd.to_numeric, errors='ignore')
@@ -88,6 +93,7 @@ def convert_ampds(input_path, output_filename, format='HDF'):
         df = df.astype(np.float32)
         store.put(str(key), df)
         print("Done with file #", (i + 1))
+        
     store.close()
     metadata_path = join(_get_module_directory(), 'metadata')
     print('Processing metadata...')
