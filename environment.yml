@@ -1,6 +1,6 @@
 name: nilmtk-env
 dependencies:
-- python=3.6.4
+- python=3.6
 - Cython>=0.27.3
 - bottleneck>=1.2.1
 - numpy>=1.13.3
@@ -13,15 +13,15 @@ dependencies:
 - scikit-learn>=0.19.1
 - jupyter
 - ipython
+- ipykernel
 - six
 - future
 - nose
 - coverage
 - pip
+- psycopg2
 - pip:  # Install packages which are not in conda. Install these using pip:
     - coveralls
     - https://github.com/hmmlearn/hmmlearn/archive/ae1a41e4d03ea61b7a25cba68698e8e2e52880ad.zip#egg=hmmlearn
-    - psycopg2 # not available in conda for Windows.  See issue #462
     - https://github.com/nilmtk/nilm_metadata/archive/master.zip#egg=nilm_metadata
     - https://github.com/nilmtk/nilmtk/archive/master.zip#egg=nilmtk
-    - ipykernel # Needed to get jupyter notebook working with different kernel
