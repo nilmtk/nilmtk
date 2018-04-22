@@ -24,12 +24,13 @@ only a subset of the data.
 
 For example, to only load house 26 for April 2014:
 
-dataport.download_dataset(
-           'username',
-           'password',
-           '/path/output_filename.h5'
-           periods_to_load = {26: ('2014-04-01', '2014-05-01')}
-           )
+    from nilmtk.dataset_converters.dataport.download_dataport import download_dataport
+    download_dataport(
+        'username',
+        'password',
+        '/path/output_filename.h5',
+        periods_to_load={26: ('2014-04-01', '2014-05-01')}
+    )
 
 REQUIREMENTS:
 
