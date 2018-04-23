@@ -158,7 +158,7 @@ class CombinatorialOptimisation(Disaggregator):
             appliance_powers = self.disaggregate_chunk(chunk)
 
             for i, model in enumerate(self.model):
-                appliance_power = appliance_powers[i]
+                appliance_power = appliance_powers.iloc[:, i]
                 if len(appliance_power) == 0:
                     continue
                 data_is_available = True
