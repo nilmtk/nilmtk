@@ -254,19 +254,32 @@ class CombinatorialOptimisation(Disaggregator):
         return appliance_powers
 
     def import_model(self, filename):
-        imported_model = pickle.load(open(filename, 'r'))
+        with open(filename, 'rb') as in_file:
+            imported_model = pickle.load(in_file)
+            
         self.model = imported_model.model
-        # recreate datastores from filenames
+        
+        # Recreate datastores from filenames
         for pair in self.model:
-            pair['training_metadata'].store = HDFDataStore(
-                pair['training_metadata'].store)
+            store_filename = pair['training_metadata'].store
+            pair['training_metadata'].store = HDFDataStore(store_filename)
+            
         self.state_combinations = imported_model.state_combinations
         self.MIN_CHUNK_LENGTH = imported_model.MIN_CHUNK_LENGTH
 
     def export_model(self, filename):
         # Can't pickle datastore, so convert to filenames
-        exported_model = copy.deepcopy(self)
-        for pair in exported_model.model:
-            pair['training_metadata'].store = (
-                pair['training_metadata'].store.store.filename)
-        pickle.dump(exported_model, open(filename, 'wb'))
+        original_stores = []
+        for pair in self.model:
+            original_store = pair['training_metadata'].store
+            original_stores.append(original_store)
+            pair['training_metadata'].store = original_store.store.filename
+    
+        try:
+            with open(filename, 'wb') as out_file:
+                pickle.dump(self, out_file)
+        finally:
+            # Restore the stores even if the pickling fails
+            for original_store, pair in zip(original_stores, self.model):
+                pair['training_metadata'].store = original_store
+                
