@@ -178,7 +178,7 @@ def download_dataport(database_username, database_password,
 
     # if user has specified buildings
     if periods_to_load:
-        buildings_to_load = periods_to_load.keys()
+        buildings_to_load = list(periods_to_load.keys())
     else:
         # get buildings present in all tables
         sql_query = ''
