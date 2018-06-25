@@ -74,16 +74,17 @@ def convert_combed(combed_path, output_filename, format='HDF'):
                 if exists:
                     total = pd.concat(dfs, axis=1)
                     total = total.tz_localize('UTC').tz_convert('Asia/Kolkata')
-                    total.rename(columns=lambda x: column_mapping[x], inplace=True)
+                    total.columns = pd.MultiIndex.from_tuples([column_mapping[x] for x in total.columns])
                     total.columns.set_names(LEVEL_NAMES, inplace=True)
                     assert total.index.is_unique
                     store.put(str(key), total)
+                    
     convert_yaml_to_hdf5(join(_get_module_directory(), 'metadata'),
                          output_filename)
 
     print("Done converting COMBED to HDF5!")
 
-
+    
 def _get_module_directory():
     # Taken from http://stackoverflow.com/a/6098238/732596
     path_to_this_file = dirname(getfile(currentframe()))
