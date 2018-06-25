@@ -65,7 +65,7 @@ def convert_combed(combed_path, output_filename, format='HDF'):
                     if os.path.isfile(filename_attribute):
                         exists = True
                         print(filename_attribute)
-                        df = pd.read_csv(filename_attribute, header=True, names=["timestamp", attribute])
+                        df = pd.read_csv(filename_attribute, names=["timestamp", attribute])
                         df.index = pd.to_datetime(df["timestamp"], unit='ms')
                         df = df.drop("timestamp", 1)
                         dfs.append(df)
