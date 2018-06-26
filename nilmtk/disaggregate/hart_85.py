@@ -159,31 +159,27 @@ class PairBuffer(object):
                             # active
                             matchtols = [self._min_tol, self._min_tol]
                             for ix in range(1, self._num_measurements):
-                                matchtols[ix - 1] = self._min_tol if (max(np.fabs([val[ix], compval[ix]]))
-                                                                      < self._large_transition) else (self._percent_tol
-                                                                                                      * max(
-                                    np.fabs([val[ix], compval[ix]])))
+                                matchtols[ix - 1] = (
+                                    self._min_tol 
+                                    if (max(np.fabs([val[ix], compval[ix]])) < self._large_transition) 
+                                    else (self._percent_tol * max(np.fabs([val[ix], compval[ix]])))
+                                )
                             if self._num_measurements == 3:
-                                condition = (np.fabs(vsum[0]) < matchtols[0]) and (
-                                    np.fabs(vsum[1]) < matchtols[1])
+                                condition = (np.fabs(vsum[0]) < matchtols[0]) and (np.fabs(vsum[1]) < matchtols[1])
 
                             elif self._num_measurements == 2:
                                 condition = np.fabs(vsum[0]) < matchtols[0]
 
                             if condition:
                                 # Mark the transition as complete
-                                self.transition_list[idx][
-                                    self._num_measurements] = True
-                                self.transition_list[compindex][
-                                    self._num_measurements] = True
+                                self.transition_list[idx][self._num_measurements] = True
+                                self.transition_list[compindex][self._num_measurements] = True
                                 pairmatched = True
 
                                 # Append the OFF transition to the ON. Add to
                                 # dataframe.
-                                matchedpair = val[
-                                              0:self._num_measurements] + compval[0:self._num_measurements]
-                                self.matched_pairs.loc[
-                                    len(self.matched_pairs)] = matchedpair
+                                matchedpair = val[0:self._num_measurements] + compval[0:self._num_measurements]
+                                self.matched_pairs.loc[len(self.matched_pairs)] = matchedpair
 
                     # Iterate Index
                     idx += 1
