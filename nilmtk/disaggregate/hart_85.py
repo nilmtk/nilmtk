@@ -237,6 +237,16 @@ class Hart85(Disaggregator):
         self.pair_df = self.pair(
             buffer_size, min_tolerance, percent_tolerance, large_transition)
         self.centroids = hart85_means_shift_cluster(self.pair_df, cols)
+        
+        self.model = dict(
+            cols=cols,
+            state_threshold=state_threshold,
+            noise_level=noise_level,
+            steady_states=self.steady_states, 
+            transients=self.transients,
+            # pair_df=self.pair_df,
+            centroids=self.centroids
+        )
 
     def pair(self, buffer_size, min_tolerance, percent_tolerance,
              large_transition):
