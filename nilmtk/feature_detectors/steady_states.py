@@ -29,6 +29,8 @@ def find_steady_states_transients(metergroup, cols, noise_level,
             power_dataframe = power_df[[('power', 'active'), ('power', 'reactive')]]
         """
         power_dataframe = power_df.dropna()
+        if power_dataframe.empty: 
+            continue
 
         x, y = find_steady_states(
             power_dataframe, noise_level=noise_level,

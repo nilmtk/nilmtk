@@ -3,8 +3,7 @@ from collections import OrderedDict, deque
 import pandas as pd
 
 from nilmtk.feature_detectors.cluster import hart85_means_shift_cluster
-from nilmtk.feature_detectors.steady_states import (
-    find_steady_states_transients)
+from nilmtk.feature_detectors.steady_states import find_steady_states_transients
 from nilmtk.disaggregate import Disaggregator
 
 
@@ -133,11 +132,14 @@ class PairBuffer(object):
         if tlength < 2:
             return pairmatched
 
+            
         # Can we reduce the running time of this algorithm?
         # My gut feeling is no, because we can't re-order the list...
         # I wonder if we sort but then check the time... maybe. TO DO
         # (perhaps!).
 
+        new_matched_pairs = []
+        
         # Start the element distance at 1, go up to current length of buffer
         for eDistance in range(1, tlength):
             idx = 0
@@ -176,16 +178,22 @@ class PairBuffer(object):
                                 self.transition_list[compindex][self._num_measurements] = True
                                 pairmatched = True
 
-                                # Append the OFF transition to the ON. Add to
-                                # dataframe.
+                                # Append the OFF transition to the ON. Add to the list.
                                 matchedpair = val[0:self._num_measurements] + compval[0:self._num_measurements]
-                                self.matched_pairs.loc[len(self.matched_pairs)] = matchedpair
+                                new_matched_pairs.append(matchedpair)
 
                     # Iterate Index
                     idx += 1
                 else:
                     break
 
+        # Process new pairs in a single operation (faster than growing the dataframe)
+        if pairmatched:
+            if self.matched_pairs.empty:
+                self.matched_pairs = pd.DataFrame(new_matched_pairs, columns=self.pair_columns)
+            else:
+                self.matched_pairs = self.matched_pairs.append(pd.DataFrame(new_matched_pairs, columns=self.pair_columns)) 
+        
         return pairmatched
 
 
