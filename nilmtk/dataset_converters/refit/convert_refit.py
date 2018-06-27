@@ -1,3 +1,18 @@
+'''
+REFIT dataset converter for the clean version avaiable at the URLs below:
+
+"REFIT: Electrical Load Measurements (Cleaned)"
+https://pure.strath.ac.uk/portal/en/datasets/refit-electrical-load-measurements-cleaned(9ab14b0e-19ac-4279-938f-27f643078cec).html
+https://pure.strath.ac.uk/portal/files/52873459/Processed_Data_CSV.7z
+
+The original version of the dataset include duplicated timestamps. 
+Check the dataset website for more information.
+
+For citation of the dataset, use:
+http://dx.doi.org/10.1038/sdata.2016.122
+
+'''
+
 from __future__ import print_function, division
 import pandas as pd
 import numpy as np
@@ -71,9 +86,12 @@ def _convert(input_path, store, tz, sort_index=True):
         nilmtk_house_id += 1
         print("Loading house", house_id, end="... ")
         stdout.flush()
-        csv_filename = input_path + 'House' + str(house_id) + '.csv'
-        columns = ['Timestamp','Aggregate','Appliance1','Appliance2','Appliance3','Appliance4','Appliance5','Appliance6','Appliance7','Appliance8','Appliance9']
-        df = _load_csv(csv_filename, columns, tz)
+        csv_filename = input_path + 'House_' + str(house_id) + '.csv'
+        # The clean version already includes header, so we
+        # just skip the text version of the timestamp
+        usecols = ['Unix','Aggregate','Appliance1','Appliance2','Appliance3','Appliance4','Appliance5','Appliance6','Appliance7','Appliance8','Appliance9']
+        
+        df = _load_csv(csv_filename, usecols, tz)
         if sort_index:
             df = df.sort_index() # might not be sorted...
         chan_id = 0
@@ -92,12 +110,12 @@ def _convert(input_path, store, tz, sort_index=True):
             store.put(str(key), chan_df)
         print('')
 
-def _load_csv(filename, columns, tz):
+def _load_csv(filename, usecols, tz):
     """
     Parameters
     ----------
     filename : str
-    columns : list of tuples (for hierarchical column index)
+    usecols : list of columns to keep
     tz : str e.g. 'US/Eastern'
 
     Returns
@@ -105,11 +123,11 @@ def _load_csv(filename, columns, tz):
     dataframe
     """
     # Load data
-    df = pd.read_csv(filename, names=columns)
+    df = pd.read_csv(filename, usecols=usecols)
     
     # Convert the integer index column to timezone-aware datetime 
-    df['Timestamp'] = pd.to_datetime(df.Timestamp, unit='s', utc=True)
-    df.set_index('Timestamp', inplace=True)
+    df['Unix'] = pd.to_datetime(df['Unix'], unit='s', utc=True)
+    df.set_index('Unix', inplace=True)
     df = df.tz_convert(tz)
 
     return df
