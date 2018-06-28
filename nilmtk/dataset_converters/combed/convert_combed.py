@@ -54,6 +54,8 @@ def convert_combed(combed_path, output_filename, format='HDF'):
     # Open store
     store = get_datastore(output_filename, format, mode='w')
 
+    any_file_converted = False
+    
     for building_name, building_mapping in iteritems(overall_dataset_mapping):
         for load_name, load_mapping in iteritems(building_mapping):
             for load_mapping_path, meter_number in iteritems(load_mapping):
@@ -62,6 +64,11 @@ def convert_combed(combed_path, output_filename, format='HDF'):
                 dfs = []
                 for attribute in column_mapping.keys():
                     filename_attribute = join(combed_path, building_name, load_name, load_mapping_path, "%s.csv" %attribute)
+                    if not os.path.isfile(filename_attribute):
+                        # File not found directly in the combed_path provided
+                        # Try adding 'iiitd' to it
+                        filename_attribute = join(combed_path, 'iiitd', building_name, load_name, load_mapping_path, "%s.csv" %attribute)
+                    
                     if os.path.isfile(filename_attribute):
                         exists = True
                         print(filename_attribute)
@@ -71,6 +78,7 @@ def convert_combed(combed_path, output_filename, format='HDF'):
                         dfs.append(df)
                     else:
                         exists = False
+                        
                 if exists:
                     total = pd.concat(dfs, axis=1)
                     total = total.tz_localize('UTC').tz_convert('Asia/Kolkata')
@@ -78,6 +86,10 @@ def convert_combed(combed_path, output_filename, format='HDF'):
                     total.columns.set_names(LEVEL_NAMES, inplace=True)
                     assert total.index.is_unique
                     store.put(str(key), total)
+                    any_file_converted = True
+                    
+    if not any_file_converted:
+        raise RuntimeError('No files converted, did you specify the correct path?')
                     
     convert_yaml_to_hdf5(join(_get_module_directory(), 'metadata'),
                          output_filename)
