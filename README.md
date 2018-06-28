@@ -5,11 +5,10 @@ energy consumed by individual appliances given just a whole-house
 power meter reading.  In other words, it produces an (estimated)
 itemised energy bill from just a single, whole-house power meter.
 
-NILMTK is a toolkit designed to help *researchers* evaluate the
-accuracy of NILM algorithms. 
+NILMTK is a toolkit designed to help **researchers** evaluate the accuracy of NILM algorithms. 
 
-**NILMTK is not being actively developed now. However, we believe it does the job it's intended to do! 
-It may take time for the original NILMTK authors to get back to you regarding queries/issues. However, you are more than welcome to propose changes, support!**.
+**As of June 2018, NILMTK is being revived! Although no major changes are expected in the coming months, the codebase is slowly being updated to work properly with the current Python ecosystem, especially to modern versions of our major dependency, *Pandas*. 
+It may take time for the NILMTK authors to get back to you regarding queries/issues. However, you are more than welcome to propose changes, support!** 
 
 # Documentation
 
