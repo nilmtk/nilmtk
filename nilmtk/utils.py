@@ -421,9 +421,11 @@ def safe_resample(data, **resample_kwargs):
        
 
     try:
-        if len(data.index.get_duplicates()) > 0:
+        dups_in_index = data.index.duplicated(keep='first')
+        if dups_in_index.any():
             warnings.warn("Found duplicate index. Keeping first value")
-            data = data[~data.index.duplicated(keep='first')]
+            data = data[~dups_in_index]
+            
         data = _resample_chain(data, resample_kwargs)
     except pytz.AmbiguousTimeError:
         # Work-around for
