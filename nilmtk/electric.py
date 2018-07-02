@@ -173,7 +173,7 @@ class Electric(object):
         """
         # Get start and end times for the plot
         timeframe = self.get_timeframe() if timeframe is None else timeframe
-        if not timeframe:
+        if not timeframe or timeframe.empty:
             return ax
 
         kwargs['sections'] = [timeframe]
