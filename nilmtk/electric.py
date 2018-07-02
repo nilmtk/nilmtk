@@ -630,7 +630,7 @@ class Electric(object):
             if chunk.empty:
                 yield chunk
                 continue
-            chunk_to_yield = chunk[physical_quantity].sum(axis=1)
+            chunk_to_yield = chunk[physical_quantity].sum(axis=1, skipna=False)
             ac_types = '+'.join(chunk[physical_quantity].columns)
             chunk_to_yield.name = (physical_quantity, ac_types)
             chunk_to_yield.timeframe = getattr(chunk, 'timeframe', None)
