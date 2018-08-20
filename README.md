@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/nilmtk/nilmtk.svg?branch=master)](https://travis-ci.org/nilmtk/nilmtk)
+
 # NILMTK: Non-Intrusive Load Monitoring Toolkit
 
 Non-Intrusive Load Monitoring (NILM) is the process of estimating the
@@ -64,5 +66,3 @@ as a guide to the current API.
 * Nov 2014: NILMTK wins best demo award at [ACM BuildSys](http://www.buildsys.org/2014/)
 
 For more detail, please see our [changelog](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/development_guide/changelog.md).
-
-[![Build Status](https://travis-ci.org/nilmtk/nilmtk.svg?branch=master)](https://travis-ci.org/nilmtk/nilmtk)
