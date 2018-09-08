@@ -12,6 +12,7 @@ from nilmtk.measurement import LEVEL_NAMES
 from nilmtk.datastore import Key
 from nilm_metadata import convert_yaml_to_hdf5
 from inspect import currentframe, getfile, getsourcefile
+import pytz
 
 """
 MANUAL:
@@ -188,7 +189,7 @@ def download_dataport(database_username, database_password,
                          ') UNION ')
         sql_query = sql_query[:-7]
         sql_query = (sql_query + ' ORDER BY dataid') 
-        buildings_to_load = pd.read_sql(sql_query, conn)['dataid'].tolist()
+        buildings_to_load = pd.read_sql(sql_query, conn)['dataid'].tolist()  # this line will take a while
 
     # for each user specified building or all buildings in database
     for building_id in buildings_to_load:
@@ -267,10 +268,25 @@ def download_dataport(database_username, database_password,
                                      "'" + chunk_start.strftime(format) + "'" + 
                                      " and " + 
                                      "'" + chunk_end.strftime(format) + "'")
-                        chunk_dataframe = pd.read_sql(sql_query, conn)
+                        try:
+                            chunk_dataframe = pd.read_sql(sql_query, conn)
+                        except:
+                            text_file = open(
+                                "WikiEnergyDownload_connection_failure_report.txt",
+                                "a"
+                            )
+                            e = sys.exc_info()
+                            text_file.write(
+                                'Error: %s is found for dataport building id: %s' +
+                                'between date range from %s and %s\n'
+                                % (str(e), building_id, chunk_start, chunk_end)
+                            )
+                            text_file.close()
+
                         
                         # nilmtk requires building indices to start at 1
                         nilmtk_building_id = buildings_to_load.index(building_id) + 1
+
                         # convert to nilmtk-df and save to disk
                         nilmtk_dataframe = _dataport_dataframe_to_hdf(chunk_dataframe, store,
                                                                          nilmtk_building_id,
@@ -307,16 +323,27 @@ def _dataport_dataframe_to_hdf(dataport_dataframe,
                                  nilmtk_building_id,
                                  dataport_building_id):
     local_dataframe = dataport_dataframe.copy()
-    
+
+    # WK: using local time zone seems problematic with NotExistenceTimeError and AmbiguousError, let's stick to UTC
+    # WK: After thorough examination, I GUESS that dataport will return UTC time if possible. When there is ambiguous
+    #     dst time, the returned data would be tz=None. In this case, we should manually convert the 'localminute'
+    #     column back to UTC time by handling the ambiguity.
+    if pd.DatetimeIndex(local_dataframe['localminute']).tzinfo != pytz.UTC:
+        print('NOT UTC encountered, localminute dtype is: %s' % local_dataframe['localminute'].dtype)
+        local_dataframe['localminute'] = pd.DatetimeIndex(local_dataframe['localminute']).tz_localize('UTC')
+
+
+    # WK: the following line is commented by WK
     # remove timezone information to avoid append errors
-    local_dataframe['localminute'] = pd.DatetimeIndex([i.replace(tzinfo=None) 
-                                                       for i in local_dataframe['localminute']])
+    # local_dataframe['localminute'] = pd.DatetimeIndex([i.replace(tzinfo=None)
+    #                                                    for i in local_dataframe['localminute']])
     
     # set timestamp as frame index
     local_dataframe = local_dataframe.set_index('localminute')
-    
+
+    # WK: the following line is commented by WK
     # set timezone
-    local_dataframe = local_dataframe.tz_localize('US/Central')
+    # local_dataframe = local_dataframe.tz_localize('US/Central', ambiguous='infer')
     
     # remove timestamp column from dataframe
     feeds_dataframe = local_dataframe.drop('dataid', axis=1)
@@ -351,9 +378,11 @@ def _dataport_dataframe_to_hdf(dataport_dataframe,
             feed_dataframe.columns.set_names(LEVEL_NAMES, inplace=True)
             
             key = Key(building=nilmtk_building_id, meter=meter_id)
-            
+
+            if feed_dataframe.index.tzinfo != pytz.UTC:
+                print('NOT UTC timezone!!! double check!')
             # store dataframe
-            store.put(str(key), feed_dataframe, format='table', append=True)
+            store.put(str(key), feed_dataframe, format='table', append=True)  # WK: before store, should check tzinfo!!
             store.flush()
                         
             # elec_meter metadata
