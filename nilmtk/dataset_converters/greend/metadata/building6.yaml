@@ -5,117 +5,168 @@ elec_meters:
   1:
     device_model: circle
     submeter_of: 0
-    room: lounge
+    site_meter: true # outlets meter
+    room: hall
   2:
     device_model: circle
     submeter_of: 0
-    room: lounge
+    site_meter: true # light meter
+    room: hall
   3:
     device_model: circle
-    submeter_of: 0
+    submeter_of: 1
     room: kitchen
   4:
     device_model: circle
-    submeter_of: 0
-    room: bedroom # bedroom 3
+    submeter_of: 1
+    room: lounge
   5:
     device_model: circle
-    submeter_of: 0
-    room: utility
+    submeter_of: 1
+    room: kitchen
   6:
     device_model: circle
-    submeter_of: 0
-    room: bedroom # bedroom 2
+    submeter_of: 1
+    room: kitchen
   7:
     device_model: circle
-    submeter_of: 0
-    room: bedroom # bedroom 1
+    submeter_of: 1
+    room: lounge
   8:
     device_model: circle
-    submeter_of: 0
-    room: utility
+    submeter_of: 1
+    room: hall
   9:
     device_model: circle
-    submeter_of: 0
+    submeter_of: 1
     room: kitchen
 
 appliances:
 - type: television
   instance: 1
-  meters: [1]
-  control:
-    - manual
-  model: TH-37PA50E
-  manufacturer: Panasonic
-
-- type: incandescent lamp
-  instance: 1
-  meters: [2]
-  control:
-    - manual
-  nominal_consumption: 250
-  
-- type: toaster
-  instance: 1
   meters: [3]
+  room: kitchen
   control:
     - manual
-  nominal_consumption: 1600
-  model: TP36
-  manufacturer: Girmi
-    
-- type: electric space heater
-  instance: 1
-  meters: [4]
-  control:
-    - manual
-  nominal_consumption: 1800
-  model: Kalimero
-  manufacturer: Argo
-  
-- type: clothes iron
-  instance: 1
-  meters: [5]
-  control:
-    - manual
-  model: Maxivap 2
-  manufacturer: Jura
-  
-- type: incandescent lamp
-  instance: 2
-  meters: [5]
-  control:
-    - manual
-  
-- type: laptop computer
-  instance: 1
-  meters: [6]
-  control:
-    - manual
-  model: S400C
+  model: 24T1E
   manufacturer: Asus
+  year_of_purchase: 2011
   
 - type: television
   instance: 2
-  meters: [7]
+  meters: [4]
+  room: lounge
   control:
     - manual
-  model: 32LD320-ZA
-  manufacturer: LG
+  model: BS4216H1
+  manufacturer: Bluesky
+  year_of_purchase: 2002
   
+- type: set top box # decoder
+  instance: 1
+  meters: [4]
+  room: lounge
+  control:
+    - manual
+  model: SMTT1041
+  manufacturer: Samsung
+  year_of_purchase: 2013
+  
+- type: fridge freezer
+  instance: 1
+  meters: [5]
+  room: kitchen
+  control:
+    - thermostat
+  manufacturer: Carma
+  year_of_purchase: 2002
+    
+- type: electric oven
+  instance: 1
+  meters: [6]
+  room: kitchen
+  control:
+    - manual
+  model: A9650/128
+  manufacturer: REX
+  year_of_purchase: 2002
+
+- type: laptop computer
+  instance: 1
+  meters: [7]
+  room: lounge
+  control:
+    - manual
+  model: T430
+  manufacturer: Lenovo
+  year_of_purchase: 2013
+      
+- type: charger # in-home-display thermostat controller
+  instance: 1
+  meters: [7]
+  room: lounge
+  control:
+    - always on
+  model: EVOHOME
+  manufacturer: Honeywell
+  year_of_purchase: 2013
+    
 - type: washing machine
   instance: 1
   meters: [8]
+  room: hall
   control:
     - manual
-  model: R16
-  manufacturer: REX
-  energy_rating: AA
+  model: HYDRAX 413
+  manufacturer: San Giorgio
+  year_of_purchase: 2002
   
-- type: fridge
+- type: air handling unit
   instance: 1
   meters: [9]
+  room: kitchen
   control:
     - manual
-  model: KGN362LN0
-  manufacturer: Bosch
+  model: AQUA STIXF/120
+  manufacturer: Elica
+  year_of_purchase: 2008
+  
+description: Two floor apartment at the 12th and 13th floor of a building of 13 floors. Total of 170sqm.
+rooms:
+  - name: hall
+    instance: 1
+    floor: 12
+  - name: lounge
+    instance: 1
+    floor: 12
+  - name: bathroom
+    instance: 1
+    floor: 12
+  - name: bathroom
+    instance: 2
+    floor: 12
+  - name: bathroom
+    instance: 3
+    floor: 12
+  - name: bedroom
+    instance: 1
+    floor: 12
+  - name: bedroom
+    instance: 2
+    floor: 12
+  - name: bedroom
+    instance: 3
+    floor: 12
+  - name: kitchen
+    instance: 1
+    floor: 12
+  - name: bedroom
+    instance: 4
+    floor: 13
+  - name: bathroom
+    instance: 4
+    floor: 13
+n_occupants: 2
+#timeframe: keine Ahnung
+periods_unoccupied: 19 april 2014 - 21 april 2014, 12 may 2014 - 16 may 2014, 1 july 2014 - 06 july 2014
+construction_year: 1970

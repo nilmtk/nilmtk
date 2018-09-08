@@ -131,7 +131,7 @@ def convert_greend(greend_path, hdf_filename, use_mp=True):
     
     h = 1 # nilmtk counts buildings from 1 not from 0 as we do, so everything is shifted by 1
     
-    for house in houses[:1]:
+    for house in houses:
         print('Loading', house)
         abs_house = join(greend_path, house)
         dates = [d for d in listdir(abs_house) if d.startswith('dataset')]

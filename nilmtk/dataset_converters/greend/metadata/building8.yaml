@@ -1,0 +1,108 @@
+instance: 8
+original_name: House#7
+
+elec_meters:
+  1:
+    device_model: circle
+    submeter_of: 0
+  2:
+    device_model: circle
+    submeter_of: 0
+  3:
+    device_model: circle
+    submeter_of: 0
+  4:
+    device_model: circle
+    submeter_of: 0
+  5:
+    device_model: circle
+    submeter_of: 0
+  6:
+    device_model: circle
+    submeter_of: 0
+  7:
+    device_model: circle
+    submeter_of: 0
+  8:
+    device_model: circle
+    original_name: outlets meter
+    submeter_of: 0
+    site_meter: true # outlets meter
+    room: hall
+  9:
+    device_model: circle
+    original_name: lights meter
+    submeter_of: 0
+    site_meter: true # lights meter
+    room: hall
+    
+appliances:
+- type: hair dryer
+  instance: 1
+  meters: [1]
+
+- type: washing machine
+  instance: 1
+  meters: [2]
+
+- type: games console
+  instance: 1
+  meters: [3]
+  
+- type: radio
+  instance: 1
+  meters: [3]
+
+- type: spin dryer
+  instance: 1
+  meters: [4]
+
+- type: television
+  instance: 1
+  meters: [5]
+  
+- type: computer
+  instance: 1
+  meters: [5]
+  
+- type: television
+  instance: 2
+  meters: [6]
+
+- type: dish washer
+  instance: 1
+  meters: [7]
+
+
+description: Three floor terraced house
+rooms:
+  - name: hall
+    instance: 1
+    floor: 0 
+  - name: utility
+    instance: 1
+    floor: 0
+  - name: utility
+    instance: 2
+    floor: 0
+  - name: bathroom
+    instance: 1
+    floor: 0
+  - name: lounge
+    instance: 1
+    floor: 1
+  - name: kitchen
+    instance: 1
+    floor: 1
+  - name: bedroom
+    instance: 1
+    floor: 2
+  - name: bedroom
+    instance: 2
+    floor: 2
+  - name: bathroom
+    instance: 2
+    floor: 2
+
+n_occupants: 4
+construction_year: 2008

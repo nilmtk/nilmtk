@@ -56,7 +56,7 @@ appliances:
   meters: [2]
   room: basement
   control:
-    - manuel
+    - manual
   manufacturer: Miele
   year_of_purchase: 2012
 
