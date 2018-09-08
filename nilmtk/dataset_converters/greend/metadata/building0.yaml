@@ -91,7 +91,7 @@ appliances:
   manufacturer: LG
   year_of_purchase: 2012
 
-- type: dishwasher
+- type: dish washer
   instance: 1
   meters: [6]
   room: kitchen

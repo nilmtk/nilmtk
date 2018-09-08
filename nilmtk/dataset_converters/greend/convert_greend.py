@@ -2,17 +2,115 @@ from __future__ import print_function, division
 from os import listdir, getcwd
 from os.path import join, isdir, isfile, dirname, abspath
 import pandas as pd
+import numpy as np
 import datetime
 import time
 from nilmtk.datastore import Key
-import warnings
 from nilm_metadata import convert_yaml_to_hdf5
-import csv
+import warnings
 import numpy as np
+from io import StringIO
+from multiprocessing import Pool
+import inspect
 
 warnings.filterwarnings("ignore")
 
-def convert_greend(greend_path, hdf_filename):
+def _get_blocks(filename):
+    '''
+    Return a list of dataframes from a GREEND CSV file
+    
+    GREEND files can be interpreted as multiple CSV blocks concatenated into
+    a single file per date. Since the columns of the individual blocks can 
+    vary in a single file, they need to be read separately.
+    
+    There are some issues we need to handle in the converter:
+    - the headers from the multiple blocks
+    - corrupted data (lines with null chars, broken lines)
+    - more fields than specified in header
+    '''
+    block_data = None
+    dfs = []
+    previous_header = None
+    print(filename)
+    # Use float64 for timestamps and float32 for the rest of the columns
+    dtypes = {}
+    dtypes['timestamp'] = np.float64
+    
+    def _process_block():
+        if block_data is None:
+            return
+            
+        block_data.seek(0)
+        try:
+            # ignore extra fields for some files
+            error_bad_lines = not (
+                ('building5' in filename and 'dataset_2014-02-04.csv' in filename)
+            )
+            df = pd.read_csv(block_data, index_col='timestamp', dtype=dtypes, error_bad_lines=error_bad_lines)
+        except: #(pd.errors.ParserError, ValueError, TypeError):
+            print("ERROR", filename)
+            raise
+            
+        df.index = pd.to_datetime(df.index, unit='s')
+        df = df.tz_localize("UTC").tz_convert("CET")
+        df.sort_index(inplace=True)
+        df.drop_duplicates(inplace=True)
+        
+        dfs.append(df)
+        block_data.close()
+    
+    
+    special_check = (
+        ('dataset_2014-01-28.csv' in filename and 'building5' in filename) or
+        ('dataset_2014-09-02.csv' in filename and 'building6' in filename)
+    )
+    
+    with open(filename, 'r') as f:
+        for line in f:
+            # At least one file have a bunch of nulls present, let's clean the data
+            line = line.strip('\0')
+            if 'time' in line:
+                # Found a new block
+                if not line.startswith('time'):
+                    # Some lines are corrupted, e.g. 1415605814.541311,0.0,NULL,NUtimestamp,000D6F00029C2918...
+                    line = line[line.find('time'):]
+                
+                if previous_header == line.strip():
+                    # Same exact header, we can treat it as the same block
+                    # print('Skipping split')
+                    continue
+                    
+                # Using a defaultdict for the dtypes didn't work with read_csv,
+                # so we fill a normal dict when we find the columns
+                cols = line.strip().split(',')[1:]
+                for col in cols:
+                    dtypes[col] = np.float32
+                    
+                # print('Found new block')
+                _process_block()
+                block_data = StringIO()
+                previous_header = line.strip()
+
+            
+            if special_check:
+                if ('0.072.172091508705606' in line or
+                    '1409660828.0753369,NULL,NUL' == line):
+                    continue
+
+            block_data.write(line)
+            
+    # Process the remaining block
+    _process_block()
+    
+    return (filename, dfs)
+
+    
+def _get_houses(greend_path):
+    house_list = listdir(greend_path)
+    return [h for h in house_list if isdir(join(greend_path,h))] 
+    
+
+def convert_greend(greend_path, hdf_filename, use_mp=True):
     """
     Parameters
     ----------
@@ -20,94 +118,66 @@ def convert_greend(greend_path, hdf_filename):
         The root path of the greend dataset.
     hdf_filename : str
         The destination HDF5 filename (including path and suffix).
+    use_mp : bool 
+        Defaults to True. Use multiprocessing to load the files for
+        each building.
     """
-    store = pd.HDFStore(hdf_filename, 'w', complevel=9, complib='zlib')
-    houses = sorted(__get_houses(greend_path))
-    print(houses)
+    store = pd.HDFStore(hdf_filename, 'w', complevel=5, complib='zlib')
+    houses = sorted(_get_houses(greend_path))
+    
+    print('Houses found:', houses)
+    if use_mp:
+        pool = Pool()
+    
     h = 1 # nilmtk counts buildings from 1 not from 0 as we do, so everything is shifted by 1
-    for house in houses:
-        print('loading '+house)
+    
+    for house in houses[:1]:
+        print('Loading', house)
         abs_house = join(greend_path, house)
         dates = [d for d in listdir(abs_house) if d.startswith('dataset')]
-        house_data = []
-        for date in dates:
-            print('-----------------------',date)
-            try:
-                tmp_pandas = pd.read_csv(join(abs_house, date), na_values=['na'], error_bad_lines=False)
-            except: # A ParserError/ValueError is returned for malformed files (irregular column number)
-                pass 
-                # for building0 either remove the first days (with less nodes) or use __preprocess_file
-                #import StringIO as sio
-                #tmp_pandas = pd.DataFrame.from_csv(sio.StringIO(__preprocess_file(abs_house, date)))
+        target_filenames = [join(abs_house, date) for date in dates]
+        if use_mp:
+            house_data = pool.map(_get_blocks, target_filenames)
+
+            # Ensure the blocks are sorted by date and make a plain list
+            house_data_dfs = []
+            for date, data in sorted(house_data, key=lambda x: x[0]):
+                house_data_dfs.extend(data)
+        else:
+            house_data_dfs = []
+            for fn in target_filenames:
+                house_data_dfs.extend(_get_blocks(fn)[1])
             
-            # if the timestamp is not correctly parsed then it's an object dtype (string), else a float64
-            if tmp_pandas.timestamp.dtype != np.float64:
-                tmp_pandas = tmp_pandas[tmp_pandas.timestamp != 'timestamp'] # remove all error rows
-                # use the cleaned column as the index
-            tmp_pandas.index = tmp_pandas["timestamp"].apply(pd.to_numeric, errors='ignore').values
-            tmp_pandas = tmp_pandas.drop('timestamp', 1) # remove timestamp from the columns (it's the index already)
-            tmp_pandas = tmp_pandas.astype("float32") # convert everything back to float32
-            # convert the index to datetime
-            tmp_pandas.index = pd.to_datetime(tmp_pandas.index, unit='s')
-            tmp_pandas = tmp_pandas.tz_localize("UTC").tz_convert("CET")
-            tmp_pandas = tmp_pandas.drop_duplicates()
-            #tmp_pandas = tmp_pandas.sort_index()
-            house_data.append(tmp_pandas)
-        overall_df = pd.concat(house_data)
-        overall_df = overall_df.drop_duplicates()
-        overall_df = overall_df.sort_index()
-
+        overall_df = pd.concat(house_data_dfs, sort=True)
+        overall_df.drop_duplicates(inplace=True)
+        
         m = 1
-
         for column in overall_df.columns:
-            print("meter" + str(m)+': '+column)
-            key = Key(building = h, meter=m)
+            print("meter {}: {}".format(m, column))
+            key = Key(building=h, meter=m)
             print("Putting into store...")
             store.put(str(key), overall_df[column], format = 'table')
             m += 1
-            print('Flushing store...')
-            store.flush()
+            # print('Flushing store...')
+            # store.flush()
+            
         h += 1
 
     store.close()
 	
 	# retrieve the dataset metadata in the metadata subfolder
-    import inspect
-    convert_yaml_to_hdf5(dirname(inspect.getfile(convert_greend))+'/metadata/', hdf_filename)
-
-def __timestamp(t):
-    res = 1
-    try:
-        res = datetime.datetime.fromtimestamp(int(float(t)))
-    except ValueError:
-        print('exception'+str(t))
-    return res
-
-def __get_houses(greend_path):
-    house_list = listdir(greend_path)
-    return [h for h in house_list if isdir(join(greend_path,h))] 
-    
-def __preprocess_file(building_path, day_file):
-    filename = join(building_path, day_file)
-    csvfile = open(filename, 'rb')
-    ff = csv.reader(csvfile, delimiter = ',', quotechar='|')
-    from collections import defaultdict
-    cols_nums = defaultdict(list)
-    for f in ff: cols_nums[len(f)].append(f) # group by column number
-    best_col_num = sorted( [(k, len(cols_nums[k])) for k in cols_nums.keys()] , key=lambda x:x[1], reverse=True) # sort rows by row_number DESC
-    processed_rows = cols_nums[best_col_num[0][0]] # reject outliers (all rows with different column number)
-    print("\t"+day_file+" has", best_col_num, "taking only rows with", best_col_num[0][0], "columns")    
-    
-    import io
-    csvfile = io.BytesIO()
-    writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-    writer.writerows(processed_rows) # print row to csv byte stream
-    return csvfile.getvalue()
+    convert_yaml_to_hdf5(
+        join(dirname(inspect.getfile(convert_greend)), 'metadata'),
+        hdf_filename
+    )
 
 #is only called when this file is the main file... only test purpose
 if __name__ == '__main__':
     t1 = time.time()
-    convert_greend('/home/student/Downloads/GREEND_0-1_311014/',
-                   '/home/student/Desktop/greend.h5')
+    convert_greend('GREEND_0-2_300615',
+                   'GREEND_0-2_300615.h5')
     dt = time.time() - t1
-    print('\n\nTime passed:\n'+str(int(dt/60))+' : ' + str(dt%60))
+    print()
+    print()
+    print('Time passed: {}:{}'.format(int(dt/60), dt%60))
+    
