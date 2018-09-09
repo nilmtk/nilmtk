@@ -1,3 +1,4 @@
+from __future__ import print_function
 import pandas as pd
 import numpy as np
 import sys
@@ -8,9 +9,6 @@ from nilmtk.utils import get_module_directory, check_directory_exists
 from nilmtk.datastore import Key
 from nilmtk.measurement import LEVEL_NAMES
 from nilm_metadata import convert_yaml_to_hdf5
-from inspect import currentframe, getfile, getsourcefile
-from sys import getfilesystemencoding
-
 
 """
 DATASET STRUCTURE:
@@ -53,7 +51,6 @@ def convert_eco(dataset_loc, hdf_filename, timezone):
 
     # Traversing every folder
     for folder in directory_list:
-
         if folder[0] == '.' or folder[-3:] == '.h5':
             print('Skipping ', folder)
             continue
@@ -68,7 +65,6 @@ def convert_eco(dataset_loc, hdf_filename, timezone):
         print('Current dir list:', dir_list)
 
         for fl in dir_list:
-            
             print('Computing for folder ', fl)
             
             fl_dir_list = [i for i in listdir(join(dataset_loc,folder,fl)) if '.csv' in i]
@@ -80,28 +76,34 @@ def convert_eco(dataset_loc, hdf_filename, timezone):
                     
                     for phase in range(1,4):
                         key = str(Key(building=building_no, meter=phase))
-                        df_phase = df.ix[:,[1+phase, 5+phase, 8+phase, 13+phase]]
+                        df_phase = df.loc[:,[1+phase, 5+phase, 8+phase, 13+phase]]
 
                         # get reactive power
-                        power = df_phase.as_matrix([1+phase, 13+phase])
+                        power = df_phase.loc[:, (1+phase, 13+phase)].values
                         reactive = power[:,0] * np.tan(power[:,1] * np.pi / 180)
                         df_phase['Q'] = reactive
                         
                         df_phase.index = pd.DatetimeIndex(start=fi[:-4], freq='s', periods=86400, tz='GMT')
                         df_phase = df_phase.tz_convert(timezone)
                         
-                        sm_column_name = {1+phase:('power', 'active'),
-                                            5+phase:('current', ''),
-                                            8+phase:('voltage', ''),
-                                            13+phase:('phase_angle', ''),
-                                            'Q': ('power', 'reactive'),
-                                            };
-                        df_phase.rename(columns=sm_column_name, inplace=True)
+                        sm_column_name = {
+                            1+phase:('power', 'active'),
+                            5+phase:('current', ''),
+                            8+phase:('voltage', ''),
+                            13+phase:('phase_angle', ''),
+                            'Q': ('power', 'reactive'),
+                        }
+                        df_phase.columns = pd.MultiIndex.from_tuples(
+                            sm_column_name[col] for col in df_phase.columns
+                        )
                         
-                        tmp_before = np.size(df_phase.power.active)
-                        df_phase = df_phase[df_phase.power.active != -1]
-                        tmp_after = np.size(df_phase.power.active)
-                        if (tmp_before != tmp_after):
+                        power_active = df_phase['power', 'active']
+                        tmp_before = np.size(power_active)
+                        df_phase = df_phase[power_active != -1]
+                        power_active = df_phase['power', 'active']
+                        tmp_after = np.size(power_active)
+                        
+                        if tmp_before != tmp_after:
                             print('Removed missing measurements - Size before: ' + str(tmp_before) + ', size after: ' + str(tmp_after))
                         
                         df_phase.columns.set_names(LEVEL_NAMES, inplace=True)
@@ -123,7 +125,7 @@ def convert_eco(dataset_loc, hdf_filename, timezone):
                 for fi in fl_dir_list:
                     df = pd.read_csv(join(dataset_loc,folder,fl ,fi), names=[1], dtype=np.float64)
                     df.index = pd.DatetimeIndex(start=fi[:-4], freq='s', periods=86400, tz = 'GMT')
-                    df.rename(columns=plugs_column_name, inplace=True)
+                    df_phase.columns = pd.MultiIndex.from_tuples([plugs_column_name])
                     df = df.tz_convert(timezone)
                     df.columns.set_names(LEVEL_NAMES, inplace=True)
 
@@ -147,20 +149,13 @@ def convert_eco(dataset_loc, hdf_filename, timezone):
 
     # Adding the metadata to the HDF5file
     print("Proceeding to Metadata conversion...")
-    meta_path = join(_get_module_directory(), 'metadata')
+    meta_path = join(
+        get_module_directory(), 
+        'dataset_converters',
+        'eco',
+        'metadata'
+    )
     convert_yaml_to_hdf5(meta_path, hdf_filename)
     print("Completed Metadata conversion.")
 
-def _get_module_directory():
-    # Taken from http://stackoverflow.com/a/6098238/732596
-    path_to_this_file = dirname(getfile(currentframe()))
-    if not isdir(path_to_this_file):
-        encoding = getfilesystemencoding()
-        path_to_this_file = dirname(unicode(__file__, encoding))
-    if not isdir(path_to_this_file):
-        abspath(getsourcefile(lambda _: None))
-    if not isdir(path_to_this_file):
-        path_to_this_file = getcwd()
-    assert isdir(path_to_this_file), path_to_this_file + ' is not a directory'
-    return path_to_this_file
 
