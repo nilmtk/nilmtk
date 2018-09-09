@@ -156,7 +156,7 @@ def convert_eco(dataset_loc, hdf_filename, timezone):
                 for fi in fl_dir_list:
                     found_any_plug = True
                     df = pd.read_csv(join(current_folder, fi), names=[1], dtype=np.float64)
-                    df.index = pd.DatetimeIndex(start=fi[:-4], freq='s', periods=86400, tz = 'GMT')
+                    df.index = pd.DatetimeIndex(start=fi[:-4].replace('.', ':'), freq='s', periods=86400, tz = 'GMT')
                     df.columns = pd.MultiIndex.from_tuples(plugs_column_name.values())
                     df = df.tz_convert(timezone)
                     df.columns.set_names(LEVEL_NAMES, inplace=True)
