@@ -17,9 +17,18 @@ On extracting all the dataset values, we should arrive at a similar directory st
 mentioned.
 
 ECO Dataset will have a folder '<i>_sm_csv' and '<i>_plug_csv' where i is the building no.
+Originally, the expected folder structure was:
 
-<i>_sm_csv has a folder 01
-<i>_plug_csv has a folder 01, 02,....<n> where n is the plug numbers.
+- <i>_sm_csv has a folder <i>
+- <i>_plug_csv has folders 01, 02,....<n> where n is the plug numbers.
+
+This version also supports the following structure, which can be created by unpacking the 
+ZIP files uniformly, creating a folder for each one:
+
+- <i>_sm_csv has a folder <i>
+- <i>_plug_csv has a folder <i>, and <i>_plug_csv/<i> has folders 01, 02,....<n>,
+  where n is the plug numbers.
+
 
 Each folder has a CSV file as per each day, with each day csv file containing
 	86400 entries.
@@ -49,19 +58,36 @@ def convert_eco(dataset_loc, hdf_filename, timezone):
     directory_list.sort()
     print(directory_list)
 
+    found_any_sm = False
+    found_any_plug = False
+    
     # Traversing every folder
     for folder in directory_list:
         if folder[0] == '.' or folder[-3:] == '.h5':
             print('Skipping ', folder)
             continue
-        print('Computing for folder', folder)
 
         #Building number and meter_flag
         building_no = int(folder[:2])
-        meter_flag = 'sm' if 'sm_csv' in folder else 'plugs'
+        meter_flag = None 
+        if 'sm_csv' in folder:
+            meter_flag = 'sm'
+        elif 'plugs' in folder:
+            meter_flag = 'plugs'
+        else:
+            print('Skipping folder', folder)
+            continue
+            
+        print('Computing for folder', folder)
 
         dir_list = [i for i in listdir(join(dataset_loc, folder)) if isdir(join(dataset_loc,folder,i))]
         dir_list.sort()
+        
+        if meter_flag == 'plugs' and len(dir_list) < 3:
+            # Try harder to find the subfolders
+            folder = join(folder, folder[:2])
+            dir_list = [i for i in listdir(join(dataset_loc, folder)) if isdir(join(dataset_loc,folder,i))]
+        
         print('Current dir list:', dir_list)
 
         for fl in dir_list:
@@ -72,6 +98,7 @@ def convert_eco(dataset_loc, hdf_filename, timezone):
 
             if meter_flag == 'sm':
                 for fi in fl_dir_list:
+                    found_any_sm = True
                     df = pd.read_csv(join(dataset_loc,folder,fl,fi), names=[i for i in range(1,17)], dtype=np.float32)
                     
                     for phase in range(1,4):
@@ -120,12 +147,17 @@ def convert_eco(dataset_loc, hdf_filename, timezone):
                 meter_num = int(fl) + 3
                 
                 key = str(Key(building=building_no, meter=meter_num))
-                
+
+                current_folder = join(dataset_loc,folder,fl)
+                if not fl_dir_list:
+                    raise RuntimeError("No CSV file found in " + current_folder)
+                    
                 #Getting dataframe for each csv file seperately
                 for fi in fl_dir_list:
-                    df = pd.read_csv(join(dataset_loc,folder,fl ,fi), names=[1], dtype=np.float64)
+                    found_any_plug = True
+                    df = pd.read_csv(join(current_folder, fi), names=[1], dtype=np.float64)
                     df.index = pd.DatetimeIndex(start=fi[:-4], freq='s', periods=86400, tz = 'GMT')
-                    df_phase.columns = pd.MultiIndex.from_tuples([plugs_column_name])
+                    df.columns = pd.MultiIndex.from_tuples(plugs_column_name.values())
                     df = df.tz_convert(timezone)
                     df.columns.set_names(LEVEL_NAMES, inplace=True)
 
@@ -144,6 +176,10 @@ def convert_eco(dataset_loc, hdf_filename, timezone):
                         store.flush()
                         print('Building',building_no,', Meter no.',meter_num,'=> Done for ',fi[:-4])
             
+            
+    if not found_any_plug or not found_any_sm:
+        raise RuntimeError('The files were not found! Please check the folder structure. Extract each ZIP file into a folder with its base name (e.g. extract "01_plugs_csv.zip" into a folder named "01_plugs_csv", etc.)')
+        
     print("Data storage completed.")
     store.close()
 
