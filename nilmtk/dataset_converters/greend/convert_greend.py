@@ -6,6 +6,7 @@ import numpy as np
 import datetime
 import time
 from nilmtk.datastore import Key
+from nilmtk.measurement import LEVEL_NAMES
 from nilm_metadata import convert_yaml_to_hdf5
 import warnings
 import numpy as np
@@ -156,7 +157,12 @@ def convert_greend(greend_path, hdf_filename, use_mp=True):
             print("meter {}: {}".format(m, column))
             key = Key(building=h, meter=m)
             print("Putting into store...")
-            store.put(str(key), overall_df[column], format = 'table')
+            
+            df = overall_df[column].to_frame()
+            df.columns = pd.MultiIndex.from_tuples([('power', 'active')])
+            df.columns.set_names(LEVEL_NAMES, inplace=True)
+            
+            store.put(str(key), df, format = 'table')
             m += 1
             # print('Flushing store...')
             # store.flush()
