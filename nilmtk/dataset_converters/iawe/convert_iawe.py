@@ -6,9 +6,8 @@ from os import getcwd
 from sys import getfilesystemencoding
 from nilmtk.datastore import Key
 from nilmtk.measurement import LEVEL_NAMES
-from nilmtk.utils import check_directory_exists, get_datastore
+from nilmtk.utils import check_directory_exists, get_datastore, get_module_directory
 from nilm_metadata import convert_yaml_to_hdf5
-from inspect import currentframe, getfile, getsourcefile
 from copy import deepcopy
 
 def reindex_fill_na(df, idx):
@@ -91,21 +90,9 @@ def convert_iawe(iawe_path, output_filename, format="HDF"):
         assert df.isnull().sum().sum() == 0
         store.put(str(key), df)
     store.close()
-    convert_yaml_to_hdf5(join(_get_module_directory(), 'metadata'),
-                         output_filename)
+    
+    metadata_dir = join(get_module_directory(), 'dataset_converters', 'iawe', 'metadata')
+    convert_yaml_to_hdf5(metadata_dir, output_filename)
 
     print("Done converting iAWE to HDF5!")
 
-
-def _get_module_directory():
-    # Taken from http://stackoverflow.com/a/6098238/732596
-    path_to_this_file = dirname(getfile(currentframe()))
-    if not isdir(path_to_this_file):
-        encoding = getfilesystemencoding()
-        path_to_this_file = dirname(unicode(__file__, encoding))
-    if not isdir(path_to_this_file):
-        abspath(getsourcefile(lambda _: None))
-    if not isdir(path_to_this_file):
-        path_to_this_file = getcwd()
-    assert isdir(path_to_this_file), path_to_this_file + ' is not a directory'
-    return path_to_this_file

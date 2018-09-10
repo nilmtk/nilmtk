@@ -12,7 +12,6 @@ from nilmtk.utils import get_datastore
 from nilmtk.datastore import Key
 from nilmtk.measurement import LEVEL_NAMES
 from nilm_metadata import convert_yaml_to_hdf5
-from inspect import currentframe, getfile, getsourcefile
 import yaml
 
 """
@@ -235,15 +234,22 @@ def convert_hes(data_dir, output_filename, format='HDF', max_chunks=None):
             
             building_metadata['appliances'].append(appliance_metadata)
         building = 'building{:d}'.format(nilmtk_building_id)
-        yaml_full_filename = join(_get_module_directory(), 'metadata', building + '.yaml')
+        
+        yaml_full_filename = join(
+            get_module_directory(), 'dataset_converters', 'hes', 'metadata', building + '.yaml'
+        )
+
+        #TODO: copy metadata and modify in a temp dir
         with open(yaml_full_filename, 'w') as outfile:
             #print(building_metadata)
             outfile.write(yaml.dump(building_metadata))
             
-    
     # write yaml metadata to hdf5
-    convert_yaml_to_hdf5(join(_get_module_directory(), 'metadata'),
-                         output_filename)
+    convert_yaml_to_hdf5(
+        join(get_module_directory(), 'dataset_converters', 'hes', 'metadata'),
+        output_filename
+    )
+    
 
 def _process_meter_in_chunk(nilmtk_house_id, meter_id, chunk, store, appliance_code):
 
@@ -259,15 +265,3 @@ def _process_meter_in_chunk(nilmtk_house_id, meter_id, chunk, store, appliance_c
     key = Key(building=nilmtk_house_id, meter=meter_id)
     store.append(str(key), df)
         
-def _get_module_directory():
-    # Taken from http://stackoverflow.com/a/6098238/732596
-    path_to_this_file = dirname(getfile(currentframe()))
-    if not isdir(path_to_this_file):
-        encoding = getfilesystemencoding()
-        path_to_this_file = dirname(unicode(__file__, encoding))
-    if not isdir(path_to_this_file):
-        abspath(getsourcefile(lambda _: None))
-    if not isdir(path_to_this_file):
-        path_to_this_file = getcwd()
-    assert isdir(path_to_this_file), path_to_this_file + ' is not a directory'
-    return path_to_this_file

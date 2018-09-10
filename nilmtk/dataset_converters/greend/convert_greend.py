@@ -12,7 +12,7 @@ import warnings
 import numpy as np
 from io import StringIO
 from multiprocessing import Pool
-import inspect
+from nilmtk.utils import get_module_directory
 
 warnings.filterwarnings("ignore")
 
@@ -172,10 +172,8 @@ def convert_greend(greend_path, hdf_filename, use_mp=True):
     store.close()
 	
 	# retrieve the dataset metadata in the metadata subfolder
-    convert_yaml_to_hdf5(
-        join(dirname(inspect.getfile(convert_greend)), 'metadata'),
-        hdf_filename
-    )
+    metadata_dir = join(get_module_directory(), 'dataset_converters', 'greend', 'metadata')
+    convert_yaml_to_hdf5(metadata_dir, hdf_filename)
 
 #is only called when this file is the main file... only test purpose
 if __name__ == '__main__':

@@ -11,7 +11,7 @@ from nilmtk.measurement import measurement_columns
 from nilmtk.measurement import LEVEL_NAMES
 from nilmtk.datastore import Key
 from nilm_metadata import convert_yaml_to_hdf5
-from inspect import currentframe, getfile, getsourcefile
+from nilmtk.utils import get_module_directory
 
 """
 MANUAL:
@@ -158,11 +158,14 @@ def download_dataport(database_username, database_password,
     # set up a new HDF5 datastore (overwrites existing store)
     store = pd.HDFStore(hdf_filename, 'w', complevel=9, complib='zlib')
     
-    # remove existing building yaml files in module dir
-    for f in os.listdir(join(_get_module_directory(), 'metadata')):
-        if re.search('^building', f):
-            os.remove(join(_get_module_directory(), 'metadata', f))
+    #TODO: copy metadata and modify in a temp dir
     
+    # remove existing building yaml files in module dir
+    metadata_dir = join(get_module_directory(), 'dataset_converters', 'dataport', 'metadata')
+    for f in os.listdir(metadata_dir):
+        if re.search('^building', f):
+            os.remove(join(metadata_dir, f))
+
     """
     TODO:
     The section below can be altered or removed, since the restructured Dataport
@@ -266,7 +269,7 @@ def download_dataport(database_username, database_password,
                                      'and localminute between ' + 
                                      "'" + chunk_start.strftime(format) + "'" + 
                                      " and " + 
-                                     "'" + chunk_end.strftime(format) + "'")
+                                     "'" + chunk_end.strftime(format) + "'") #TODO: add 'order by'
                         chunk_dataframe = pd.read_sql(sql_query, conn)
                         
                         # nilmtk requires building indices to start at 1
@@ -298,8 +301,7 @@ def download_dataport(database_username, database_password,
     
     # write yaml to hdf5
     # dataset.yaml and meter_devices.yaml are static, building<x>.yaml are dynamic  
-    convert_yaml_to_hdf5(join(_get_module_directory(), 'metadata'),
-                         hdf_filename)
+    convert_yaml_to_hdf5(metadata_dir, hdf_filename)
                          
 
 def _dataport_dataframe_to_hdf(dataport_dataframe, 
@@ -384,21 +386,10 @@ def _dataport_dataframe_to_hdf(dataport_dataframe,
             
     # write building yaml to file
     building = 'building{:d}'.format(nilmtk_building_id)
-    yaml_full_filename = join(_get_module_directory(), 'metadata', building + '.yaml')
+    metadata_dir = join(get_module_directory(), 'dataset_converters', 'dataport', 'metadata')
+    yaml_full_filename = join(metadata_dir, building + '.yaml')
     with open(yaml_full_filename, 'w') as outfile:
         outfile.write(yaml.dump(building_metadata))
         
     return 0
 
-def _get_module_directory():
-    # Taken from http://stackoverflow.com/a/6098238/732596
-    path_to_this_file = dirname(getfile(currentframe()))
-    if not isdir(path_to_this_file):
-        encoding = getfilesystemencoding()
-        path_to_this_file = dirname(unicode(__file__, encoding))
-    if not isdir(path_to_this_file):
-        abspath(getsourcefile(lambda _: None))
-    if not isdir(path_to_this_file):
-        path_to_this_file = getcwd()
-    assert isdir(path_to_this_file), path_to_this_file + ' is not a directory'
-    return path_to_this_file

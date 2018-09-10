@@ -6,9 +6,8 @@ from os import getcwd
 from os import listdir
 from nilmtk.datastore import Key
 from nilmtk.measurement import LEVEL_NAMES
-from nilmtk.utils import check_directory_exists, get_datastore
+from nilmtk.utils import check_directory_exists, get_datastore, get_module_directory
 from nilm_metadata import convert_yaml_to_hdf5
-from inspect import currentframe, getfile, getsourcefile
 from sys import getfilesystemencoding
 
 # Column name mapping
@@ -26,21 +25,6 @@ columnNameMapping = {'V': ('voltage', ''),
 
 TIMESTAMP_COLUMN_NAME = "TS"
 TIMEZONE = "America/Vancouver"
-
-
-def _get_module_directory():
-    # Taken from http://stackoverflow.com/a/6098238/732596
-    path_to_this_file = dirname(getfile(currentframe()))
-    if not isdir(path_to_this_file):
-        encoding = getfilesystemencoding()
-        path_to_this_file = dirname(__file__)
-    if not isdir(path_to_this_file):
-        abspath(getsourcefile(lambda _: None))
-    if not isdir(path_to_this_file):
-        path_to_this_file = getcwd()
-    assert isdir(path_to_this_file), path_to_this_file + ' is not a directory'
-    return path_to_this_file
-
 
 def convert_ampds(input_path, output_filename, format='HDF'):
     """
@@ -95,6 +79,6 @@ def convert_ampds(input_path, output_filename, format='HDF'):
         print("Done with file #", (i + 1))
         
     store.close()
-    metadata_path = join(_get_module_directory(), 'metadata')
+    metadata_path = join(get_module_directory(), 'dataset_converters', 'ampds', 'metadata')
     print('Processing metadata...')
     convert_yaml_to_hdf5(metadata_path, output_filename)

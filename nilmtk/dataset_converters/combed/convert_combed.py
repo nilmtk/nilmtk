@@ -3,16 +3,13 @@ from os.path import join, isdir, dirname, abspath
 from os import getcwd
 import os
 from sys import getfilesystemencoding
-from inspect import currentframe, getfile, getsourcefile
 from collections import OrderedDict
 from six import iteritems
-
 import pandas as pd
 from nilm_metadata import convert_yaml_to_hdf5
-
 from nilmtk.datastore import Key
 from nilmtk.measurement import LEVEL_NAMES
-from nilmtk.utils import check_directory_exists, get_datastore
+from nilmtk.utils import check_directory_exists, get_datastore, get_module_directory
 
 #{"load_type": {"floor/wing":meter_number_in_nilmtk}
 acad_block_meter_mapping = {'Building Total Mains': {'0': 1},
@@ -91,21 +88,9 @@ def convert_combed(combed_path, output_filename, format='HDF'):
     if not any_file_converted:
         raise RuntimeError('No files converted, did you specify the correct path?')
                     
-    convert_yaml_to_hdf5(join(_get_module_directory(), 'metadata'),
-                         output_filename)
+    convert_yaml_to_hdf5(
+        join(get_module_directory(), 'dataset_converters', 'combed', 'metadata'),
+        output_filename
+    )
 
     print("Done converting COMBED to HDF5!")
-
-    
-def _get_module_directory():
-    # Taken from http://stackoverflow.com/a/6098238/732596
-    path_to_this_file = dirname(getfile(currentframe()))
-    if not isdir(path_to_this_file):
-        encoding = getfilesystemencoding()
-        path_to_this_file = dirname(unicode(__file__, encoding))
-    if not isdir(path_to_this_file):
-        abspath(getsourcefile(lambda _: None))
-    if not isdir(path_to_this_file):
-        path_to_this_file = getcwd()
-    assert isdir(path_to_this_file), path_to_this_file + ' is not a directory'
-    return path_to_this_file
