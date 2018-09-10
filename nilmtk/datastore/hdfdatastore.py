@@ -27,7 +27,7 @@ class HDFDataStore(DataStore):
         return self.store[key]
 
     @doc_inherit
-    def load(self, key, cols=None, sections=None, n_look_ahead_rows=0,
+    def load(self, key, columns=None, sections=None, n_look_ahead_rows=0,
              chunksize=MAX_MEM_ALLOWANCE_IN_BYTES, verbose=False):
         # TODO: calculate chunksize default based on physical
         # memory installed and number of columns
@@ -45,15 +45,15 @@ class HDFDataStore(DataStore):
         sections = [TimeFrame()] if sections is None else sections
         sections = TimeFrameGroup(sections)
 
-        # Replace any Nones with '' in cols:
-        if cols is not None:
-            cols = [('' if pq is None else pq, '' if ac is None else ac)
-                    for pq, ac in cols]
+        # Replace any Nones with '' in columns:
+        if columns is not None:
+            columns = [('' if pq is None else pq, '' if ac is None else ac)
+                    for pq, ac in columns]
 
         if verbose:
-            print("HDFDataStore.load(key='{}', cols='{}', sections='{}',"
+            print("HDFDataStore.load(key='{}', columns='{}', sections='{}',"
                   " n_look_ahead_rows='{}', chunksize='{}')"
-                  .format(key, cols, sections, n_look_ahead_rows, chunksize))
+                  .format(key, columns, sections, n_look_ahead_rows, chunksize))
 
         self.all_sections_smaller_than_chunksize = True
 
@@ -110,7 +110,7 @@ class HDFDataStore(DataStore):
                     chunk_end_i = section_end_i
                 chunk_end_i += 1
 
-                data = self.store.select(key=key, columns=cols,
+                data = self.store.select(key=key, columns=columns,
                                          start=chunk_start_i, stop=chunk_end_i)
 
                 # if len(data) <= 2:
@@ -123,7 +123,7 @@ class HDFDataStore(DataStore):
                         look_ahead_end_i = look_ahead_start_i + n_look_ahead_rows
                         try:
                             data.look_ahead = self.store.select(
-                                key=key, columns=cols,
+                                key=key, columns=columns,
                                 start=look_ahead_start_i,
                                 stop=look_ahead_end_i)
                         except ValueError:
@@ -221,21 +221,21 @@ class HDFDataStore(DataStore):
             raise KeyError('at least one of ' + str(columns) + 
                            ' is not a valid column')
 
-    def _table_has_column_names(self, key, cols):
+    def _table_has_column_names(self, key, columns):
         """
         Parameters
         ----------
-        cols : string or list of strings
+        columns : string or list of strings
         
         Returns
         -------
         boolean
         """
-        assert cols is not None
+        assert columns is not None
         self._check_key(key)
-        if isinstance(cols, str):
-            cols = [cols]
-        query_cols = set(cols)
+        if isinstance(columns, str):
+            columns = [columns]
+        query_cols = set(columns)
         table_cols = set(self._column_names(key) + ['index'])
         return query_cols.issubset(table_cols)
 
@@ -245,28 +245,28 @@ class HDFDataStore(DataStore):
         col_names = storer.non_index_axes[0][1:][0]
         return col_names
 
-    def _check_data_will_fit_in_memory(self, key, nrows, cols=None):
+    def _check_data_will_fit_in_memory(self, key, nrows, columns=None):
         # Check we won't use too much memory
-        mem_requirement = self._estimate_memory_requirement(key, nrows, cols)
+        mem_requirement = self._estimate_memory_requirement(key, nrows, columns)
         if mem_requirement > MAX_MEM_ALLOWANCE_IN_BYTES:
             raise MemoryError('Requested data would use {:.3f}MBytes:'
                               ' too much memory.'
                               .format(mem_requirement / 1E6))
 
-    def _estimate_memory_requirement(self, key, nrows, cols=None, paranoid=False):
+    def _estimate_memory_requirement(self, key, nrows, columns=None, paranoid=False):
         """Returns estimated mem requirement in bytes."""
         BYTES_PER_ELEMENT = 4
         BYTES_PER_TIMESTAMP = 8
         if paranoid:
             self._check_key(key)
-        if cols is None:
-            cols = self._column_names(key)
+        if columns is None:
+            columns = self._column_names(key)
         elif paranoid:
-            self._check_columns(key, cols)
-        ncols = len(cols)
+            self._check_columns(key, columns)
+        ncols = len(columns)
         est_mem_usage_for_data = nrows * ncols * BYTES_PER_ELEMENT
         est_mem_usage_for_index = nrows * BYTES_PER_TIMESTAMP
-        if cols == ['index']:
+        if columns == ['index']:
             return est_mem_usage_for_index
         else:
             return est_mem_usage_for_data + est_mem_usage_for_index

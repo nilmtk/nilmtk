@@ -351,7 +351,7 @@ class ElecMeter(Hashable, Electric):
         By default, `load` will load all available columns from the DataStore.
         Specific columns can be selected in one or two mutually exclusive ways:
 
-        1. specify a list of column names using the `cols` parameter.
+        1. specify a list of column names using the `columns` parameter.
         2. specify a `physical_quantity` and/or an `ac_type` parameter to ask
            `load` to automatically select columns.
 
@@ -377,9 +377,9 @@ class ElecMeter(Hashable, Electric):
             If set to a list of AC type strings then will load all those
             AC types and will raise an Exception if any cannot be found.
 
-        cols : list of tuples, using NILMTK's vocabulary for measurements.
+        columns : list of tuples, using NILMTK's vocabulary for measurements.
             e.g. [('power', 'active'), ('voltage', ''), ('energy', 'reactive')]
-            `cols` can't be used if `ac_type` and/or `physical_quantity` are set.
+            `columns` can't be used if `ac_type` and/or `physical_quantity` are set.
 
         sample_period : int, defaults to None
             Number of seconds to use as the new sample period for resampling.
@@ -503,34 +503,34 @@ class ElecMeter(Hashable, Electric):
             return [(physical_quantity, best_ac_type)]
 
     def _convert_physical_quantity_and_ac_type_to_cols(
-            self, physical_quantity=None, ac_type=None, cols=None,
+            self, physical_quantity=None, ac_type=None, columns=None,
             **kwargs):
         """Returns kwargs dict with physical_quantity and ac_type removed
-        and cols populated appropriately."""
-        if cols:
+        and columns populated appropriately."""
+        if columns:
             if (ac_type or physical_quantity):
                 raise ValueError("Cannot use `ac_type` and/or `physical_quantity`"
-                                 " with `cols` parameter.")
+                                 " with `columns` parameter.")
             else:
-                if set(cols).issubset(self.available_columns()):
-                    kwargs['cols'] = cols
+                if set(columns).issubset(self.available_columns()):
+                    kwargs['columns'] = columns
                     return kwargs
                 else:
                     msg = ("'{}' is not a subset of the available columns: '{}'"
-                           .format(cols, self.available_columns()))
+                           .format(columns, self.available_columns()))
                     raise MeasurementError(msg)
 
         msg = ""
         if not (ac_type or physical_quantity):
-            cols = self.available_columns()
+            columns = self.available_columns()
         elif ac_type == 'best':
-            cols = self._get_columns_with_best_ac_type(physical_quantity)
-            if not cols:
+            columns = self._get_columns_with_best_ac_type(physical_quantity)
+            if not columns:
                 msg += "No AC types for physical quantity {}".format(physical_quantity)
         else:
             if ac_type:
-                cols = self._ac_type_to_columns(ac_type)
-                if not cols:
+                columns = self._ac_type_to_columns(ac_type)
+                if not columns:
                     msg += "AC type '{}' not available. ".format(ac_type)
 
             if physical_quantity:
@@ -538,19 +538,19 @@ class ElecMeter(Hashable, Electric):
                 if not cols_matching_pq:
                     msg += ("Physical quantity '{}' not available. "
                             .format(physical_quantity))
-                if cols:
-                    cols = list(set(cols).intersection(cols_matching_pq))
-                    if not cols:
+                if columns:
+                    columns = list(set(columns).intersection(cols_matching_pq))
+                    if not columns:
                         msg += ("No measurement matching ({}, {}). "
                                 .format(physical_quantity, ac_type))
                 else:
-                    cols = cols_matching_pq
+                    columns = cols_matching_pq
 
         if msg:
             msg += "Available columns = {}. ".format(self.available_columns())
             raise MeasurementError(msg)
 
-        kwargs['cols'] = cols
+        kwargs['columns'] = columns
         return kwargs
 
     def dry_run_metadata(self):
@@ -659,8 +659,8 @@ class ElecMeter(Hashable, Electric):
         verbose = loader_kwargs.get('verbose')
         if 'ac_type' in loader_kwargs or 'physical_quantity' in loader_kwargs:
             loader_kwargs = self._convert_physical_quantity_and_ac_type_to_cols(**loader_kwargs)
-        cols = loader_kwargs.get('cols', [])
-        ac_types = set([m[1] for m in cols if m[1]])
+        columns = loader_kwargs.get('columns', [])
+        ac_types = set([m[1] for m in columns if m[1]])
         results_obj_copy = deepcopy(results_obj)
 
         # Prepare `sections` list

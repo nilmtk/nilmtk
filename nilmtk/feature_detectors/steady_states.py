@@ -9,7 +9,7 @@ SEED = 42
 np.random.seed(SEED)
 
 
-def find_steady_states_transients(metergroup, cols, noise_level,
+def find_steady_states_transients(metergroup, columns, noise_level,
                                   state_threshold, **load_kwargs):
     """
     Returns
@@ -19,7 +19,7 @@ def find_steady_states_transients(metergroup, cols, noise_level,
     steady_states_list = []
     transients_list = []
 
-    for power_df in metergroup.load(cols=cols, **load_kwargs):
+    for power_df in metergroup.load(columns=columns, **load_kwargs):
         """
         if len(power_df.columns) <= 2:
             # Use whatever is available

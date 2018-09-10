@@ -49,7 +49,7 @@ class CSVDataStore(DataStore):
             raise KeyError('{} not found'.format(key))
 
     @doc_inherit
-    def load(self, key, cols=None, sections=None, n_look_ahead_rows=0,
+    def load(self, key, columns=None, sections=None, n_look_ahead_rows=0,
              chunksize=MAX_MEM_ALLOWANCE_IN_BYTES):
              
         file_path = self._key_to_abs_path(key)
@@ -75,8 +75,8 @@ class CSVDataStore(DataStore):
             for chunk_idx, chunk in enumerate(text_file_reader):
                 
                 # filter dataframe by specified columns
-                if cols:
-                    chunk = chunk[cols]
+                if columns:
+                    chunk = chunk[columns]
                 
                 # mask chunk by window and section intersect
                 subchunk_idx = [True]*len(chunk)

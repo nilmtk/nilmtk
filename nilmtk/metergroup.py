@@ -627,7 +627,7 @@ class MeterGroup(Electric):
         By default, `load` will load all available columns from the DataStore.  
         Specific columns can be selected in one or two mutually exclusive ways:
 
-        1. specify a list of column names using the `cols` parameter.
+        1. specify a list of column names using the `columns` parameter.
         2. specify a `physical_quantity` and/or an `ac_type` parameter to ask 
            `load` to automatically select columns.
 
@@ -663,9 +663,9 @@ class MeterGroup(Electric):
             physical quantity, else raise an Exception.
             If set to a list of AC type strings then will load all those 
             AC types and will raise an Exception if any cannot be found.
-        cols : list of tuples, using NILMTK's vocabulary for measurements.
+        columns : list of tuples, using NILMTK's vocabulary for measurements.
             e.g. [('power', 'active'), ('voltage', ''), ('energy', 'reactive')]
-            `cols` can't be used if `ac_type` and/or `physical_quantity` are set.
+            `columns` can't be used if `ac_type` and/or `physical_quantity` are set.
         preprocessing : list of Node subclass instances
             e.g. [Clip()]
 
@@ -682,7 +682,7 @@ class MeterGroup(Electric):
         chunksize = kwargs.pop('chunksize', MAX_MEM_ALLOWANCE_IN_BYTES)
         duration_threshold = sample_period * chunksize
         columns = pd.MultiIndex.from_tuples(
-            self._convert_physical_quantity_and_ac_type_to_cols(**kwargs)['cols'],
+            self._convert_physical_quantity_and_ac_type_to_cols(**kwargs)['columns'],
             names=LEVEL_NAMES)
         freq = '{:d}S'.format(int(sample_period))
         verbose = kwargs.get('verbose')
@@ -712,10 +712,10 @@ class MeterGroup(Electric):
         for meter in self.meters:
             kwargs_copy = deepcopy(kwargs)
             new_kwargs = meter._convert_physical_quantity_and_ac_type_to_cols(**kwargs_copy)
-            cols = new_kwargs.get('cols', [])
-            for col in cols:
+            columns = new_kwargs.get('columns', [])
+            for col in columns:
                 all_columns.add(col)
-        kwargs['cols'] = list(all_columns)
+        kwargs['columns'] = list(all_columns)
         return kwargs
 
     def _meter_generators(self, **kwargs):

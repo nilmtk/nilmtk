@@ -212,7 +212,7 @@ class Hart85(Disaggregator):
         self.model = {}
         self.MODEL_NAME = "Hart85"
 
-    def train(self, metergroup, cols=[('power', 'active')],
+    def train(self, metergroup, columns=[('power', 'active')],
               buffer_size=20, noise_level=70, state_threshold=15,
               min_tolerance=100, percent_tolerance=0.035,
               large_transition=1000, **kwargs):
@@ -222,7 +222,7 @@ class Hart85(Disaggregator):
         Parameters
         ----------
         metergroup : a nilmtk.MeterGroup object
-        cols: nilmtk.Measurement, should be one of the following
+        columns: nilmtk.Measurement, should be one of the following
             [('power','active')]
             [('power','apparent')]
             [('power','reactive')]
@@ -237,17 +237,17 @@ class Hart85(Disaggregator):
         large_transition: float, optional
             power draw of a Large transition
         """
-        self.cols = cols
+        self.columns = columns
         self.state_threshold = state_threshold
         self.noise_level = noise_level
         [self.steady_states, self.transients] = find_steady_states_transients(
-            metergroup, cols, noise_level, state_threshold, **kwargs)
+            metergroup, columns, noise_level, state_threshold, **kwargs)
         self.pair_df = self.pair(
             buffer_size, min_tolerance, percent_tolerance, large_transition)
-        self.centroids = hart85_means_shift_cluster(self.pair_df, cols)
+        self.centroids = hart85_means_shift_cluster(self.pair_df, columns)
         
         self.model = dict(
-            cols=cols,
+            columns=columns,
             state_threshold=state_threshold,
             noise_level=noise_level,
             steady_states=self.steady_states, 
@@ -412,7 +412,7 @@ class Hart85(Disaggregator):
         data_is_available = False
 
         [_, transients] = find_steady_states_transients(
-            mains, cols=self.cols, state_threshold=self.state_threshold,
+            mains, columns=self.columns, state_threshold=self.state_threshold,
             noise_level=self.noise_level, **load_kwargs)
 
         # For now ignoring the first transient
@@ -433,17 +433,17 @@ class Hart85(Disaggregator):
             power_df = self.disaggregate_chunk(
                 chunk, prev, transients)
 
-            cols = pd.MultiIndex.from_tuples([chunk.name])
+            columns = pd.MultiIndex.from_tuples([chunk.name])
 
             for meter in learnt_meters:
                 data_is_available = True
                 df = power_df[[meter]]
-                df.columns = cols
+                df.columns = columns
                 key = '{}/elec/meter{:d}'.format(building_path, meter + 2)
                 output_datastore.append(key, df)
 
             output_datastore.append(key=mains_data_location,
-                                    value=pd.DataFrame(chunk, columns=cols))
+                                    value=pd.DataFrame(chunk, columns=columns))
 
         if data_is_available:
             self._save_metadata_for_disaggregation(

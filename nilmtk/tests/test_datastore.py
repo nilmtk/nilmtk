@@ -32,7 +32,7 @@ class SuperTestDataStore(object):
         timeframe = TimeFrame('2012-01-01 00:00:00', '2012-01-01 00:00:05')
         self.datastore.window.clear()
         gen = self.datastore.load(key=self.keys[0],
-                                  cols=[('power', 'active')],
+                                  columns=[('power', 'active')],
                                   sections=[timeframe],
                                   n_look_ahead_rows=10)
         df = next(gen)

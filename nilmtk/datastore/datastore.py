@@ -69,13 +69,13 @@ class DataStore(object):
         window.check_tz()
         self._window = window
         
-    def load(self, key, cols=None, sections=None, n_look_ahead_rows=0,
+    def load(self, key, columns=None, sections=None, n_look_ahead_rows=0,
              chunksize=MAX_MEM_ALLOWANCE_IN_BYTES):
         """
         Parameters
         ----------
         key : string, the location of a table within the DataStore.
-        cols : list of Measurements, optional
+        columns : list of Measurements, optional
             e.g. [('power', 'active'), ('power', 'reactive'), ('voltage')]
             if not provided then will return all columns from the table.
         sections : TimeFrameGroup; or list of nilmtk.TimeFrame objects;
