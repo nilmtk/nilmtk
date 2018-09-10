@@ -86,7 +86,7 @@ def _convert(input_path, store, tz, sort_index=True):
         nilmtk_house_id += 1
         print("Loading house", house_id, end="... ")
         stdout.flush()
-        csv_filename = input_path + 'House_' + str(house_id) + '.csv'
+        csv_filename = join(input_path, 'House_' + str(house_id) + '.csv')
         # The clean version already includes header, so we
         # just skip the text version of the timestamp
         usecols = ['Unix','Aggregate','Appliance1','Appliance2','Appliance3','Appliance4','Appliance5','Appliance6','Appliance7','Appliance8','Appliance9']

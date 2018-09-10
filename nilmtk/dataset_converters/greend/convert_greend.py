@@ -183,5 +183,5 @@ if __name__ == '__main__':
     dt = time.time() - t1
     print()
     print()
-    print('Time passed: {}:{}'.format(int(dt/60), dt%60))
+    print('Time passed: {}:{}'.format(int(dt/60), int(dt%60)))
     

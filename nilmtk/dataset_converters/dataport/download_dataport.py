@@ -12,6 +12,7 @@ from nilmtk.measurement import LEVEL_NAMES
 from nilmtk.datastore import Key
 from nilm_metadata import convert_yaml_to_hdf5
 from nilmtk.utils import get_module_directory
+import shutil, tempfile
 
 """
 MANUAL:
@@ -158,10 +159,13 @@ def download_dataport(database_username, database_password,
     # set up a new HDF5 datastore (overwrites existing store)
     store = pd.HDFStore(hdf_filename, 'w', complevel=9, complib='zlib')
     
-    #TODO: copy metadata and modify in a temp dir
+    # Create a temporary metadata dir, remove existing building yaml files in module dir (if any)
+    original_metadata_dir = join(get_module_directory(), 'dataset_converters', 'dataport', 'metadata')
+    tmp_dir = tempfile.mkdtemp()
+    metadata_dir = join(tmp_dir, 'metadata')
+    shutil.copytree(original_metadata_dir, metadata_dir)
+    print("Using temporary dir for metadata:", metadata_dir)
     
-    # remove existing building yaml files in module dir
-    metadata_dir = join(get_module_directory(), 'dataset_converters', 'dataport', 'metadata')
     for f in os.listdir(metadata_dir):
         if re.search('^building', f):
             os.remove(join(metadata_dir, f))
@@ -275,9 +279,12 @@ def download_dataport(database_username, database_password,
                         # nilmtk requires building indices to start at 1
                         nilmtk_building_id = buildings_to_load.index(building_id) + 1
                         # convert to nilmtk-df and save to disk
-                        nilmtk_dataframe = _dataport_dataframe_to_hdf(chunk_dataframe, store,
-                                                                         nilmtk_building_id,
-                                                                         building_id)
+                        nilmtk_dataframe = _dataport_dataframe_to_hdf(
+                            chunk_dataframe, store,
+                            nilmtk_building_id,
+                            building_id,
+                            metadata_dir
+                        )
 
                         # print progress
                         print('    ' + str(chunk_start) + ' -> ' + 
@@ -302,12 +309,17 @@ def download_dataport(database_username, database_password,
     # write yaml to hdf5
     # dataset.yaml and meter_devices.yaml are static, building<x>.yaml are dynamic  
     convert_yaml_to_hdf5(metadata_dir, hdf_filename)
+    
+    # remote the temporary dir when finished
+    shutil.rmtree(tmp_dir)
+    
                          
 
 def _dataport_dataframe_to_hdf(dataport_dataframe, 
                                  store, 
                                  nilmtk_building_id,
-                                 dataport_building_id):
+                                 dataport_building_id,
+                                 metadata_dir):
     local_dataframe = dataport_dataframe.copy()
     
     # remove timezone information to avoid append errors
@@ -386,7 +398,6 @@ def _dataport_dataframe_to_hdf(dataport_dataframe,
             
     # write building yaml to file
     building = 'building{:d}'.format(nilmtk_building_id)
-    metadata_dir = join(get_module_directory(), 'dataset_converters', 'dataport', 'metadata')
     yaml_full_filename = join(metadata_dir, building + '.yaml')
     with open(yaml_full_filename, 'w') as outfile:
         outfile.write(yaml.dump(building_metadata))

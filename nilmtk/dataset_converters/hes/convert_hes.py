@@ -137,6 +137,15 @@ def convert_hes(data_dir, output_filename, format='HDF', max_chunks=None):
     house_codes = []
     # map 
     house_appliance_codes = dict()
+    
+
+    # Create a temporary metadata dir
+    original_metadata_dir = join(get_module_directory(), 'dataset_converters', 'hes', 'metadata')
+    tmp_dir = tempfile.mkdtemp()
+    metadata_dir = join(tmp_dir, 'metadata')
+    shutil.copytree(original_metadata_dir, metadata_dir)
+    print("Using temporary dir for metadata:", metadata_dir)
+    
 
     # Iterate over files
     for filename in FILENAMES:
@@ -236,7 +245,7 @@ def convert_hes(data_dir, output_filename, format='HDF', max_chunks=None):
         building = 'building{:d}'.format(nilmtk_building_id)
         
         yaml_full_filename = join(
-            get_module_directory(), 'dataset_converters', 'hes', 'metadata', building + '.yaml'
+            metadata_dir, building + '.yaml'
         )
 
         #TODO: copy metadata and modify in a temp dir
@@ -246,9 +255,12 @@ def convert_hes(data_dir, output_filename, format='HDF', max_chunks=None):
             
     # write yaml metadata to hdf5
     convert_yaml_to_hdf5(
-        join(get_module_directory(), 'dataset_converters', 'hes', 'metadata'),
+        metadata_dir,
         output_filename
     )
+
+    # remote the temporary dir when finished
+    shutil.rmtree(tmp_dir)
     
 
 def _process_meter_in_chunk(nilmtk_house_id, meter_id, chunk, store, appliance_code):
