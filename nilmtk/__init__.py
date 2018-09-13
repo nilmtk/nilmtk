@@ -17,25 +17,56 @@ from nilmtk.dataset import DataSet
 
 global_meter_group = MeterGroup()
 
+def setup_package():
+    """Nosetests package setup function (run when tests are done).
+    See http://nose.readthedocs.org/en/latest/writing_tests.html#test-packages
 
+    Copies the original data files to be restored after testing."""
+    from nilmtk.tests.testingtools import data_dir
+    
+    # Create backups of the data files
+    from glob import glob
+    from os.path import join, isdir
+    import os, shutil
+    
+    target_paths = glob(join(data_dir(), '*.h5'))
+    target_paths.append(join(data_dir(), 'random_csv'))
+    
+    for original_fn in target_paths:
+        target_fn = original_fn + '.original'
+        if isdir(original_fn):
+            shutil.copytree(original_fn, target_fn)
+        else:
+            shutil.copyfile(original_fn, target_fn)
+            
+    
 def teardown_package():
     """Nosetests package teardown function (run when tests are done).
     See http://nose.readthedocs.org/en/latest/writing_tests.html#test-packages
 
-    Uses git to reset data_dir after tests have run.
+    Closes remaining open HDF5 files to avoid warnings and resets the 
+    files in data_dir to their original states.
     """
     from nilmtk.tests.testingtools import data_dir
-    import subprocess
     
-    #Workaround for open .h5 files on Windows
+    # Workaround for open .h5 files on Windows
     from tables.file import _open_files
     _open_files.close_all()
+
+    # Restore the original copies of the data files    
+    from glob import glob
+    from os.path import join, isdir
+    import os, shutil
     
-    cmd = "git checkout -- {}".format(data_dir())
-    try:
-        subprocess.check_output(cmd, shell=True, cwd=data_dir())
-    except Exception:
-        print("Failed to run '{}'".format(cmd))
-        raise
-    else:
-        print("Succeeded in running '{}'".format(cmd))
+    for original_fn in glob(join(data_dir(), '*.original')):
+        target_fn = original_fn[:original_fn.rfind('.original')]
+        try:
+            if isdir(target_fn):
+                shutil.rmtree(target_fn)
+            else:
+                os.remove(target_fn)
+                
+            os.rename(original_fn, target_fn)
+            
+        except:
+            warnings.warn('Could not restore file or directory "{}"'.format(target_fn))
