@@ -1230,7 +1230,7 @@ class MeterGroup(Electric):
 
         mains = self.mains()
         good_sections = self.mains().good_sections()
-        sample_period = mains.device['sample_period']
+        sample_period = mains.sample_period()
         appx_num_records_in_each_good_section = [
             int((ts.end - ts.start).total_seconds() / sample_period) for ts in good_sections]
         appx_total_records = sum(appx_num_records_in_each_good_section)
