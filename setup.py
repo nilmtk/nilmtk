@@ -19,7 +19,7 @@ from os.path import join
 import os
 import sys
 import warnings
-import numpy
+# import numpy
 
 """
 CYTHON_DIR = 'nilmtk/disaggregate/feature_detectors'
@@ -107,7 +107,16 @@ setup(
     version=FULLVERSION,
     packages=find_packages(),
     package_data={'': ['*.yaml']},
-    install_requires=[],
+    install_requires=[
+        'future',
+        'six',
+        'psycopg2-binary',
+        'pandas',
+        'networkx==2.1',
+        'scipy',
+        'tables',
+        'hmmlearn',
+    ],
     description='Estimate the energy consumed by individual appliances from '
                 'whole-house power meter readings',
     author='nilmtk authors',
