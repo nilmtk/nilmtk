@@ -21,7 +21,10 @@ def setup_package():
     """Nosetests package setup function (run when tests are done).
     See http://nose.readthedocs.org/en/latest/writing_tests.html#test-packages
 
-    Copies the original data files to be restored after testing."""
+    - Copies the original data files to be restored after testing.
+    - Sets a non-interactive backend for matplotlib (even though we don't 
+    show any figures, it can import PyQt, for example).
+    """
     from nilmtk.tests.testingtools import data_dir
     
     # Create backups of the data files
@@ -39,6 +42,10 @@ def setup_package():
         else:
             shutil.copyfile(original_fn, target_fn)
             
+    # Use the most basic Matplotlib backend
+    import matplotlib
+    matplotlib.use('AGG')
+    
     
 def teardown_package():
     """Nosetests package teardown function (run when tests are done).
