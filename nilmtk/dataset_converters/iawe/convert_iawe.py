@@ -1,8 +1,7 @@
 from __future__ import print_function, division
 import pandas as pd
 import numpy as np
-from os.path import join, isdir, isfile, dirname, abspath
-from os import getcwd
+from os.path import join
 from nilmtk.datastore import Key
 from nilmtk.measurement import LEVEL_NAMES
 from nilmtk.utils import check_directory_exists, get_datastore, get_module_directory
@@ -73,7 +72,7 @@ def convert_iawe(iawe_path, output_filename, format="HDF"):
         key = Key(building=1, meter=chan)
         filename = join(electricity_path, "%d.csv" % chan)
         print('Loading ', chan)
-        df = pd.read_csv(filename)
+        df = pd.read_csv(filename, dtype=np.float64, na_values='\\N')
         df.drop_duplicates(subset=["timestamp"], inplace=True)
         df.index = pd.to_datetime(df.timestamp.values, unit='s', utc=True)
         df = df.tz_convert(TIMEZONE)
