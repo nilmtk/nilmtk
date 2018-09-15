@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 from os.path import join, isdir, isfile, dirname, abspath
 from os import getcwd
-from sys import getfilesystemencoding
 from nilmtk.datastore import Key
 from nilmtk.measurement import LEVEL_NAMES
 from nilmtk.utils import check_directory_exists, get_datastore, get_module_directory
@@ -47,7 +46,7 @@ column_mapping = {
 
 TIMESTAMP_COLUMN_NAME = "timestamp"
 TIMEZONE = "Asia/Kolkata"
-START_DATETIME, END_DATETIME = '7-13-2013', '8-4-2013'
+START_DATETIME, END_DATETIME = '2013-07-13', '2013-08-04'
 FREQ = "1T"
 
 
