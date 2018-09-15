@@ -273,7 +273,9 @@ def download_dataport(database_username, database_password,
                                      'and localminute between ' + 
                                      "'" + chunk_start.strftime(format) + "'" + 
                                      " and " + 
-                                     "'" + chunk_end.strftime(format) + "'") #TODO: add 'order by'
+                                     "'" + chunk_end.strftime(format) + 
+                                     "' ORDER BY localminute"
+                        )
                         chunk_dataframe = pd.read_sql(sql_query, conn)
                         
                         # nilmtk requires building indices to start at 1
