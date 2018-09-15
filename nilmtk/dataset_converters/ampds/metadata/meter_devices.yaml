@@ -7,26 +7,26 @@ PS18:
   max_sample_period: 60
   measurements:
   - physical_quantity: voltage
-    type: apparent
+    type:
     upper_limit: 270
     lower_limit: 0
   - physical_quantity: current
-    type: apparent
+    type:
     upper_limit: 400
     lower_limit: 0
   - physical_quantity: frequency
-    type: apparent
+    type:
     upper_limit: 70
     lower_limit: 0
-  - physical_quantity: power factor 
+  - physical_quantity: power factor
     type: apparent
     upper_limit: 1
     lower_limit: 0
-  - physical_quantity: power factor 
+  - physical_quantity: power factor
     type: real
     upper_limit: 1
     lower_limit: 0
-  - physical_quantity: power 
+  - physical_quantity: power
     type: active
     upper_limit: 96000
     lower_limit: 0
@@ -34,7 +34,7 @@ PS18:
     type: active
     upper_limit: 500000000
     lower_limit: 0
-  - physical_quantity: power 
+  - physical_quantity: power
     type: reactive
     upper_limit: 96000
     lower_limit: 0
@@ -42,7 +42,7 @@ PS18:
     type: reactive
     upper_limit: 500000000
     lower_limit: 0
-  - physical_quantity: power 
+  - physical_quantity: power
     type: apparent
     upper_limit: 96000
     lower_limit: 0

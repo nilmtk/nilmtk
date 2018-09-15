@@ -14,7 +14,7 @@ from sys import getfilesystemencoding
 columnNameMapping = {'V': ('voltage', ''),
                      'I': ('current', ''),
                      'f': ('frequency', ''),
-                     'DPF': ('pf', 'd'),
+                     'DPF': ('power factor', 'real'),
                      'APF': ('power factor', 'apparent'),
                      'P': ('power', 'active'),
                      'Pt': ('energy', 'active'),
