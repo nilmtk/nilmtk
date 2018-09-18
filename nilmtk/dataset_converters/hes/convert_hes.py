@@ -1,19 +1,16 @@
 from __future__ import print_function, division
-from os import remove
-from os.path import join, isdir, isfile, dirname, abspath
+from os.path import join
 import pandas as pd
-from datetime import datetime
-from pytz import UTC
 import numpy as np
-from nilmtk.dataset_converters.redd.convert_redd import (_convert, _load_csv)
 from nilmtk.utils import get_module_directory
 from nilmtk import DataSet
 from nilmtk.utils import get_datastore
 from nilmtk.datastore import Key
 from nilmtk.measurement import LEVEL_NAMES
 from nilm_metadata import convert_yaml_to_hdf5
+import tempfile, shutil
+from sys import stderr
 import yaml
-
 """
 TODO
 ----
@@ -31,6 +28,7 @@ TODO
 * Maybe email CAR to let them know that nilmtk can now import HES.
 HES notes
 ---------
+* As of 2018, the dataset is available from ukdataservice.ac.uk
 * 14 homes recorded mains but only 5 were kept after cleaning
 * circuit-level data from the consumer unit was recorded as 'sockets' for 216 houses
 * 'total_profiles.csv' records pairs of <house>,<appliance> which are the 
@@ -45,11 +43,10 @@ HES notes
   activation over a year.
 """
 
-FILENAMES = ['appliance_group_data-{}.csv'.format(s) for s in
+FILENAMES = ['agd-{s}/appliance_group_data-{s}.csv'.format(s=s) for s in
              ['1a','1b','1c','1d','2','3']]
-CHUNKSIZE = 1E5 # number of rows
-COL_NAMES = ['interval id', 'house id', 'appliance code', 'date',
-             'data', 'time']
+CHUNKSIZE = 1E6 # number of rows
+COL_NAMES = ['interval id', 'house id', 'appliance code', 'date', 'data', 'time']
 LAST_PWR_COLUMN = 250
 NANOSECONDS_PER_TENTH_OF_AN_HOUR = 1E9 * 60 * 6
 MAINS_CODES = [240, 241]
@@ -57,28 +54,9 @@ TEMPERATURE_CODES = list(range(251, 256))
 CIRCUIT_CODES = list(range(208, 218)) + [222]
 #E_MEASUREMENT = Measurement('energy', 'active')
 
-
-def datetime_converter(s):
-    """
-    Parameters
-    ----------
-    s : int
-        of the form 2011-02-02 14:48:00
-    Returns
-    -------
-    datetime
-    """
-    # 0123456789012345678
-    # 2011-02-02 14:48:00
-    # the code below is ~8 times faster 
-    # than datetime.strptime(s, '%Y-%m-%d %H:%M:%S')
-    return datetime(year=int(s[0:4]), month=int(s[5:7]), day=int(s[8:10]),
-                    hour=int(s[11:13]), minute=int(s[14:16]), 
-                    second=int(s[17:19]), tzinfo=UTC)
-
 def load_list_of_house_ids(data_dir):
     """Returns a list of house IDs in HES (ints)."""
-    filename = join(data_dir,'AnonHES/' 'ipsos-anonymised-corrected 310713.csv')
+    filename = join(data_dir, 'anonhes', 'ipsos-anonymised-corrected_310713.csv')
     series = pd.read_csv(filename, usecols=[0], index_col=False, squeeze=True)
     return series.tolist()
 
@@ -135,9 +113,9 @@ def convert_hes(data_dir, output_filename, format='HDF', max_chunks=None):
 
     # array of hes_house_codes: nilmtk_building_code = house_codes.index(hes_house_code)
     house_codes = []
+    
     # map 
     house_appliance_codes = dict()
-    
 
     # Create a temporary metadata dir
     original_metadata_dir = join(get_module_directory(), 'dataset_converters', 'hes', 'metadata')
@@ -145,13 +123,12 @@ def convert_hes(data_dir, output_filename, format='HDF', max_chunks=None):
     metadata_dir = join(tmp_dir, 'metadata')
     shutil.copytree(original_metadata_dir, metadata_dir)
     print("Using temporary dir for metadata:", metadata_dir)
-    
 
     # Iterate over files
     for filename in FILENAMES:
         # Load appliance energy data chunk-by-chunk
         full_filename = join(data_dir, filename)
-        print('loading', full_filename)
+        print('Loading', full_filename)
         try:
             reader = pd.read_csv(full_filename, names=COL_NAMES, 
                                  index_col=False, chunksize=CHUNKSIZE)
@@ -170,7 +147,7 @@ def convert_hes(data_dir, output_filename, format='HDF', max_chunks=None):
             dt = chunk['date'] + ' ' + chunk['time']
             del chunk['date']
             del chunk['time']
-            chunk['datetime'] = dt.apply(datetime_converter)
+            chunk['datetime'] = pd.to_datetime(dt, format='%Y-%m-%d %H:%M:%S', utc=True)
 
             # Data is either tenths of a Wh or tenths of a degree
             chunk['data'] *= 10
@@ -194,6 +171,8 @@ def convert_hes(data_dir, output_filename, format='HDF', max_chunks=None):
                     _process_meter_in_chunk(nilmtk_house_id, nilmtk_meter_id, hes_house_id_df, store, appliance_code)
                     
             chunk_i += 1
+            
+            
     print('houses with some data loaded:', house_appliance_codes.keys())
     
     store.close()
@@ -242,13 +221,14 @@ def convert_hes(data_dir, output_filename, format='HDF', max_chunks=None):
             appliance_metadata['instance'] = instance_counter[lookup_row.nilmtk_name]
             
             building_metadata['appliances'].append(appliance_metadata)
+            
+            
         building = 'building{:d}'.format(nilmtk_building_id)
         
         yaml_full_filename = join(
             metadata_dir, building + '.yaml'
         )
 
-        #TODO: copy metadata and modify in a temp dir
         with open(yaml_full_filename, 'w') as outfile:
             #print(building_metadata)
             outfile.write(yaml.dump(building_metadata))
@@ -264,7 +244,6 @@ def convert_hes(data_dir, output_filename, format='HDF', max_chunks=None):
     
 
 def _process_meter_in_chunk(nilmtk_house_id, meter_id, chunk, store, appliance_code):
-
     data = chunk['data'].values
     index = chunk['datetime']
     df = pd.DataFrame(data=data, index=index)
@@ -272,8 +251,7 @@ def _process_meter_in_chunk(nilmtk_house_id, meter_id, chunk, store, appliance_c
     
     # Modify the column labels to reflect the power measurements recorded.
     df.columns.set_names(LEVEL_NAMES, inplace=True)
-    df  = df.sort()
+    df = df.sort_index()
 
     key = Key(building=nilmtk_house_id, meter=meter_id)
     store.append(str(key), df)
-        
