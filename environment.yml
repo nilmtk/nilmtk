@@ -11,6 +11,7 @@ dependencies:
 - networkx==2.1
 - scipy>=1.0.0
 - scikit-learn>=0.19.1
+- scikit-learn<0.20
 - jupyter
 - ipython
 - ipykernel
