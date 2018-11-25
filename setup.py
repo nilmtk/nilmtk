@@ -117,6 +117,9 @@ setup(
         'tables',
         'scikit-learn==0.19.2',
         'hmmlearn>=0.2.1',
+        'pyyaml',
+        'matplotlib>=2.2.0',
+        'jupyter'
     ],
     description='Estimate the energy consumed by individual appliances from '
                 'whole-house power meter readings',
