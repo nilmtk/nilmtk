@@ -54,9 +54,9 @@ Following Segment of this file was taken from the pandas project(https://github.
 # Version Check
 
 MAJOR = 0
-MINOR = 2
-MICRO = 1
-ISRELEASED = True
+MINOR = 3
+MICRO = 0
+ISRELEASED = False
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 QUALIFIER = ''
 
@@ -111,11 +111,12 @@ setup(
         'future',
         'six',
         'psycopg2-binary',
-        'pandas',
+        'pandas==0.22.0',
         'networkx==2.1',
         'scipy',
         'tables',
-        'hmmlearn',
+        'scikit-learn==0.19.2',
+        'hmmlearn>=0.2.1',
     ],
     description='Estimate the energy consumed by individual appliances from '
                 'whole-house power meter readings',
