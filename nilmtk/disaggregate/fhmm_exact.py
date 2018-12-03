@@ -3,7 +3,7 @@ import itertools
 from copy import deepcopy
 from collections import OrderedDict
 from warnings import warn
-
+import pickle
 import nilmtk
 import pandas as pd
 import numpy as np
@@ -11,9 +11,10 @@ from hmmlearn import hmm
 
 from nilmtk.feature_detectors import cluster
 from nilmtk.disaggregate import Disaggregator
+from nilmtk.datastore import HDFDataStore
 
 # Python 2/3 compatibility
-from six import iteritems
+from six import iteritems, iterkeys
 from builtins import range
 
 SEED = 42
@@ -248,7 +249,7 @@ class FHMM(Disaggregator):
         self.individual = new_learnt_models
         self.model = learnt_model_combined
         self.meters = [nilmtk.global_meter_group.select_using_appliances(type=appliance).meters[0]
-                       for appliance in self.individual.iterkeys()]
+                       for appliance in iterkeys(self.individual)]
 
     def train(self, metergroup, num_states_dict={}, **load_kwargs):
         """Train using 1d FHMM.
@@ -511,3 +512,41 @@ class FHMM(Disaggregator):
                     building=mains.building(),
                     meters=self.meters
                 )
+
+
+    def import_model(self, filename):
+        with open(filename, 'rb') as in_file:
+            imported_model = pickle.load(in_file)
+            
+        self.model = imported_model.model
+        self.individual = imported_model.individual
+        
+        # Recreate datastores from filenames
+        for meter in self.individual.keys():
+            store_filename = meter.store
+            meter.store = HDFDataStore(store_filename)
+
+        self.meters = list(self.individual.keys())
+
+        
+    def export_model(self, filename):
+        # Can't pickle datastore, so convert to filenames
+        original_stores = []
+        
+        meters = self.meters
+        self.meters = None
+        
+        for meter in self.individual.keys():
+            original_store = meter.store
+            original_stores.append(original_store)
+            meter.store = original_store.store.filename
+    
+        try:
+            with open(filename, 'wb') as out_file:
+                pickle.dump(self, out_file)
+        finally:
+            # Restore the meters and stores even if the pickling fails
+            for original_store, meter in zip(original_stores, self.individual.keys()):
+                meter.store = original_store
+                
+            self.meters = meters
