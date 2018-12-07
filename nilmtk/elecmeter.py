@@ -421,6 +421,7 @@ class ElecMeter(Hashable, Electric):
             # Set default key word arguments for resampling.
             resample_kwargs = kwargs.setdefault('resample_kwargs', {})
             resample_kwargs.setdefault('fill_method', 'ffill')
+            resample_kwargs.setdefault('how', 'mean')
             if 'limit' not in resample_kwargs:
                 sample_period = kwargs.get('sample_period', self.sample_period())
                 max_number_of_rows_to_ffill = int(

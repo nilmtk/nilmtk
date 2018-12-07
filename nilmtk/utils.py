@@ -417,7 +417,7 @@ def safe_resample(data, **resample_kwargs):
         if resample_kwargs:
             warnings.warn("Not all resample_kwargs were consumed: {}".format(repr(resample_kwargs))) 
         
-        return how(fill_method(data.resample(rule, **resample_kwargs)))
+        return fill_method(how(data.resample(rule, **resample_kwargs)))
        
 
     try:
