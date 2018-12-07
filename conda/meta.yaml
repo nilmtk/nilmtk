@@ -1,0 +1,37 @@
+package:
+    name: nilmtk
+    version: "0.3.0.dev1"
+
+source:
+    path: ..
+
+build:
+    noarch: python
+    
+requirements:
+    host:
+        - python
+        - setuptools
+        - numpy>=1.13.3
+    run: 
+        - python=3.6
+        - Cython>=0.27.3
+        - bottleneck>=1.2.1
+        - numpy>=1.13.3
+        - numexpr>=2.6.4
+        - pytables
+        - pandas==0.22.0
+        - matplotlib>=2.2.0
+        - networkx==2.1
+        - scipy>=1.0.0
+        - scikit-learn==0.19.2
+        - jupyter
+        - ipython
+        - ipykernel
+        - six
+        - future
+        - nose
+        - coverage
+        - psycopg2
+        - nilm_metadata
+        - hmmlearn
