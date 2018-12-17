@@ -53,13 +53,9 @@ def _get_blocks(filename):
             raise
             
         df.index = pd.to_datetime(df.index, unit='s')
-        df = df.tz_localize("UTC").tz_convert("CET")
-        df.sort_index(inplace=True)
-        df.drop_duplicates(inplace=True)
-        
+        df = df.tz_localize("UTC").tz_convert("CET").sort_index()
         dfs.append(df)
         block_data.close()
-    
     
     special_check = (
         ('dataset_2014-01-28.csv' in filename and 'building5' in filename) or
@@ -149,8 +145,11 @@ def convert_greend(greend_path, hdf_filename, use_mp=True):
             for fn in target_filenames:
                 house_data_dfs.extend(_get_blocks(fn)[1])
             
-        overall_df = pd.concat(house_data_dfs, sort=True)
-        overall_df.drop_duplicates(inplace=True)
+        overall_df = pd.concat(house_data_dfs).sort_index()
+        dups_in_index = overall_df.index.duplicated(keep='first')
+        if dups_in_index.any():
+            print("Found duplicated values in index, dropping them.")
+            overall_df = overall_df[~dups_in_index]
         
         m = 1
         for column in overall_df.columns:
@@ -158,7 +157,12 @@ def convert_greend(greend_path, hdf_filename, use_mp=True):
             key = Key(building=h, meter=m)
             print("Putting into store...")
             
-            df = overall_df[column].to_frame()
+            df = overall_df[column].to_frame() #.dropna(axis=0)
+            
+            # if drop_duplicates:
+                # print("Dropping duplicated values in data...")
+                # df = df.drop_duplicates()
+            
             df.columns = pd.MultiIndex.from_tuples([('power', 'active')])
             df.columns.set_names(LEVEL_NAMES, inplace=True)
             
