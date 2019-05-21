@@ -3,7 +3,7 @@ package:
     version: "0.3.0.dev1"
 
 source:
-    path: ..
+    git_url: https://github.com/nilmtk/nilmtk.git
 
 build:
     noarch: python
@@ -35,3 +35,7 @@ requirements:
         - psycopg2
         - nilm_metadata
         - hmmlearn
+extra:
+    copy_test_source_files: true
+    final: true
+
