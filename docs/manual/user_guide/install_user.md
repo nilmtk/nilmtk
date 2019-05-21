@@ -1,33 +1,70 @@
+# Installing NILMTK
 
-# Install NILMTK
+We recommend using [Anaconda](https://store.continuum.io/cshop/anaconda/), which bundles togther most of the required packages. Since many packages are deprecating  Python 2, we are now recommending installing Python 3.6. For the time being, Python 2.7 is still supported but that may change in the near future.
 
-We recommend using
-[Anaconda](https://store.continuum.io/cshop/anaconda/), which bundles
-togther most of the required packages. Since many packages are deprecating 
-Python 2, we are now recommending installing Python 3.6. For the time being, 
-Python 2.7 is still supported but that may change in the near future.
+After Anaconda has been installed, open up the terminal (Unix) or Anaconda prompt(Windows) :
 
-```bash
-# 0. For Windows only. Download the appropriate version of VS C++ compiler for Python version.
-# For Python 3.6 https://www.microsoft.com/en-us/download/details.aspx?id=48159
-# For Python 2.7 https://www.microsoft.com/en-us/download/details.aspx?id=44266
-# This is needed for building hmmlearn.
+1.  NILMTK should work fine in the base environment, but we recommend creating a new environment where NILMTK and related dependecies are installed.
 
-# 1. Download environment.yml from NILMTK. For Unix like environment, use wget
-# for Windows, download manually
-wget https://raw.githubusercontent.com/nilmtk/nilmtk/master/environment.yml
+	```bash
+	conda create --name nilmtk-env 
+	```
 
-# 2. Creating nilmtk environment. Will download the necessary packages
-conda env create
-# For Linux/OSX
-source activate nilmtk-env
-# For Windows
-activate nilmtk-env
+2. Activate the new *nilmtk-env* environment.
 
-# 3. Create a Jupyter kernel environment
-python -m ipykernel install --user --name nilmtk-env --display-name "Python (nilmtk)"
+	```bash
+	conda activate nilmtk-env
+	```
 
-#4. Configuring the interpreter in your IDE to use nilmtk-env
-# See https://github.com/nilmtk/nilmtk/issues/557#issuecomment-290094260 on how to do this in PyCharm.
-```
+3. Install the NILMTK package
 
+	```bash
+	conda install -c nilmtk nilmtk
+	```
+
+4. The installed package import for python/ ipython can be  tested in the terminal using the following command:
+	```bash
+	python -c "import nilmtk"
+	```
+	or	
+	```bash
+	ipython -c "import nilmtk"
+	```
+	> Note: This might show DepreciationWarning due to the *imp* module. That will be fixed in a future release.
+
+	* Alternatively, you can also run your IDE in *nilmtk-env* from: Anaconda Navigator > "Applications on" dropdown > nilmtk-env
+	To check the current environment variables,
+
+		```python
+		import sys
+		print(sys.executable)
+		print(sys.version)
+		```
+		You will see an output similar to:
+		```
+		/home/ayush/anaconda3/envs/nilmtk-env/bin/python
+		3.6.7 | packaged by conda-forge | (default, Feb 28 2019, 09:07:38) 
+		[GCC 7.3.0]
+		```
+5. Run your python IDE from this environment, for example:
+
+	```bash
+	jupyter notebook
+	```
+	or
+
+	```bash
+	spyder
+	```
+
+6. Import NILMTK in the IDE:
+
+	```python
+	import nilmtk
+	```
+	The package modules can now be used.
+7. To deactivate this environment,
+
+	```bash
+	conda deactivate
+	```
