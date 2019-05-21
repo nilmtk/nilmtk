@@ -1,3 +1,4 @@
+
 # NILMTK Documentation
 
 ## Contents
@@ -8,8 +9,10 @@
 
 * [Introduction](https://github.com/nilmtk/nilmtk/blob/master/README.md)
 * Installation
-   * [Users](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/user_guide/install_user.md); [YouTube](https://www.youtube.com/watch?v=XZJH0CHxIMA&list=PLftoLyLEwECA6Ac95J96Xh1aRMY01nqe2&index=1)
+   * [Users](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/user_guide/install_user.md)    	
+ <!--[YouTube](https://www.youtube.com/watch?v=XZJH0CHxIMA&)list=PLftoLyLEwECA6Ac95J96Xh1aRMY01nqe2&index=1)
    * [Developers](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/user_guide/install_dev.md)
+-->
 * [Data](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/user_guide/data.ipynb): convert and load data.
 * [The Load API: Loading data into memory](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/user_guide/loading_data_into_memory.ipynb)
 * [Meter selection and basic statistics](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/user_guide/elecmeter_and_metergroup.ipynb)
