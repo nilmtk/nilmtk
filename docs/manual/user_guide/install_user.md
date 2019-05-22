@@ -10,6 +10,11 @@ After Anaconda has been installed, open up the terminal (Unix) or Anaconda promp
 	conda create --name nilmtk-env 
 	```
 
+2. Add conda-forge to list of channels to be searched for packages.
+	```bash
+	conda config --add channels conda-forge
+	```
+
 2. Activate the new *nilmtk-env* environment.
 
 	```bash
