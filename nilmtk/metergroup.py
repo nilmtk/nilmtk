@@ -3,6 +3,7 @@ import networkx as nx
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.sankey import Sankey 
 from matplotlib.ticker import FuncFormatter
 from datetime import timedelta
 from warnings import warn
@@ -1412,38 +1413,30 @@ class MeterGroup(Electric):
         return ax
 
     def _plot_sankey(self):
-        graph = self.wiring_graph()
-        meter_labels = {meter: meter.instance() for meter in graph.nodes()}
-        try:
-            # Try using graphviz layout...
-            pos = nx.drawing.nx_agraph.graphviz_layout(graph, prog='dot')
-            used_graphviz = True
-        except:
-            # ...and fallback to shell layout if graphviz is not installed or
-            # doesn't work
-            pos = nx.shell_layout(graph)
-            used_graphviz = False
+        energy_per_meter = elec.submeters().energy_per_meter()
+        total_energy= sum(energy_per_meter.iloc[0])
+        ratio_energy=[]
+        labels=[]
+        total_devices=len(energy_per_meter.iloc[0])
+        for i in range(total_devices):
+            labels.append(elec.submeters().meters[i].appliances[0].type['type'])
+            
+        for i in range(len(energy_per_meter.iloc[0])):
+            ratio_energy.append(energy_per_meter.iloc[0][i]/total_energy)
+
+        ratio_energy.append(-1)  
+        labels.append('mains')
+        orientations=np.ones(total_devices+1)
+        orientations[-1]=0
+        for i in range(int(total_devices/2)):
+                orientations[i]=-1
         
-        meter_labels = {meter: meter.label() for meter in graph.nodes()}
-        for meter, name in iteritems(meter_labels):
-            x, y = pos[meter]
-            
-            if used_graphviz:
-                if meter.is_site_meter():
-                    delta_y = 5
-                else:
-                    delta_y = -5
-                
-                plt.text(x, y + delta_y, s=name, bbox=dict(facecolor='red', alpha=0.5), horizontalalignment='center')
-                    
-            if not meter.is_site_meter():
-                upstream_meter = meter.upstream_meter()
-                proportion_of_upstream = meter.proportion_of_upstream()
-                print(meter.instance(), upstream_meter.instance(), proportion_of_upstream)
-                graph[upstream_meter][meter]["weight"] = proportion_of_upstream*10
-                graph[upstream_meter][meter]["color"] = "blue"
-            
-        nx.draw(graph, pos, labels=meter_labels, arrows=False)
+        # basic sankey chart
+        Sankey(flows=ratio_energy, labels=labels, orientations=orientations).finish()
+        plt.title("Sankey diagram")
+        plt.rcParams["figure.figsize"] = [16,16]
+
+        
 
     def _plot_area(self, ax=None, timeframe=None, pretty_labels=True, unit='W',
                    label_kwargs=None, plot_kwargs=None, threshold=None,
