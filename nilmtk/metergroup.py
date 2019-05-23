@@ -1434,7 +1434,6 @@ class MeterGroup(Electric):
         # basic sankey chart
         Sankey(flows=ratio_energy, labels=labels, orientations=orientations).finish()
         plt.title("Sankey diagram")
-        plt.rcParams["figure.figsize"] = [16,16]
 
         
 
