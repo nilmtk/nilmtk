@@ -120,9 +120,9 @@ def convert_eco(dataset_loc, hdf_filename, timezone):
                             13+phase:('phase_angle', ''),
                             'Q': ('power', 'reactive'),
                         }
-                        df_phase.columns = pd.MultiIndex.from_tuples(
+                        df_phase.columns = pd.MultiIndex.from_tuples([
                             sm_column_name[col] for col in df_phase.columns
-                        )
+                        ])
                         
                         power_active = df_phase['power', 'active']
                         tmp_before = np.size(power_active)
