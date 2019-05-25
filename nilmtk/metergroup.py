@@ -1413,28 +1413,44 @@ class MeterGroup(Electric):
         return ax
 
     def _plot_sankey(self):
-        energy_per_meter = elec.submeters().energy_per_meter()
-        total_energy= sum(energy_per_meter.iloc[0])
-        ratio_energy=[]
-        labels=[]
-        total_devices=len(energy_per_meter.iloc[0])
+        """
+        Computes parameters like fraction of energy, labels and orientations
+        from elecmeter object and calls matplotlib.sankey function to plot
+        the data
+
+        """
+
+        # Use fraction_per_meter() function to get energy fraction values of
+        # submeters
+        fraction_per_meter = self.submeters().fraction_per_meter()
+
+        # Calculate total number of devices
+        total_devices = len(fraction_per_meter)
+
+        # Define a list of energy_ratio
+        energy_ratio = [i for i in fraction_per_meter]
+
+        #  Define a list of labels of submeters
+        labels = []
+
         for i in range(total_devices):
-            labels.append(elec.submeters().meters[i].appliances[0].type['type'])
-            
-        for i in range(len(energy_per_meter.iloc[0])):
-            ratio_energy.append(energy_per_meter.iloc[0][i]/total_energy)
+            # Get labels of appliances
+            labels.append(self.submeters().meters[i].appliances[0].type['type'])
 
-        ratio_energy.append(-1)  
+        # Append mains to last of both lists
+        energy_ratio.append(-1)
         labels.append('mains')
-        orientations=np.ones(total_devices+1)
-        orientations[-1]=0
-        for i in range(int(total_devices/2)):
-                orientations[i]=-1
-        
-        # basic sankey chart
-        Sankey(flows=ratio_energy, labels=labels, orientations=orientations).finish()
-        plt.title("Sankey diagram")
 
+        # Define orientations for plot
+        orientations = np.ones(total_devices + 1)
+        orientations[-1] = 0
+        for i in range(int(total_devices / 2)):
+            orientations[i] = -1
+
+        # Plot
+        Sankey(flows=energy_ratio, labels=labels,
+            orientations=orientations).finish()
+        plt.title("Sankey Diagram")
         
 
     def _plot_area(self, ax=None, timeframe=None, pretty_labels=True, unit='W',
