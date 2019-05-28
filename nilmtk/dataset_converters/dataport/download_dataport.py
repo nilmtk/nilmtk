@@ -23,6 +23,7 @@ as NILMTK-DF. Since downloading the entire dataset will likely take >
 24 hours, this function provides some options to allow you to download
 only a subset of the data.
 
+'''''''''''''''' Previous Version '''''''''''''''''''''
 For example, to only load house 26 for April 2014:
 
     from nilmtk.dataset_converters.dataport.download_dataport import download_dataport
@@ -32,6 +33,51 @@ For example, to only load house 26 for April 2014:
         '/path/output_filename.h5',
         periods_to_load={26: ('2014-04-01', '2014-05-01')}
     )
+'''''''''''''''' Previous Version '''''''''''''''''''''
+
+'''''''''''''''' New Version '''''''''''''''''''''
+
+    from nilmtk.dataset_converters.dataport.download_dataport 
+    import  download_dataport,
+            _dataport_dataframe_to_hdf,
+            view_database_tables,
+            view_buildings
+    
+    # see all available tables in the dataport database. 
+    view_database_tables(
+        'username',
+        'password',
+        'database_schema'   # university or commercial
+    )   
+
+    # show the list of all available buildings
+    view_buildings(
+        'username',
+        'password',
+        'database_schema',  # university or commercial
+        'table_name'        # for example 'electricity_egauge_15min', 'electricity_egauge_hours'
+    )
+    
+    # view data collection window of selected buildings
+    view_buildings(
+        'username',
+        'password',
+        'database_schema',  # university or commercial
+        'table_name',       # for example 'electricity_egauge_15min','electricity_egauge_hours'
+        [18,26,43,44]       # data collection window of building 18,26,43 and 44 respectively
+    )
+
+    # download the dataset. For example, loading electricity_egauge_hours from 2018-11-17 to 2019-12-17 of building 26
+    download_dataport(
+        'username',
+        'password',
+        'university',
+        'electricity_egauge_hours',
+        '/path/output_filename.h5',
+        periods_to_load={ 26: ('2018-11-17', '2019-12-17')})
+
+
+'''''''''''''''' New Version '''''''''''''''''''''
 
 REQUIREMENTS:
 
