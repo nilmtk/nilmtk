@@ -71,9 +71,9 @@ For example, to only load house 26 for April 2014:
     download_dataport(
         'username',
         'password',
+        '/path/output_filename.h5',
         'university',
         'electricity_egauge_hours',
-        '/path/output_filename.h5',
         periods_to_load={ 26: ('2018-11-17', '2019-12-17')})
 
 
@@ -261,9 +261,9 @@ def view_buildings(database_username, database_password,
     print("Done loading all the buildings!!")
     conn.close()
 
-def download_dataport(database_username, database_password,
-                     database_schema,user_selected_table, 
-                     hdf_filename, periods_to_load=None):
+def download_dataport(database_username, database_password,hdf_filename,
+                     database_schema='university',user_selected_table='electricity_egauge_minutes', 
+                     periods_to_load=None):
     """
     Downloads data from dataport database into an HDF5 file.
 
@@ -271,7 +271,7 @@ def download_dataport(database_username, database_password,
     ----------
     hdf_filename : str
         Output HDF filename.  If file exists already then will be deleted.
-    database_username, database_password, database_schema,user_selected_table, hdf_filename : str
+    database_username, database_password, hdf_filename, database_schema,user_selected_table  : str
     periods_to_load : dict of tuples, optional
        Key of dict is the building number (int).
        Values are (<start date>, <end date>)
