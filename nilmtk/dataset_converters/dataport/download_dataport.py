@@ -122,6 +122,37 @@ feed_mapping = {
 feed_ignore = ['gen', 'grid']
 
 
+def view_database_tables(database_username, database_password, 
+                     database_schema):
+    
+    database_host = 'dataport.pecanstreet.org'
+    database_port = '5434'
+    database_name = 'postgres'
+
+    try:
+        conn = db.connect('host=' + database_host + 
+                          ' port=' + database_port + 
+                          ' dbname=' + database_name + 
+                          ' user=' + database_username + 
+                          ' password=' + database_password)
+    except:
+        print('Could not connect to remote database')
+        raise
+
+    
+    #Loading university schemas
+    sql_query = ("SELECT table_name" +
+                 " FROM information_schema.views" +
+                 " WHERE table_schema ='" + database_schema + "'" +
+                 " ORDER BY table_name")
+    database_tables=pd.read_sql(sql_query, conn)['table_name'].tolist()
+
+    df=pd.DataFrame({database_schema:database_tables})
+    #print(database_tables)
+    print(df)
+    conn.close()
+
+    
 def download_dataport(database_username, database_password, 
                      hdf_filename, periods_to_load=None):
     """
