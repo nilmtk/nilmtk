@@ -215,7 +215,8 @@ def view_buildings(database_username, database_password,
     print("Done loading all the buildings!!")
     conn.close()
 
-def download_dataport(database_username, database_password, 
+def download_dataport(database_username, database_password,
+                     database_schema,user_selected_table, 
                      hdf_filename, periods_to_load=None):
     """
     Downloads data from dataport database into an HDF5 file.
@@ -224,7 +225,7 @@ def download_dataport(database_username, database_password,
     ----------
     hdf_filename : str
         Output HDF filename.  If file exists already then will be deleted.
-    database_username, database_password : str
+    database_username, database_password, database_schema,user_selected_table, hdf_filename : str
     periods_to_load : dict of tuples, optional
        Key of dict is the building number (int).
        Values are (<start date>, <end date>)
@@ -236,7 +237,7 @@ def download_dataport(database_username, database_password,
     database_host = 'dataport.pecanstreet.org'
     database_port = '5434'
     database_name = 'postgres'
-    database_schema = 'university'
+
 
     # try to connect to database
     try:
@@ -249,6 +250,12 @@ def download_dataport(database_username, database_password,
         print('Could not connect to remote database')
         raise
 
+    # map user_selected_table and timestamp column
+    timestamp_map={"electricity_egauge_15min":"local_15min",
+                    "electricity_egauge_hours":"localhour",
+                    "electricity_egauge_minutes":"localminute",
+                    "electricity_egauge_seconds":"localminute"}   
+  
     # set up a new HDF5 datastore (overwrites existing store)
     store = pd.HDFStore(hdf_filename, 'w', complevel=9, complib='zlib')
     
@@ -274,8 +281,7 @@ def download_dataport(database_username, database_password,
                  " WHERE table_schema ='" + database_schema + "'" +
                  " ORDER BY table_name")
     database_tables = pd.read_sql(sql_query, conn)['table_name'].tolist()
-    database_tables = [t for t in database_tables if 'electricity_egauge_minutes' in t]
-
+    database_tables = [t for t in database_tables if user_selected_table in t]
     # if user has specified buildings
     if periods_to_load:
         buildings_to_load = list(periods_to_load.keys())
@@ -309,14 +315,15 @@ def download_dataport(database_username, database_password,
                          ' FROM university.metadata' +
                          ' WHERE egauge_min_time IS NOT NULL' +
                          ' ORDER BY dataid')
+            
             buildings_in_table = pd.read_sql(sql_query, conn)['dataid'].tolist()
-
             if building_id in buildings_in_table:
                 # get first and last timestamps for this house in electricity_egauge_minutes table
                 sql_query = ('SELECT MIN(egauge_min_time) AS minlocalminute,' +
                              ' MAX(egauge_max_time) AS maxlocalminute' +
                              ' FROM university.metadata' +
                              ' WHERE dataid=' + str(building_id))
+
                 range = pd.read_sql(sql_query, conn)
                 first_timestamp_in_table = range['minlocalminute'][0]
                 last_timestamp_in_table = range['maxlocalminute'][0]
@@ -361,16 +368,15 @@ def download_dataport(database_username, database_password,
                         # query power data for all channels
                         format = '%Y-%m-%d %H:%M:%S'
                         sql_query = ('SELECT *' + 
-                                     ' FROM "' + database_schema + '".' + database_table + 
+                                     ' FROM "' + database_schema + '".' + user_selected_table + 
                                      ' WHERE dataid=' + str(building_id) + 
-                                     'and localminute between ' + 
+                                     'and "'+ timestamp_map[user_selected_table] + '" between ' + 
                                      "'" + chunk_start.strftime(format) + "'" + 
                                      " and " + 
                                      "'" + chunk_end.strftime(format) + 
-                                     "' ORDER BY localminute"
+                                     "' ORDER BY "+timestamp_map[user_selected_table]
                         )
                         chunk_dataframe = pd.read_sql(sql_query, conn)
-                        
                         # nilmtk requires building indices to start at 1
                         nilmtk_building_id = buildings_to_load.index(building_id) + 1
                         # convert to nilmtk-df and save to disk
@@ -378,6 +384,7 @@ def download_dataport(database_username, database_password,
                             chunk_dataframe, store,
                             nilmtk_building_id,
                             building_id,
+                            timestamp_map[user_selected_table],
                             metadata_dir
                         )
 
@@ -414,15 +421,16 @@ def _dataport_dataframe_to_hdf(dataport_dataframe,
                                  store, 
                                  nilmtk_building_id,
                                  dataport_building_id,
+                                 timestamp_name,
                                  metadata_dir):
     local_dataframe = dataport_dataframe.copy()
     
     # remove timezone information to avoid append errors
-    local_dataframe['localminute'] = pd.DatetimeIndex([i.replace(tzinfo=None) 
-                                                       for i in local_dataframe['localminute']])
+    local_dataframe[timestamp_name] = pd.DatetimeIndex([i.replace(tzinfo=None) 
+                                                       for i in local_dataframe[timestamp_name]])
     
     # set timestamp as frame index
-    local_dataframe = local_dataframe.set_index('localminute')
+    local_dataframe = local_dataframe.set_index(timestamp_name)
     
     # set timezone
     local_dataframe = local_dataframe.tz_localize('US/Central')
@@ -498,4 +506,3 @@ def _dataport_dataframe_to_hdf(dataport_dataframe,
         outfile.write(yaml.dump(building_metadata))
         
     return 0
-
