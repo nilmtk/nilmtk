@@ -190,6 +190,50 @@ def view_buildings(database_username, database_password,
     buildings_in_table = pd.read_sql(sql_query, conn)['dataid'].tolist()
     print(buildings_in_table)
     conn.close()
+
+def view_data_window(database_username, database_password,
+                    database_schema,database_table,building_no=None):
+    
+    
+    database_assert(database_table)
+    database_host = 'dataport.pecanstreet.org'
+    database_port = '5434'
+    database_name = 'postgres'
+
+    # try to connect to database
+    try:
+        conn = db.connect('host=' + database_host + 
+                          ' port=' + database_port + 
+                          ' dbname=' + database_name + 
+                          ' user=' + database_username + 
+                          ' password=' + database_password)
+    except:
+        print('Could not connect to remote database')
+        raise
+
+    #select all buildings for the database_table
+    sql_query = ('SELECT DISTINCT dataid' +
+                         ' FROM university.metadata' +
+                         ' WHERE' + database_table +
+                         ' ORDER BY dataid')
+    
+    if(not (building_no)):        
+        print(" Please provide the list of building numbers to load the data window")
+    else:
+        for each_building in building_no:
+            sql_query = ('SELECT MIN(egauge_min_time) AS minlocalminute,' +
+                                 ' MAX(egauge_max_time) AS maxlocalminute' +
+                                 ' FROM university.metadata' +
+                                 ' WHERE dataid=' + str(each_building))
+                    
+            timestamps = pd.read_sql(sql_query, conn)
+            #print(range)
+            first_timestamp_in_table = timestamps['minlocalminute'][0]
+            last_timestamp_in_table = timestamps['maxlocalminute'][0]    
+            print(str(each_building),"\t\t",first_timestamp_in_table,"\t\t",last_timestamp_in_table)
+        print("Done loading all the buildings!!")
+
+    conn.close()
     
 def download_dataport(database_username, database_password, 
                      hdf_filename, periods_to_load=None):
