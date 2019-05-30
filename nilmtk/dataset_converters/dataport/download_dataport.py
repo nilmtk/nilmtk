@@ -159,8 +159,38 @@ def view_database_tables(database_username, database_password,
     #print(database_tables)
     print(df)
     conn.close()
-    
 
+def view_buildings(database_username, database_password,
+                    database_schema,database_table):
+    
+    
+    database_assert(database_table)
+    database_host = 'dataport.pecanstreet.org'
+    database_port = '5434'
+    database_name = 'postgres'
+
+    # try to connect to database
+    try:
+        conn = db.connect('host=' + database_host + 
+                          ' port=' + database_port + 
+                          ' dbname=' + database_name + 
+                          ' user=' + database_username + 
+                          ' password=' + database_password)
+    except:
+        print('Could not connect to remote database')
+        raise
+
+    #select all buildings for the database_table
+    sql_query = ('SELECT DISTINCT dataid' +
+                         ' FROM university.metadata' +
+                         ' WHERE' + database_table +
+                         ' ORDER BY dataid')
+    
+    
+    buildings_in_table = pd.read_sql(sql_query, conn)['dataid'].tolist()
+    print(buildings_in_table)
+    conn.close()
+    
 def download_dataport(database_username, database_password, 
                      hdf_filename, periods_to_load=None):
     """
