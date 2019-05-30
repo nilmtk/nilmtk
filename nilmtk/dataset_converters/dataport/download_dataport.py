@@ -298,7 +298,7 @@ def download_dataport(database_username, database_password,hdf_filename,
        defaults to all buildings and all date ranges
     """
 
-    database_assert(database_table)
+    database_assert(user_selected_table)
     # dataport database settings
     database_host = 'dataport.pecanstreet.org'
     database_port = '5434'
