@@ -121,6 +121,14 @@ feed_mapping = {
 
 feed_ignore = ['gen', 'grid']
 
+def database_assert(database_table):
+    assert (
+            database_table == 'electricity_egauge_15min' 
+            or database_table == 'electricity_egauge_hours' 
+            or database_table == 'electricity_egauge_minutes'
+            or database_table == 'electricity_egauge_seconds'
+            ), "Table not compatible with NILMTK"
+    
 
 def download_dataport(database_username, database_password, 
                      hdf_filename, periods_to_load=None):
