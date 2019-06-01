@@ -1773,7 +1773,7 @@ def combine_chunks_from_generators(index, columns, meters, kwargs):
 
     DTYPE = np.float32
     cumulator = pd.DataFrame(np.NaN, index=index, columns=columns, dtype=DTYPE)
-    cumulator_arr = cumulator.as_matrix()
+    cumulator_arr = cumulator.values
     columns_to_average_counter = pd.DataFrame(dtype=np.uint16)
     timeframe = None
 
