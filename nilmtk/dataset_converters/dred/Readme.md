@@ -6,3 +6,10 @@ DRED (Dutch Residential Energy Dataset) is the first open-access, publicly avail
 * Household information - house layout, number of appliance monitored, appliance-location mapping, etc.
 
 The [data set homepage](http://www.st.ewi.tudelft.nl/~akshay/dred/) contains nilmtk H5 file, in addition to the raw data.
+
+UPDATES :- 
+
+DRED dataset converter added
+The official .h5 file is not compatible with NILMTK. Use the converter instead. The converter is compatible with All_data.csv file.
+
+
