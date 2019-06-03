@@ -1,0 +1,15 @@
+mains:
+  model: mains
+  sample_period: 1
+  max_sample_period: 1   
+  measurements:
+  - physical_quantity: power   # power, voltage, energy, current?
+    type: apparent  # active (real power), reactive or apparent?
+
+GT:
+  model: GT
+  sample_period: 1
+  max_sample_period: 1  
+  measurements:
+  - physical_quantity: power   # power, voltage, energy, current?
+    type: apparent   # active (real power), reactive or apparent?

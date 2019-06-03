@@ -1,0 +1,81 @@
+instance: 1 
+original_name: house_1   
+elec_meters:
+  1: &mains
+    site_meter: true
+    device_model: mains
+  2: &GT
+    submeter_of: 0 
+    device_model: GT
+  3: *GT
+  4: *GT
+  5: *GT
+  6: *GT
+  7: *GT
+  8: *GT
+  9: *GT
+  10: *GT
+  11: *GT
+  12: *GT
+  13: *GT
+
+appliances:
+- original_name: television
+  type: television
+  instance: 1
+  meters: [2]   
+
+- original_name: fan
+  type: fan
+  instance: 1
+  meters: [3]
+
+- original_name: fridge
+  type: fridge
+  instance: 1
+  meters: [4]  
+
+- original_name: laptop
+  type: laptop computer
+  instance: 1
+  meters: [5]   
+
+- original_name: electric heating element
+  type: electric heating element
+  instance: 1
+  meters: [6]   
+
+- original_name: oven
+  type: electric oven
+  instance: 1
+  meters: [7]   
+
+- original_name: unknown
+  type: unknown
+  instance: 1
+  meters: [8]
+
+- original_name: washing machine
+  type: washing machine
+  instance: 1
+  meters: [9]
+
+- original_name: microwave
+  type: microwave
+  instance: 1
+  meters: [10]
+
+- original_name: toaster
+  type: toaster
+  instance: 1
+  meters: [11]
+
+- original_name: sockets
+  type: sockets
+  instance: 1
+  meters: [12]
+
+- original_name: cooker
+  type: cooker
+  instance: 1
+  meters: [13]
