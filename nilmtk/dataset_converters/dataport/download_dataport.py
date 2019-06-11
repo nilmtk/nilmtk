@@ -42,7 +42,8 @@ For example, to only load house 26 for April 2014:
     import download_dataport,
             _dataport_dataframe_to_hdf,
             view_database_tables,
-            view_buildings
+            view_buildings,
+            view_data_window
 
     # see all available tables in the dataport database.
     view_database_tables(
@@ -60,7 +61,7 @@ For example, to only load house 26 for April 2014:
     )
 
     # view data collection window of selected buildings
-    view_buildings(
+    view_data_window(
         'username',
         'password',
         'database_schema',  # university or commercial
