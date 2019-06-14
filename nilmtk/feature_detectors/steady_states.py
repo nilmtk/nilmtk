@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 import numpy as np
-import pandas as pd 
+import pandas as pd
 import sys
 
 
@@ -29,7 +29,7 @@ def find_steady_states_transients(metergroup, columns, noise_level,
             power_dataframe = power_df[[('power', 'active'), ('power', 'reactive')]]
         """
         power_dataframe = power_df.dropna()
-        if power_dataframe.empty: 
+        if power_dataframe.empty:
             continue
 
         x, y = find_steady_states(
@@ -82,7 +82,7 @@ def find_steady_states(dataframe, min_n_samples=2, state_threshold=15,
     sys.stdout.flush()
 
     for row in dataframe.itertuples():
-        #print(row)
+        # print(row)
 
         # test if either active or reactive moved more than threshold
         # http://stackoverflow.com/questions/17418108/elegant-way-to-perform-tuple-arithmetic
@@ -109,7 +109,8 @@ def find_steady_states(dataframe, min_n_samples=2, state_threshold=15,
         if instantaneous_change and (not ongoing_change):
 
             # Calculate transition size
-            last_transition = np.subtract(estimated_steady_power, last_steady_power)
+            last_transition = np.subtract(
+                estimated_steady_power, last_steady_power)
             # logging.debug('The steady state transition is: %s' %
             # (lastTransition,))
 
@@ -167,7 +168,8 @@ def find_steady_states(dataframe, min_n_samples=2, state_threshold=15,
     # than the noise threshold
     #  https://github.com/nilmtk/nilmtk/issues/400
 
-    if np.sum(steady_states[0] > noise_level) and index_transitions[0] == index_steady_states[0] == dataframe.iloc[0].name:
+    if np.sum(
+            steady_states[0] > noise_level) and index_transitions[0] == index_steady_states[0] == dataframe.iloc[0].name:
         transitions = transitions[1:]
         index_transitions = index_transitions[1:]
         steady_states = steady_states[1:]
@@ -184,7 +186,6 @@ def find_steady_states(dataframe, min_n_samples=2, state_threshold=15,
     cols_steady = {1: ['active average'],
                    2: ['active average', 'reactive average']}
 
-    
     if len(index_transitions) == 0:
         # No events
         return pd.DataFrame(), pd.DataFrame()
@@ -195,8 +196,10 @@ def find_steady_states(dataframe, min_n_samples=2, state_threshold=15,
 
         print("Creating states frame ...")
         sys.stdout.flush()
-        steady_states = pd.DataFrame(data=steady_states, index=index_steady_states,
-                                     columns=cols_steady[num_measurements])
+        steady_states = pd.DataFrame(
+            data=steady_states,
+            index=index_steady_states,
+            columns=cols_steady[num_measurements])
         print("States frame created.")
         print("Finished.")
         return steady_states, transitions
