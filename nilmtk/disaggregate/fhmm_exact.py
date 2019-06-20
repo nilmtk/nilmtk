@@ -176,6 +176,34 @@ def decode_hmm(length_sequence, centroids, appliance_list, states):
     return [hmm_states, hmm_power]
 
 
+def _check_memory(num_appliances):
+    """
+    Checks if the maximum resident memory is enough to handle the 
+    combined matrix of transition probabilities
+    """
+    # Each transmat is small (usually 2x2 or 3x3) but the combined
+    # matrix is dense, using much more memory
+    
+    # Get the approximate memory in MB
+    try:
+        # If psutil is installed, we can get the correct total 
+        # physical memory of the system
+        import psutil
+        available_memory = psutil.virtual_memory().total >> 20
+    except ImportError:
+        # Otherwise use a crude approximation
+        available_memory = 16 << 10
+    
+    
+    # We use (num_appliances + 1) here to get a pessimistic approximation:
+    # 8 bytes * (2 ** (num_appliances + 1)) ** 2
+    required_memory = ((1 << (2 * (num_appliances + 1))) << 3) >> 20
+    
+    if required_memory >= available_memory:
+        warn("The required memory for the model may be more than the total system memory!"
+             " Try using fewer appliances if the training fails.")
+
+
 class FHMM(Disaggregator):
     """
     Attributes
@@ -206,6 +234,9 @@ class FHMM(Disaggregator):
         :param load_kwargs:
         :return:
         """
+
+        _check_memory(len(list_of_appliances))
+
         self.list_of_appliances = list_of_appliances
         models = {}
 
@@ -265,6 +296,8 @@ class FHMM(Disaggregator):
             max_num_clusters = 2
         else:
             max_num_clusters = 3
+
+        _check_memory(len((metergroup.submeters().meters)))
 
         for i, meter in enumerate(metergroup.submeters().meters):
             power_series = meter.power_series(**load_kwargs)
