@@ -6,11 +6,11 @@ dependencies:
 - numpy>=1.13.3
 - numexpr>=2.6.4
 - pytables
-- pandas==0.22.0
+- pandas>=0.24.2
 - matplotlib>=2.2.0
 - networkx==2.1
 - scipy>=1.0.0
-- scikit-learn==0.19.2
+- scikit-learn>=0.21.2
 - jupyter
 - ipython
 - ipykernel
@@ -22,6 +22,6 @@ dependencies:
 - psycopg2
 - pip:  # Install packages which are not in conda. Install these using pip:
     - coveralls
-    - https://github.com/hmmlearn/hmmlearn/archive/ae1a41e4d03ea61b7a25cba68698e8e2e52880ad.zip#egg=hmmlearn
+    - https://github.com/hmmlearn/hmmlearn/archive/de0546eaab01ce11c9f8481a9e8eaf7526adc113.zip#egg=hmmlearn
     - https://github.com/nilmtk/nilm_metadata/archive/master.zip#egg=nilm_metadata
     - https://github.com/nilmtk/nilmtk/archive/master.zip#egg=nilmtk
