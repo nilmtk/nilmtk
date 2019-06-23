@@ -77,8 +77,10 @@ def convert_iawe(iawe_path, output_filename, format="HDF"):
         df.index = pd.to_datetime(df.timestamp.values, unit='s', utc=True)
         df = df.tz_convert(TIMEZONE)
         df = df.drop(TIMESTAMP_COLUMN_NAME, 1)
-        df.rename(columns=lambda x: column_mapping[x], inplace=True)
-        df.columns.set_names(LEVEL_NAMES, inplace=True)
+        df.columns = pd.MultiIndex.from_tuples(
+            [column_mapping[x] for x in df.columns],
+            names=LEVEL_NAMES
+        )
         df = df.apply(pd.to_numeric, errors='ignore')
         df = df.dropna()
         df = df.astype(np.float32)

@@ -145,7 +145,7 @@ def convert_greend(greend_path, hdf_filename, use_mp=True):
             for fn in target_filenames:
                 house_data_dfs.extend(_get_blocks(fn)[1])
             
-        overall_df = pd.concat(house_data_dfs).sort_index()
+        overall_df = pd.concat(house_data_dfs, sort=False).sort_index()
         dups_in_index = overall_df.index.duplicated(keep='first')
         if dups_in_index.any():
             print("Found duplicated values in index, dropping them.")
