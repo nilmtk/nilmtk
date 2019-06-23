@@ -122,14 +122,18 @@ class HDFDataStore(DataStore):
                         look_ahead_start_i = chunk_end_i
                         look_ahead_end_i = look_ahead_start_i + n_look_ahead_rows
                         try:
-                            data.look_ahead = self.store.select(
+                            look_ahead = self.store.select(
                                 key=key, columns=columns,
                                 start=look_ahead_start_i,
-                                stop=look_ahead_end_i)
+                                stop=look_ahead_end_i
+                            )
                         except ValueError:
-                            data.look_ahead = pd.DataFrame()
+                            look_ahead = pd.DataFrame()
                     else:
-                        data.look_ahead = pd.DataFrame()
+                        look_ahead = pd.DataFrame()
+                            
+                    setattr(data, 'look_ahead', look_ahead)
+
 
                 data.timeframe = _timeframe_for_chunk(there_are_more_subchunks, 
                                                       chunk_i, window_intersect,

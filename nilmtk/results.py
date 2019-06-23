@@ -106,7 +106,7 @@ class Results(object):
         if new_result._data.empty:
             return
 
-        self._data = self._data.append(new_result._data)
+        self._data = self._data.append(new_result._data, sort=False)
         self._data.sort_index(inplace=True)
         self.check_for_overlap()
 
