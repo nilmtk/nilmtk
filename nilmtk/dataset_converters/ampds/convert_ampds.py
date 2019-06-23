@@ -70,8 +70,10 @@ def convert_ampds(input_path, output_filename, format='HDF'):
         df.index = pd.to_datetime(df[TIMESTAMP_COLUMN_NAME], unit='s', utc=True)
         df = df.drop(TIMESTAMP_COLUMN_NAME, 1)
         df = df.tz_convert(TIMEZONE)
-        df.rename(columns=lambda x: columnNameMapping[x], inplace=True)
-        df.columns.set_names(LEVEL_NAMES, inplace=True)
+        df.columns = pd.MultiIndex.from_tuples(
+            [columnNameMapping[x] for x in df.columns],
+            names=LEVEL_NAMES
+        )
         df = df.apply(pd.to_numeric, errors='ignore')
         df = df.dropna()
         df = df.astype(np.float32)
