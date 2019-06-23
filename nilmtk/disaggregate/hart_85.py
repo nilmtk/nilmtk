@@ -380,10 +380,10 @@ class Hart85(Disaggregator):
                     # print("A", values[i], i)
                     on = True
                     i = i + 1
-                    power[i] = self.centroids.ix[appliance].values
+                    power[i] = self.centroids.loc[appliance].values
                     while values[i] != 0 and i < len(values) - 1:
                         # print("B", values[i], i)
-                        power[i] = self.centroids.ix[appliance].values
+                        power[i] = self.centroids.loc[appliance].values
                         i = i + 1
                 elif values[i] == 0:
                     # print("C", values[i], i)
@@ -416,10 +416,10 @@ class Hart85(Disaggregator):
                     else:
                         # print("H", values[i], i)
                         on = True
-                        power[i] = self.centroids.ix[appliance].values
+                        power[i] = self.centroids.loc[appliance].values
                         while values[i] != 0 and i < len(values) - 1:
                             # print("I", values[i], i)
-                            power[i] = self.centroids.ix[appliance].values
+                            power[i] = self.centroids.loc[appliance].values
                             i = i + 1
 
             di[appliance] = power
@@ -490,8 +490,7 @@ class Hart85(Disaggregator):
                 df.columns = columns
                 df.columns.names = ['physical_quantity', 'type']
                 key = '{}/elec/meter{:d}'.format(building_path, meter + 2)
-                val = df.convert_objects(convert_numeric=True)
-                val = val.astype('float32')
+                val = df.apply(pd.to_numeric).astype('float32')
                 output_datastore.append(key, value=val)
             print('Next Chunk..')
 
@@ -500,7 +499,7 @@ class Hart85(Disaggregator):
         for chunk_mains in mains.load(ac_type=ac_type):
             chunk_df = chunk_mains
 
-        chunk_df = chunk_df.convert_objects(convert_numeric=True)
+        chunk_df = chunk_df.apply(pd.to_numeric).astype('float32')
         print('Done')
 
         output_datastore.append(key=mains_data_location,
