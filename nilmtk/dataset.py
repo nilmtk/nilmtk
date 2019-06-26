@@ -90,7 +90,7 @@ class DataSet(object):
     def describe(self, **kwargs):
         """Returns a DataFrame describing this dataset.
         Each column is a building.  Each row is a feature."""
-        keys = self.buildings.keys()
+        keys = list(self.buildings.keys())
         keys.sort()
         results = pd.DataFrame(columns=keys)
         for i, building in iteritems(self.buildings):
