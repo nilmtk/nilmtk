@@ -56,13 +56,13 @@ Following Segment of this file was taken from the pandas project(https://github.
 MAJOR = 0
 MINOR = 3
 MICRO = 0
+DEV = 0 # For multiple dev pre-releases, please increment this value
 ISRELEASED = False
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 QUALIFIER = ''
 
 FULLVERSION = VERSION
 if not ISRELEASED:
-    FULLVERSION += '.dev'
     try:
         import subprocess
         try:
@@ -78,9 +78,11 @@ if not ISRELEASED:
         if sys.version_info[0] >= 3:
             rev = rev.decode('ascii')
 
-        FULLVERSION += "-%s" % rev
+        # Use a local version tag to include the git revision
+        FULLVERSION += ".dev{}+git.{}".format(DEV, rev)
     except:
-        warnings.warn("WARNING: Couldn't get git revision")
+        FULLVERSION += ".dev{}".format(DEV)
+        warnings.warn('WARNING: Could not get the git revision, version will be "{}"'.format(FULLVERSION))
 else:
     FULLVERSION += QUALIFIER
 
