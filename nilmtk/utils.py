@@ -8,7 +8,7 @@ from inspect import currentframe, getfile, getsourcefile
 from sys import getfilesystemencoding, stdout
 from IPython.core.display import HTML, display
 from collections import OrderedDict
-import datetime
+import datetime, re
 import pytz
 from nilmtk.datastore import HDFDataStore, CSVDataStore
 import warnings
@@ -222,7 +222,7 @@ def dict_to_html(dictionary):
     def format_string(value):
         try:
             if isinstance(value, basestring) and 'http' in value:
-                html = '<a href="{url}">{url}</a>'.format(url=value)
+                html = re.sub(r'(http[^\s\)]+)', r'<a href="\1">\1</a>', value)
             else:
                 html = '{}'.format(value)
         except UnicodeEncodeError:
