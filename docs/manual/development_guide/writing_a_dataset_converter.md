@@ -59,7 +59,11 @@ meters).
 The index column is a datetime represented on disk as a nano-second
 precision (!) UNIX timestamp stored as an unsigned 64-bit int. In
 Python, we used a timezone-aware `numpy.datetime64`. The dataframe must 
-be sorted in ascending order on the index (timestamp) column.
+be sorted in ascending order on the index (timestamp) column. 
+
+To avoid issues later on, the index column must have unique values. If
+there are duplicates, the converter should either drop one of the items
+or disambiguated them if possible.
 
 #### Measurement columns
 
