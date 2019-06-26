@@ -1,0 +1,9 @@
+name: SMART
+timezone: US/Eastern  # Amherst is on the east coast
+timeframe:
+  start: 2013-12-31 19:00:00-05:00
+  end: 2016-12-31 18:59:00-05:00
+number_of_buildings: 3
+related_documents:
+ -http://traces.cs.umass.edu/index.php/Smart/Smart
+ 
