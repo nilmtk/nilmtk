@@ -1,22 +1,23 @@
 from __future__ import print_function, division
-import numpy as np
-import pandas as pd
-import networkx as nx
 from os.path import isdir, dirname, abspath
 from os import getcwd
 from inspect import currentframe, getfile, getsourcefile
 from sys import getfilesystemencoding, stdout
-from IPython.core.display import HTML, display
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 import datetime, re
 import pytz
-from nilmtk.datastore import HDFDataStore, CSVDataStore
 import warnings
 
+import numpy as np
+import pandas as pd
+import networkx as nx
+from IPython.core.display import HTML, display
+from sklearn.metrics import mean_squared_error
 # Python 2/3 compatibility
 from six import iteritems
 from past.builtins import basestring
 
+from nilmtk.datastore import HDFDataStore, CSVDataStore
 
 def show_versions():
     """Prints versions of various dependencies"""
@@ -381,6 +382,84 @@ def capitalise_legend(ax):
     labels = capitalise_index(legend_handles[1])
     ax.legend(legend_handles[0], labels)
     return ax
+
+
+def compute_rmse(ground_truth, predictions, pretty=True):
+    """
+    Compute the RMS error between the time-series of appliance
+    ground truth values and predicted values.
+
+    Parameters
+    ----------
+    ground_truth : `pandas.DataFrame` containing the ground truth series 
+                  for the appliances.
+    
+    predictions : `pandas.DataFrame` containing the predicted time-series
+                  for each appliance. If a appliance is present in 
+                  `ground_truth` but absent in `predictions` (or only
+                  contains NA values), it is not listed in the output.
+    
+    pretty : If `True`, tries to use the appliance labels if possible. If
+             a type of appliance is present more than once, resulting in
+             duplicate labels, building and instance number are added 
+             to differentiate them. 
+    
+    Returns
+    -------
+    pandas.Series with the RMSe for each appliance
+    """ 
+    
+    # This was initially added to simplify examples, see #652.
+    
+    rms_error = []
+    app_counts = defaultdict(int)
+    for app_idx, app in enumerate(ground_truth.columns):
+        if pretty:
+            try:
+                app_label = app.label()
+            except:
+                pretty = False
+                app_label = app
+        else:
+            app_label = app
+        
+        gt_app = ground_truth.iloc[:, app_idx]
+        pred_app = predictions.iloc[:, app_idx]
+        if pred_app.empty: 
+            continue
+            
+        df_app = pd.DataFrame({'gt': gt_app, 'pr': pred_app}, index=gt_app.index).dropna()
+        
+        if not df_app.empty:
+            app_rms_error = np.sqrt(mean_squared_error(df_app['gt'], df_app['pr']))
+        else:
+            app_rms_error = np.NaN
+
+        if pretty:
+            app_counts[app_label] += 1
+            
+        rms_error.append([app, app_label, app_rms_error])
+
+    if pretty:
+        for current_label, current_count in app_counts.items():
+            if current_count < 2:
+                continue
+
+            # A loop should be fine for such small lists
+            for app_data in rms_error:
+                if app_data[1] != current_label:
+                    continue
+
+                app = app_data[0]
+                app_data[1] += '{} ({}, {})'.format(
+                    current_label,
+                    app.building,
+                    app.instance
+                )
+            
+    return pd.Series(dict(
+        (item[1], item[2]) for item in rms_error
+    ))
 
 
 def safe_resample(data, **resample_kwargs):
