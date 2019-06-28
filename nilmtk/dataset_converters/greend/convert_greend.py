@@ -14,8 +14,6 @@ from io import StringIO
 from multiprocessing import Pool
 from nilmtk.utils import get_module_directory
 
-warnings.filterwarnings("ignore")
-
 def _get_blocks(filename):
     '''
     Return a list of dataframes from a GREEND CSV file

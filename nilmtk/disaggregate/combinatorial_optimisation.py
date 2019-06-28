@@ -207,10 +207,6 @@ class CombinatorialOptimisation(Disaggregator):
         if len(mains) < self.MIN_CHUNK_LENGTH:
             raise RuntimeError("Chunk is too short.")
 
-        # sklearn produces lots of DepreciationWarnings with PyTables
-        import warnings
-        warnings.filterwarnings("ignore", category=DeprecationWarning)
-
         # Because CombinatorialOptimisation could have been trained using
         # either train() or train_on_chunk(), we must
         # set state_combinations here.

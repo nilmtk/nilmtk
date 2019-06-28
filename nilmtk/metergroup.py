@@ -1,17 +1,19 @@
 from __future__ import print_function, division
+import warnings
+import gc
+from sys import stdout
+from collections import Counter
+from copy import copy, deepcopy
+from collections import namedtuple
+from datetime import timedelta
+
 import networkx as nx
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.sankey import Sankey 
 from matplotlib.ticker import FuncFormatter
-from datetime import timedelta
-from warnings import warn
-from sys import stdout
-from collections import Counter
-from copy import copy, deepcopy
-import gc
-from collections import namedtuple
+from matplotlib import MatplotlibDeprecationWarning
 from six import iteritems, integer_types
 
 # NILMTK imports
@@ -36,6 +38,7 @@ from nilmtk.timeframegroup import TimeFrameGroup
 # (we can't use a set because sets aren't hashable so we can't use 
 # a set as a dict key or a DataFrame column name.)
 MeterGroupID = namedtuple('MeterGroupID', ['meters'])
+
 
 class MeterGroup(Electric):
 
@@ -78,10 +81,10 @@ class MeterGroup(Electric):
         assert isinstance(appliances, list)
         assert isinstance(building_id, tuple)
         if not elec_meters:
-            warn("Building {} has an empty 'elec_meters' object."
+            warnings.warn("Building {} has an empty 'elec_meters' object."
                  .format(building_id.instance), RuntimeWarning)
         if not appliances:
-            warn("Building {} has an empty 'appliances' list."
+            warnings.warn("Building {} has an empty 'appliances' list."
                  .format(building_id.instance), RuntimeWarning)
 
         # Load static Meter Devices
@@ -594,6 +597,7 @@ class MeterGroup(Electric):
 
     def draw_wiring_graph(self, show_meter_labels=True):
         graph = self.wiring_graph()
+        
         try:
             # Try using graphviz layout...
             pos = nx.drawing.nx_agraph.graphviz_layout(graph, prog='dot')
@@ -617,7 +621,16 @@ class MeterGroup(Electric):
                     
                     plt.text(x, y + delta_y, s=name, bbox=dict(facecolor='red', alpha=0.5), horizontalalignment='center')
         
-        nx.draw(graph, pos, labels=meter_labels, arrows=False)
+
+        with warnings.catch_warnings():
+            #TODO: update networkx to 2.4 when it is released and remove this filter
+            warnings.simplefilter('ignore', category=MatplotlibDeprecationWarning)
+            if used_graphviz:
+                # meter_labels already drawn
+                nx.draw(graph, pos, arrows=False)
+            else:
+                nx.draw(graph, pos, labels=meter_labels, arrows=False)
+            
         ax = plt.gca()
         
         return graph, ax
@@ -866,7 +879,7 @@ class MeterGroup(Electric):
             collected_stats.append(single_stat)
             if (full_results and len(self.meters) > 1 and
                     not meter.store.all_sections_smaller_than_chunksize):
-                warn("at least one section requested from '{}' required"
+                warnings.warn("at least one section requested from '{}' required"
                      " multiple chunks to be loaded into memory. This may cause"
                      " a failure when we try to unify results from multiple"
                      " meters.".format(meter))
@@ -919,7 +932,7 @@ class MeterGroup(Electric):
         """
         if self.meters:
             if len(self.meters) > 1:
-                warn("As a quick implementation we only get Good Sections from"
+                warnings.warn("As a quick implementation we only get Good Sections from"
                      " the first meter in the meter group.  We should really"
                      " return the intersection of the good sections for all"
                      " meters.  This will be fixed...")

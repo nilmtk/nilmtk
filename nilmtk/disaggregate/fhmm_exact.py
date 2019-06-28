@@ -420,9 +420,6 @@ class FHMM(Disaggregator):
         mains_data_location = building_path + '/elec/meter1'
         data_is_available = False
 
-        import warnings
-        warnings.filterwarnings("ignore", category=Warning)
-
         for chunk in mains.power_series(**load_kwargs):
 
             # Check that chunk is sensible size before resampling
@@ -491,8 +488,6 @@ class FHMM(Disaggregator):
             mains_data_location = building_path + '/elec/meter1'
             data_is_available = False
 
-            import warnings
-            warnings.filterwarnings("ignore", category=Warning)
             building_elec = ds.buildings[building].elec
             self.meters = []
             for appliance in self.list_of_appliances:

@@ -94,10 +94,6 @@ def _apply_clustering(X, max_num_clusters, exact_num_clusters=None):
 
     from sklearn import metrics
 
-    # sklearn produces lots of DepreciationWarnings with PyTables
-    import warnings
-    warnings.filterwarnings("ignore", category=DeprecationWarning)
-
     # Finds whether 2 or 3 gives better Silhouellete coefficient
     # Whichever is higher serves as the number of clusters for that
     # appliance

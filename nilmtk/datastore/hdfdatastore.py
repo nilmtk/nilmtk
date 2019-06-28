@@ -1,13 +1,16 @@
 from __future__ import print_function, division
-import pandas as pd
 from copy import deepcopy
-import numpy as np
 from os.path import isfile
+from builtins import range
+import warnings
+
+import numpy as np
+import pandas as pd
+
 from nilmtk.timeframe import TimeFrame
 from nilmtk.timeframegroup import TimeFrameGroup
 from .datastore import DataStore, MAX_MEM_ALLOWANCE_IN_BYTES
 from nilmtk.docinherit import doc_inherit
-from builtins import range
 
 # do not edit! added by PythonBreakpoints
 from pdb import set_trace as _breakpoint
@@ -19,8 +22,13 @@ class HDFDataStore(DataStore):
     def __init__(self, filename, mode='a'):
         if mode == 'a' and not isfile(filename):
             raise IOError("No such file as " + filename)
-        self.store = pd.HDFStore(filename, mode, complevel=9, complib='blosc')
-        super(HDFDataStore, self).__init__()
+
+        with warnings.catch_warnings():
+            # Silence pytables warnings with numpy, out of our control
+            warnings.filterwarnings('ignore', category=RuntimeWarning, message='.*numpy.ufunc size changed.*')
+
+            self.store = pd.HDFStore(filename, mode, complevel=9, complib='blosc')
+            super(HDFDataStore, self).__init__()
 
     @doc_inherit
     def __getitem__(self, key):
@@ -132,8 +140,11 @@ class HDFDataStore(DataStore):
                     else:
                         look_ahead = pd.DataFrame()
                             
-                    setattr(data, 'look_ahead', look_ahead)
-
+                    with warnings.catch_warnings():
+                        # Silence "Pandas doesn't allow columns to be created via a new attribute name" 
+                        # since we're not adding a column
+                        warnings.filterwarnings('ignore', category=UserWarning, message=".*Pandas doesn't allow columns.*")
+                        setattr(data, 'look_ahead', look_ahead)
 
                 data.timeframe = _timeframe_for_chunk(there_are_more_subchunks, 
                                                       chunk_i, window_intersect,
