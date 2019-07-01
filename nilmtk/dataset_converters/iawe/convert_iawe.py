@@ -60,7 +60,7 @@ def convert_iawe(iawe_path, output_filename, format="HDF"):
     """
 
     check_directory_exists(iawe_path)
-    idx = pd.DatetimeIndex(start=START_DATETIME, end=END_DATETIME, freq=FREQ)
+    idx = pd.date_range(start=START_DATETIME, end=END_DATETIME, freq=FREQ)
     idx = idx.tz_localize('GMT').tz_convert(TIMEZONE)
 
     # Open data store
