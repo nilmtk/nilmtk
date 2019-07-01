@@ -13,7 +13,7 @@ ONE_SEC_COLUMNS = [('power', 'active'), ('power', 'apparent'), ('voltage', '')]
 TZ = 'Europe/London'
 
 
-def convert_ukdale(ukdale_path, output_filename, format='HDF'):
+def convert_ukdale(ukdale_path, output_filename, format='HDF', drop_duplicates=True):
     """Converts the UK-DALE dataset to NILMTK HDF5 format.
 
     For more information about the UK-DALE dataset, and to download
@@ -28,6 +28,9 @@ def convert_ukdale(ukdale_path, output_filename, format='HDF'):
         The destination filename (including path and suffix).
     format : str
         format of output. Either 'HDF' or 'CSV'. Defaults to 'HDF'
+    drop_duplicates : bool
+        Remove entries with duplicated timestamp (keeps the first value)
+        Defaults to True.
     """
     ac_type_map = _get_ac_type_map(ukdale_path)
 
@@ -40,7 +43,7 @@ def convert_ukdale(ukdale_path, output_filename, format='HDF'):
 
     # Convert 6-second data
     _convert(ukdale_path, store, _ukdale_measurement_mapping_func, TZ,
-             sort_index=False)
+             sort_index=False, drop_duplicates=drop_duplicates)
     store.close()
 
     # Add metadata
@@ -49,7 +52,7 @@ def convert_ukdale(ukdale_path, output_filename, format='HDF'):
 
     # Convert 1-second data
     store.open(mode='a')
-    _convert_one_sec_data(ukdale_path, store, ac_type_map)
+    _convert_one_sec_data(ukdale_path, store, ac_type_map, drop_duplicates)
 
     store.close()
     print("Done converting UK-DALE to HDF5!")
@@ -80,12 +83,13 @@ def _get_ac_type_map(ukdale_path):
         for meter in elec.meters + elec.disabled_meters:
             key = (building_i, meter.instance())
             ac_type_map[key] = meter.available_ac_types('power')
+
     ukdale_dataset.store.close()
     remove(hdf5_just_metadata)
     return ac_type_map
 
 
-def _convert_one_sec_data(ukdale_path, store, ac_type_map):
+def _convert_one_sec_data(ukdale_path, store, ac_type_map, drop_duplicates):
     ids_of_one_sec_data = [
         identifier for identifier, ac_types in iteritems(ac_type_map)
         if ac_types == ['active', 'apparent']]
@@ -98,7 +102,7 @@ def _convert_one_sec_data(ukdale_path, store, ac_type_map):
         print("Loading 1-second data for", key, "...")
         house_path = 'house_{:d}'.format(key.building)
         filename = join(ukdale_path, house_path, 'mains.dat')
-        df = _load_csv(filename, ONE_SEC_COLUMNS, TZ)
+        df = _load_csv(filename, ONE_SEC_COLUMNS, TZ, drop_duplicates=drop_duplicates)
         store.put(str(key), df)
 
     store.close()

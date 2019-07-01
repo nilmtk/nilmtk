@@ -59,7 +59,7 @@ def convert_redd(redd_path, output_filename, format='HDF'):
 
     print("Done converting REDD to HDF5!")
 
-def _convert(input_path, store, measurement_mapping_func, tz, sort_index=True):
+def _convert(input_path, store, measurement_mapping_func, tz, sort_index=True, drop_duplicates=False):
     """
     Parameters
     ----------
@@ -75,6 +75,10 @@ def _convert(input_path, store, measurement_mapping_func, tz, sort_index=True):
     tz : str 
         Timezone e.g. 'US/Eastern'
     sort_index : bool
+        Defaults to True
+    drop_duplicates : bool
+        Remove entries with duplicated timestamp (keeps the first value)
+        Defaults to False for backwards compatibility.
     """
 
     check_directory_exists(input_path)
@@ -91,10 +95,11 @@ def _convert(input_path, store, measurement_mapping_func, tz, sort_index=True):
             key = Key(building=house_id, meter=chan_id)
             measurements = measurement_mapping_func(house_id, chan_id)
             csv_filename = _get_csv_filename(input_path, key)
-            df = _load_csv(csv_filename, measurements, tz)
+            df = _load_csv(csv_filename, measurements, tz, 
+                sort_index=sort_index, 
+                drop_duplicates=drop_duplicates
+            )
 
-            if sort_index:
-                df = df.sort_index() # raw REDD data isn't always sorted
             store.put(str(key), df)
         print()
 
@@ -173,17 +178,23 @@ def _get_csv_filename(input_path, key_obj):
     return filename
 
 
-def _load_csv(filename, columns, tz):
+def _load_csv(filename, columns, tz, drop_duplicates=False, sort_index=False):
     """
     Parameters
     ----------
     filename : str
     columns : list of tuples (for hierarchical column index)
-    tz : str e.g. 'US/Eastern'
+    tz : str 
+        e.g. 'US/Eastern'
+    sort_index : bool
+        Defaults to True
+    drop_duplicates : bool
+        Remove entries with duplicated timestamp (keeps the first value)
+        Defaults to False for backwards compatibility.
 
     Returns
     -------
-    dataframe
+    pandas.DataFrame
     """
     # Load data
     df = pd.read_csv(filename, sep=' ', names=columns,
@@ -195,5 +206,13 @@ def _load_csv(filename, columns, tz):
     # Convert the integer index column to timezone-aware datetime 
     df.index = pd.to_datetime(df.index.values, unit='s', utc=True)
     df = df.tz_convert(tz)
+
+    if sort_index:
+        df = df.sort_index() # raw REDD data isn't always sorted
+        
+    if drop_duplicates:
+        dups_in_index = df.index.duplicated(keep='first')
+        if dups_in_index.any():
+            df = df[~dups_in_index]
 
     return df

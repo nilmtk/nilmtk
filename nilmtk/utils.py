@@ -501,6 +501,8 @@ def safe_resample(data, **resample_kwargs):
 
     try:
         dups_in_index = data.index.duplicated(keep='first')
+
+        #TODO: remove this after validation tests are ready
         if dups_in_index.any():
             warnings.warn("Found duplicate index. Keeping first value")
             data = data[~dups_in_index]
