@@ -451,7 +451,7 @@ def compute_rmse(ground_truth, predictions, pretty=True):
                     continue
 
                 app = app_data[0]
-                app_data[1] += '{} ({}, {})'.format(
+                app_data[1] = '{} ({}, {})'.format(
                     current_label,
                     app.building,
                     app.instance
