@@ -66,9 +66,10 @@ appliances:
   room: kitchen
   manufacturer: Braun
   model: 3217/ WK210
-  nominal_consumption: 2280
+  nominal_consumption: 
+    on_power: 2280
   control:
-    - manuel
+    - manual
 
 - type: fridge
   instance: 1
@@ -98,7 +99,8 @@ appliances:
   manufacturer: Remington
   model: D-3700
   year_of_purchase: 2010
-  nominal_consumption: 2200
+  nominal_consumption: 
+    on_power: 2200
   
 - type: desktop computer
   instance: 1
@@ -107,7 +109,7 @@ appliances:
   year_of_purchase: 2013
   year_of_manufacture: 2013
   control:
-    - manuel
+    - manual
   manufacturer: dimotion PC
   model: QuietONE Q2
   
@@ -118,7 +120,9 @@ appliances:
   multiple: false
   control:
     - manual
-  nominal_consumption: 1260
+  nominal_consumption: 
+    on_power: 1260
+
   model: Delonghi Pixie
   manufacturer: Delonghi
   

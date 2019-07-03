@@ -46,7 +46,8 @@ appliances:
   control:
     - thermostat
   efficiency_rating: A+
-  nominal_consumption: 26
+  nominal_consumption: 
+    on_power: 26
   model: ARG 737
   manufacturer: Whirpool
   year_of_purchase: 2011
@@ -57,7 +58,8 @@ appliances:
   meters: [2]
   control:
     - manual
-  nominal_consumption: 2100
+  nominal_consumption: 
+    on_power: 2100
   model: ADG 555 IX
   manufacturer: Whirpool
   year_of_purchase: 2011
@@ -68,7 +70,8 @@ appliances:
   meters: [3]
   control:
     - manual
-  nominal_consumption: 1300
+  nominal_consumption: 
+    on_power: 1300
   model: AMW 494/IX
   manufacturer: Whirpool
   year_of_purchase: 2011
@@ -79,7 +82,8 @@ appliances:
   meters: [4]
   control:
     - manual
-  nominal_consumption: 900
+  nominal_consumption: 
+    on_power: 900
   model: HD 4619
   manufacturer: Philips
   year_of_purchase: 2012
@@ -91,7 +95,8 @@ appliances:
   control:
     - manual
   efficiency_rating: A
-  nominal_consumption: 2200
+  nominal_consumption: 
+    on_power: 2200
   model: F1215
   manufacturer: Zanussi
   year_of_purchase: 2006
@@ -110,18 +115,20 @@ appliances:
   meters: [7]
   control:
     - manual
-  nominal_consumption: 1800
+  nominal_consumption: 
+    on_power: 1800
   model: 3522
   manufacturer: Braun
   year_of_purchase: 2008
   year_of_manufacture: 2000
 
-- type: charger # tootbrusher
+- type: charger # toothbrusher
   instance: 1
   meters: [7]
   control:
     - manual
-  nominal_consumption: 2
+  nominal_consumption: 
+    on_power: 2
   model: 4729
   manufacturer: Braun
   year_of_purchase: 2005
@@ -132,7 +139,8 @@ appliances:
   meters: [8]
   control:
     - manual
-  nominal_consumption: 450
+  nominal_consumption: 
+    on_power: 450
   model: CNHR 18
   manufacturer: Bosch
   year_of_purchase: 2010

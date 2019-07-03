@@ -46,7 +46,8 @@ appliances:
   room: kitchen
   control:
     - manual
-  nominal_consumption: 1450
+  nominal_consumption: 
+    on_power: 1450
   model: ESAM04.110
   manufacturer: Delonghi
   year_of_purchase: 2012
