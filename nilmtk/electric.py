@@ -696,14 +696,14 @@ class Electric(object):
             # to natural boundaries of 'period'.
             resampled_to_period = on_chunk.iloc[[0, -1]].resample(period).mean().index
             start = resampled_to_period[0]
-            end = resampled_to_period[-1] + 1
+            end = resampled_to_period[-1] + 1 * resampled_to_period.freq
 
             # Reindex chunk
             new_index = pd.date_range(start, end, freq=bin_duration, closed='left')
             on_chunk = on_chunk.reindex(new_index, fill_value=0, copy=False)
 
             # reshape
-            matrix = on_chunk.reshape((-1, n_bins))
+            matrix = on_chunk.values.reshape((-1, n_bins))
 
             # histogram
             hist += matrix.sum(axis=0)
@@ -712,6 +712,17 @@ class Electric(object):
 
     def plot_activity_histogram(self, ax=None, period='D', bin_duration='H',
                                 plot_kwargs=None, **kwargs):
+        
+        # Some common labels
+        freq_labels = {
+            'H': 'hour',
+            'D': 'day',
+            'M': 'month',
+            'T': 'minute',
+            'min': 'minute',
+            'W': 'week'
+        }
+
         if ax is None:
             ax = plt.gca()
         hist = self.activity_histogram(bin_duration=bin_duration,
@@ -724,9 +735,14 @@ class Electric(object):
         ax.bar(range(n_bins), hist, np.ones(n_bins), **plot_kwargs)
         ax.set_xlim([-0.5, n_bins])
         ax.set_title('Activity distribution')
-        ax.set_xlabel(bin_duration + ' of ' + period)
+        ax.set_xlabel(
+            freq_labels.get(bin_duration, bin_duration).title() + 
+            ' of ' + 
+            freq_labels.get(period, period)
+        )
         ax.set_ylabel('Count')
         return ax
+
 
     def activation_series(self, *args, **kwargs):
         """Returns runs of an appliance.
