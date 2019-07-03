@@ -310,17 +310,35 @@ class FHMM(Disaggregator):
                 
             assert X.ndim == 2
             self.X = X
-
-            if num_states_dict.get(meter) is not None:
-                # User has specified the number of states for this appliance
+            num_total_states = None
+            
+            # Check if the user has specific the number of states for this meter
+            num_total_states = num_states_dict.get(meter)
+            
+            # If not, check if the number of states for the appliances was specified
+            if num_total_states is None:
+                num_apps_states = []
+                for appliance in meter.appliances:
+                    num_app_state = num_states_dict.get(appliance)
+                    if num_app_state is None:
+                        num_app_state = num_states_dict.get(appliance.identifier.type)
+                        
+                    if num_app_state is not None:
+                        num_apps_states.append(num_app_state)
+                    
+                if num_apps_states:
+                    num_total_states = sum(num_apps_states)
+                    
+            if num_states_dict.get(meter) is not None or num_states_dict.get(meter) is not None:
+                # User has specified the number  of states for this appliance
                 num_total_states = num_states_dict.get(meter)
 
-            else:
-                # Find the optimum number of states
+            # Otherwise, find the optimum number of states via clustering
+            if num_total_states is None:
                 states = cluster(meter_data, max_num_clusters)
                 num_total_states = len(states)
 
-            print("Training model for submeter '{}'".format(meter))
+            print("Training model for submeter '{}' with {} states".format(meter, num_total_states))
             learnt_model[meter] = hmm.GaussianHMM(num_total_states, "full")
 
             # Fit
