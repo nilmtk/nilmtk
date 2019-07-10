@@ -1,12 +1,12 @@
 from __future__ import print_function, division
-import numpy as np
+import pickle
 from collections import OrderedDict, deque
+import numpy as np
 import pandas as pd
 from sklearn.metrics import mean_squared_error
 from nilmtk.feature_detectors.cluster import hart85_means_shift_cluster
 from nilmtk.feature_detectors.steady_states import find_steady_states_transients
 from nilmtk.disaggregate import Disaggregator
-
 
 # Fix the seed for repeatability of experiments
 SEED = 42
@@ -517,26 +517,21 @@ class Hart85(Disaggregator):
             )
         return power_df
 
-    # filename=model.pickle
-
     def export_model(self, filename):
-
         example_dict = self.model
-
-        pickle_out = open(filename, "wb")
-        pickle.dump(example_dict, pickle_out)
-        pickle_out.close()
+        with open(filename, "wb") as pickle_out:
+            pickle.dump(example_dict, pickle_out)
 
     def import_model(self, filename):
-        pickle_in = open(filename)
-        self.model = pickle.load(pickle_in)
-        self.columns = self.model['columns']
-        self.state_threshold = self.model['state_threshold']
-        self.noise_level = self.model['noise_level']
-        self.steady_states = self.model['steady_states']
-        self.transients = self.model['transients']
-        # pair_df=self.pair_df,
-        self.centroids = self.model['centroids']
+        with open(filename, "rb") as pickle_in:
+            self.model = pickle.load(pickle_in)
+            self.columns = self.model['columns']
+            self.state_threshold = self.model['state_threshold']
+            self.noise_level = self.model['noise_level']
+            self.steady_states = self.model['steady_states']
+            self.transients = self.model['transients']
+            # pair_df=self.pair_df,
+            self.centroids = self.model['centroids']
 
     def best_matched_appliance(self, submeters, pred_df):
         """
