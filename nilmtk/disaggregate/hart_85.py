@@ -8,12 +8,6 @@ from nilmtk.feature_detectors.cluster import hart85_means_shift_cluster
 from nilmtk.feature_detectors.steady_states import find_steady_states_transients
 from nilmtk.disaggregate import Disaggregator
 
-# Fix the seed for repeatability of experiments
-SEED = 42
-
-np.random.seed(SEED)
-
-
 class MyDeque(deque):
     def popmiddle(self, pos):
         self.rotate(-pos)

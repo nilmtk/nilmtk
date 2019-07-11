@@ -2,12 +2,6 @@ from __future__ import print_function, division
 import numpy as np
 import pandas as pd
 
-
-# Fix the seed for repeatability of experiments
-SEED = 42
-np.random.seed(SEED)
-
-
 def cluster(X, max_num_clusters=3, exact_num_clusters=None):
     '''Applies clustering on reduced data,
     i.e. data where power is greater than threshold.

@@ -3,12 +3,6 @@ import numpy as np
 import pandas as pd
 import sys
 
-
-# Fix the seed for repeatability of experiments
-SEED = 42
-np.random.seed(SEED)
-
-
 def find_steady_states_transients(metergroup, columns, noise_level,
                                   state_threshold, **load_kwargs):
     """

@@ -17,12 +17,6 @@ from nilmtk.datastore import HDFDataStore
 from six import iteritems, iterkeys
 from builtins import range
 
-SEED = 42
-
-# Fix the seed for repeatibility of experiments
-np.random.seed(SEED)
-
-
 def sort_startprob(mapping, startprob):
     """ Sort the startprob according to power means; as returned by mapping
     """

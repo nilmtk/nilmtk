@@ -11,10 +11,6 @@ from nilmtk.feature_detectors import cluster
 from nilmtk.disaggregate import Disaggregator
 from nilmtk.datastore import HDFDataStore
 
-# Fix the seed for repeatability of experiments
-SEED = 42
-np.random.seed(SEED)
-
 
 class CombinatorialOptimisation(Disaggregator):
     """1 dimensional combinatorial optimisation NILM algorithm.
