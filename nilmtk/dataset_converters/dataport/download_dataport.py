@@ -3,11 +3,11 @@ import os
 import re
 import datetime
 import sys
-from os.path import join, isdir, isfile, dirname, abspath
+from os.path import join
 import pandas as pd
 import yaml
+
 import psycopg2 as db
-from nilmtk.measurement import measurement_columns
 from nilmtk.measurement import LEVEL_NAMES
 from nilmtk.datastore import Key
 from nilm_metadata import convert_yaml_to_hdf5

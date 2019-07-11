@@ -1,34 +1,24 @@
-
-'''
+"""
 DRED Dataset converter.
-The .h5 format is hosted in DRED official website. But the file is not fully compatible with NILMTK.
+The .h5 format is hosted in DRED official website. But the file is not fully
+compatible with NILMTK.
 
 Download All_data.csv from the official website and use this converter
 
 Official Website :- http://www.st.ewi.tudelft.nl/~akshay/dred/
 
-'''
+"""
 
 from __future__ import print_function, division
 import pandas as pd
-import numpy as np
-from copy import deepcopy
-from os.path import join, isdir, isfile
-from os import listdir
-import fnmatch
-import re
+from os.path import join
 from sys import stdout
+
 from nilmtk.utils import get_datastore
 from nilmtk.datastore import Key
-from nilmtk.timeframe import TimeFrame
 from nilmtk.measurement import LEVEL_NAMES
-from nilmtk.utils import get_module_directory, check_directory_exists
-from nilm_metadata import convert_yaml_to_hdf5, save_yaml_to_datastore
-import pickle
-import glob
-import numpy as np
-import time
-from datetime import datetime
+from nilmtk.utils import get_module_directory
+from nilm_metadata import save_yaml_to_datastore
 
 
 def convert_dred(input_path, output_filename, format='HDF'):
@@ -49,11 +39,10 @@ def convert_dred(input_path, output_filename, format='HDF'):
     # Convert raw data to DataStore
     _convert(input_path, store, 'Europe/Amsterdam')
     # Add metadata
-    save_yaml_to_datastore(join(get_module_directory(), 
-                              'dataset_converters', 
-                              'dred', 
-                              'metadata'),
-                         store)
+    yaml_dir = join(get_module_directory(),
+                    'dataset_converters', 'dred', 'metadata')
+    save_yaml_to_datastore(yaml_dir=yaml_dir, store=store)
+
     store.close()
 
     print("Done converting DRED to HDF5!")
@@ -67,11 +56,6 @@ def _convert(csv_filename, store, tz, sort_index=True):
         The csv_filename that will be loaded. Must end with .csv
     store : DataStore
         The NILMTK DataStore object.
-    measurement_mapping_func : function
-        Must take these parameters:
-            - house_id
-            - chan_id
-        Function should return a list of tuples e.g. [('power', 'apparent')]
     tz : str 
         Timezone e.g. 'Europe/Amsterdam'
     sort_index : bool
@@ -85,13 +69,10 @@ def _convert(csv_filename, store, tz, sort_index=True):
         print("Loading house", house_id, end="... ")
         stdout.flush()
         
-        usecols=['Timestamp','mains',
-                 'television','fan','fridge',
-                 'laptop computer','electric heating element',
-                 'oven','unknown','washing machine',
-                 'microwave','toaster',
-                 'sockets','cooker'
-                ]
+        usecols = ['Timestamp', 'mains', 'television', 'fan', 'fridge',
+                   'laptop computer', 'electric heating element',
+                   'oven', 'unknown', 'washing machine', 'microwave', 'toaster',
+                   'sockets', 'cooker']
         df = _load_csv(csv_filename, usecols, 3, tz)
 
         if sort_index:
@@ -106,7 +87,8 @@ def _convert(csv_filename, store, tz, sort_index=True):
             chan_df = pd.DataFrame(df[col])
             chan_df.columns = pd.MultiIndex.from_tuples([('power', 'apparent')])
             
-            # Modify the column labels to reflect the power measurements recorded.
+            # Modify the column labels to reflect the power
+            # measurements recorded.
             chan_df.columns.set_names(LEVEL_NAMES, inplace=True)
             store.put(str(key), chan_df)
         print('')
@@ -118,7 +100,8 @@ def _load_csv(filename, usecols, skip, tz):
     ----------
     filename : str
     usecols : list of columns to keep
-    skip : number of columns to skip from beginning. 3 rows are irrelevant in .csv file
+    skip : number of columns to skip from beginning.
+        3 rows are irrelevant in .csv file
     tz : str e.g. 'Europe/Amsterdam'
 
     Returns

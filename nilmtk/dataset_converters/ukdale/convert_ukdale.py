@@ -2,6 +2,7 @@ from __future__ import print_function, division
 from os import remove
 from os.path import join
 from six import iteritems
+
 from nilmtk.dataset_converters.redd.convert_redd import (_convert, _load_csv)
 from nilmtk import DataSet
 from nilmtk.utils import get_datastore
@@ -13,7 +14,8 @@ ONE_SEC_COLUMNS = [('power', 'active'), ('power', 'apparent'), ('voltage', '')]
 TZ = 'Europe/London'
 
 
-def convert_ukdale(ukdale_path, output_filename, format='HDF', drop_duplicates=True):
+def convert_ukdale(
+        ukdale_path, output_filename, format='HDF', drop_duplicates=True):
     """Converts the UK-DALE dataset to NILMTK HDF5 format.
 
     For more information about the UK-DALE dataset, and to download
@@ -102,7 +104,8 @@ def _convert_one_sec_data(ukdale_path, store, ac_type_map, drop_duplicates):
         print("Loading 1-second data for", key, "...")
         house_path = 'house_{:d}'.format(key.building)
         filename = join(ukdale_path, house_path, 'mains.dat')
-        df = _load_csv(filename, ONE_SEC_COLUMNS, TZ, drop_duplicates=drop_duplicates)
+        df = _load_csv(filename, ONE_SEC_COLUMNS, TZ,
+                       drop_duplicates=drop_duplicates)
         store.put(str(key), df)
 
     store.close()

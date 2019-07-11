@@ -2,11 +2,14 @@ from __future__ import print_function, division
 import pandas as pd
 import numpy as np
 from os.path import join
+from copy import deepcopy
+
 from nilmtk.datastore import Key
 from nilmtk.measurement import LEVEL_NAMES
-from nilmtk.utils import check_directory_exists, get_datastore, get_module_directory
+from nilmtk.utils import \
+    check_directory_exists, get_datastore, get_module_directory
 from nilm_metadata import convert_yaml_to_hdf5
-from copy import deepcopy
+
 
 def reindex_fill_na(df, idx):
     df_copy = deepcopy(df)
@@ -57,6 +60,8 @@ def convert_iawe(iawe_path, output_filename, format="HDF"):
         The root path of the iawe dataset.
     output_filename : str
         The destination filename (including path and suffix).
+    format : str
+        Format of output. Either 'HDF' or 'CSV'. Defaults to 'HDF'
     """
 
     check_directory_exists(iawe_path)
@@ -91,8 +96,8 @@ def convert_iawe(iawe_path, output_filename, format="HDF"):
         store.put(str(key), df)
     store.close()
     
-    metadata_dir = join(get_module_directory(), 'dataset_converters', 'iawe', 'metadata')
+    metadata_dir = join(get_module_directory(),
+                        'dataset_converters', 'iawe', 'metadata')
     convert_yaml_to_hdf5(metadata_dir, output_filename)
 
     print("Done converting iAWE to HDF5!")
-

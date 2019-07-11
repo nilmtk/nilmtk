@@ -1,17 +1,16 @@
 from __future__ import print_function, division
 import pandas as pd
 import numpy as np
-from copy import deepcopy
 from os.path import join, isdir, isfile
 from os import listdir
 import re
 from sys import stdout
+
 from nilmtk.utils import get_datastore
 from nilmtk.datastore import Key
-from nilmtk.timeframe import TimeFrame
 from nilmtk.measurement import LEVEL_NAMES
 from nilmtk.utils import get_module_directory, check_directory_exists
-from nilm_metadata import convert_yaml_to_hdf5, save_yaml_to_datastore
+from nilm_metadata import save_yaml_to_datastore
 
 """
 TODO:
@@ -43,18 +42,12 @@ def convert_redd(redd_path, output_filename, format='HDF'):
     # Convert raw data to DataStore
     _convert(redd_path, store, _redd_measurement_mapping_func, 'US/Eastern')
 
-    s=join(get_module_directory(),
-                              'dataset_converters',
-                              'redd',
-                              'metadata')
-
+    yaml_dir = join(get_module_directory(),
+             'dataset_converters', 'redd', 'metadata')
 
     # Add metadata
-    save_yaml_to_datastore(join(get_module_directory(), 
-                              'dataset_converters', 
-                              'redd', 
-                              'metadata'),
-                         store)
+    save_yaml_to_datastore(yaml_dir=yaml_dir, store=store)
+
     store.close()
 
     print("Done converting REDD to HDF5!")

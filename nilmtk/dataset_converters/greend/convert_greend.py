@@ -1,40 +1,38 @@
 from __future__ import print_function, division
-from os import listdir, getcwd
-from os.path import join, isdir, isfile, dirname, abspath
+from os import listdir
+from os.path import join, isdir
 import pandas as pd
-import numpy as np
-import datetime
 import time
-from nilmtk.datastore import Key
-from nilmtk.measurement import LEVEL_NAMES
-from nilm_metadata import convert_yaml_to_hdf5
-import warnings
 import numpy as np
 from io import StringIO
 from multiprocessing import Pool
+
+from nilmtk.datastore import Key
+from nilmtk.measurement import LEVEL_NAMES
+from nilm_metadata import convert_yaml_to_hdf5
 from nilmtk.utils import get_module_directory
 
+
 def _get_blocks(filename):
-    '''
+    """
     Return a list of dataframes from a GREEND CSV file
-    
+
     GREEND files can be interpreted as multiple CSV blocks concatenated into
-    a single file per date. Since the columns of the individual blocks can 
+    a single file per date. Since the columns of the individual blocks can
     vary in a single file, they need to be read separately.
-    
+
     There are some issues we need to handle in the converter:
     - the headers from the multiple blocks
     - corrupted data (lines with null chars, broken lines)
     - more fields than specified in header
-    '''
+    """
     block_data = None
     dfs = []
     previous_header = None
     print(filename)
     # Use float64 for timestamps and float32 for the rest of the columns
-    dtypes = {}
-    dtypes['timestamp'] = np.float64
-    
+    dtypes = {'timestamp': np.float64}
+
     def _process_block():
         if block_data is None:
             return
@@ -43,10 +41,12 @@ def _get_blocks(filename):
         try:
             # ignore extra fields for some files
             error_bad_lines = not (
-                ('building5' in filename and 'dataset_2014-02-04.csv' in filename)
+                ('building5' in filename and
+                 'dataset_2014-02-04.csv' in filename)
             )
-            df = pd.read_csv(block_data, index_col='timestamp', dtype=dtypes, error_bad_lines=error_bad_lines)
-        except: #(pd.errors.ParserError, ValueError, TypeError):
+            df = pd.read_csv(block_data, index_col='timestamp',
+                             dtype=dtypes, error_bad_lines=error_bad_lines)
+        except:  # (pd.errors.ParserError, ValueError, TypeError):
             print("ERROR", filename)
             raise
             
@@ -62,12 +62,14 @@ def _get_blocks(filename):
     
     with open(filename, 'r') as f:
         for line in f:
-            # At least one file have a bunch of nulls present, let's clean the data
+            # At least one file have a bunch of nulls present,
+            # let's clean the data
             line = line.strip('\0')
             if 'time' in line:
                 # Found a new block
                 if not line.startswith('time'):
-                    # Some lines are corrupted, e.g. 1415605814.541311,0.0,NULL,NUtimestamp,000D6F00029C2918...
+                    # Some lines are corrupted, e.g.:
+                    # 1415605814.541311,0.0,NULL,NUtimestamp,000D6F00029C2918...
                     line = line[line.find('time'):]
                 
                 if previous_header == line.strip():
@@ -86,24 +88,23 @@ def _get_blocks(filename):
                 block_data = StringIO()
                 previous_header = line.strip()
 
-            
-            if special_check:
-                if ('0.072.172091508705606' in line or
-                    '1409660828.0753369,NULL,NUL' == line):
-                    continue
+            if special_check and (
+                    '0.072.172091508705606' in line or
+                    line == '1409660828.0753369,NULL,NUL'):
+                continue
 
             block_data.write(line)
             
     # Process the remaining block
     _process_block()
-    
-    return (filename, dfs)
 
-    
+    return filename, dfs
+
+
 def _get_houses(greend_path):
     house_list = listdir(greend_path)
-    return [h for h in house_list if isdir(join(greend_path,h))] 
-    
+    return [h for h in house_list if isdir(join(greend_path, h))]
+
 
 def convert_greend(greend_path, hdf_filename, use_mp=True):
     """
@@ -123,8 +124,10 @@ def convert_greend(greend_path, hdf_filename, use_mp=True):
     print('Houses found:', houses)
     if use_mp:
         pool = Pool()
-    
-    h = 1 # nilmtk counts buildings from 1 not from 0 as we do, so everything is shifted by 1
+
+    # nilmtk counts buildings from 1 not from 0 as we do, so everything
+    # is shifted by 1
+    h = 1
     
     for house in houses:
         print('Loading', house)
@@ -155,16 +158,16 @@ def convert_greend(greend_path, hdf_filename, use_mp=True):
             key = Key(building=h, meter=m)
             print("Putting into store...")
             
-            df = overall_df[column].to_frame() #.dropna(axis=0)
+            df = overall_df[column].to_frame()  # .dropna(axis=0)
             
             # if drop_duplicates:
-                # print("Dropping duplicated values in data...")
-                # df = df.drop_duplicates()
+            #     print("Dropping duplicated values in data...")
+            #     df = df.drop_duplicates()
             
             df.columns = pd.MultiIndex.from_tuples([('power', 'active')])
             df.columns.set_names(LEVEL_NAMES, inplace=True)
             
-            store.put(str(key), df, format = 'table')
+            store.put(str(key), df, format='table')
             m += 1
             # print('Flushing store...')
             # store.flush()
@@ -172,18 +175,18 @@ def convert_greend(greend_path, hdf_filename, use_mp=True):
         h += 1
 
     store.close()
-	
-	# retrieve the dataset metadata in the metadata subfolder
-    metadata_dir = join(get_module_directory(), 'dataset_converters', 'greend', 'metadata')
+
+    # retrieve the dataset metadata in the metadata subfolder
+    metadata_dir = join(get_module_directory(),
+                        'dataset_converters', 'greend', 'metadata')
     convert_yaml_to_hdf5(metadata_dir, hdf_filename)
 
-#is only called when this file is the main file... only test purpose
+
+# is only called when this file is the main file... only test purpose
 if __name__ == '__main__':
     t1 = time.time()
-    convert_greend('GREEND_0-2_300615',
-                   'GREEND_0-2_300615.h5')
+    convert_greend('GREEND_0-2_300615', 'GREEND_0-2_300615.h5')
     dt = time.time() - t1
     print()
     print()
-    print('Time passed: {}:{}'.format(int(dt/60), int(dt%60)))
-    
+    print('Time passed: {}:{}'.format(int(dt/60), int(dt % 60)))

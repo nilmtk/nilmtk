@@ -1,33 +1,28 @@
-'''
-REFIT dataset converter for the clean version avaiable at the URLs below:
+"""
+REFIT dataset converter for the clean version available at the URLs below:
 
 "REFIT: Electrical Load Measurements (Cleaned)"
 https://pure.strath.ac.uk/portal/en/datasets/refit-electrical-load-measurements-cleaned(9ab14b0e-19ac-4279-938f-27f643078cec).html
 https://pure.strath.ac.uk/portal/files/52873459/Processed_Data_CSV.7z
 
-The original version of the dataset include duplicated timestamps. 
+The original version of the dataset include duplicated timestamps.
 Check the dataset website for more information.
 
 For citation of the dataset, use:
 http://dx.doi.org/10.1038/sdata.2016.122
 
-'''
+"""
 
 from __future__ import print_function, division
 import pandas as pd
-import numpy as np
-from copy import deepcopy
-from os.path import join, isdir, isfile
-from os import listdir
-import fnmatch
-import re
+from os.path import join
 from sys import stdout
+
 from nilmtk.utils import get_datastore
 from nilmtk.datastore import Key
-from nilmtk.timeframe import TimeFrame
 from nilmtk.measurement import LEVEL_NAMES
 from nilmtk.utils import get_module_directory, check_directory_exists
-from nilm_metadata import convert_yaml_to_hdf5, save_yaml_to_datastore
+from nilm_metadata import save_yaml_to_datastore
 
 
 def convert_refit(input_path, output_filename, format='HDF'):
@@ -49,14 +44,14 @@ def convert_refit(input_path, output_filename, format='HDF'):
     _convert(input_path, store, 'Europe/London')
 
     # Add metadata
-    save_yaml_to_datastore(join(get_module_directory(), 
-                              'dataset_converters', 
-                              'refit', 
-                              'metadata'),
-                         store)
+    yaml_dir = join(get_module_directory(),
+                    'dataset_converters', 'refit', 'metadata')
+    save_yaml_to_datastore(yaml_dir=yaml_dir, store=store)
+
     store.close()
 
     print("Done converting REFIT to HDF5!")
+
 
 def _convert(input_path, store, tz, sort_index=True):
     """
@@ -66,11 +61,6 @@ def _convert(input_path, store, tz, sort_index=True):
         The root path of the REFIT dataset.
     store : DataStore
         The NILMTK DataStore object.
-    measurement_mapping_func : function
-        Must take these parameters:
-            - house_id
-            - chan_id
-        Function should return a list of tuples e.g. [('power', 'active')]
     tz : str 
         Timezone e.g. 'US/Eastern'
     sort_index : bool
@@ -80,7 +70,8 @@ def _convert(input_path, store, tz, sort_index=True):
 
     # Iterate though all houses and channels
     # house 14 is missing!
-    houses = [1,2,3,4,5,6,7,8,9,10,11,12,13,15,16,17,18,19,20,21]
+    houses = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+              11, 12, 13, 15, 16, 17, 18, 19, 20, 21]
     nilmtk_house_id = 0
     for house_id in houses:
         nilmtk_house_id += 1
@@ -89,7 +80,9 @@ def _convert(input_path, store, tz, sort_index=True):
         csv_filename = join(input_path, 'House_' + str(house_id) + '.csv')
         # The clean version already includes header, so we
         # just skip the text version of the timestamp
-        usecols = ['Unix','Aggregate','Appliance1','Appliance2','Appliance3','Appliance4','Appliance5','Appliance6','Appliance7','Appliance8','Appliance9']
+        usecols = ['Unix', 'Aggregate', 'Appliance1', 'Appliance2',
+                   'Appliance3', 'Appliance4', 'Appliance5', 'Appliance6',
+                   'Appliance7', 'Appliance8', 'Appliance9']
         
         df = _load_csv(csv_filename, usecols, tz)
         if sort_index:
@@ -103,12 +96,14 @@ def _convert(input_path, store, tz, sort_index=True):
             
             chan_df = pd.DataFrame(df[col])
             chan_df.columns = pd.MultiIndex.from_tuples([('power', 'active')])
-            
-            # Modify the column labels to reflect the power measurements recorded.
+
+            # Modify the column labels to reflect the power measurements
+            # recorded.
             chan_df.columns.set_names(LEVEL_NAMES, inplace=True)
-            
+
             store.put(str(key), chan_df)
         print('')
+
 
 def _load_csv(filename, usecols, tz):
     """

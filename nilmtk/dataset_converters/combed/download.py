@@ -5,6 +5,7 @@ import pandas as pd
 import os
 import time
 from six import iteritems
+from six.moves import input as raw_input
 
 
 def download():
@@ -44,26 +45,39 @@ def download():
                      'Power': 'Power Sockets',
                      'UPS': 'UPS Sockets'}
 
-    academic_building = {'Academic Block': academic_block, 'Lecture Block': lecture_block}
+    academic_building = {
+        'Academic Block': academic_block,
+        'Lecture Block': lecture_block}
 
-    query = """select *  where Metadata/Extra/Block = '{}' and (Metadata/SourceName = '{}') and Metadata/Extra/Type = '{}' and Metadata/Location/Floor = '{}' and Metadata/Extra/PhysicalParameter = '{}'"""
+    query = "select *  where Metadata/Extra/Block = '{}' and " \
+            "(Metadata/SourceName = '{}') and Metadata/Extra/Type = '{}' and " \
+            "Metadata/Location/Floor = '{}' and " \
+            "Metadata/Extra/PhysicalParameter = '{}'"
 
     for block_name, block in iteritems(academic_building):
         for load, floors in iteritems(block):
             for floor in floors:
                 for measurement in MEASUREMENTS:
-                    query_instance = query.format(block_name, "Academic Building", load, str(floor), measurement)
-                    DATA_URL = join(SMAP_URL, "backend/api/data/uuid/{}?starttime={}&endtime={}")
-                    uuid = requests.post(UUID_URL, query_instance).json()[0]['uuid']
-                    data = requests.get(DATA_URL.format(uuid, START_TIME, END_TIME)).json()[0]["Readings"]
+                    query_instance = query.format(
+                        block_name, "Academic Building",
+                        load, str(floor), measurement)
+                    DATA_URL = join(
+                        SMAP_URL,
+                        "backend/api/data/uuid/{}?starttime={}&endtime={}")
+                    uuid = requests.post(
+                        UUID_URL, query_instance).json()[0]['uuid']
+                    data = requests.get(DATA_URL.format(
+                        uuid, START_TIME, END_TIME)).json()[0]["Readings"]
                     df = pd.DataFrame(data)
                     # Some loads like AHU-1, etc. need to be changed to only AHU
                     if load in load_renaming:
                         load_renamed = load_renaming[load]
                     else:
                         load_renamed = load
-                    path_to_create = join(BASE_PATH, block_name, load_renamed, str(floor))
+                    path_to_create = join(
+                        BASE_PATH, block_name, load_renamed, str(floor))
                     print(path_to_create)
                     if not os.path.exists(path_to_create):
                         os.makedirs(path_to_create)
-                    df.to_csv(path_to_create+"/"+measurement+".csv", header=False, index=False)
+                    df.to_csv(path_to_create+"/"+measurement+".csv",
+                              header=False, index=False)

@@ -2,13 +2,13 @@ from __future__ import print_function, division
 import numpy as np
 import pandas as pd
 from os.path import *
-from os import getcwd
 from os import listdir
+
 from nilmtk.datastore import Key
 from nilmtk.measurement import LEVEL_NAMES
-from nilmtk.utils import check_directory_exists, get_datastore, get_module_directory
+from nilmtk.utils import \
+    check_directory_exists, get_datastore, get_module_directory
 from nilm_metadata import convert_yaml_to_hdf5
-from sys import getfilesystemencoding
 
 # Column name mapping
 columnNameMapping = {'V': ('voltage', ''),
@@ -26,12 +26,14 @@ columnNameMapping = {'V': ('voltage', ''),
 TIMESTAMP_COLUMN_NAME = "TS"
 TIMEZONE = "America/Vancouver"
 
+
 def convert_ampds(input_path, output_filename, format='HDF'):
     """
     Convert AMPds R2013 as seen on Dataverse. Download the files
     as CSVs and put them in the `input_path` folder for conversion.
     
-    Download URL: https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/MXB7VO
+    Download URL: https://
+    dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/MXB7VO
     
     Parameters: 
     -----------
@@ -81,6 +83,7 @@ def convert_ampds(input_path, output_filename, format='HDF'):
         print("Done with file #", (i + 1))
         
     store.close()
-    metadata_path = join(get_module_directory(), 'dataset_converters', 'ampds', 'metadata')
+    metadata_path = join(get_module_directory(),
+                         'dataset_converters', 'ampds', 'metadata')
     print('Processing metadata...')
     convert_yaml_to_hdf5(metadata_path, output_filename)
