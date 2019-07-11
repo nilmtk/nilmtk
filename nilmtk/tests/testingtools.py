@@ -3,7 +3,11 @@ Tools to help with testing.
 """
 
 from __future__ import print_function, division
-import os, inspect, warnings
+
+import inspect
+import os
+import warnings
+
 
 def data_dir():
     # Taken from http://stackoverflow.com/a/6098238/732596
@@ -22,6 +26,7 @@ class WarningTestMixin(object):
     def assertWarns(self, warning, callable, *args, **kwds):
         with warnings.catch_warnings(record=True) as warning_list:
             warnings.simplefilter('always')
-            result = callable(*args, **kwds)
-            self.assertTrue(any(item.category == warning for item in warning_list),
-                            msg="Warning '{}' not raised.".format(warning))
+            callable(*args, **kwds)
+            self.assertTrue(
+                any(item.category == warning for item in warning_list),
+                msg="Warning '{}' not raised.".format(warning))

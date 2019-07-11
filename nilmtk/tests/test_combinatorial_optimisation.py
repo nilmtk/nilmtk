@@ -1,11 +1,11 @@
 #!/usr/bin/python
+
 from __future__ import print_function, division
 import unittest
 from os.path import join
-from os import remove
 import pandas as pd
+
 from .testingtools import data_dir
-from nilmtk.datastore import HDFDataStore
 from nilmtk import DataSet
 from nilmtk.disaggregate import CombinatorialOptimisation
 

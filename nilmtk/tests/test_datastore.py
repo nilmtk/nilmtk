@@ -1,12 +1,15 @@
 #!/usr/bin/python
+
 from __future__ import print_function, division
+
 import unittest
 from os.path import join
 import pandas as pd
 from datetime import timedelta
-from .testingtools import data_dir
-from nilmtk.datastore import HDFDataStore, CSVDataStore
+
 from nilmtk import TimeFrame
+from nilmtk.datastore import HDFDataStore, CSVDataStore
+from nilmtk.tests.testingtools import data_dir
 
 
 # class name can't begin with test
@@ -26,7 +29,8 @@ class SuperTestDataStore(object):
             self.datastore.window.enabled = False
             self.assertEqual(self.datastore.get_timeframe(key), self.TIMEFRAME)
             self.datastore.window.enabled = True
-            self.assertEqual(self.datastore.get_timeframe(key), self.datastore.window)
+            self.assertEqual(self.datastore.get_timeframe(key),
+                             self.datastore.window)
 
     def test_load(self):
         timeframe = TimeFrame('2012-01-01 00:00:00', '2012-01-01 00:00:05')
@@ -38,7 +42,9 @@ class SuperTestDataStore(object):
         df = next(gen)
         self.assertEqual(df.index[0], timeframe.start)
         self.assertEqual(df.index[-1], timeframe.end - timedelta(seconds=1))
-#        self.assertEqual(df.look_ahead.index[0], timeframe.end) # This test, for some odd reason, fails for CSVDataStore in Python3, intermittently.  Very odd.
+        # This test, for some odd reason, fails for CSVDataStore in Python3,
+        # intermittently. Very odd.
+        # self.assertEqual(df.look_ahead.index[0], timeframe.end)
         self.assertEqual(len(df.look_ahead), 10)
 
     def test_load_chunks(self):
@@ -58,20 +64,24 @@ class SuperTestDataStore(object):
         i = 0
         for chunk in chunks:
             self.assertEqual(chunk.index[0], timeframes[i].start)
-            self.assertEqual(chunk.index[-1], timeframes[i].end-timedelta(seconds=1))
+            self.assertEqual(chunk.index[-1],
+                             timeframes[i].end - timedelta(seconds=1))
             self.assertEqual(len(chunk), 5)
             i += 1
         self.assertEqual(i, 2)
 
         # Check when we have a narrow mask
-        self.datastore.window = TimeFrame('2012-01-01 00:10:02', '2012-01-01 00:10:10')
+        self.datastore.window = \
+            TimeFrame('2012-01-01 00:10:02', '2012-01-01 00:10:10')
         chunks = self.datastore.load(key=self.keys[0], sections=timeframes)
         i = 0
         for chunk in chunks:
             if chunk.empty:
                 continue
-            self.assertEqual(chunk.index[0], pd.Timestamp('2012-01-01 00:10:02'))
-            self.assertEqual(chunk.index[-1], pd.Timestamp('2012-01-01 00:10:04'))
+            self.assertEqual(chunk.index[0],
+                             pd.Timestamp('2012-01-01 00:10:02'))
+            self.assertEqual(chunk.index[-1],
+                             pd.Timestamp('2012-01-01 00:10:04'))
             self.assertEqual(len(chunk), 3)
             i += 1
         self.assertEqual(i, 1)
@@ -90,11 +100,12 @@ class SuperTestDataStore(object):
                             chunk.index[-1] <= 
                             chunk.timeframe.end)        
 
-    #--------- helper functions ---------------------#
+    # --------- helper functions --------- #
 
     def _apply_mask(self):
-        self.datastore.window = TimeFrame('2012-01-01 00:10:00',
-                                        '2012-01-01 00:20:00')
+        self.datastore.window = \
+            TimeFrame('2012-01-01 00:10:00', '2012-01-01 00:20:00')
+
 
 class TestHDFDataStore(unittest.TestCase, SuperTestDataStore):
 
@@ -126,11 +137,14 @@ class TestHDFDataStore(unittest.TestCase, SuperTestDataStore):
         self._apply_mask()
         for key in self.keys:
             self.datastore.window.enabled = True
-            mem = self.datastore._estimate_memory_requirement(key, self.datastore._nrows(key))
+            mem = self.datastore._estimate_memory_requirement(
+                key, self.datastore._nrows(key))
             self.assertEqual(mem, 12000)
             self.datastore.window.enabled = False
-            mem = self.datastore._estimate_memory_requirement(key, self.datastore._nrows(key))
+            mem = self.datastore._estimate_memory_requirement(
+                key, self.datastore._nrows(key))
             self.assertEqual(mem, 200000)
+
 
 class TestCSVDataStore(unittest.TestCase, SuperTestDataStore):
 
@@ -143,6 +157,7 @@ class TestCSVDataStore(unittest.TestCase, SuperTestDataStore):
     @classmethod
     def tearDownClass(cls):
         cls.datastore.close()
-    
+
+
 if __name__ == '__main__':
     unittest.main()

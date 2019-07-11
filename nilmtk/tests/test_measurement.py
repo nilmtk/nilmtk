@@ -1,14 +1,18 @@
 #!/usr/bin/python
+
 from __future__ import print_function, division
+
 import unittest
 import pandas as pd
 import numpy as np
+
 import nilmtk.measurement as measure
 from nilmtk.elecmeter import ElecMeter, ElecMeterID
 from nilmtk.exceptions import MeasurementError
 
-BAD_AC_TYPES = ['foo', '', None, True, {'a':'b'}, 
-                (1,2), [], ['reactive'], 'reaactive']
+BAD_AC_TYPES = ['foo', '', None, True, {'a': 'b'},
+                (1, 2), [], ['reactive'], 'reaactive']
+
 
 class TestMeasurement(unittest.TestCase):
     def test_check_ac_type(self):
@@ -42,7 +46,7 @@ class TestMeasurement(unittest.TestCase):
 
         # Create DataFrame
         N_COLS = len(columns)
-        df = pd.DataFrame(np.arange(N_COLS).reshape((1,N_COLS)), 
+        df = pd.DataFrame(np.arange(N_COLS).reshape((1, N_COLS)),
                           columns=measure.measurement_columns(columns))
 
         # Try accessing columns
@@ -58,17 +62,19 @@ class TestMeasurement(unittest.TestCase):
     def test_select_best_ac_type(self):
         self.assertEqual(measure.select_best_ac_type(['reactive']), 'reactive')
 
-        self.assertEqual(measure.select_best_ac_type(['active', 'reactive', 'apparent']), 'active')
+        self.assertEqual(measure.select_best_ac_type(
+            ['active', 'reactive', 'apparent']), 'active')
 
         ElecMeter.meter_devices.update(
             {'test model': {'measurements': [{'physical_quantity': 'power', 
                                               'type': 'apparent'}]}})
         meter_id = ElecMeterID(1, 1, 'REDD')
-        meter = ElecMeter(metadata={'device_model': 'test model'}, meter_id=meter_id)
+        meter = ElecMeter(metadata={'device_model': 'test model'},
+                          meter_id=meter_id)
         
-        self.assertEqual(measure.select_best_ac_type(['reactive'], 
-                                                     meter.available_power_ac_types()),
-                         'reactive')
+        self.assertEqual(measure.select_best_ac_type(
+            ['reactive'], meter.available_power_ac_types()), 'reactive')
+
 
 if __name__ == '__main__':
     unittest.main()

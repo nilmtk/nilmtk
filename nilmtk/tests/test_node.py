@@ -1,14 +1,18 @@
 #!/usr/bin/python
+
 from __future__ import print_function, division
+
 import unittest
-from ..node import find_unsatisfied_requirements
+
+from nilmtk.node import find_unsatisfied_requirements
+
 
 class TestNode(unittest.TestCase):
 
     def test_unsatisfied_requirements(self):
         requirements = {'gaps_located':True, 'energy_computed':True}
 
-        state = {'gaps_located':True}
+        state = {'gaps_located': True}
         unsatisfied = find_unsatisfied_requirements(state, requirements)
         self.assertEqual(len(unsatisfied), 1)
 

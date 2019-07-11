@@ -1,11 +1,11 @@
 from __future__ import print_function, division
 import pandas as pd
 from datetime import timedelta
-from nilmtk.tests.testingtools import data_dir
 from os.path import join
-import itertools
 from collections import OrderedDict
 import numpy as np
+
+from nilmtk.tests.testingtools import data_dir
 from nilmtk.consts import JOULES_PER_KWH
 from nilmtk.measurement import measurement_columns, AC_TYPES
 from nilmtk.utils import flatten_2d_list
@@ -80,6 +80,7 @@ def create_random_df_hierarchical_column_index():
                              size=(N_PERIODS,
                                    N_METERS * N_MEASUREMENTS_PER_METER))
     return pd.DataFrame(data=data, index=rng, columns=columns, dtype=np.float32)
+
 
 MEASUREMENTS = [('power', 'active'), ('energy', 'reactive'), ('voltage', '')]
 

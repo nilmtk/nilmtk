@@ -1,17 +1,20 @@
 #!/usr/bin/python
+
 from __future__ import print_function, division
+
 import unittest
 from os.path import join
 import pandas as pd
-from datetime import timedelta
-from .testingtools import data_dir, WarningTestMixin
-from ..datastore import HDFDataStore
-from ..elecmeter import ElecMeter, ElecMeterID
-from ..stats.tests.test_totalenergy import check_energy_numbers
+
+from nilmtk.tests.testingtools import data_dir, WarningTestMixin
+from nilmtk.datastore import HDFDataStore
+from nilmtk.elecmeter import ElecMeter, ElecMeterID
+from nilmtk.stats.tests.test_totalenergy import check_energy_numbers
 
 METER_ID = ElecMeterID(instance=1, building=1, dataset='REDD')
 METER_ID2 = ElecMeterID(instance=2, building=1, dataset='REDD')
 METER_ID3 = ElecMeterID(instance=3, building=1, dataset='REDD')
+
 
 class TestElecMeter(WarningTestMixin, unittest.TestCase):
 
@@ -20,7 +23,8 @@ class TestElecMeter(WarningTestMixin, unittest.TestCase):
         filename = join(data_dir(), 'energy.h5')
         cls.datastore = HDFDataStore(filename)
         ElecMeter.load_meter_devices(cls.datastore)
-        cls.meter_meta = cls.datastore.load_metadata('building1')['elec_meters'][METER_ID.instance]
+        cls.meter_meta = cls.datastore.load_metadata(
+            'building1')['elec_meters'][METER_ID.instance]
 
     @classmethod
     def tearDownClass(cls):
@@ -66,10 +70,10 @@ class TestElecMeter(WarningTestMixin, unittest.TestCase):
         self.assertEquals(meter.proportion_of_energy(meter), 1.0)
 
     def correlation(self):
-        meter_1 = ElecMeter(store=self.datastore, metadata=self.meter_meta, 
-                          meter_id=METER_ID)
-        meter_2 = ElecMeter(store=self.datastore, metadata=self.meter_meta, 
-                          meter_id=METER_ID2)
+        meter_1 = ElecMeter(store=self.datastore, metadata=self.meter_meta,
+                            meter_id=METER_ID)
+        meter_2 = ElecMeter(store=self.datastore, metadata=self.meter_meta,
+                            meter_id=METER_ID2)
 
         # Let us get raw DataFrames 
         df1 = self.datastore.store.get('/building1/elec/meter1')
@@ -85,8 +89,8 @@ class TestElecMeter(WarningTestMixin, unittest.TestCase):
         from pandas.util.testing import assert_frame_equal
         assert_frame_equal(corr12_nilmtk, corr12_pandas)
 
-        #self.assertEqual(corr12_nilmtk, corr12_pandas)
-        #print("Correlation using pandas:", corr12_pandas)
+        # self.assertEqual(corr12_nilmtk, corr12_pandas)
+        # print("Correlation using pandas:", corr12_pandas)
 
 
 if __name__ == '__main__':
