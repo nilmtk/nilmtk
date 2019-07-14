@@ -1,18 +1,12 @@
 from __future__ import print_function, division
-import numpy as np
+import pickle
 from collections import OrderedDict, deque
+import numpy as np
 import pandas as pd
-
+from sklearn.metrics import mean_squared_error
 from nilmtk.feature_detectors.cluster import hart85_means_shift_cluster
 from nilmtk.feature_detectors.steady_states import find_steady_states_transients
 from nilmtk.disaggregate import Disaggregator
-
-
-# Fix the seed for repeatability of experiments
-SEED = 42
-
-np.random.seed(SEED)
-
 
 class MyDeque(deque):
     def popmiddle(self, pos):
@@ -29,7 +23,7 @@ class PairBuffer(object):
     * matchedPairs (dataframe containing matched pairs of transitions)
     """
 
-    def __init__(self, buffer_size, min_tolerance, percent_tolerance,
+    def __init__(self, columns, buffer_size, min_tolerance, percent_tolerance,
                  large_transition, num_measurements):
         """
         Parameters
@@ -61,8 +55,12 @@ class PairBuffer(object):
                                  'T2 Time', 'T2 Active', 'T2 Reactive']
         elif self._num_measurements == 2:
             # Only active power is available
-            self.pair_columns = ['T1 Time', 'T1 Active',
-                                 'T2 Time', 'T2 Active']
+            if columns[0][1] == 'active':
+                self.pair_columns = ['T1 Time', 'T1 Active',
+                                     'T2 Time', 'T2 Active']
+            elif columns[0][1] == 'apparent':
+                self.pair_columns = ['T1 Time', 'T1 Apparent',
+                                     'T2 Time', 'T2 Apparent']
         self.matched_pairs = pd.DataFrame(columns=self.pair_columns)
 
     def clean_buffer(self):
@@ -94,16 +92,10 @@ class PairBuffer(object):
     def pair_transitions(self):
         """
         Hart 85, P 33.
-        When searching the working buffer for pairs, the order in which
-        entries are examined is very important. If an Appliance has
-        on and off several times in succession, there can be many
-        pairings between entries in the buffer. The algorithm must not
-        allow an 0N transition to match an OFF which occurred at the end
+        The algorithm must not allow an 0N transition to match an OFF which occurred at the end
         of a different cycle, so that only ON/OFF pairs which truly belong
         together are paired up. Otherwise the energy consumption of the
-        appliance will be greatly overestimated. The most straightforward
-        search procedures can make errors of this nature when faced with
-        types of transition sequences.
+        appliance will be greatly overestimated.
 
         Hart 85, P 32.
         For the two-state load monitor, a pair is defined as two entries
@@ -116,14 +108,6 @@ class PairBuffer(object):
         Watts (or 3.5% of the real power, if the transitions are
         over 1000 W) and the absolute value of the reactive power
         component is less than 35 VAR (or 3.5%).
-
-        ... the correct way to search the buffer is to start by checking
-        elements which are close together in the buffer, and gradually
-        increase the distance. First, adjacent  elements are checked for
-        pairs which meet all four requirements above; if any are found
-        they are processed and marked. Then elements two entries apart
-        are checked, then three, and so on, until the first and last
-        element are checked...
 
         """
 
@@ -216,14 +200,23 @@ class Hart85(Disaggregator):
         Each value is a sorted list of power in different states.
     """
 
-    def __init__(self, d):
+    def __init__(self):
         self.model = {}
         self.MODEL_NAME = "Hart85"
 
-    def train(self, metergroup, columns=[('power', 'active')],
-              buffer_size=20, noise_level=70, state_threshold=15,
-              min_tolerance=100, percent_tolerance=0.035,
-              large_transition=1000, **kwargs):
+    def train(
+        self,
+        metergroup,
+        columns=[
+            ('power',
+             'active')],
+        buffer_size=20,
+        noise_level=70,
+        state_threshold=15,
+        min_tolerance=100,
+        percent_tolerance=0.035,
+        large_transition=1000,
+            **kwargs):
         """
         Train using Hart85. Places the learnt model in `model` attribute.
 
@@ -268,10 +261,13 @@ class Hart85(Disaggregator):
              large_transition):
         subset = list(self.transients.itertuples())
         buffer = PairBuffer(
-            min_tolerance=min_tolerance, buffer_size=buffer_size,
+            columns=self.columns,
+            min_tolerance=min_tolerance,
+            buffer_size=buffer_size,
             percent_tolerance=percent_tolerance,
             large_transition=large_transition,
-            num_measurements=len(self.transients.columns) + 1)
+            num_measurements=len(
+                self.transients.columns) + 1)
         for s in subset:
             # if len(buffer.transitionList) < bsize
             if len(buffer.transition_list) == buffer_size:
@@ -332,7 +328,35 @@ class Hart85(Disaggregator):
                     states.loc[transient_tuple[0]][index_least_delta] = 0
         prev = states.iloc[-1].to_dict()
         power_chunk_dict = self.assign_power_from_states(states, prev)
-        return pd.DataFrame(power_chunk_dict, index=chunk.index)
+        self.power_dict = power_chunk_dict
+        self.chunk_index = chunk.index
+
+        # Check whether 1d data or 2d data and converting dict to dataframe
+        if len(transient_tuple) == 2:
+
+            temp_df = pd.DataFrame(power_chunk_dict, index=chunk.index)
+            return temp_df, 2
+
+        else:
+            tuples = []
+
+            for i in range(len(self.centroids.index.values)):
+                for j in range(0, 2):
+                    tuples.append([i, j])
+
+            columns = pd.MultiIndex.from_tuples(tuples)
+
+            temp_df = pd.DataFrame(
+                power_chunk_dict,
+                index=chunk.index,
+                columns=columns)
+
+            for i in range(len(chunk.index)):
+                for j in range(len(self.centroids.index.values)):
+                    for k in range(0, 2):
+                        temp_df.iloc[i][j][k] = power_chunk_dict[j][i][k]
+
+            return temp_df, 3
 
     def assign_power_from_states(self, states_chunk, prev):
         di = {}
@@ -350,10 +374,10 @@ class Hart85(Disaggregator):
                     # print("A", values[i], i)
                     on = True
                     i = i + 1
-                    power[i] = self.centroids.ix[appliance].values
+                    power[i] = self.centroids.loc[appliance].values
                     while values[i] != 0 and i < len(values) - 1:
                         # print("B", values[i], i)
-                        power[i] = self.centroids.ix[appliance].values
+                        power[i] = self.centroids.loc[appliance].values
                         i = i + 1
                 elif values[i] == 0:
                     # print("C", values[i], i)
@@ -386,10 +410,10 @@ class Hart85(Disaggregator):
                     else:
                         # print("H", values[i], i)
                         on = True
-                        power[i] = self.centroids.ix[appliance].values
+                        power[i] = self.centroids.loc[appliance].values
                         while values[i] != 0 and i < len(values) - 1:
                             # print("I", values[i], i)
-                            power[i] = self.centroids.ix[appliance].values
+                            power[i] = self.centroids.loc[appliance].values
                             i = i + 1
 
             di[appliance] = power
@@ -434,25 +458,47 @@ class Hart85(Disaggregator):
 
         timeframes = []
         # Now iterating over mains data and disaggregating chunk by chunk
+        if len(self.columns) == 1:
+            ac_type = self.columns[0][1]
+        else:
+            ac_type = ['active', 'reactive']
+
         for chunk in mains.power_series(**load_kwargs):
             # Record metadata
+
             timeframes.append(chunk.timeframe)
             measurement = chunk.name
-            power_df = self.disaggregate_chunk(
+            power_df, dimen = self.disaggregate_chunk(
                 chunk, prev, transients)
 
-            columns = pd.MultiIndex.from_tuples([chunk.name])
+            if dimen == 2:
+                columns = pd.MultiIndex.from_tuples([chunk.name])
+
+            else:
+                tuples = list(self.columns)
+                columns = pd.MultiIndex.from_tuples(tuples)
 
             for meter in learnt_meters:
                 data_is_available = True
                 df = power_df[[meter]]
                 df.columns = columns
+                df.columns.names = ['physical_quantity', 'type']
                 key = '{}/elec/meter{:d}'.format(building_path, meter + 2)
-                output_datastore.append(key, df)
+                val = df.apply(pd.to_numeric).astype('float32')
+                output_datastore.append(key, value=val)
+            print('Next Chunk..')
 
-            output_datastore.append(key=mains_data_location,
-                                    value=pd.DataFrame(chunk, columns=columns))
+        print('Appending mains data to datastore')
 
+        for chunk_mains in mains.load(ac_type=ac_type):
+            chunk_df = chunk_mains
+
+        chunk_df = chunk_df.apply(pd.to_numeric).astype('float32')
+        print('Done')
+
+        output_datastore.append(key=mains_data_location,
+                                value=chunk_df)
+        # save metadata
         if data_is_available:
             self._save_metadata_for_disaggregation(
                 output_datastore=output_datastore,
@@ -463,24 +509,57 @@ class Hart85(Disaggregator):
                 supervised=False,
                 num_meters=len(self.centroids)
             )
+        return power_df
 
-    """
     def export_model(self, filename):
-        model_copy = {}
-        for appliance, appliance_states in self.model.iteritems():
-            model_copy[
-                "{}_{}".format(appliance.name, appliance.instance)] = appliance_states
-        j = json.dumps(model_copy)
-        with open(filename, 'w+') as f:
-            f.write(j)
+        example_dict = self.model
+        with open(filename, "wb") as pickle_out:
+            pickle.dump(example_dict, pickle_out)
 
     def import_model(self, filename):
-        with open(filename, 'r') as f:
-            temp = json.loads(f.read())
-        for appliance, centroids in temp.iteritems():
-            appliance_name = appliance.split("_")[0].encode("ascii")
-            appliance_instance = int(appliance.split("_")[1])
-            appliance_name_instance = ApplianceID(
-                appliance_name, appliance_instance)
-            self.model[appliance_name_instance] = centroids
-    """
+        with open(filename, "rb") as pickle_in:
+            self.model = pickle.load(pickle_in)
+            self.columns = self.model['columns']
+            self.state_threshold = self.model['state_threshold']
+            self.noise_level = self.model['noise_level']
+            self.steady_states = self.model['steady_states']
+            self.transients = self.model['transients']
+            # pair_df=self.pair_df,
+            self.centroids = self.model['centroids']
+
+    def best_matched_appliance(self, submeters, pred_df):
+        """
+        Parameters
+        ----------
+        submeters : elec.submeters object
+        pred_df : predicted dataframe returned by disaggregate()
+
+        Returns
+        -------
+        list : containing best matched pairs to disaggregated output
+
+        """
+
+        rms_error = {}
+        submeters_df = submeters.dataframe_of_meters()
+        new_df = pd.merge(
+            pred_df,
+            submeters_df,
+            left_index=True,
+            right_index=True)
+
+        rmse_all = []
+        for pred_appliance in pred_df.columns:
+            rmse = {}
+            for appliance in submeters_df.columns:
+                temp_value = (
+                    np.sqrt(
+                        mean_squared_error(
+                            new_df[pred_appliance],
+                            new_df[appliance])))
+                rmse[appliance] = temp_value
+            rmse_all.append(rmse)
+        match = []
+        for i in range(len(rmse_all)):
+            key_min = min(rmse_all[i].keys(), key=(lambda k: rmse_all[i][k]))
+            print('Best Matched Pair is', (i, key_min))
