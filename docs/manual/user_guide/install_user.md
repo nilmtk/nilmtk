@@ -1,8 +1,8 @@
 # Installing NILMTK
 
-We recommend using [Anaconda](https://store.continuum.io/cshop/anaconda/), which bundles togther most of the required packages. Since many packages are deprecating  Python 2, we are now recommending installing Python 3.6. For the time being, Python 2.7 is still supported but that may change in the near future.
+We recommend using [Anaconda](https://store.continuum.io/cshop/anaconda/), which bundles together most of the required packages. Since many packages are deprecating  Python 2, we are now recommending installing Python 3.6. For the time being, Python 2.7 is still supported but it will be removed in the next NILMTK version due to most of the dependencies dropping Python 2.7.
 
-After Anaconda has been installed, open up the terminal (Unix) or Anaconda prompt(Windows) :
+After Anaconda has been installed, open up the terminal (Unix) or Anaconda prompt (Windows):
 
 1.  NILMTK should work fine in the base environment, but we recommend creating a new environment where NILMTK and related dependecies are installed.
 
@@ -15,19 +15,19 @@ After Anaconda has been installed, open up the terminal (Unix) or Anaconda promp
 	conda config --add channels conda-forge
 	```
 
-2. Activate the new *nilmtk-env* environment.
+3. Activate the new *nilmtk-env* environment.
 
 	```bash
 	conda activate nilmtk-env
 	```
 
-3. Install the NILMTK package
+4. Install the NILMTK package
 
 	```bash
 	conda install -c nilmtk nilmtk
 	```
 
-4. The installed package import for python/ ipython can be  tested in the terminal using the following command:
+5. The installed package import for python/ ipython can be  tested in the terminal using the following command:
 	```bash
 	python -c "import nilmtk"
 	```
@@ -51,7 +51,7 @@ After Anaconda has been installed, open up the terminal (Unix) or Anaconda promp
 		3.6.7 | packaged by conda-forge | (default, Feb 28 2019, 09:07:38) 
 		[GCC 7.3.0]
 		```
-5. Run your python IDE from this environment, for example:
+6. Run your Python IDE from this environment, for example:
 
 	```bash
 	jupyter notebook
@@ -62,14 +62,16 @@ After Anaconda has been installed, open up the terminal (Unix) or Anaconda promp
 	spyder
 	```
 
-6. Import NILMTK in the IDE:
+7. Import NILMTK in the IDE:
 
 	```python
 	import nilmtk
 	```
 	The package modules can now be used.
-7. To deactivate this environment,
+8. To deactivate this environment,
 
 	```bash
 	conda deactivate
 	```
+    
+We recommend checking the [Anaconda documentation about environments](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html) if the concept is new to you.

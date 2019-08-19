@@ -1,5 +1,5 @@
 """
-   Copyright 2013 nilmtk authors
+   Copyright 2013-2019 NILMTK developers
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -21,43 +21,11 @@ import sys
 import warnings
 # import numpy
 
-"""
-CYTHON_DIR = 'nilmtk/disaggregate/feature_detectors'
-
-try:
-    # This trick adapted from 
-    # http://stackoverflow.com/a/4515279/732596
-    from Cython.Build import cythonize
-except ImportError:
-    use_cython = False
-else:
-    use_cython = True
-
-if use_cython:
-    sources = [join(CYTHON_DIR, '_feature_detectors.pyx')]
-    extensions = [Extension("nilmtk.disaggregate._feature_detectors", 
-                            sources=sources,
-                            include_dirs=[numpy.get_include()])]
-    ext_modules = cythonize(extensions)
-else:
-    ext_modules = [
-        Extension("nilmtk.disaggregate._feature_detectors", 
-                  [join(CYTHON_DIR, '_feature_detectors.c')],
-                  include_dirs=[numpy.get_include()]),
-    ]
-
-"""
-
-"""
-Following Segment of this file was taken from the pandas project(https://github.com/pydata/pandas) 
-"""
-# Version Check
-
 MAJOR = 0
 MINOR = 3
-MICRO = 0
+MICRO = 2
 DEV = 0 # For multiple dev pre-releases, please increment this value
-ISRELEASED = False
+ISRELEASED = True
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 QUALIFIER = ''
 
@@ -125,7 +93,7 @@ setup(
     ],
     description='Estimate the energy consumed by individual appliances from '
                 'whole-house power meter readings',
-    author='nilmtk authors',
+    author='NILMTK developers',
     author_email='',
     url='https://github.com/nilmtk/nilmtk',
     download_url="https://github.com/nilmtk/nilmtk/tarball/master#egg=nilmtk-dev",

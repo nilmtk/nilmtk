@@ -1,9 +1,9 @@
 package:
     name: nilmtk
-    version: "0.3.0.dev1"
+    version: "0.3.2"
 
 source:
-    git_url: https://github.com/nilmtk/nilmtk.git
+    path: ..
 
 build:
     noarch: python
@@ -12,7 +12,6 @@ requirements:
     host:
         - python
         - setuptools
-        - numpy>=1.13.3
     run: 
         - python=3.6
         - Cython>=0.27.3
@@ -20,7 +19,8 @@ requirements:
         - numpy>=1.13.3
         - numexpr>=2.6.4
         - pytables
-        - pandas==0.22.0
+        - pandas>=0.24.2
+        - pandas<0.25.0
         - matplotlib>=2.2.0
         - networkx==2.1
         - scipy>=1.0.0
