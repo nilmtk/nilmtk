@@ -22,10 +22,10 @@ import warnings
 # import numpy
 
 MAJOR = 0
-MINOR = 3
-MICRO = 2
-DEV = 0 # For multiple dev pre-releases, please increment this value
-ISRELEASED = True
+MINOR = 4
+MICRO = 0
+DEV = 1 # For multiple dev pre-releases, please increment this value
+ISRELEASED = False
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 QUALIFIER = ''
 
