@@ -49,23 +49,23 @@ For example, to only load house 26 for April 2014:
     view_database_tables(
         'username',
         'password',
-        'database_schema'   # university or commercial
+        'database_schema'    # electricity 
     )
 
     # show the list of all available buildings
     view_buildings(
         'username',
         'password',
-        'database_schema',  # university or commercial
-        'table_name'        # for example 'electricity_egauge_15min', 'electricity_egauge_hours'
+        'database_schema',  # electricity 
+        'table_name'        # for example 'eg_realpower_1min', 'eg_current_15min'
     )
 
     # view data collection window of selected buildings
     view_data_window(
         'username',
         'password',
-        'database_schema',  # university or commercial
-        'table_name',       # for example 'electricity_egauge_15min','electricity_egauge_hours'
+        'database_schema',  # electricity
+        'table_name',       # for example 'eg_realpower_1min','eg_current_1hr'
         [18,26,43,44]       # data collection window of building 18,26,43 and 44 respectively
     )
 
@@ -76,8 +76,8 @@ For example, to only load house 26 for April 2014:
         'username',
         'password',
         '/path/output_filename.h5',
-        'university',
-        'electricity_egauge_hours',
+        'electricity',
+        'eg_realpower_1hr',
         periods_to_load={ 26: ('2018-11-17', '2019-12-17')})
 
 
@@ -95,7 +95,6 @@ TODO:
 
 """
 feed_mapping = {
-                'use': {},
                 'air1': {'type': 'air conditioner'},
                 'air2': {'type': 'air conditioner'},
                 'air3': {'type': 'air conditioner'},
@@ -108,7 +107,9 @@ feed_mapping = {
                 'bedroom3': {'type': 'sockets', 'room': 'bedroom'},
                 'bedroom4': {'type': 'sockets', 'room': 'bedroom'},
                 'bedroom5': {'type': 'sockets', 'room': 'bedroom'},
+                'battery1': {},                       #new field, need mapping
                 'car1': {'type': 'electric vehicle'},
+                'circpump1': {},                      #new field, need mapping
                 'clotheswasher1': {'type': 'washing machine'},
                 'clotheswasher_dryg1': {'type': 'washer dryer'},
                 'diningroom1': {'type': 'sockets', 'room': 'dining room'},
@@ -122,9 +123,10 @@ feed_mapping = {
                 'furnace2': {'type': 'electric furnace'},
                 'garage1': {'type': 'sockets', 'room': 'dining room'},
                 'garage2': {'type': 'sockets', 'room': 'dining room'},
-                'gen': {},
                 'grid': {},
                 'heater1': {'type': 'electric space heater'},
+                'heater2': {'type': 'electric space heater'},
+                'heater3': {'type': 'electric space heater'},
                 'housefan1': {'type': 'electric space heater'},
                 'icemaker1': {'type': 'appliance'},
                 'jacuzzi1': {'type': 'electric hot tub heater'},
@@ -155,28 +157,49 @@ feed_mapping = {
                 'refrigerator1': {'type': 'fridge'},
                 'refrigerator2': {'type': 'fridge'},
                 'security1': {'type': 'security alarm'},
+                'sewerpump1': {},               #new field, need mapping
                 'shed1': {'type': 'sockets', 'room': 'shed'},
+                'solar': {},
+                'solar2': {},
                 'sprinkler1': {'type': 'appliance'},
-                'unknown1': {'type': 'unknown'},
-                'unknown2': {'type': 'unknown'},
-                'unknown3': {'type': 'unknown'},
-                'unknown4': {'type': 'unknown'},
+                'sumppump1': {},                #new field, need mapping
                 'utilityroom1': {'type': 'sockets', 'room': 'utility room'},
                 'venthood1': {'type': 'appliance'},
                 'waterheater1': {'type': 'electric water heating appliance'},
                 'waterheater2': {'type': 'electric water heating appliance'},
+                'wellpump1': {},                #new field, need mapping
                 'winecooler1': {'type': 'appliance'},
+                'leg1v':{},
+                'leg2v':{}
                 }
 
-feed_ignore = ['gen', 'grid']
+feed_ignore = ['solar', 'solar2', 'grid', 'leg1v', 'leg2v', 'battery1', 'circpump1',
+               'sewerpump1', 'sumppump1', 'wellpump1']
 
 
 def database_assert(database_table):
     assert (
-            database_table == 'electricity_egauge_15min' or
-            database_table == 'electricity_egauge_hours' or
-            database_table == 'electricity_egauge_minutes' or
-            database_table == 'electricity_egauge_seconds'
+            database_table == 'eg_angle_15min' or
+            database_table == 'eg_angle_1hr' or
+            database_table == 'eg_angle_1min' or
+            database_table == 'eg_angle_1s' or
+            database_table == 'eg_apparentpower_15min' or
+            database_table == 'eg_apparentpower_1hr' or
+            database_table == 'eg_apparentpower_1min' or
+            database_table == 'eg_apparentpower_1s' or
+            database_table == 'eg_current_15min' or
+            database_table == 'eg_current_1hr' or
+            database_table == 'eg_current_1min' or
+            database_table == 'eg_current_1s' or
+            database_table == 'eg_realpower_15min' or
+            database_table == 'eg_realpower_1hr' or
+            database_table == 'eg_realpower_1min' or
+            database_table == 'eg_realpower_1s' or
+            database_table == 'eg_thd_15min' or
+            database_table == 'eg_thd_1hr' or
+            database_table == 'eg_thd_1min' or
+            database_table == 'eg_thd_1s' or
+            database_table == 'eg_realpower_1s_40homes_dataset'
             ), "Table not compatible with NILMTK"
 
 
@@ -185,9 +208,10 @@ def view_database_tables(
     database_password,
     database_schema
 ):
+    
     database_host = 'dataport.pecanstreet.org'
     database_port = '5434'
-    database_name = 'postgres'
+    database_name = 'dataport'
 
     try:
         conn = db.connect('host=' + database_host +
@@ -221,7 +245,7 @@ def view_buildings(
     database_assert(database_table)
     database_host = 'dataport.pecanstreet.org'
     database_port = '5434'
-    database_name = 'postgres'
+    database_name = 'dataport'
 
     # try to connect to database
     try:
@@ -236,10 +260,9 @@ def view_buildings(
 
     # select all buildings for the database_table
     sql_query = ('SELECT DISTINCT dataid' +
-                 ' FROM university.metadata' +
-                 ' WHERE' + database_table +
+                 ' FROM other_datasets.metadata' +
                  ' ORDER BY dataid')
-
+    
     buildings_in_table = pd.read_sql(sql_query, conn)['dataid'].tolist()
     print(buildings_in_table)
     conn.close()
@@ -255,7 +278,7 @@ def view_data_window(
     database_assert(database_table)
     database_host = 'dataport.pecanstreet.org'
     database_port = '5434'
-    database_name = 'postgres'
+    database_name = 'dataport'
 
     # try to connect to database
     try:
@@ -270,17 +293,23 @@ def view_data_window(
 
     # select all buildings for the database_table
     sql_query = ('SELECT DISTINCT dataid' +
-                 ' FROM university.metadata' +
-                 ' WHERE' + database_table +
+                 ' FROM other_datasets.metadata' +
                  ' ORDER BY dataid')
 
     if(not (building_no)):
         print(" Please provide the list of building numbers ")
     else:
         for each_building in building_no:
-            sql_query = ('SELECT MIN(egauge_min_time) AS minlocalminute,' +
-                         ' MAX(egauge_max_time) AS maxlocalminute' +
-                         ' FROM university.metadata' +
+            #seperate columns for 1s and 1min data
+            if(database_table.find('_1s') > 0):
+                sql_query = ('SELECT MIN(egauge_1s_min_time) AS minlocalminute,' +
+                         ' MAX(egauge_1s_max_time) AS maxlocalminute' +
+                         ' FROM other_datasets.metadata' +
+                         ' WHERE dataid=' + str(each_building))
+            else:
+                sql_query = ('SELECT MIN(egauge_1min_min_time) AS minlocalminute,' +
+                         ' MAX(egauge_1min_max_time) AS maxlocalminute' +
+                         ' FROM other_datasets.metadata' +
                          ' WHERE dataid=' + str(each_building))
 
             timestamps = pd.read_sql(sql_query, conn)
@@ -296,8 +325,8 @@ def view_data_window(
 
 def download_dataport(database_username,
                       database_password, hdf_filename,
-                      database_schema='university',
-                      user_selected_table='electricity_egauge_minutes',
+                      database_schema='electricity',
+                      user_selected_table='eg_realpower_1min',
                       periods_to_load=None):
     """
     Downloads data from dataport database into an HDF5 file.
@@ -318,7 +347,7 @@ def download_dataport(database_username,
     # dataport database settings
     database_host = 'dataport.pecanstreet.org'
     database_port = '5434'
-    database_name = 'postgres'
+    database_name = 'dataport'
 
     # try to connect to database
     try:
@@ -332,13 +361,32 @@ def download_dataport(database_username,
         raise
 
     # map user_selected_table and timestamp column
-    timestamp_map = {"electricity_egauge_15min": "local_15min",
-                     "electricity_egauge_hours": "localhour",
-                     "electricity_egauge_minutes": "localminute",
-                     "electricity_egauge_seconds": "localminute"}
+    timestamp_map = {"eg_angle_15min": "local_15min",
+                     "eg_angle_1hr": "localhour",
+                     "eg_angle_1min": "localminute",
+                     "eg_angle_1s": "localminute",
+                     "eg_apparentpower_15min": "local_15min",
+                     "eg_apparentpower_1hr": "localhour",
+                     "eg_apparentpower_1min": "localminute",
+                     "eg_apparentpower_1s": "localminute",
+                     "eg_current_15min": "local_15min",
+                     "eg_current_1hr": "localhour",
+                     "eg_current_1min": "localminute",
+                     "eg_current_1s": "localminute",
+                     "eg_realpower_15min": "local_15min",
+                     "eg_realpower_1hr": "localhour",
+                     "eg_realpower_1min": "localminute",
+                     "eg_realpower_1s": "localminute",
+                     "eg_thd_15min": "local_15min",
+                     "eg_thd_1hr": "localhour",
+                     "eg_thd_1min": "localminute",
+                     "eg_thd_1s": "localminute",
+                     "eg_realpower_1s_40homes_dataset": "localminute"}
 
     # set up a new HDF5 datastore (overwrites existing store)
+    
     store = pd.HDFStore(hdf_filename, 'w', complevel=9, complib='zlib')
+    
 
     # Create a temporary metadata dir, remove existing building
     # yaml files in module dir (if any)
@@ -397,19 +445,32 @@ def download_dataport(database_username,
             sys.stdout.flush()
 
             # get buildings present in electricity_egauge_minutes table
-            sql_query = ('SELECT DISTINCT dataid' +
-                         ' FROM university.metadata' +
-                         ' WHERE egauge_min_time IS NOT NULL' +
+            if(user_selected_table.find('_1s') > 0):
+                sql_query = ('SELECT DISTINCT dataid' +
+                         ' FROM other_datasets.metadata' +
+                         ' WHERE egauge_1s_min_time IS NOT NULL' +
                          ' ORDER BY dataid')
+            else:
+                sql_query = ('SELECT DISTINCT dataid' +
+                         ' FROM other_datasets.metadata' +
+                         ' WHERE egauge_1min_min_time IS NOT NULL' +
+                         ' ORDER BY dataid')
+                
 
             buildings_in_table = pd.read_sql(sql_query,
                                              conn)['dataid'].tolist()
             if building_id in buildings_in_table:
                 # get first and last timestamps for this
                 # house in electricity_egauge_minutes table
-                sql_query = ('SELECT MIN(egauge_min_time) AS minlocalminute,' +
-                             ' MAX(egauge_max_time) AS maxlocalminute' +
-                             ' FROM university.metadata' +
+                if(user_selected_table.find('_1s') > 0):
+                    sql_query = ('SELECT MIN(egauge_1s_min_time) AS minlocalminute,' +
+                             ' MAX(egauge_1s_max_time) AS maxlocalminute' +
+                             ' FROM other_datasets.metadata' +
+                             ' WHERE dataid=' + str(building_id))
+                else:
+                    sql_query = ('SELECT MIN(egauge_1min_min_time) AS minlocalminute,' +
+                             ' MAX(egauge_1min_max_time) AS maxlocalminute' +
+                             ' FROM other_datasets.metadata' +
                              ' WHERE dataid=' + str(building_id))
 
                 range = pd.read_sql(sql_query, conn)
@@ -474,7 +535,8 @@ def download_dataport(database_username,
                             nilmtk_building_id,
                             building_id,
                             timestamp_map[user_selected_table],
-                            metadata_dir
+                            metadata_dir,
+                            user_selected_table                            
                         )
 
                         # print progress
@@ -493,7 +555,6 @@ def download_dataport(database_username,
         # if len(dataframe_list) > 0:
             # dataframe_concat = pd.concat(dataframe_list)
             # dataframe_concat.to_csv(output_directory + str(building_id) + '.csv')
-
     store.close()
     conn.close()
 
@@ -510,7 +571,8 @@ def _dataport_dataframe_to_hdf(dataport_dataframe,
                                nilmtk_building_id,
                                dataport_building_id,
                                timestamp_name,
-                               metadata_dir):
+                               metadata_dir,
+                               user_selected_table):
     local_dataframe = dataport_dataframe.copy()
 
     # remove timezone information to avoid append errors
@@ -525,8 +587,9 @@ def _dataport_dataframe_to_hdf(dataport_dataframe,
     feeds_dataframe = local_dataframe.drop('dataid', axis=1)
     # Column names for dataframe
     column_names = [('power', 'active')]
-    # convert from kW to W
-    feeds_dataframe = feeds_dataframe.mul(1000)
+    # convert from kW to W for realpower data
+    if(user_selected_table.find('_realpower_') > 0):
+        feeds_dataframe = feeds_dataframe.mul(1000)
     # building metadata
     building_metadata = {}
     building_metadata['instance'] = nilmtk_building_id
@@ -587,3 +650,5 @@ def _dataport_dataframe_to_hdf(dataport_dataframe,
         outfile.write(yaml.dump(building_metadata))
 
     return 0
+
+
