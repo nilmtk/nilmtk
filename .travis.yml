@@ -17,14 +17,14 @@ before_install:
 
 install:
   # create and activate env using NILMTK's environment.yml
-  - conda env create 
+  - conda env create -f environment-dev.yml
   - source activate nilmtk-env
 
-  # Install nilm_metadata (can't yet install using pip / conda)
-  #- pip install 'git+https://github.com/nilmtk/nilm_metadata.git#egg=nilm_metadata'
+  # Install nilm_metadata (development version)
+  - pip install 'git+https://github.com/nilmtk/nilm_metadata.git#egg=nilm_metadata'
 
-  # Finally, install nilmtk...
-  #- pip install 'git+https://github.com/nilmtk/nilmtk.git#egg=nilmtk'
+  # Finally, install nilmtk (development version)
+  - pip install .
 
 script:
   - python -c 'from nilmtk.utils import show_versions; show_versions()'
