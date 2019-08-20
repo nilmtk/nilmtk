@@ -1,10 +1,8 @@
-from __future__ import print_function, division
 from os.path import join, isdir, dirname, abspath
 from os import getcwd
 import os
 from sys import getfilesystemencoding
 from collections import OrderedDict
-from six import iteritems
 import pandas as pd
 from nilm_metadata import convert_yaml_to_hdf5
 from nilmtk.datastore import Key
@@ -53,9 +51,9 @@ def convert_combed(combed_path, output_filename, format='HDF'):
 
     any_file_converted = False
     
-    for building_name, building_mapping in iteritems(overall_dataset_mapping):
-        for load_name, load_mapping in iteritems(building_mapping):
-            for load_mapping_path, meter_number in iteritems(load_mapping):
+    for building_name, building_mapping in overall_dataset_mapping.items():
+        for load_name, load_mapping in building_mapping.items():
+            for load_mapping_path, meter_number in load_mapping.items():
                 building_number = building_number_mapping[building_name]
                 key = Key(building=building_number, meter=meter_number)
                 dfs = []

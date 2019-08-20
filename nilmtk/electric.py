@@ -1,8 +1,6 @@
-from __future__ import print_function, division
 import pandas as pd
 import numpy as np
 from collections import Counter
-from builtins import zip
 from warnings import warn
 import scipy.spatial as ss
 from scipy import fft
@@ -344,7 +342,6 @@ class Electric(object):
         if y_n <= 1:
             return np.NaN
 
-        # we're using Python 3's division (which returns a float)
         x_bar = x_sum / x_n 
         y_bar = y_sum / y_n
 

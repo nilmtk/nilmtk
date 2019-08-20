@@ -2,11 +2,11 @@ sudo: false  # use new container infrastructure on Travis CI
 
 language: python
 
-python: 2.7
+python: 3.7
 
 before_install:
   # Install miniconda.
-  - wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+  - wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
   - bash miniconda.sh -b -p $HOME/miniconda
   - rm miniconda.sh
   - export PATH="$HOME/miniconda/bin:$PATH"

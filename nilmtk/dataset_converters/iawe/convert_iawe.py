@@ -1,4 +1,3 @@
-from __future__ import print_function, division
 import pandas as pd
 import numpy as np
 from os.path import join
@@ -19,8 +18,7 @@ def reindex_fill_na(df, idx):
     for power in power_columns:
         df_copy[power].fillna(0, inplace=True)
     for measurement in non_power_columns:
-        df_copy[measurement].fillna(
-            df[measurement].median(), inplace=True)
+        df_copy[measurement].fillna(df[measurement].median(), inplace=True)
 
     return df_copy
 

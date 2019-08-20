@@ -1,4 +1,3 @@
-from __future__ import print_function, division
 import warnings
 import gc
 from sys import stdout
@@ -14,7 +13,6 @@ import matplotlib.pyplot as plt
 from matplotlib.sankey import Sankey 
 from matplotlib.ticker import FuncFormatter
 from matplotlib import MatplotlibDeprecationWarning
-from six import iteritems, integer_types
 
 # NILMTK imports
 from .elecmeter import ElecMeter, ElecMeterID
@@ -91,7 +89,7 @@ class MeterGroup(Electric):
         ElecMeter.load_meter_devices(store)
 
         # Load each meter
-        for meter_i, meter_metadata_dict in iteritems(elec_meters):
+        for meter_i, meter_metadata_dict in elec_meters.items():
             meter_id = ElecMeterID(instance=meter_i,
                                    building=building_id.instance,
                                    dataset=building_id.dataset)
@@ -271,10 +269,10 @@ class MeterGroup(Electric):
                                 .format(len(meters)))
             else:
                 raise KeyError(key)
-        elif isinstance(key, integer_types) and not isinstance(key, bool):
+        elif isinstance(key, int) and not isinstance(key, bool):
             meters_found = []
             for meter in self.meters:
-                if isinstance(meter.instance(), integer_types):
+                if isinstance(meter.instance(), int):
                     if meter.instance() == key:
                         meters_found.append(meter)
                 elif isinstance(meter.instance(), (tuple, list)):
@@ -610,7 +608,7 @@ class MeterGroup(Electric):
             
         meter_labels = {meter: meter.label() for meter in graph.nodes()}
         if show_meter_labels:
-            for meter, name in iteritems(meter_labels):
+            for meter, name in meter_labels.items():
                 x, y = pos[meter]
 
                 if used_graphviz:
@@ -1599,7 +1597,7 @@ class MeterGroup(Electric):
 
         cumsum = energy.cumsum()
         text_ys = cumsum - (cumsum.diff().fillna(energy['Remainder']) / 2)
-        for kwh, (label, y) in zip(energy.values, iteritems(text_ys)):
+        for kwh, (label, y) in zip(energy.values, text_ys.items()):
             label += " ({:.2f})".format(kwh)
             ax.annotate(label, (0, y), color='white', size=8,
                         horizontalalignment='center', 
@@ -1645,7 +1643,7 @@ class MeterGroup(Electric):
         meters = [self[meter_key] for meter_key in meter_keys]
         for i, (ax, meter) in enumerate(zip(axes, meters)):
             kwargs_copy = deepcopy(kwargs)
-            for parameter, arguments in iteritems(kwargs_per_meter):
+            for parameter, arguments in kwargs_per_meter.items():
                 kwargs_copy[parameter] = arguments[i]
             getattr(meter, plot_func)(ax=ax, **kwargs_copy)
             ax.set_title(meter.label(pretty=pretty_label))

@@ -1,4 +1,3 @@
-from __future__ import print_function, division
 import pickle
 from collections import OrderedDict, deque
 import numpy as np

@@ -1,4 +1,3 @@
-from __future__ import print_function, division
 import itertools
 from copy import deepcopy
 from collections import OrderedDict
@@ -12,10 +11,6 @@ from hmmlearn import hmm
 from nilmtk.feature_detectors import cluster
 from nilmtk.disaggregate import Disaggregator
 from nilmtk.datastore import HDFDataStore
-
-# Python 2/3 compatibility
-from six import iteritems, iterkeys
-from builtins import range
 
 def sort_startprob(mapping, startprob):
     """ Sort the startprob according to power means; as returned by mapping
@@ -261,7 +256,7 @@ class FHMM(Disaggregator):
                 print("Not enough samples for %s" % appliance)
 
         new_learnt_models = OrderedDict()
-        for appliance, appliance_model in iteritems(models):
+        for appliance, appliance_model in models.items():
             startprob, means, covars, transmat = sort_learnt_parameters(
                 appliance_model.startprob_, appliance_model.means_,
                 appliance_model.covars_, appliance_model.transmat_)
@@ -274,7 +269,7 @@ class FHMM(Disaggregator):
         self.individual = new_learnt_models
         self.model = learnt_model_combined
         self.meters = [nilmtk.global_meter_group.select_using_appliances(type=appliance).meters[0]
-                       for appliance in iterkeys(self.individual)]
+                       for appliance in self.individual.keys()]
 
     def train(self, metergroup, num_states_dict={}, **load_kwargs):
         """Train using 1d FHMM.
@@ -389,7 +384,7 @@ class FHMM(Disaggregator):
 
         # Model
         means = OrderedDict()
-        for elec_meter, model in iteritems(self.individual):
+        for elec_meter, model in self.individual.items():
             means[elec_meter] = (
                 model.means_.round().astype(int).flatten().tolist())
             means[elec_meter].sort()

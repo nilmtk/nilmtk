@@ -1,5 +1,3 @@
-#!/usr/bin/python
-from __future__ import print_function, division
 import unittest
 from ..node import find_unsatisfied_requirements
 

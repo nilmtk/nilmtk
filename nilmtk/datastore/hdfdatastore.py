@@ -1,7 +1,5 @@
-from __future__ import print_function, division
 from copy import deepcopy
 from os.path import isfile
-from builtins import range
 import warnings
 
 import numpy as np
@@ -11,10 +9,6 @@ from nilmtk.timeframe import TimeFrame
 from nilmtk.timeframegroup import TimeFrameGroup
 from .datastore import DataStore, MAX_MEM_ALLOWANCE_IN_BYTES
 from nilmtk.docinherit import doc_inherit
-
-# do not edit! added by PythonBreakpoints
-from pdb import set_trace as _breakpoint
-
 
 class HDFDataStore(DataStore):
 
@@ -104,6 +98,7 @@ class HDFDataStore(DataStore):
                 section_start_i = coords[0]
                 section_end_i   = coords[-1]
                 del coords
+
             slice_starts = range(section_start_i, section_end_i, chunksize)
             n_chunks = int(np.ceil((section_end_i - section_start_i) / chunksize))
 

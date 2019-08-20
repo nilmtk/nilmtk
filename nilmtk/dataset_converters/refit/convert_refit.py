@@ -13,7 +13,6 @@ http://dx.doi.org/10.1038/sdata.2016.122
 
 '''
 
-from __future__ import print_function, division
 import pandas as pd
 import numpy as np
 from copy import deepcopy

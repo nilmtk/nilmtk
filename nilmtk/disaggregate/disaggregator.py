@@ -1,4 +1,3 @@
-from __future__ import print_function, division
 from datetime import datetime
 from nilmtk.timeframe import merge_timeframes, TimeFrame
 

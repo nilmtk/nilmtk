@@ -1,5 +1,4 @@
 from copy import deepcopy
-from six import iteritems
 from nilm_metadata import recursively_update_dict
 
 class Node(object):
@@ -112,7 +111,7 @@ def find_unsatisfied_requirements(state, requirements):
 
     def unsatisfied_requirements(st, req):
         # Recursively find requirements
-        for key, value in iteritems(req):
+        for key, value in req.items():
             try:
                 cond_value = st[key]
             except KeyError:

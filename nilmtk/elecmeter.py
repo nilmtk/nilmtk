@@ -1,10 +1,8 @@
-from __future__ import print_function, division
 from warnings import warn
 from collections import namedtuple
 from copy import deepcopy
 import numpy as np
 import pandas as pd
-from six import iteritems
 from .preprocessing import Clip
 from .stats import TotalEnergy, GoodSections, DropoutRate
 from .hashable import Hashable
@@ -322,7 +320,7 @@ class ElecMeter(Hashable, Electric):
             raise TypeError()
 
         match = True
-        for k, v in iteritems(key):
+        for k, v in key.items():
             if hasattr(self.identifier, k):
                 if getattr(self.identifier, k) != v:
                     match = False
