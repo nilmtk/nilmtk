@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/nilmtk/nilmtk.svg?branch=master)](https://travis-ci.org/nilmtk/nilmtk)
+[![Build Status](https://travis-ci.org/nilmtk/nilmtk.svg?branch=master)](https://travis-ci.org/nilmtk/nilmtk) [![Install with conda](https://anaconda.org/nilmtk/nilmtk/badges/installer/conda.svg)](https://anaconda.org/nilmtk/nilmtk) [![conda package version](https://anaconda.org/nilmtk/nilmtk/badges/version.svg)](https://anaconda.org/nilmtk/nilmtk)
 
 # NILMTK: Non-Intrusive Load Monitoring Toolkit
 
