@@ -412,7 +412,6 @@ class MeterGroup(Electric):
         MeterGroup
         """
         meter_ids = list(meter_ids)
-        meter_ids = list(set(meter_ids))  # make unique
         meters = []
 
         def append_meter_group(meter_id):
@@ -424,7 +423,13 @@ class MeterGroup(Electric):
                 metergroup = self.from_list(meter_id.meters)
             meters.append(metergroup)
 
+        already_processed = set()
         for meter_id in meter_ids:
+            if meter_id in already_processed:
+                continue
+
+            already_processed.add(meter_id)
+
             if isinstance(meter_id, ElecMeterID):
                 meters.append(self[meter_id])
             elif isinstance(meter_id, MeterGroupID):
@@ -434,6 +439,7 @@ class MeterGroup(Electric):
                 append_meter_group(meter_id)
             else:
                 raise TypeError()
+
         return MeterGroup(meters)
 
     @classmethod
