@@ -29,6 +29,7 @@ install:
 script:
   - python -c 'from nilmtk.utils import show_versions; show_versions()'
   - nosetests
+  - bash ci/build_conda_package.sh
 
 after_script:
   - source deactivate
