@@ -75,3 +75,12 @@ After Anaconda has been installed, open up the terminal (Unix) or Anaconda promp
 	```
     
 We recommend checking the [Anaconda documentation about environments](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html) if the concept is new to you.
+
+
+# Conda development snapshots
+
+If you want to try out tagged development versions, you can follow the normal installation guide but use the following command for the NILMTK installation (step 4):
+
+	```bash
+    conda install -c nilmtk -c nilmtk/label/dev nilmtk
+	```
