@@ -37,7 +37,7 @@ else:
 
 
 FULLVERSION = VERSION
-if not ENV_VERSION or not ISRELEASED:
+if not TRAVIS_TAG or not ISRELEASED:
     try:
         import subprocess
         try:
