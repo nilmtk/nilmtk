@@ -26,6 +26,7 @@ TRAVIS_TAG = os.environ.get('TRAVIS_TAG', '')
 if TRAVIS_TAG:
     #TODO: validate if the tag is a valid version number
     VERSION = TRAVIS_TAG
+    ISRELEASED = not ('dev' in TRAVIS_TAG)
 else:
     MAJOR = 0
     MINOR = 4
@@ -37,7 +38,7 @@ else:
 
 
 FULLVERSION = VERSION
-if not TRAVIS_TAG or not ISRELEASED:
+if not ISRELEASED and not TRAVIS_TAG:
     try:
         import subprocess
         try:
