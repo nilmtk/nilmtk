@@ -5,7 +5,7 @@ import pandas as pd
 from .testingtools import data_dir
 from nilmtk.datastore import HDFDataStore
 from nilmtk import DataSet
-from nilmtk.disaggregate import CombinatorialOptimisation
+from nilmtk.legacy.disaggregate import CombinatorialOptimisation
 
 
 class TestCO(unittest.TestCase):

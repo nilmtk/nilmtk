@@ -8,9 +8,9 @@ import pandas as pd
 import numpy as np
 from hmmlearn import hmm
 
-from nilmtk.feature_detectors import cluster
-from nilmtk.disaggregate import Disaggregator
-from nilmtk.datastore import HDFDataStore
+from ...feature_detectors import cluster
+from . import Disaggregator
+from ...datastore import HDFDataStore
 
 def sort_startprob(mapping, startprob):
     """ Sort the startprob according to power means; as returned by mapping

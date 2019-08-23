@@ -4,7 +4,7 @@ from os import remove
 from .testingtools import data_dir
 from nilmtk.datastore import HDFDataStore
 from nilmtk import DataSet
-from nilmtk.disaggregate import FHMM
+from nilmtk.legacy.disaggregate import FHMM
 
 
 class TestFHMM(unittest.TestCase):
