@@ -21,16 +21,23 @@ import sys
 import warnings
 # import numpy
 
-MAJOR = 0
-MINOR = 4
-MICRO = 0
-DEV = 1 # For multiple dev pre-releases, please increment this value
-ISRELEASED = False
-VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
-QUALIFIER = ''
+TRAVIS_TAG = os.environ.get('TRAVIS_TAG', '')
+
+if TRAVIS_TAG:
+    #TODO: validate if the tag is a valid version number
+    VERSION = TRAVIS_TAG
+else:
+    MAJOR = 0
+    MINOR = 4
+    MICRO = 0
+    DEV = 1 # For multiple dev pre-releases, please increment this value
+    ISRELEASED = False
+    VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
+    QUALIFIER = ''
+
 
 FULLVERSION = VERSION
-if not ISRELEASED:
+if not ENV_VERSION or not ISRELEASED:
     try:
         import subprocess
         try:
