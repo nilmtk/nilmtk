@@ -1,4 +1,4 @@
-if [ -n "$TRAVIS_TAG" ]; then # only run conda-build on tags, takes too long
+if [ -n "$TRAVIS_TAG" ]; then # only run conda-build on tags, sometimes takes too long
     echo Building conda package...
     conda install conda-build anaconda-client
     conda update -q conda-build
@@ -13,7 +13,7 @@ if [ -n "$TRAVIS_TAG" ]; then # only run conda-build on tags, takes too long
     conda config --add channels nilmtk
     
     # Replace version with the tag
-    sed -i 's/version: "0\.4\.0\.dev1"/version: "$TRAVIS_TAG"/g' conda/meta.yml
+    sed -i "s/0\.4\.0\.dev1/$TRAVIS_TAG/g" conda/meta.yaml
     
     conda-build --quiet --no-test --output-folder "$ARTIFACTS_FOLDER" conda 
 

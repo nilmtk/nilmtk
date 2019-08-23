@@ -27,6 +27,7 @@ if TRAVIS_TAG:
     #TODO: validate if the tag is a valid version number
     VERSION = TRAVIS_TAG
     ISRELEASED = not ('dev' in TRAVIS_TAG)
+    QUALIFIER = ''
 else:
     MAJOR = 0
     MINOR = 4
