@@ -173,5 +173,5 @@ def hart85_means_shift_cluster(pair_buffer_df, columns):
     ms.fit(X)
     labels = ms.labels_
     cluster_centers = ms.cluster_centers_
-    labels_unique = np.unique(labels)
+    np.unique(labels)
     return pd.DataFrame(cluster_centers, columns=columns)

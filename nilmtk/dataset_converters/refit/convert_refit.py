@@ -14,19 +14,13 @@ http://dx.doi.org/10.1038/sdata.2016.122
 '''
 
 import pandas as pd
-import numpy as np
-from copy import deepcopy
-from os.path import join, isdir, isfile
-from os import listdir
-import fnmatch
-import re
+from os.path import join
 from sys import stdout
 from nilmtk.utils import get_datastore
 from nilmtk.datastore import Key
-from nilmtk.timeframe import TimeFrame
 from nilmtk.measurement import LEVEL_NAMES
 from nilmtk.utils import get_module_directory, check_directory_exists
-from nilm_metadata import convert_yaml_to_hdf5, save_yaml_to_datastore
+from nilm_metadata import save_yaml_to_datastore
 
 
 def convert_refit(input_path, output_filename, format='HDF'):

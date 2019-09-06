@@ -1,4 +1,4 @@
-from collections import namedtuple, OrderedDict
+from collections import namedtuple
 import pandas as pd
 from .metergroup import MeterGroup
 from .datastore.datastore import join_key

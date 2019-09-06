@@ -2,7 +2,6 @@ import pandas as pd
 from datetime import timedelta
 from nilmtk.tests.testingtools import data_dir
 from os.path import join
-import itertools
 from collections import OrderedDict
 import numpy as np
 from nilmtk.consts import JOULES_PER_KWH

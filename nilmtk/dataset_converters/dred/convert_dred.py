@@ -9,24 +9,13 @@ Official Website :- http://www.st.ewi.tudelft.nl/~akshay/dred/
 '''
 
 import pandas as pd
-import numpy as np
-from copy import deepcopy
-from os.path import join, isdir, isfile
-from os import listdir
-import fnmatch
-import re
+from os.path import join
 from sys import stdout
 from nilmtk.utils import get_datastore
 from nilmtk.datastore import Key
-from nilmtk.timeframe import TimeFrame
 from nilmtk.measurement import LEVEL_NAMES
-from nilmtk.utils import get_module_directory, check_directory_exists
-from nilm_metadata import convert_yaml_to_hdf5, save_yaml_to_datastore
-import pickle
-import glob
-import numpy as np
-import time
-from datetime import datetime
+from nilmtk.utils import get_module_directory
+from nilm_metadata import save_yaml_to_datastore
 
 
 def convert_dred(input_path, output_filename, format='HDF'):

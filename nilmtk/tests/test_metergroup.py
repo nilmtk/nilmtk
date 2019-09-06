@@ -3,7 +3,6 @@ from os.path import join
 from nilmtk.tests.testingtools import data_dir
 from nilmtk import (Appliance, MeterGroup, ElecMeter, HDFDataStore, 
                     global_meter_group, TimeFrame, DataSet)
-from nilmtk.utils import tree_root, nodes_adjacent_to_root
 from nilmtk.elecmeter import ElecMeterID
 from nilmtk.building import BuildingID
 
@@ -71,7 +70,7 @@ class TestMeterGroup(unittest.TestCase):
             meter = ElecMeter(self.datastore, meter_meta, meter_id)
             meters.append(meter)
 
-        mains = meters[0]
+        meters[0]
         mg = MeterGroup(meters)
         self.assertEqual(mg.proportion_of_energy_submetered(), 1.0) 
         # Check a second time to check cache works

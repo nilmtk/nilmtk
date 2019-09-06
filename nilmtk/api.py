@@ -1,10 +1,8 @@
-import datetime
 from sklearn.metrics import mean_squared_error, mean_absolute_error, f1_score
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from .dataset import DataSet
-from .metergroup import MeterGroup
 from .disaggregate import (
     CombinatorialOptimisation,
     Mean,
@@ -338,7 +336,7 @@ class API:
                 )
 
         # store train submeters reading
-        train_buildings = pd.DataFrame()
+        pd.DataFrame()
         for appliance in self.appliances:
             train_df = pd.DataFrame()
             print("For appliance .. ", appliance)

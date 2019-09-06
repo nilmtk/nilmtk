@@ -1,7 +1,5 @@
-from os.path import join, isdir, dirname, abspath
-from os import getcwd
+from os.path import join
 import os
-from sys import getfilesystemencoding
 from collections import OrderedDict
 import pandas as pd
 from nilm_metadata import convert_yaml_to_hdf5

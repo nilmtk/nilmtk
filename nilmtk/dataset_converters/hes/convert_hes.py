@@ -2,7 +2,6 @@ from os.path import join
 import pandas as pd
 import numpy as np
 from nilmtk.utils import get_module_directory
-from nilmtk import DataSet
 from nilmtk.utils import get_datastore
 from nilmtk.datastore import Key
 from nilmtk.measurement import LEVEL_NAMES
@@ -108,7 +107,7 @@ def convert_hes(data_dir, output_filename, format='HDF', max_chunks=None):
     # load list of houses
     hes_house_ids = load_list_of_house_ids(data_dir)
     nilmtk_house_ids = np.arange(1, len(hes_house_ids) + 1)
-    hes_to_nilmtk_house_ids = dict(zip(hes_house_ids, nilmtk_house_ids))
+    dict(zip(hes_house_ids, nilmtk_house_ids))
 
     # array of hes_house_codes: nilmtk_building_code = house_codes.index(hes_house_code)
     house_codes = []

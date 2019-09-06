@@ -25,7 +25,6 @@ class TestMeasurement(unittest.TestCase):
                 cls(ac_type=bad_ac_type)
 
     def test_as_dataframe_columns(self):
-        N_ROWS = 5
         columns = []
 
         # Create columns using every permutation of ac_type and cumulative

@@ -1,19 +1,15 @@
 import pandas as pd
-import numpy as np
 from functools import reduce
-from copy import deepcopy
-from os.path import join, isdir, isfile
+from os.path import isdir, join
 from os import listdir
-import re
 import os
 import glob
 from sys import stdout
 from nilmtk.utils import get_datastore
 from nilmtk.datastore import Key
-from nilmtk.timeframe import TimeFrame
 from nilmtk.measurement import LEVEL_NAMES
 from nilmtk.utils import get_module_directory, check_directory_exists
-from nilm_metadata import convert_yaml_to_hdf5, save_yaml_to_datastore
+from nilm_metadata import save_yaml_to_datastore
 
 """
 TODO:
@@ -222,9 +218,8 @@ def _find_all_csv_paths(input_path, house_id, year):
     list of csv paths of data (with respect to a house and a particular year )
     """
     house_year_path = (input_path + '/' + 'Home' + house_id + '/' + year)
-    extension = 'csv'
     os.chdir(house_year_path)
-    csv_names = glob.glob(house_year_path + '/*.csv')
+    glob.glob(house_year_path + '/*.csv')
 
     txt_paths = glob.glob(house_year_path + '/*.txt')
 

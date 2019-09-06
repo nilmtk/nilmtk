@@ -1,13 +1,11 @@
-from os import listdir, getcwd
-from os.path import join, isdir, isfile, dirname, abspath
+from os import listdir
+from os.path import isdir, join
 import pandas as pd
 import numpy as np
-import datetime
 import time
 from nilmtk.datastore import Key
 from nilmtk.measurement import LEVEL_NAMES
 from nilm_metadata import convert_yaml_to_hdf5
-import warnings
 import numpy as np
 from io import StringIO
 from multiprocessing import Pool

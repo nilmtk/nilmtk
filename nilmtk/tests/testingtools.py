@@ -21,6 +21,6 @@ class WarningTestMixin(object):
     def assertWarns(self, warning, callable, *args, **kwds):
         with warnings.catch_warnings(record=True) as warning_list:
             warnings.simplefilter('always')
-            result = callable(*args, **kwds)
+            callable(*args, **kwds)
             self.assertTrue(any(item.category == warning for item in warning_list),
                             msg="Warning '{}' not raised.".format(warning))

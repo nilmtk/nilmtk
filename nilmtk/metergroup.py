@@ -17,20 +17,15 @@ from matplotlib import MatplotlibDeprecationWarning
 # NILMTK imports
 from .elecmeter import ElecMeter, ElecMeterID
 from .appliance import Appliance
-from .datastore.datastore import join_key
 from .utils import (tree_root, nodes_adjacent_to_root, simplest_type_for,
                     flatten_2d_list, convert_to_timestamp, normalise_timestamp,
                     print_on_line, convert_to_list, append_or_extend_list,
                     most_common, capitalise_first_letter)
-from .plots import plot_series
 from .measurement import (select_best_ac_type, AC_TYPES, LEVEL_NAMES,
                           PHYSICAL_QUANTITIES_TO_AVERAGE)
-from nilmtk.exceptions import MeasurementError
 from .electric import Electric
-from .timeframe import TimeFrame, split_timeframes
-from .preprocessing import Apply
+from .timeframe import split_timeframes
 from .datastore import MAX_MEM_ALLOWANCE_IN_BYTES
-from nilmtk.timeframegroup import TimeFrameGroup
 
 # MeterGroupID.meters is a tuple of ElecMeterIDs.  Order doesn't matter.
 # (we can't use a set because sets aren't hashable so we can't use 
@@ -703,7 +698,7 @@ class MeterGroup(Electric):
             self._convert_physical_quantity_and_ac_type_to_cols(**kwargs)['columns'],
             names=LEVEL_NAMES)
         freq = '{:d}S'.format(int(sample_period))
-        verbose = kwargs.get('verbose')
+        kwargs.get('verbose')
 
         # Check for empty sections
         sections = [section for section in sections if section]
@@ -1515,7 +1510,7 @@ class MeterGroup(Electric):
         meter_identifiers = list(self.identifier.meters)
         fig, ax = plt.subplots()
         for i, meter in enumerate(self.meters):
-            id_meter = meter.identifier
+            meter.identifier
             for chunk_when_on in meter.when_on(**load_kwargs):
                 series_to_plot = chunk_when_on[chunk_when_on==True]
                 if len(series_to_plot.index):

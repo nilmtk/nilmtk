@@ -5,7 +5,6 @@ from ..node import Node
 from ..utils import timedelta64_to_secs
 from ..consts import JOULES_PER_KWH
 from ..measurement import AC_TYPES
-from ..timeframe import TimeFrame
 
 
 class TotalEnergy(Node):

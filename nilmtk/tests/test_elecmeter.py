@@ -1,7 +1,6 @@
 import unittest
 from os.path import join
 import pandas as pd
-from datetime import timedelta
 from .testingtools import data_dir, WarningTestMixin
 from ..datastore import HDFDataStore
 from ..elecmeter import ElecMeter, ElecMeterID

@@ -44,7 +44,7 @@ class TestLocateGoodSections(unittest.TestCase):
                 source_node = meter.get_source_node(**kwargs)
                 good_sections = GoodSections(source_node)
                 good_sections.run()
-                combined = good_sections.results.simple()
+                good_sections.results.simple()
                 meter.clear_cache()
                 meter.good_sections(**kwargs)
                 meter.good_sections(**kwargs)

@@ -3,7 +3,6 @@ from warnings import warn
 import pandas as pd
 import numpy as np
 import pickle
-import copy
 
 from ...utils import find_nearest
 from ...feature_detectors import cluster

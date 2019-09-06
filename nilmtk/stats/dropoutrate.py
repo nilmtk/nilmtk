@@ -1,6 +1,5 @@
 import numpy as np
 from ..node import Node
-from ..exceptions import TooFewSamplesError
 from ..utils import get_index 
 from .dropoutrateresults import DropoutRateResults
 

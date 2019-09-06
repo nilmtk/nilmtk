@@ -371,7 +371,6 @@ class Hart85(Disaggregator):
             while i < len(values) - 1:
                 if values[i] == 1:
                     # print("A", values[i], i)
-                    on = True
                     i = i + 1
                     power[i] = self.centroids.loc[appliance].values
                     while values[i] != 0 and i < len(values) - 1:
@@ -380,7 +379,6 @@ class Hart85(Disaggregator):
                         i = i + 1
                 elif values[i] == 0:
                     # print("C", values[i], i)
-                    on = False
                     i = i + 1
                     power[i] = 0
                     while values[i] != 1 and i < len(values) - 1:
@@ -397,7 +395,6 @@ class Hart85(Disaggregator):
                     # use that. Else, it defaults to 0
                     if prev[appliance] == -1 or prev[appliance] == 0:
                         # print("F", values[i], i)
-                        on = False
                         power[i] = 0
                         while values[i] != 1 and i < len(values) - 1:
                             # print("G", values[i], i)
@@ -408,7 +405,6 @@ class Hart85(Disaggregator):
                             i = i + 1
                     else:
                         # print("H", values[i], i)
-                        on = True
                         power[i] = self.centroids.loc[appliance].values
                         while values[i] != 0 and i < len(values) - 1:
                             # print("I", values[i], i)
@@ -539,7 +535,6 @@ class Hart85(Disaggregator):
 
         """
 
-        rms_error = {}
         submeters_df = submeters.dataframe_of_meters()
         new_df = pd.merge(
             pred_df,
@@ -558,7 +553,6 @@ class Hart85(Disaggregator):
                             new_df[appliance])))
                 rmse[appliance] = temp_value
             rmse_all.append(rmse)
-        match = []
         for i in range(len(rmse_all)):
             key_min = min(rmse_all[i].keys(), key=(lambda k: rmse_all[i][k]))
             print('Best Matched Pair is', (i, key_min))
