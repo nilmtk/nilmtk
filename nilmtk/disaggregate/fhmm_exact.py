@@ -188,13 +188,13 @@ class FHMM_EXACT(Disaggregator):
 		self.app_names = []
 
 	def partial_fit(self, train_main, train_appliances, **load_kwargs):
-        """Fits the model
+		"""Fits the model
 
-        Attributes
-        ----------
-        train_main: List of mains dataframes
-        train_appliances: List of tuples, where each tuple is (appliance_name, List of appliance data frames)
-        """
+		Attributes
+		----------
+		train_main: List of mains dataframes
+		train_appliances: List of tuples, where each tuple is (appliance_name, List of appliance data frames)
+		"""
 		print(".........................FHMM partial_fit.................")
 
 		train_main = pd.concat(train_main, axis=0)
@@ -281,12 +281,12 @@ class FHMM_EXACT(Disaggregator):
 		For now assuming there is no missing data at this stage.
 
 		Parameters
-        ----------
-        test_mains: List of mains dataframes
+		----------
+		test_mains: List of mains dataframes
 
-        Returns
-        -------
-        For each mains dataframe, it returns the predictions dataframe. The predictions dataframe has appliances as columns and has a predictions corresponding to each row of the mains dataframe.
+		Returns
+		-------
+		For each mains dataframe, it returns the predictions dataframe. The predictions dataframe has appliances as columns and has a predictions corresponding to each row of the mains dataframe.
 
 
 
