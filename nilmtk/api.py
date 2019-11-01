@@ -76,9 +76,10 @@ class API():
 
             # If the model has the filename specified for loading the pretrained model, then we don't need to load training data
 
-            if clf.load_model_path:
-                print (clf.MODEL_NAME," is loading the pretrained model")
-                continue
+            if hasattr(clf,'load_model_path'):
+                if clf.load_model_path:
+                    print (clf.MODEL_NAME," is loading the pretrained model")
+                    continue
 
             # if user wants to train chunk wise
             if self.chunk_size:
