@@ -17,7 +17,9 @@ class Mean(Disaggregator):
             self.load_model(self.load_model_path)
 
     def partial_fit(self, train_main, train_appliances, **load_kwargs):
+
         for app_name, power in train_appliances:
+            print ("Training %s in %s model".format(app_name, self.MODEL_NAME), end="\r")
             power_ = pd.concat(power, axis=0)
             app_dict = self.model.get(app_name, {'sum': 0,'n_elem': 0})
             app_dict['sum'] += int(np.nansum(power_.values))
@@ -40,10 +42,10 @@ class Mean(Disaggregator):
     def save_model(self, folder_name):
         string_to_save = json.dumps(self.model)
         os.makedirs(folder_name, exist_ok=True)
-        with open(os.path.join(folder_name, "model.txt", "w")) as f:
+        with open(os.path.join(folder_name, "model.txt") ,"w") as f:
             f.write(string_to_save)
 
     def load_model(self, folder_name):
-        with open(os.path.join(folder_name, "model.txt", "r")) as f:
+        with open(os.path.join(folder_name, "model.txt") ,"w") as f:
             model_string = f.read().strip()
             self.model = json.loads(model_string)
