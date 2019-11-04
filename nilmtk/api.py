@@ -1,7 +1,6 @@
 from nilmtk.dataset import DataSet
 from nilmtk.metergroup import MeterGroup
 import pandas as pd
-from six import iteritems
 from nilmtk.losses import *
 import numpy as np
 import matplotlib.pyplot as plt
@@ -10,10 +9,8 @@ from IPython.display import clear_output
 
 
 class API():
-
     """
-    The API ia designed for rapid experimentation with NILM Algorithms. 
-
+    The API is designed for rapid experimentation with NILM Algorithms. 
     """
 
     def __init__(self,params):
@@ -72,13 +69,13 @@ class API():
 
         for model_name, clf in self.classifiers:
             # If the model is a neural net, it has an attribute n_epochs, Ex: DAE, Seq2Point
-            print ("Started training for ",clf.MODEL_NAME)
+            print("Started training for ",clf.MODEL_NAME)
 
             # If the model has the filename specified for loading the pretrained model, then we don't need to load training data
 
             if hasattr(clf,'load_model_path'):
                 if clf.load_model_path:
-                    print (clf.MODEL_NAME," is loading the pretrained model")
+                    print(clf.MODEL_NAME," is loading the pretrained model")
                     continue
 
             # if user wants to train chunk wise
@@ -93,37 +90,36 @@ class API():
                         # If it doesn't have the attribute n_epochs, this is executed. Ex: Mean, Zero
                         n_epochs = 1
                     # Training on those many chunks for those many epochs
-                    print ("Chunk wise training for ",clf.MODEL_NAME)
+                    print("Chunk wise training for ",clf.MODEL_NAME)
                     for i in range(n_epochs):
                         self.train_chunk_wise(clf,d) 
 
                 else:
-                    print ("Joint training for ",clf.MODEL_NAME)
+                    print("Joint training for ",clf.MODEL_NAME)
                     self.train_jointly(clf,d)            
 
             # if it doesn't support chunk wise training
             else:
-                print ("Joint training for ",clf.MODEL_NAME)
+                print("Joint training for ",clf.MODEL_NAME)
                 self.train_jointly(clf,d)            
 
-            print ("Finished training for ",clf.MODEL_NAME)
+            print("Finished training for ",clf.MODEL_NAME)
             clear_output()
 
         d=self.test_datasets_dict
 
         if self.chunk_size:
-            print ("Chunk Wise Testing for all algorithms")
+            print("Chunk Wise Testing for all algorithms")
             # It means that, predictions can also be done on chunks
             self.test_chunk_wise(d)
 
         else:
-            print ("Joint Testing for all algorithms")
+            print("Joint Testing for all algorithms")
             self.test_jointly(d)
 
 
         
     def train_chunk_wise(self,clf,d):
-
         """
         This function loads the data from buildings and datasets with the specified chunk size and trains on each of them. 
         """
@@ -156,7 +152,7 @@ class API():
                         train_df, appliance_readings = self.dropna(train_df, appliance_readings)
                     
                     if self.artificial_aggregate:
-                        print ("Creating an Artificial Aggregate")
+                        print("Creating an Artificial Aggregate")
                         train_df = pd.DataFrame(np.zeros(appliance_readings[0].shape),index = appliance_readings[0].index,columns=appliance_readings[0].columns)
                         for app_reading in appliance_readings:
                             train_df+=app_reading
@@ -198,7 +194,7 @@ class API():
                         test_df, appliance_readings = self.dropna(test_df, appliance_readings)
 
                     if self.artificial_aggregate:
-                        print ("Creating an Artificial Aggregate")
+                        print("Creating an Artificial Aggregate")
                         test_df = pd.DataFrame(np.zeros(appliance_readings[0].shape),index = appliance_readings[0].index,columns=appliance_readings[0].columns)
                         for app_reading in appliance_readings:
                             test_df+=app_reading
@@ -241,13 +237,13 @@ class API():
                     train_df, appliance_readings = self.dropna(train_df, appliance_readings)
 
                 if self.artificial_aggregate:
-                    print ("Creating an Artificial Aggregate")
+                    print("Creating an Artificial Aggregate")
                     train_df = pd.DataFrame(np.zeros(appliance_readings[0].shape),index = appliance_readings[0].index,columns=appliance_readings[0].columns)
                     for app_reading in appliance_readings:
                         train_df+=app_reading
 
-                print ("Train Jointly")
-                print (train_df.shape, appliance_readings[0].shape, train_df.columns,appliance_readings[0].columns )
+                print("Train Jointly")
+                print(train_df.shape, appliance_readings[0].shape, train_df.columns,appliance_readings[0].columns )
                 self.train_mains=self.train_mains.append(train_df)
                 for i,appliance_name in enumerate(self.appliances):
                     self.train_submeters[i] = self.train_submeters[i].append(appliance_readings[i])
@@ -282,7 +278,7 @@ class API():
 
 
                 if self.artificial_aggregate:
-                    print ("Creating an Artificial Aggregate")
+                    print("Creating an Artificial Aggregate")
                     test_mains = pd.DataFrame(np.zeros(appliance_readings[0].shape),index = appliance_readings[0].index,columns=appliance_readings[0].columns)
                     for app_reading in appliance_readings:
                         test_mains+=app_reading
@@ -300,7 +296,7 @@ class API():
         """
         Drops the missing values in the Mains reading and appliance readings and returns consistent data by copmuting the intersection
         """
-        print ("Dropping missing values")
+        print("Dropping missing values")
 
         # The below steps are for making sure that data is consistent by doing intersection across appliances
         mains_df = mains_df.dropna()
@@ -328,11 +324,11 @@ class API():
                 self.classifiers.append((name,clf))
 
             except Exception as e:
-                print ("\n\nThe method {model_name} specied does not exist. \n\n".format(model_name=name))
-                print (e)
+                print("\n\nThe method {model_name} specied does not exist. \n\n".format(model_name=name))
+                print(e)
+
     
     def call_predict(self,classifiers):
-
         """
         This functions computers the predictions on the self.test_mains using all the trained models and then compares different learn't models using the metrics specified
         """
@@ -346,7 +342,7 @@ class API():
         self.pred_overall=pred_overall
 
         if gt_overall.size==0:
-            print ("No samples found in ground truth")
+            print("No samples found in ground truth")
             return None
 
         for i in gt_overall.columns:
@@ -364,7 +360,7 @@ class API():
             try:
                 loss_function = globals()[metric]                
             except:
-                print ("Loss function ",metric, " is not supported currently!")
+                print("Loss function ",metric, " is not supported currently!")
                 continue
 
             computed_metric={}
@@ -376,16 +372,13 @@ class API():
             self.errors.append(computed_metric)
             self.errors_keys.append(self.storing_key + "_" + metric)
 
-
-
-                
                     
     def predict(self, clf, test_elec, test_submeters, sample_period, timezone):
-        print ("Generating predictions for :",clf.MODEL_NAME)        
         """
         Generates predictions on the test dataset using the specified classifier.
         """
         
+        print("Generating predictions for :", clf.MODEL_NAME)
         # "ac_type" varies according to the dataset used. 
         # Make sure to use the correct ac_type before using the default parameters in this code.   
         

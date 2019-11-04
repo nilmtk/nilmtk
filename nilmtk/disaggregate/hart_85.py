@@ -1,4 +1,3 @@
-from __future__ import print_function, division
 import numpy as np
 from collections import OrderedDict, deque
 import pandas as pd
@@ -7,13 +6,6 @@ import pickle
 from nilmtk.feature_detectors.cluster import hart85_means_shift_cluster
 from nilmtk.feature_detectors.steady_states import find_steady_states
 from nilmtk.disaggregate import Disaggregator
-
-
-# Fix the seed for repeatability of experiments
-SEED = 42
-
-np.random.seed(SEED)
-
 
 class MyDeque(deque):
     def popmiddle(self, pos):

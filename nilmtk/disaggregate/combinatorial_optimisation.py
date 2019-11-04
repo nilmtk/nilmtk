@@ -1,4 +1,3 @@
-from __future__ import print_function, division
 from warnings import warn
 
 import pandas as pd
@@ -10,10 +9,6 @@ from nilmtk.utils import find_nearest
 from nilmtk.feature_detectors import cluster
 from nilmtk.disaggregate import Disaggregator
 from nilmtk.datastore import HDFDataStore
-
-# Fix the seed for repeatability of experiments
-SEED = 42
-np.random.seed(SEED)
 
 
 class CO(Disaggregator):
