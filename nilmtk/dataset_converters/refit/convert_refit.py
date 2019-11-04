@@ -2,21 +2,23 @@
 REFIT dataset converter for the clean version avaiable at the URLs below:
 
 "REFIT: Electrical Load Measurements (Cleaned)"
-https://pure.strath.ac.uk/portal/en/datasets/refit-electrical-load-measurements-cleaned(9ab14b0e-19ac-4279-938f-27f643078cec).html
-https://pure.strath.ac.uk/portal/files/52873459/Processed_Data_CSV.7z
+https://pureportal.strath.ac.uk/en/datasets/refit-electrical-load-measurements-cleaned
+https://pureportal.strath.ac.uk/files/52873459/Processed_Data_CSV.7z
+https://pureportal.strath.ac.uk/files/62090184/CLEAN_REFIT_081116.7z
 
 The original version of the dataset include duplicated timestamps. 
 Check the dataset website for more information.
 
 For citation of the dataset, use:
 http://dx.doi.org/10.1038/sdata.2016.122
+https://doi.org/10.15129/9ab14b0e-19ac-4279-938f-27f643078cec
 
 '''
 
 import pandas as pd
 import numpy as np
 from copy import deepcopy
-from os.path import join, isdir, isfile
+from os.path import join, isdir, isfile, exists
 from os import listdir
 import fnmatch
 import re
@@ -81,11 +83,29 @@ def _convert(input_path, store, tz, sort_index=True):
     # house 14 is missing!
     houses = [1,2,3,4,5,6,7,8,9,10,11,12,13,15,16,17,18,19,20,21]
     nilmtk_house_id = 0
+    prefix = ''
+    suffix = '_'
+    version_checked = False
+    
     for house_id in houses:
         nilmtk_house_id += 1
         print("Loading house", house_id, end="... ")
         stdout.flush()
-        csv_filename = join(input_path, 'House_' + str(house_id) + '.csv')
+        csv_filename = join(input_path, prefix + 'House' + suffix + str(house_id) + '.csv')
+        if not version_checked:
+            version_checked = True
+            
+            if exists(csv_filename):
+                print('Using original filenames (House_XX.csv)')
+            else:
+                prefix = 'CLEAN_'
+                suffix = ''
+                csv_filename = join(input_path, prefix + 'House' + suffix + str(house_id) + '.csv')
+                print('Using CLEAN filenames (CLEAN_HouseXX.csv)')
+                
+        if not exists(csv_filename):
+            raise RuntimeError('Could not find REFIT files. Please check the provided folder.')
+        
         # The clean version already includes header, so we
         # just skip the text version of the timestamp
         usecols = ['Unix','Aggregate','Appliance1','Appliance2','Appliance3','Appliance4','Appliance5','Appliance6','Appliance7','Appliance8','Appliance9']
@@ -107,6 +127,7 @@ def _convert(input_path, store, tz, sort_index=True):
             chan_df.columns.set_names(LEVEL_NAMES, inplace=True)
             
             store.put(str(key), chan_df)
+            
         print('')
 
 def _load_csv(filename, usecols, tz):
