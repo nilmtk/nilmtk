@@ -1,7 +1,6 @@
 from nilmtk.dataset import DataSet
 from nilmtk.metergroup import MeterGroup
 import pandas as pd
-from six import iteritems
 from nilmtk.losses import *
 import numpy as np
 import matplotlib.pyplot as plt
