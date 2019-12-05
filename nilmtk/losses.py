@@ -1,4 +1,4 @@
-from sklearn.metrics import mean_squared_error, mean_absolute_error, f1_score
+from sklearn.metrics import mean_squared_error, mean_absolute_error, f1_score, r2_score
 import numpy as np
 
 def mae(app_gt,app_pred):
@@ -21,3 +21,23 @@ def relative_error(app_gt,app_pred):
     numerator = np.abs(app_gt - app_pred)
     denominator = constant + app_pred
     return np.mean(numerator/denominator)
+
+def r2score(app_gt,app_pred):
+    # https://scikit-learn.org/stable/modules/generated/sklearn.metrics.r2_score.html#sklearn.metrics.r2_score
+    return r2_score(app_gt, app_pred)
+
+def nde(app_gt,app_pred):
+    # Normalized Disaggregation Error (NDE)
+    # Inspired by http://proceedings.mlr.press/v22/zico12/zico12.pdf
+    numerator = np.sum((app_gt-app_pred)**2)
+    denominator = np.sum(app_gt**2)
+
+    return np.sqrt(numerator/denominator)
+
+def nep(app_gt,app_pred):
+    # Normalized Error in Assigned Power (NEP)
+    # Inspired by https://www.springer.com/gp/book/9783030307813
+    numerator = np.sum(np.abs(app_gt-app_pred))
+    denominator = np.sum(app_gt)
+
+    return numerator/denominator
