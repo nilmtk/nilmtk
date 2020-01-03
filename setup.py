@@ -106,7 +106,7 @@ setup(
     author_email='',
     url='https://github.com/nilmtk/nilmtk',
     download_url="https://github.com/nilmtk/nilmtk/tarball/master#egg=nilmtk-dev",
-    long_description=open('README.md').read(),
+    long_description=open('README.md', encoding="utf8").read(),
     license='Apache 2.0',
     classifiers=[
         'Development Status :: 3 - Alpha',
