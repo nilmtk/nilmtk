@@ -2,7 +2,6 @@
 Tools to help with testing.
 """
 
-from __future__ import print_function, division
 import os, inspect, warnings
 
 def data_dir():

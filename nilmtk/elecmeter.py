@@ -1,10 +1,8 @@
-from __future__ import print_function, division
 from warnings import warn
 from collections import namedtuple
 from copy import deepcopy
 import numpy as np
 import pandas as pd
-from six import iteritems
 from .preprocessing import Clip
 from .stats import TotalEnergy, GoodSections, DropoutRate
 from .hashable import Hashable
@@ -322,7 +320,7 @@ class ElecMeter(Hashable, Electric):
             raise TypeError()
 
         match = True
-        for k, v in iteritems(key):
+        for k, v in key.items():
             if hasattr(self.identifier, k):
                 if getattr(self.identifier, k) != v:
                     match = False
@@ -423,7 +421,14 @@ class ElecMeter(Hashable, Electric):
             resample_kwargs.setdefault('fill_method', 'ffill')
             resample_kwargs.setdefault('how', 'mean')
             if 'limit' not in resample_kwargs:
-                sample_period = kwargs.get('sample_period', self.sample_period())
+                default_sample_period = self.sample_period()
+                sample_period = kwargs.get('sample_period', default_sample_period)
+                
+                if default_sample_period is not None and sample_period < default_sample_period:
+                    warn("The provided sample_period ({}) is shorter than the meter's sample_period ({})".format(
+                        sample_period, default_sample_period
+                    ))
+
                 max_number_of_rows_to_ffill = int(
                     np.ceil(self.device['max_sample_period'] / sample_period))
                 resample_kwargs.update({'limit': max_number_of_rows_to_ffill})

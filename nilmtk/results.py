@@ -1,7 +1,6 @@
 import abc
 import pandas as pd
 import copy
-from six import iteritems
 from .timeframe import TimeFrame
 from nilmtk.utils import get_tz, tz_localize_naive
 
@@ -73,9 +72,9 @@ class Results(object):
         row = pd.DataFrame(index=[timeframe.start],
                            columns=['end'] + list(new_results))
         row['end'] = timeframe.end
-        for key, val in iteritems(new_results):
+        for key, val in new_results.items():
             row[key] = val
-        self._data = self._data.append(row, verify_integrity=True)
+        self._data = self._data.append(row, verify_integrity=True, sort=False)
         self._data.sort_index(inplace=True)
 
     def check_for_overlap(self):
@@ -106,7 +105,7 @@ class Results(object):
         if new_result._data.empty:
             return
 
-        self._data = self._data.append(new_result._data)
+        self._data = self._data.append(new_result._data, sort=False)
         self._data.sort_index(inplace=True)
         self.check_for_overlap()
 

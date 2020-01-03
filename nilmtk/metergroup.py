@@ -1,18 +1,18 @@
-from __future__ import print_function, division
+import warnings
+import gc
+from sys import stdout
+from collections import Counter
+from copy import copy, deepcopy
+from collections import namedtuple
+from datetime import timedelta
+
 import networkx as nx
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.sankey import Sankey 
 from matplotlib.ticker import FuncFormatter
-from datetime import timedelta
-from warnings import warn
-from sys import stdout
-from collections import Counter
-from copy import copy, deepcopy
-import gc
-from collections import namedtuple
-from six import iteritems, integer_types
+from matplotlib import MatplotlibDeprecationWarning
 
 # NILMTK imports
 from .elecmeter import ElecMeter, ElecMeterID
@@ -36,6 +36,7 @@ from nilmtk.timeframegroup import TimeFrameGroup
 # (we can't use a set because sets aren't hashable so we can't use 
 # a set as a dict key or a DataFrame column name.)
 MeterGroupID = namedtuple('MeterGroupID', ['meters'])
+
 
 class MeterGroup(Electric):
 
@@ -78,17 +79,17 @@ class MeterGroup(Electric):
         assert isinstance(appliances, list)
         assert isinstance(building_id, tuple)
         if not elec_meters:
-            warn("Building {} has an empty 'elec_meters' object."
+            warnings.warn("Building {} has an empty 'elec_meters' object."
                  .format(building_id.instance), RuntimeWarning)
         if not appliances:
-            warn("Building {} has an empty 'appliances' list."
+            warnings.warn("Building {} has an empty 'appliances' list."
                  .format(building_id.instance), RuntimeWarning)
 
         # Load static Meter Devices
         ElecMeter.load_meter_devices(store)
 
         # Load each meter
-        for meter_i, meter_metadata_dict in iteritems(elec_meters):
+        for meter_i, meter_metadata_dict in elec_meters.items():
             meter_id = ElecMeterID(instance=meter_i,
                                    building=building_id.instance,
                                    dataset=building_id.dataset)
@@ -268,10 +269,10 @@ class MeterGroup(Electric):
                                 .format(len(meters)))
             else:
                 raise KeyError(key)
-        elif isinstance(key, integer_types) and not isinstance(key, bool):
+        elif isinstance(key, int) and not isinstance(key, bool):
             meters_found = []
             for meter in self.meters:
-                if isinstance(meter.instance(), integer_types):
+                if isinstance(meter.instance(), int):
                     if meter.instance() == key:
                         meters_found.append(meter)
                 elif isinstance(meter.instance(), (tuple, list)):
@@ -411,7 +412,6 @@ class MeterGroup(Electric):
         MeterGroup
         """
         meter_ids = list(meter_ids)
-        meter_ids = list(set(meter_ids))  # make unique
         meters = []
 
         def append_meter_group(meter_id):
@@ -423,7 +423,13 @@ class MeterGroup(Electric):
                 metergroup = self.from_list(meter_id.meters)
             meters.append(metergroup)
 
+        already_processed = set()
         for meter_id in meter_ids:
+            if meter_id in already_processed:
+                continue
+
+            already_processed.add(meter_id)
+
             if isinstance(meter_id, ElecMeterID):
                 meters.append(self[meter_id])
             elif isinstance(meter_id, MeterGroupID):
@@ -433,6 +439,7 @@ class MeterGroup(Electric):
                 append_meter_group(meter_id)
             else:
                 raise TypeError()
+
         return MeterGroup(meters)
 
     @classmethod
@@ -594,6 +601,7 @@ class MeterGroup(Electric):
 
     def draw_wiring_graph(self, show_meter_labels=True):
         graph = self.wiring_graph()
+        
         try:
             # Try using graphviz layout...
             pos = nx.drawing.nx_agraph.graphviz_layout(graph, prog='dot')
@@ -606,7 +614,7 @@ class MeterGroup(Electric):
             
         meter_labels = {meter: meter.label() for meter in graph.nodes()}
         if show_meter_labels:
-            for meter, name in iteritems(meter_labels):
+            for meter, name in meter_labels.items():
                 x, y = pos[meter]
 
                 if used_graphviz:
@@ -617,7 +625,16 @@ class MeterGroup(Electric):
                     
                     plt.text(x, y + delta_y, s=name, bbox=dict(facecolor='red', alpha=0.5), horizontalalignment='center')
         
-        nx.draw(graph, pos, labels=meter_labels, arrows=False)
+
+        with warnings.catch_warnings():
+            #TODO: update networkx to 2.4 when it is released and remove this filter
+            warnings.simplefilter('ignore', category=MatplotlibDeprecationWarning)
+            if used_graphviz:
+                # meter_labels already drawn
+                nx.draw(graph, pos, arrows=False)
+            else:
+                nx.draw(graph, pos, labels=meter_labels, arrows=False)
+            
         ax = plt.gca()
         
         return graph, ax
@@ -866,7 +883,7 @@ class MeterGroup(Electric):
             collected_stats.append(single_stat)
             if (full_results and len(self.meters) > 1 and
                     not meter.store.all_sections_smaller_than_chunksize):
-                warn("at least one section requested from '{}' required"
+                warnings.warn("at least one section requested from '{}' required"
                      " multiple chunks to be loaded into memory. This may cause"
                      " a failure when we try to unify results from multiple"
                      " meters.".format(meter))
@@ -919,7 +936,7 @@ class MeterGroup(Electric):
         """
         if self.meters:
             if len(self.meters) > 1:
-                warn("As a quick implementation we only get Good Sections from"
+                warnings.warn("As a quick implementation we only get Good Sections from"
                      " the first meter in the meter group.  We should really"
                      " return the intersection of the good sections for all"
                      " meters.  This will be fixed...")
@@ -1586,7 +1603,7 @@ class MeterGroup(Electric):
 
         cumsum = energy.cumsum()
         text_ys = cumsum - (cumsum.diff().fillna(energy['Remainder']) / 2)
-        for kwh, (label, y) in zip(energy.values, iteritems(text_ys)):
+        for kwh, (label, y) in zip(energy.values, text_ys.items()):
             label += " ({:.2f})".format(kwh)
             ax.annotate(label, (0, y), color='white', size=8,
                         horizontalalignment='center', 
@@ -1632,7 +1649,7 @@ class MeterGroup(Electric):
         meters = [self[meter_key] for meter_key in meter_keys]
         for i, (ax, meter) in enumerate(zip(axes, meters)):
             kwargs_copy = deepcopy(kwargs)
-            for parameter, arguments in iteritems(kwargs_per_meter):
+            for parameter, arguments in kwargs_per_meter.items():
                 kwargs_copy[parameter] = arguments[i]
             getattr(meter, plot_func)(ax=ax, **kwargs_copy)
             ax.set_title(meter.label(pretty=pretty_label))

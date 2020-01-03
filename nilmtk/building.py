@@ -1,4 +1,3 @@
-from __future__ import print_function, division
 from collections import namedtuple, OrderedDict
 import pandas as pd
 from .metergroup import MeterGroup

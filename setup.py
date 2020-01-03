@@ -1,5 +1,5 @@
 """
-   Copyright 2013 nilmtk authors
+   Copyright 2013-2019 NILMTK developers
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -21,48 +21,25 @@ import sys
 import warnings
 # import numpy
 
-"""
-CYTHON_DIR = 'nilmtk/disaggregate/feature_detectors'
+TRAVIS_TAG = os.environ.get('TRAVIS_TAG', '')
 
-try:
-    # This trick adapted from 
-    # http://stackoverflow.com/a/4515279/732596
-    from Cython.Build import cythonize
-except ImportError:
-    use_cython = False
+if TRAVIS_TAG:
+    #TODO: validate if the tag is a valid version number
+    VERSION = TRAVIS_TAG
+    ISRELEASED = not ('dev' in TRAVIS_TAG)
+    QUALIFIER = ''
 else:
-    use_cython = True
+    MAJOR = 0
+    MINOR = 4
+    MICRO = 0
+    DEV = 1 # For multiple dev pre-releases, please increment this value
+    ISRELEASED = False
+    VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
+    QUALIFIER = ''
 
-if use_cython:
-    sources = [join(CYTHON_DIR, '_feature_detectors.pyx')]
-    extensions = [Extension("nilmtk.disaggregate._feature_detectors", 
-                            sources=sources,
-                            include_dirs=[numpy.get_include()])]
-    ext_modules = cythonize(extensions)
-else:
-    ext_modules = [
-        Extension("nilmtk.disaggregate._feature_detectors", 
-                  [join(CYTHON_DIR, '_feature_detectors.c')],
-                  include_dirs=[numpy.get_include()]),
-    ]
-
-"""
-
-"""
-Following Segment of this file was taken from the pandas project(https://github.com/pydata/pandas) 
-"""
-# Version Check
-
-MAJOR = 0
-MINOR = 3
-MICRO = 0
-ISRELEASED = False
-VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
-QUALIFIER = ''
 
 FULLVERSION = VERSION
-if not ISRELEASED:
-    FULLVERSION += '.dev'
+if not ISRELEASED and not TRAVIS_TAG:
     try:
         import subprocess
         try:
@@ -78,9 +55,11 @@ if not ISRELEASED:
         if sys.version_info[0] >= 3:
             rev = rev.decode('ascii')
 
-        FULLVERSION += "-%s" % rev
+        # Use a local version tag to include the git revision
+        FULLVERSION += ".dev{}+git.{}".format(DEV, rev)
     except:
-        warnings.warn("WARNING: Couldn't get git revision")
+        FULLVERSION += ".dev{}".format(DEV)
+        warnings.warn('WARNING: Could not get the git revision, version will be "{}"'.format(FULLVERSION))
 else:
     FULLVERSION += QUALIFIER
 
@@ -111,19 +90,19 @@ setup(
         'future',
         'six',
         'psycopg2-binary',
-        'pandas==0.22.0',
+        'pandas==0.24.2',
         'networkx==2.1',
         'scipy',
         'tables',
-        'scikit-learn==0.19.2',
+        'scikit-learn>=0.21.2',
         'hmmlearn>=0.2.1',
         'pyyaml',
-        'matplotlib>=2.2.0',
+        'matplotlib>=3.1.0',
         'jupyter'
     ],
     description='Estimate the energy consumed by individual appliances from '
                 'whole-house power meter readings',
-    author='nilmtk authors',
+    author='NILMTK developers',
     author_email='',
     url='https://github.com/nilmtk/nilmtk',
     download_url="https://github.com/nilmtk/nilmtk/tarball/master#egg=nilmtk-dev",

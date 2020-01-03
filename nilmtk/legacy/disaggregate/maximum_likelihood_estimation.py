@@ -1,7 +1,7 @@
 from datetime import datetime
 import pandas as pd
 import numpy as np
-from ..timeframe import merge_timeframes, TimeFrame
+from ...timeframe import merge_timeframes, TimeFrame
 from .disaggregator import Disaggregator
 from matplotlib import pyplot as plt
 from datetime import timedelta

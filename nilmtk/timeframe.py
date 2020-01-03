@@ -1,10 +1,8 @@
-from __future__ import print_function, division
 import pandas as pd
 import pytz
 from datetime import timedelta
 from copy import deepcopy
 from warnings import warn
-from six import iteritems
 from functools import total_ordering
 
 
@@ -43,7 +41,7 @@ class TimeFrame(object):
                     self._end = self._end.tz_localize(tz)
 
     def copy_constructor(self, other):
-        for key, value in iteritems(other.__dict__):
+        for key, value in other.__dict__.items():
             setattr(self, key, value)
 
     def clear(self):

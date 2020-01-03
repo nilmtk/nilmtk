@@ -1,22 +1,18 @@
-from __future__ import print_function, division
-import numpy as np
-import pandas as pd
-import networkx as nx
 from os.path import isdir, dirname, abspath
 from os import getcwd
 from inspect import currentframe, getfile, getsourcefile
 from sys import getfilesystemencoding, stdout
-from IPython.core.display import HTML, display
-from collections import OrderedDict
-import datetime
+from collections import OrderedDict, defaultdict
+import datetime, re
 import pytz
-from nilmtk.datastore import HDFDataStore, CSVDataStore
 import warnings
+import numpy as np
+import pandas as pd
+import networkx as nx
+from IPython.core.display import HTML, display
+from sklearn.metrics import mean_squared_error
 
-# Python 2/3 compatibility
-from six import iteritems
-from past.builtins import basestring
-
+from nilmtk.datastore import HDFDataStore, CSVDataStore
 
 def show_versions():
     """Prints versions of various dependencies"""
@@ -48,7 +44,7 @@ def show_versions():
     else:
         print("")
 
-    for k, v in iteritems(output):
+    for k, v in output.items():
         print("{}: {}".format(k, v))
 
 
@@ -137,7 +133,7 @@ def find_nearest(known_array, test_array):
 
 
 def container_to_string(container, sep='_'):
-    if isinstance(container, basestring):
+    if isinstance(container, str):
         string = container
     else:
         try:
@@ -160,7 +156,7 @@ def simplest_type_for(values):
 def flatten_2d_list(list2d):
     list1d = []
     for item in list2d:
-        if isinstance(item, basestring):
+        if isinstance(item, str):
             list1d.append(item)
         else:
             try:
@@ -221,8 +217,8 @@ def get_module_directory():
 def dict_to_html(dictionary):
     def format_string(value):
         try:
-            if isinstance(value, basestring) and 'http' in value:
-                html = '<a href="{url}">{url}</a>'.format(url=value)
+            if isinstance(value, str) and 'http' in value:
+                html = re.sub(r'(http[^\s\)]+)', r'<a href="\1">\1</a>', value)
             else:
                 html = '{}'.format(value)
         except UnicodeEncodeError:
@@ -230,7 +226,7 @@ def dict_to_html(dictionary):
         return html
 
     html = '<ul>'
-    for key, value in iteritems(dictionary):
+    for key, value in dictionary.items():
         html += '<li><strong>{}</strong>: '.format(key)
         if isinstance(value, list):
             html += '<ul>'
@@ -294,7 +290,7 @@ def timestamp_is_naive(timestamp):
     -------
     True if `timestamp` is naive (i.e. if it does not have a
     timezone associated with it).  See:
-    https://docs.python.org/2/library/datetime.html#available-types
+    https://docs.python.org/3/library/datetime.html#available-types
     """
     if timestamp.tzinfo is None:
         return True
@@ -383,6 +379,84 @@ def capitalise_legend(ax):
     return ax
 
 
+def compute_rmse(ground_truth, predictions, pretty=True):
+    """
+    Compute the RMS error between the time-series of appliance
+    ground truth values and predicted values.
+
+    Parameters
+    ----------
+    ground_truth : `pandas.DataFrame` containing the ground truth series 
+                  for the appliances.
+    
+    predictions : `pandas.DataFrame` containing the predicted time-series
+                  for each appliance. If a appliance is present in 
+                  `ground_truth` but absent in `predictions` (or only
+                  contains NA values), it is not listed in the output.
+    
+    pretty : If `True`, tries to use the appliance labels if possible. If
+             a type of appliance is present more than once, resulting in
+             duplicate labels, building and instance number are added 
+             to differentiate them. 
+    
+    Returns
+    -------
+    pandas.Series with the RMSe for each appliance
+    """ 
+    
+    # This was initially added to simplify examples, see #652.
+    
+    rms_error = []
+    app_counts = defaultdict(int)
+    for app_idx, app in enumerate(ground_truth.columns):
+        if pretty:
+            try:
+                app_label = app.label()
+            except:
+                pretty = False
+                app_label = app
+        else:
+            app_label = app
+        
+        gt_app = ground_truth.iloc[:, app_idx]
+        pred_app = predictions.iloc[:, app_idx]
+        if pred_app.empty: 
+            continue
+            
+        df_app = pd.DataFrame({'gt': gt_app, 'pr': pred_app}, index=gt_app.index).dropna()
+        
+        if not df_app.empty:
+            app_rms_error = np.sqrt(mean_squared_error(df_app['gt'], df_app['pr']))
+        else:
+            app_rms_error = np.NaN
+
+        if pretty:
+            app_counts[app_label] += 1
+            
+        rms_error.append([app, app_label, app_rms_error])
+
+    if pretty:
+        for current_label, current_count in app_counts.items():
+            if current_count < 2:
+                continue
+
+            # A loop should be fine for such small lists
+            for app_data in rms_error:
+                if app_data[1] != current_label:
+                    continue
+
+                app = app_data[0]
+                app_data[1] = '{} ({}, {})'.format(
+                    current_label,
+                    app.building,
+                    app.instance
+                )
+            
+    return pd.Series(dict(
+        (item[1], item[2]) for item in rms_error
+    ))
+
+
 def safe_resample(data, **resample_kwargs):
     if data.empty:
         return data
@@ -422,6 +496,8 @@ def safe_resample(data, **resample_kwargs):
 
     try:
         dups_in_index = data.index.duplicated(keep='first')
+
+        #TODO: remove this after validation tests are ready
         if dups_in_index.any():
             warnings.warn("Found duplicate index. Keeping first value")
             data = data[~dups_in_index]

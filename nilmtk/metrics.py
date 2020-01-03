@@ -34,7 +34,6 @@ Functions
 
 '''
 
-from __future__ import print_function, division
 import numpy as np
 import pandas as pd
 import math
@@ -210,10 +209,6 @@ def f1_score(predictions, ground_truth):
     '''
     # If we import sklearn at top of file then sphinx breaks.
     from sklearn.metrics import f1_score as sklearn_f1_score
-
-    # sklearn produces lots of DepreciationWarnings with PyTables
-    import warnings
-    warnings.filterwarnings("ignore", category=DeprecationWarning)
 
     f1_scores = {}
     both_sets_of_meters = iterate_through_submeters_of_two_metergroups(

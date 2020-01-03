@@ -1,4 +1,3 @@
-from __future__ import print_function, division
 import itertools
 from copy import deepcopy
 from collections import OrderedDict
@@ -12,16 +11,8 @@ from hmmlearn import hmm
 from nilmtk.feature_detectors import cluster
 from nilmtk.disaggregate import Disaggregator
 from nilmtk.datastore import HDFDataStore
-
-# Python 2/3 compatibility
-from six import iteritems, iterkeys
-from builtins import range
-
-SEED = 42
-
-# Fix the seed for repeatibility of experiments
-np.random.seed(SEED)
-
+import datetime
+import matplotlib.pyplot as plt
 
 def sort_startprob(mapping, startprob):
     """ Sort the startprob according to power means; as returned by mapping
@@ -176,99 +167,47 @@ def decode_hmm(length_sequence, centroids, appliance_list, states):
     return [hmm_states, hmm_power]
 
 
-class FHMM(Disaggregator):
-    """
-    Attributes
-    ----------
-    model : dict
-    predictions : pd.DataFrame()
-    meters : list
-    MIN_CHUNK_LENGTH : int
-    """
+class FHMMExact(Disaggregator):
 
-    def __init__(self):
+    def __init__(self,params):
         self.model = {}
-        self.predictions = pd.DataFrame()
-        self.MIN_CHUNK_LENGTH = 100
-        self.MODEL_NAME = 'FHMM'
+        self.MODEL_NAME = 'FHMM'  # Add the name for the algorithm
+        self.save_model_path = params.get('save-model-path', None)
+        self.load_model_path = params.get('pretrained-model-path',None)
+        self.chunk_wise_training = params.get('chunk_wise_training', False)
+        self.num_of_states = params.get('num_of_states', 2)
+        if self.load_model_path:
+            self.load_model(self.load_model_path)
+        self.app_names = []
 
-
-
-    def train_across_buildings(self, ds, list_of_buildings, list_of_appliances,
-              min_activation=0.05, **load_kwargs):
-
+    def partial_fit(self, train_main, train_appliances, **load_kwargs):
         """
-
-        :param ds: nilmtk.Dataset
-        :param list_of_buildings: List of buildings to use for training
-        :param list_of_appliances: List of appliances (nilm-metadata names)
-        :param min_activation: Minimum activation (in fraction) to use a home in training
-        :param load_kwargs:
-        :return:
+        Train using 1d FHMM.
         """
-        self.list_of_appliances = list_of_appliances
-        models = {}
+        print(".........................FHMM partial_fit.................")
 
-        for appliance in list_of_appliances:
-            print("Training for", appliance)
-            o = []
-            for building_num in list_of_buildings:
+        train_main = pd.concat(train_main, axis=0)
+        train_app_tmp = []
 
-                building = ds.buildings[building_num]
-                elec = building.elec
-                try:
-                    df = next(elec[appliance].load(**load_kwargs)).squeeze()
-                    appl_power = df.dropna().values.reshape(-1, 1)
-                    activation = (df > 10).sum() * 1.0 / len(df)
-                    if activation > min_activation:
-                        o.append(appl_power)
-                except:
-                    pass
+        for app_name, df_list in train_appliances:
+            df_list = pd.concat(df_list, axis=0)
+            train_app_tmp.append((app_name,df_list))
+            self.app_names.append(app_name)
 
-            if len(o) > 1:
-                o = np.array(o)
-                mod = hmm.GaussianHMM(2, "full")
-                mod.fit(o)
-                models[appliance] = mod
-                print("Means for %s are" % appliance)
-                print(mod.means_)
-            else:
-                print("Not enough samples for %s" % appliance)
+        print (train_main.shape)
 
-        new_learnt_models = OrderedDict()
-        for appliance, appliance_model in iteritems(models):
-            startprob, means, covars, transmat = sort_learnt_parameters(
-                appliance_model.startprob_, appliance_model.means_,
-                appliance_model.covars_, appliance_model.transmat_)
-            new_learnt_models[appliance] = hmm.GaussianHMM(
-                startprob.size, "full", startprob, transmat)
-            new_learnt_models[appliance].means_ = means
-            new_learnt_models[appliance].covars_ = covars
+        train_appliances = train_app_tmp
 
-        learnt_model_combined = create_combined_hmm(new_learnt_models)
-        self.individual = new_learnt_models
-        self.model = learnt_model_combined
-        self.meters = [nilmtk.global_meter_group.select_using_appliances(type=appliance).meters[0]
-                       for appliance in iterkeys(self.individual)]
-
-    def train(self, metergroup, num_states_dict={}, **load_kwargs):
-        """Train using 1d FHMM.
-
-        Places the learnt model in `model` attribute
-        The current version performs training ONLY on the first chunk.
-        Online HMMs are welcome if someone can contribute :)
-        Assumes all pre-processing has been done.
-        """
         learnt_model = OrderedDict()
-        num_meters = len(metergroup.meters)
+        num_meters = len(train_appliances)
         if num_meters > 12:
             max_num_clusters = 2
         else:
             max_num_clusters = 3
 
-        for i, meter in enumerate(metergroup.submeters().meters):
-            power_series = meter.power_series(**load_kwargs)
-            meter_data = next(power_series).dropna()
+        for appliance, meter in train_appliances:
+            
+            meter_data = meter.dropna()
             X = meter_data.values.reshape((-1, 1))
             
             if not len(X):
@@ -278,37 +217,30 @@ class FHMM(Disaggregator):
             assert X.ndim == 2
             self.X = X
 
-            if num_states_dict.get(meter) is not None:
-                # User has specified the number of states for this appliance
-                num_total_states = num_states_dict.get(meter)
+            if self.num_of_states > 0:
+                 # User has specified the number of states for this appliance
+                 num_total_states = self.num_of_states
 
             else:
-                # Find the optimum number of states
+                 # Find the optimum number of states
                 states = cluster(meter_data, max_num_clusters)
                 num_total_states = len(states)
 
-            print("Training model for submeter '{}'".format(meter))
-            learnt_model[meter] = hmm.GaussianHMM(num_total_states, "full")
+            print("Training model for submeter '{}'".format(appliance))
+            learnt_model[appliance] = hmm.GaussianHMM(num_total_states, "full")
 
             # Fit
-            learnt_model[meter].fit(X)
+            learnt_model[appliance].fit(X)
+            print("Learnt model for : "+appliance)
 
             # Check to see if there are any more chunks.
             # TODO handle multiple chunks per appliance.
-            try:
-                next(power_series)
-            except StopIteration:
-                pass
-            else:
-                warn("The current implementation of FHMM"
-                     " can only handle a single chunk.  But there are multiple"
-                     " chunks available.  So have only trained on the"
-                     " first chunk!")
 
         # Combining to make a AFHMM
         self.meters = []
         new_learnt_models = OrderedDict()
         for meter in learnt_model:
+            print(meter)
             startprob, means, covars, transmat = sort_learnt_parameters(
                 learnt_model[meter].startprob_, learnt_model[meter].means_,
                 learnt_model[meter].covars_, learnt_model[meter].transmat_)
@@ -325,7 +257,12 @@ class FHMM(Disaggregator):
         self.individual = new_learnt_models
         self.model = learnt_model_combined
 
-    def disaggregate_chunk(self, test_mains):
+        print("print ...........",self.model)
+
+        print("FHMM partial_fit end.................")
+
+    def disaggregate_chunk(self, test_mains_list):
+
         """Disaggregate the test data according to the model learnt previously
 
         Performs 1D FHMM disaggregation.
@@ -336,217 +273,37 @@ class FHMM(Disaggregator):
         # for ideas of how to handle missing data in this code if needs be.
 
         # Array of learnt states
-        learnt_states_array = []
-        test_mains = test_mains.dropna()
-        length = len(test_mains.index)
-        temp = test_mains.values.reshape(length, 1)
-        learnt_states_array.append(self.model.predict(temp))
 
-        # Model
-        means = OrderedDict()
-        for elec_meter, model in iteritems(self.individual):
-            means[elec_meter] = (
-                model.means_.round().astype(int).flatten().tolist())
-            means[elec_meter].sort()
+        test_prediction_list = []
 
-        decoded_power_array = []
-        decoded_states_array = []
-
-        for learnt_states in learnt_states_array:
-            [decoded_states, decoded_power] = decode_hmm(
-                len(learnt_states), means, means.keys(), learnt_states)
-            decoded_states_array.append(decoded_states)
-            decoded_power_array.append(decoded_power)
-
-        prediction = pd.DataFrame(
-            decoded_power_array[0], index=test_mains.index)
-
-        return prediction
-
-
-    def disaggregate(self, mains, output_datastore, **load_kwargs):
-        '''Disaggregate mains according to the model learnt previously.
-
-        Parameters
-        ----------
-        mains : nilmtk.ElecMeter or nilmtk.MeterGroup
-        output_datastore : instance of nilmtk.DataStore subclass
-            For storing power predictions from disaggregation algorithm.
-        sample_period : number, optional
-            The desired sample period in seconds.
-        **load_kwargs : key word arguments
-            Passed to `mains.power_series(**kwargs)`
-        '''
-        load_kwargs = self._pre_disaggregation_checks(load_kwargs)
-
-        load_kwargs.setdefault('sample_period', 60)
-        load_kwargs.setdefault('sections', mains.good_sections())
-
-        timeframes = []
-        building_path = '/building{}'.format(mains.building())
-        mains_data_location = building_path + '/elec/meter1'
-        data_is_available = False
-
-        import warnings
-        warnings.filterwarnings("ignore", category=Warning)
-
-        for chunk in mains.power_series(**load_kwargs):
-
-            # Check that chunk is sensible size before resampling
-            if len(chunk) < self.MIN_CHUNK_LENGTH:
-                continue
-
-            # Record metadata
-            timeframes.append(chunk.timeframe)
-            measurement = chunk.name
-
-            # Start disaggregation
-            predictions = self.disaggregate_chunk(chunk)
-            for meter in predictions.columns:
-
-                meter_instance = meter.instance()
-                cols = pd.MultiIndex.from_tuples([chunk.name])
-                predicted_power = predictions[[meter]]
-                if len(predicted_power) == 0:
-                    continue
-                data_is_available = True
-                output_df = pd.DataFrame(predicted_power)
-                output_df.columns = pd.MultiIndex.from_tuples([chunk.name])
-                key = '{}/elec/meter{}'.format(building_path, meter_instance)
-                output_datastore.append(key, output_df)
-
-            # Copy mains data to disag output
-            output_datastore.append(key=mains_data_location,
-                                    value=pd.DataFrame(chunk, columns=cols))
-
-        if data_is_available:
-            self._save_metadata_for_disaggregation(
-                output_datastore=output_datastore,
-                sample_period=load_kwargs['sample_period'],
-                measurement=measurement,
-                timeframes=timeframes,
-                building=mains.building(),
-                meters=self.meters
-            )
-
-    def disaggregate_across_buildings(self, ds, output_datastore, list_of_buildings, **load_kwargs):
-        """
-
-        :param ds:
-        :param list_of_buildings:
-        :return:
-        """
-
-        def get_meter_instance(ds, building_num, appliance):
-            elec = ds.buildings[building_num].elec
-            meters = elec.submeters().meters
-            for meter in meters:
-                if meter.appliances[0].type['type'] == appliance:
-                    return meter.instance()
-            return -1
-
-        for building in list_of_buildings:
-            print("Disaggregating for building %d" % building)
-            mains = ds.buildings[building].elec.mains()
-            load_kwargs = self._pre_disaggregation_checks(load_kwargs)
-
-            load_kwargs.setdefault('sample_period', 60)
-            load_kwargs.setdefault('sections', mains.good_sections())
-
-            timeframes = []
-            building_path = '/building{}'.format(mains.building())
-            mains_data_location = building_path + '/elec/meter1'
-            data_is_available = False
-
-            import warnings
-            warnings.filterwarnings("ignore", category=Warning)
-            building_elec = ds.buildings[building].elec
-            self.meters = []
-            for appliance in self.list_of_appliances:
-                m_instance = get_meter_instance(ds, building, appliance)
-                if m_instance != -1:
-                    self.meters.append(building_elec[m_instance])
-                else:
-                    pass
-
-            for chunk in mains.power_series(**load_kwargs):
-                # Check that chunk is sensible size before resampling
-                if len(chunk) < self.MIN_CHUNK_LENGTH:
-                    continue
-
-                # Record metadata
-                timeframes.append(chunk.timeframe)
-                measurement = chunk.name
-
-                # Start disaggregation
-                predictions = self.disaggregate_chunk(chunk)
-                for meter in predictions.columns:
-
-                    if type(meter) is str:
-                        # training done across homes
-                        meter_instance = get_meter_instance(ds, building, meter)
-                        if meter_instance == -1:
-                            continue
-                    else:
-                        meter_instance = meter.instance()
-                    cols = pd.MultiIndex.from_tuples([chunk.name])
-                    predicted_power = predictions[[meter]]
-                    if len(predicted_power) == 0:
-                        continue
-                    data_is_available = True
-                    output_df = pd.DataFrame(predicted_power)
-                    output_df.columns = pd.MultiIndex.from_tuples([chunk.name])
-                    key = '{}/elec/meter{}'.format(building_path, meter_instance)
-                    output_datastore.append(key, output_df)
-
-                # Copy mains data to disag output
-                output_datastore.append(key=mains_data_location,
-                                        value=pd.DataFrame(chunk, columns=cols, dtype='float32'))
-
-            if data_is_available:
-                self._save_metadata_for_disaggregation(
-                    output_datastore=output_datastore,
-                    sample_period=load_kwargs['sample_period'],
-                    measurement=measurement,
-                    timeframes=timeframes,
-                    building=mains.building(),
-                    meters=self.meters
-                )
-
-
-    def import_model(self, filename):
-        with open(filename, 'rb') as in_file:
-            imported_model = pickle.load(in_file)
+        for test_mains in test_mains_list:
             
-        self.model = imported_model.model
-        self.individual = imported_model.individual
-        
-        # Recreate datastores from filenames
-        for meter in self.individual.keys():
-            store_filename = meter.store
-            meter.store = HDFDataStore(store_filename)
+            learnt_states_array = []
+            if len(test_mains) == 0:
+                tmp = pd.DataFrame(index = test_mains.index, columns = self.app_names)
+                test_prediction_list.append(tmp)
+            else:
+                length = len(test_mains.index)
+                temp = test_mains.values.reshape(length, 1)
+                learnt_states_array.append(self.model.predict(temp))
 
-        self.meters = list(self.individual.keys())
+                # Model
+                means = OrderedDict()
+                for elec_meter, model in self.individual.items():
+                    means[elec_meter] = (
+                        model.means_.round().astype(int).flatten().tolist())
+                    means[elec_meter].sort()
 
+                decoded_power_array = []
+                decoded_states_array = []
+
+                for learnt_states in learnt_states_array:
+                    [decoded_states, decoded_power] = decode_hmm(
+                        len(learnt_states), means, means.keys(), learnt_states)
+                    decoded_states_array.append(decoded_states)
+                    decoded_power_array.append(decoded_power)
+
+                appliance_powers = pd.DataFrame(decoded_power_array[0], dtype='float32')
+                test_prediction_list.append(appliance_powers)
         
-    def export_model(self, filename):
-        # Can't pickle datastore, so convert to filenames
-        original_stores = []
-        
-        meters = self.meters
-        self.meters = None
-        
-        for meter in self.individual.keys():
-            original_store = meter.store
-            original_stores.append(original_store)
-            meter.store = original_store.store.filename
-    
-        try:
-            with open(filename, 'wb') as out_file:
-                pickle.dump(self, out_file)
-        finally:
-            # Restore the meters and stores even if the pickling fails
-            for original_store, meter in zip(original_stores, self.individual.keys()):
-                meter.store = original_store
-                
-            self.meters = meters
+        return test_prediction_list

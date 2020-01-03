@@ -1,16 +1,14 @@
-from __future__ import print_function, division
 from nilmtk import DataSet, HDFDataStore
-from nilmtk.disaggregate import fhmm_exact
+from nilmtk.legacy.disaggregate import fhmm_exact
 from nilmtk.metrics import f1_score
 from os.path import join
 import matplotlib.pyplot as plt
-
 """
 This file replicates issue #376 (which should now be fixed)
 https://github.com/nilmtk/nilmtk/issues/376
 """
 
-data_dir = '/data/REDD'
+data_dir = '/data'
 building_number = 3
 disag_filename = join(data_dir, 'disag-fhmm' + str(building_number) + '.h5')
 
@@ -36,6 +34,7 @@ f1.plot(kind='barh')
 plt.ylabel('appliance');
 plt.xlabel('f-score');
 plt.title("FHMM");
+plt.tight_layout()
 plt.savefig(join(data_dir, 'f1-fhmm' + str(building_number) + '.png'))
 disag.store.close()
 ####

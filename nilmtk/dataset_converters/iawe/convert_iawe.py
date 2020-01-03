@@ -1,4 +1,3 @@
-from __future__ import print_function, division
 import pandas as pd
 import numpy as np
 from os.path import join
@@ -19,8 +18,7 @@ def reindex_fill_na(df, idx):
     for power in power_columns:
         df_copy[power].fillna(0, inplace=True)
     for measurement in non_power_columns:
-        df_copy[measurement].fillna(
-            df[measurement].median(), inplace=True)
+        df_copy[measurement].fillna(df[measurement].median(), inplace=True)
 
     return df_copy
 
@@ -60,7 +58,7 @@ def convert_iawe(iawe_path, output_filename, format="HDF"):
     """
 
     check_directory_exists(iawe_path)
-    idx = pd.DatetimeIndex(start=START_DATETIME, end=END_DATETIME, freq=FREQ)
+    idx = pd.date_range(start=START_DATETIME, end=END_DATETIME, freq=FREQ)
     idx = idx.tz_localize('GMT').tz_convert(TIMEZONE)
 
     # Open data store
@@ -77,8 +75,10 @@ def convert_iawe(iawe_path, output_filename, format="HDF"):
         df.index = pd.to_datetime(df.timestamp.values, unit='s', utc=True)
         df = df.tz_convert(TIMEZONE)
         df = df.drop(TIMESTAMP_COLUMN_NAME, 1)
-        df.rename(columns=lambda x: column_mapping[x], inplace=True)
-        df.columns.set_names(LEVEL_NAMES, inplace=True)
+        df.columns = pd.MultiIndex.from_tuples(
+            [column_mapping[x] for x in df.columns],
+            names=LEVEL_NAMES
+        )
         df = df.apply(pd.to_numeric, errors='ignore')
         df = df.dropna()
         df = df.astype(np.float32)

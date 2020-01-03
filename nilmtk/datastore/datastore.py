@@ -1,11 +1,6 @@
-from __future__ import print_function, division
 import yaml
 from nilmtk.timeframe import TimeFrame
 from io import open
-
-# do not edit! added by PythonBreakpoints
-from pdb import set_trace as _breakpoint
-
 
 MAX_MEM_ALLOWANCE_IN_BYTES = 2**28
 

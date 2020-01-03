@@ -1,27 +1,27 @@
 name: nilmtk-env
+channels:
+    - conda-forge
+    - nilmtk
 dependencies:
-- python=3.6
+- python>=3.6
 - Cython>=0.27.3
 - bottleneck>=1.2.1
 - numpy>=1.13.3
 - numexpr>=2.6.4
 - pytables
-- pandas==0.22.0
-- matplotlib>=2.2.0
+- pandas>=0.25.0
+- matplotlib>=3.1.0
 - networkx==2.1
 - scipy>=1.0.0
-- scikit-learn==0.19.2
+- scikit-learn>=0.21.2
 - jupyter
 - ipython
 - ipykernel
-- six
-- future
 - nose
 - coverage
 - pip
 - psycopg2
-- pip:  # Install packages which are not in conda. Install these using pip:
-    - coveralls
-    - https://github.com/hmmlearn/hmmlearn/archive/ae1a41e4d03ea61b7a25cba68698e8e2e52880ad.zip#egg=hmmlearn
-    - https://github.com/nilmtk/nilm_metadata/archive/master.zip#egg=nilm_metadata
-    - https://github.com/nilmtk/nilmtk/archive/master.zip#egg=nilmtk
+- coveralls
+- nilm_metadata
+- nilmtk
+- hmmlearn

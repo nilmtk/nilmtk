@@ -1,15 +1,8 @@
-from __future__ import print_function, division
 import numpy as np
-import pandas as pd 
-
-
-# Fix the seed for repeatability of experiments
-SEED = 42
-np.random.seed(SEED)
-
+import pandas as pd
 
 def cluster(X, max_num_clusters=3, exact_num_clusters=None):
-    '''Applies clustering on reduced data, 
+    '''Applies clustering on reduced data,
     i.e. data where power is greater than threshold.
 
     Parameters
@@ -94,10 +87,6 @@ def _apply_clustering(X, max_num_clusters, exact_num_clusters=None):
 
     from sklearn import metrics
 
-    # sklearn produces lots of DepreciationWarnings with PyTables
-    import warnings
-    warnings.filterwarnings("ignore", category=DeprecationWarning)
-
     # Finds whether 2 or 3 gives better Silhouellete coefficient
     # Whichever is higher serves as the number of clusters for that
     # appliance
@@ -141,18 +130,44 @@ def _apply_clustering(X, max_num_clusters, exact_num_clusters=None):
 
 def hart85_means_shift_cluster(pair_buffer_df, columns):
 
-
     from sklearn.cluster import MeanShift
     # Creating feature vector
     cluster_df = pd.DataFrame()
     power_types = [col[1] for col in columns]
-    if 'active' in power_types:
-        cluster_df['active'] = pd.Series(pair_buffer_df.apply(lambda row:
-                                                                   ((np.fabs(row['T1 Active']) + np.fabs(row['T2 Active'])) / 2), axis=1), index=pair_buffer_df.index)
-    if 'reactive' in power_types:
-        cluster_df['reactive'] = pd.Series(pair_buffer_df.apply(lambda row:
-                                                                     ((np.fabs(row['T1 Reactive']) + np.fabs(row['T2 Reactive'])) / 2), axis=1), index=pair_buffer_df.index)
 
+    if 'active' in power_types:
+        cluster_df['active'] = pd.Series(
+            pair_buffer_df.apply(
+                lambda row: (
+                    (np.fabs(
+                        row['T1 Active']) +
+                        np.fabs(
+                        row['T2 Active'])) /
+                    2),
+                axis=1),
+            index=pair_buffer_df.index)
+    if 'reactive' in power_types:
+        cluster_df['reactive'] = pd.Series(
+            pair_buffer_df.apply(
+                lambda row: (
+                    (np.fabs(
+                        row['T1 Reactive']) +
+                        np.fabs(
+                        row['T2 Reactive'])) /
+                    2),
+                axis=1),
+            index=pair_buffer_df.index)
+    if 'apparent' in power_types:
+        cluster_df['apparent'] = pd.Series(
+            pair_buffer_df.apply(
+                lambda row: (
+                    (np.fabs(
+                        row['T1 Apparent']) +
+                        np.fabs(
+                        row['T2 Apparent'])) /
+                    2),
+                axis=1),
+            index=pair_buffer_df.index)
     X = cluster_df.values.reshape((len(cluster_df.index), len(columns)))
     ms = MeanShift(bin_seeding=True)
     ms.fit(X)

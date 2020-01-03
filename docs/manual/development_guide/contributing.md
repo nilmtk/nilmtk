@@ -114,5 +114,16 @@ We use [sphinx-apidoc](http://sphinx-doc.org/man/sphinx-apidoc.html) to automati
 Please see [Graham's notes for building NILMTK's documentation on Windows](https://github.com/nilmtk/nilmtk/issues/388#issuecomment-107220362).
 
 
+   
+# Conda builds on Travis-CI
 
-    
+Starting in the version 0.4 development, NILMTK uses automated package builds on Travis CI for a fast development pace and allow users to install preview/incomplete releases. Conda packages are built only when a Git tag is present.
+
+The current logic, which can be improved, is that Git tags that contain the "dev" substring will trigger a build that is labelled `dev` in Anaconda cloud. If the "dev" substring is not found in the Git tag, the package is uploaded with the "main" label. A tag that is not a valid version string should result in an error while running `conda-build`.
+For example, tagging a commit with 0.4.0.dev0 will trigger a dev build, while simply 0.4.0 will trigger a normal package release.
+
+To install from the `dev` label, you need to specify the channel as follows:
+
+	```bash
+    conda install -c conda-forge -c nilmtk -c nilmtk/label/dev nilmtk
+	```

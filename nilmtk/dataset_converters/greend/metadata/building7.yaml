@@ -53,14 +53,16 @@ appliances:
   meters: [2]
   control:
     - manual
-  nominal_consumption: 250
+  nominal_consumption: 
+    on_power: 250
   
 - type: toaster
   instance: 1
   meters: [3]
   control:
     - manual
-  nominal_consumption: 1600
+  nominal_consumption: 
+    on_power: 1600
   model: TP36
   manufacturer: Girmi
     
@@ -69,7 +71,8 @@ appliances:
   meters: [4]
   control:
     - manual
-  nominal_consumption: 1800
+  nominal_consumption: 
+    on_power: 1800
   model: Kalimero
   manufacturer: Argo
   
