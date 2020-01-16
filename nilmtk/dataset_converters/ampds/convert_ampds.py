@@ -22,15 +22,15 @@ columnNameMapping = {'V': ('voltage', ''),
                      'S': ('power', 'apparent'),
                      'St': ('energy', 'apparent')}
 
-TIMESTAMP_COLUMN_NAME = "TS"
+TIMESTAMP_COLUMN_NAME = "unix_ts"
 TIMEZONE = "America/Vancouver"
 
 def convert_ampds(input_path, output_filename, format='HDF'):
     """
-    Convert AMPds R2013 as seen on Dataverse. Download the files
+    Convert AMPds2 R2016 as seen on Dataverse. Download the files
     as CSVs and put them in the `input_path` folder for conversion.
     
-    Download URL: https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/MXB7VO
+    Download URL: https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/FIE0S4
     
     Parameters: 
     -----------
@@ -46,18 +46,22 @@ def convert_ampds(input_path, output_filename, format='HDF'):
         Defaults to HDF5
     Example usage:
     --------------
-    convert('/AMPds/electricity', 'store.h5')    
+    convert_ampds('dataverse_files/', 'AMPds.h5')
 
     """
     check_directory_exists(input_path)
     files = [f for f in listdir(input_path) if isfile(join(input_path, f)) and
-             '.csv' in f and '.swp' not in f]
+             '.csv' in f and '.swp' not in f and 'Electricity' in f and 'Billing' not in f and 'Monthly' not in f
+             and  'Electricity_I.csv' not in f   and  'Electricity_Q.csv' not in f   and  'Electricity_P.csv' not in f
+             and 'Electricity_S.csv' not in f
+             ]
+
     # Sorting Lexicographically
     files.sort()
 
     # Remove Whole Home and put it at top
-    files.remove("WHE.csv")
-    files.insert(0, "WHE.csv")
+    files.remove("Electricity_WHE.csv")
+    files.insert(0, "Electricity_WHE.csv")
     assert isdir(input_path)
     store = get_datastore(output_filename, format, mode='w')
     for i, csv_file in enumerate(files):
