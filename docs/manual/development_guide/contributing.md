@@ -34,7 +34,7 @@ show_versions()
 
 # Code style
 
-We're aiming to mimic the wonderful scikit-learn so we plan to adopt [their coding guidelines](http://scikit-learn.org/stable/developers/#coding-guidelines).  It's basically [PEP8](http://www.python.org/dev/peps/pep-0008/) with [numpy docstrings](https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt).
+We're aiming to mimic the wonderful scikit-learn so we plan to adopt [their coding guidelines](http://scikit-learn.org/stable/developers/#coding-guidelines).  It's basically [PEP8](http://www.python.org/dev/peps/pep-0008/) with [numpy docstrings](https://numpydoc.readthedocs.io/en/latest/format.html#docstring-standard).
 
 
 # Contribute code or documentation
