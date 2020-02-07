@@ -9,12 +9,31 @@ from nilmtk.utils import check_directory_exists, get_datastore, get_module_direc
 from nilm_metadata import convert_yaml_to_hdf5
 from sys import getfilesystemencoding
 
+import os
+import re
+import datetime
+import shutil
+import sys
+from os.path import join, isdir, isfile, dirname, abspath
+import pandas as pd
+import yaml
+import psycopg2 as db
+from nilmtk.measurement import measurement_columns
+from nilmtk.measurement import LEVEL_NAMES
+from nilmtk.datastore import Key
+from nilm_metadata import convert_yaml_to_hdf5
+from nilmtk.utils import get_module_directory
+import shutil
+import tempfile
+
 # This script is based upon download_dataport.py
 # We import from it all the common functions and variables
-from nilmtk.dataset_converters.dataport.download_dataport import feed_mapping, feed_ignore, database_assert, _dataport_dataframe_to_hdf
+from nilmtk.dataset_converters.dataport.download_dataport import feed_mapping, feed_ignore, database_assert, _dataport_dataframe_to_hdf    
+    
 
-
-def convert_dataport(input_path, hdf_filename, user_selected_table='eg_realpower_1s'):
+def convert_dataport(input_path, hdf_filename,
+                     user_selected_table='eg_realpower_1s',
+                     time_column="localminute"):
     """Converts the Pecan Dataport dataset to NILMTK HDF5 format.
 
     For more information about the Pecan Dataport dataset, and to download
@@ -28,10 +47,12 @@ def convert_dataport(input_path, hdf_filename, user_selected_table='eg_realpower
     hdf_filename : str
         The destination filename (including path and suffix).
     user_selected_table: str
+    time_column: str
     """
-    # Check if directory exist
+    # Check if input directory exist
     check_directory_exists(input_path)
-    # List files in directory
+    # List csv files in directory
+    # We will only use the ones of 1Hz frequency
     files = [f for f in listdir(input_path) if isfile(join(input_path, f)) and
              '.csv' in f and '.gz' not in f and '1s' in f]
     # Sorting Lexicographically
@@ -39,29 +60,6 @@ def convert_dataport(input_path, hdf_filename, user_selected_table='eg_realpower
     
     # Assert that the type of selected table exist
     database_assert(user_selected_table)
-    
-    # map user_selected_table and timestamp column
-    timestamp_map = {"eg_angle_15min": "local_15min",
-                     "eg_angle_1hr": "localhour",
-                     "eg_angle_1min": "localminute",
-                     "eg_angle_1s": "localminute",
-                     "eg_apparentpower_15min": "local_15min",
-                     "eg_apparentpower_1hr": "localhour",
-                     "eg_apparentpower_1min": "localminute",
-                     "eg_apparentpower_1s": "localminute",
-                     "eg_current_15min": "local_15min",
-                     "eg_current_1hr": "localhour",
-                     "eg_current_1min": "localminute",
-                     "eg_current_1s": "localminute",
-                     "eg_realpower_15min": "local_15min",
-                     "eg_realpower_1hr": "localhour",
-                     "eg_realpower_1min": "localminute",
-                     "eg_realpower_1s": "localminute",
-                     "eg_thd_15min": "local_15min",
-                     "eg_thd_1hr": "localhour",
-                     "eg_thd_1min": "localminute",
-                     "eg_thd_1s": "localminute",
-                     "eg_realpower_1s_40homes_dataset": "localminute"}
     
     # set up a new HDF5 datastore (overwrites existing store)
     store = pd.HDFStore(hdf_filename, 'w', complevel=9, complib='zlib')
@@ -81,33 +79,59 @@ def convert_dataport(input_path, hdf_filename, user_selected_table='eg_realpower
         if re.search('^building', f):
             os.remove(join(metadata_dir, f))
     
+    # Create a subdirectory called building in the temp directory
+    # We will use it to store individual building csv
+    build_tmp_dir = tmp_dir + "/building"
+    try:
+        os.mkdir(build_tmp_dir)
+    except:
+        shutil.rmtree(build_tmp_dir)
+        os.mkdir(build_tmp_dir)
+        
+    # Iterate through all the csv files
+    # Export a csv for each individual building
+    for file in files:
+        # Load the csv as an iterator over a dataframe
+        file_path = input_path + "/" + file
+        data_iter = pd.read_csv(file_path, header=0, chunksize=1)
+        # Iterate through each row of the dataframe
+        for row in data_iter:
+            # Get dataid - it is different for each household
+            dataid = row["dataid"].values[0]
+            # Locate csv path
+            path_csv = build_tmp_dir + "/" + str(dataid) + ".csv"
+            try:
+                # If csv exist for that dataid, append the new row
+                row.to_csv(path_csv, mode='a', header=True)
+            except:
+                # If it doesn't exist, create new csv
+                row.to_csv(path_csv, index=False)
+    
     # Initialize nilmtk building id (it requires to start at 1)
     nilmtk_building_id = 0
-    last_building_id = -1
     
-    # Iterate through all the csv files
-    for i, file in enumerate(files):
-        # Load the dataframe
-        dataframe = pd.read_csv(file)
-        # List buildings ids
-        unique_dataid = dataframe["dataid"].unique()
-        # Iterate through each building
-        for building_id in unique_dataid:
-            print("Loading building {:d} @ {}".format(building_id, datetime.datetime.now()))
-            sys.stdout.flush()
-            chunck_dataframe = dataframe[dataframe["dataid"] == building_id].copy()
-            # Update nilmtk id
-            if building_id != last_building_id:
-                nilmtk_building_id += 1
-            # convert to nilmtk-df and save to disk
-            nilmtk_dataframe = _dataport_dataframe_to_hdf(
-                chunk_dataframe, store,
-                nilmtk_building_id,
-                building_id,
-                timestamp_map[user_selected_table],
-                metadata_dir,
-                user_selected_table                           
-            )
+    # Iterate through each building
+    buildings = os.listdir(build_tmp_dir)
+    # Sorting Lexicographically
+    buildings.sort()
+    for file in buildings:
+        building_id = int(file.rsplit(".", 1)[0])
+        print("Loading building {:d} @ {}".format(building_id, datetime.datetime.now()))
+        sys.stdout.flush()
+        dataframe = pd.read_csv(build_tmp_dir + "/" + file, index_col=0)
+        # Convert date column from string to date format
+        dataframe[time_column] = pd.to_datetime(dataframe[time_column])
+        # Update nilmtk id
+        nilmtk_building_id += 1
+        # convert to nilmtk-df and save to disk
+        nilmtk_dataframe = _dataport_dataframe_to_hdf(
+            dataframe, store,
+            nilmtk_building_id,
+            building_id,
+            time_column,
+            metadata_dir,
+            user_selected_table                           
+        )
 
     store.close()
 
@@ -117,3 +141,9 @@ def convert_dataport(input_path, hdf_filename, user_selected_table='eg_realpower
 
     # remote the temporary dir when finished
     shutil.rmtree(tmp_dir)
+
+    
+if __name__ == "__main__":
+    path_project = os.path.dirname(os.path.realpath(__file__)).rsplit('/', 4)[0]
+    path_data = f"{path_project}/nilm/data/"
+    convert_dataport(f"{path_data}dataport", f"{path_data}nilmtk/dataport.h5")
