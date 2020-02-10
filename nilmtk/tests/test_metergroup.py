@@ -1,5 +1,3 @@
-#!/usr/bin/python
-from __future__ import print_function, division
 import unittest
 from os.path import join
 from nilmtk.tests.testingtools import data_dir
@@ -8,7 +6,6 @@ from nilmtk import (Appliance, MeterGroup, ElecMeter, HDFDataStore,
 from nilmtk.utils import tree_root, nodes_adjacent_to_root
 from nilmtk.elecmeter import ElecMeterID
 from nilmtk.building import BuildingID
-from six import PY2
 
 class TestMeterGroup(unittest.TestCase):
     @classmethod
@@ -64,10 +61,7 @@ class TestMeterGroup(unittest.TestCase):
         
         self.assertIs(mg.mains(), meter1)
         self.assertEqual(mg.meters_directly_downstream_of_mains().meters, [meter2])
-        if PY2:
-            self.assertEqual(list(wiring_graph.nodes()), [meter2, meter3, meter1])
-        else:
-            self.assertEqual(list(wiring_graph.nodes()), [meter1, meter2, meter3])
+        self.assertEqual(list(wiring_graph.nodes()), [meter1, meter2, meter3])
 
     def test_proportion_of_energy_submetered(self):
         meters = []
@@ -114,16 +108,15 @@ class TestMeterGroup(unittest.TestCase):
             
         mg = global_meter_group.from_list([
             ElecMeterID(1,1,None),
-            (ElecMeterID(2,1,None), 
-             (ElecMeterID(3,1,None), ElecMeterID(4,1,None), ElecMeterID(5,1,None)))
+            (
+                ElecMeterID(2,1,None), 
+                (ElecMeterID(3,1,None), ElecMeterID(4,1,None), ElecMeterID(5,1,None))
+            )
         ])
-        """
-        Commented for the time being
-        self.assertIs(mg.meters[0], meters[0])
-        self.assertIs(mg.meters[1].meters[0], meters[1])
+        self.assertEqual(mg.meters[0], meters[0])
+        self.assertEqual(mg.meters[1].meters[0], meters[1])
         self.assertEqual(len(mg.meters[1].meters[1].meters), 3)
         self.assertEqual(len(mg.meters), 2)
-        """
 
     def test_full_results_with_no_sections_raises_runtime_error(self):
         mg = MeterGroup([ElecMeter(), ElecMeter()])

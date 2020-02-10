@@ -1,11 +1,8 @@
-from __future__ import print_function
 import requests
 from os.path import join
 import pandas as pd
 import os
 import time
-from six import iteritems
-
 
 def download():
     START_TIME_STR = "01-06-2014 0:0:0"
@@ -48,8 +45,8 @@ def download():
 
     query = """select *  where Metadata/Extra/Block = '{}' and (Metadata/SourceName = '{}') and Metadata/Extra/Type = '{}' and Metadata/Location/Floor = '{}' and Metadata/Extra/PhysicalParameter = '{}'"""
 
-    for block_name, block in iteritems(academic_building):
-        for load, floors in iteritems(block):
+    for block_name, block in academic_building.items():
+        for load, floors in block.items():
             for floor in floors:
                 for measurement in MEASUREMENTS:
                     query_instance = query.format(block_name, "Academic Building", load, str(floor), measurement)

@@ -1,6 +1,6 @@
 package:
     name: nilmtk
-    version: "0.3.2"
+    version: "0.4.0.dev1"
 
 source:
     path: ..
@@ -13,23 +13,20 @@ requirements:
         - python
         - setuptools
     run: 
-        - python=3.6
+        - python>=3.6
         - Cython>=0.27.3
         - bottleneck>=1.2.1
         - numpy>=1.13.3
         - numexpr>=2.6.4
         - pytables
-        - pandas>=0.24.2
-        - pandas<0.25.0
-        - matplotlib>=2.2.0
+        - pandas>=0.25.0
+        - matplotlib>=3.1.0
         - networkx==2.1
         - scipy>=1.0.0
-        - scikit-learn==0.19.2
+        - scikit-learn>=0.21.2
         - jupyter
         - ipython
         - ipykernel
-        - six
-        - future
         - nose
         - coverage
         - psycopg2

@@ -1,5 +1,3 @@
-#!/usr/bin/python
-from __future__ import print_function, division
 import unittest
 import pandas as pd
 from nilmtk.timeframe import TimeFrame, merge_timeframes

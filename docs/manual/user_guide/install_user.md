@@ -1,6 +1,6 @@
 # Installing NILMTK
 
-We recommend using [Anaconda](https://store.continuum.io/cshop/anaconda/), which bundles together most of the required packages. Since many packages are deprecating  Python 2, we are now recommending installing Python 3.6. For the time being, Python 2.7 is still supported but it will be removed in the next NILMTK version due to most of the dependencies dropping Python 2.7.
+We recommend using [Anaconda](https://store.continuum.io/cshop/anaconda/), which bundles together most of the required packages. We recommend using [Anaconda](https://www.anaconda.com/distribution/), which bundles togther most of the required packages. NILMTK requires Python 3.6+ due to the module it depends upon.
 
 After Anaconda has been installed, open up the terminal (Unix) or Anaconda prompt (Windows):
 
@@ -75,3 +75,12 @@ After Anaconda has been installed, open up the terminal (Unix) or Anaconda promp
 	```
     
 We recommend checking the [Anaconda documentation about environments](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html) if the concept is new to you.
+
+
+# Conda development snapshots
+
+If you want to try out tagged development versions, you can follow the normal installation guide but use the following command for the NILMTK installation (step 4):
+
+	```bash
+    conda install -c nilmtk -c nilmtk/label/dev nilmtk
+	```

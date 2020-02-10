@@ -1,5 +1,3 @@
-#!/usr/bin/python
-from __future__ import print_function, division
 import unittest
 from os.path import join
 import pandas as pd
@@ -38,7 +36,7 @@ class SuperTestDataStore(object):
         df = next(gen)
         self.assertEqual(df.index[0], timeframe.start)
         self.assertEqual(df.index[-1], timeframe.end - timedelta(seconds=1))
-#        self.assertEqual(df.look_ahead.index[0], timeframe.end) # This test, for some odd reason, fails for CSVDataStore in Python3, intermittently.  Very odd.
+        self.assertEqual(df.look_ahead.index[0], timeframe.end) # This test, for some odd reason, fails for CSVDataStore in Python3, intermittently.  Very odd.
         self.assertEqual(len(df.look_ahead), 10)
 
     def test_load_chunks(self):

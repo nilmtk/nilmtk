@@ -1,4 +1,3 @@
-from __future__ import print_function, division
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates

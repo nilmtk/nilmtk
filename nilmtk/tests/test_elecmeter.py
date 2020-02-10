@@ -1,5 +1,3 @@
-#!/usr/bin/python
-from __future__ import print_function, division
 import unittest
 from os.path import join
 import pandas as pd

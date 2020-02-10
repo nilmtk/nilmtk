@@ -1,4 +1,3 @@
-from __future__ import print_function, division
 from warnings import warn
 
 import pandas as pd
@@ -12,7 +11,7 @@ from nilmtk.disaggregate import Disaggregator
 from nilmtk.datastore import HDFDataStore
 
 
-class CombinatorialOptimisation(Disaggregator):
+class CO(Disaggregator):
     """1 dimensional combinatorial optimisation NILM algorithm.
 
     Attributes
@@ -36,77 +35,54 @@ class CombinatorialOptimisation(Disaggregator):
     MIN_CHUNK_LENGTH : int
     """
 
-    def __init__(self):
+    def __init__(self, params):
         self.model = []
+        self.MODEL_NAME = 'CO'
+        self.save_model_path = params.get('save-model-path', None)
+        self.load_model_path = params.get('pretrained-model-path',None)
+        self.chunk_wise_training = params.get('chunk_wise_training', False)
+        if self.load_model_path:
+            self.load_model(self.load_model_path)
         self.state_combinations = None
         self.MIN_CHUNK_LENGTH = 100
-        self.MODEL_NAME = 'CO'
 
-    def train(self, metergroup, num_states_dict=None, **load_kwargs):
-        """Train using 1D CO. Places the learnt model in the `model` attribute.
+    def partial_fit(
+            self,
+            train_main,
+            train_appliances,
+            do_preprocessing=True,
+            **load_kwargs):
 
-        Parameters
-        ----------
-        metergroup : a nilmtk.MeterGroup object
-        num_states_dict : dict
-        **load_kwargs : keyword arguments passed to `meter.power_series()`
+        train_main = pd.concat(train_main, axis=0)
+        train_app_tmp = []
 
-        Notes
-        -----
-        * only uses first chunk for each meter (TODO: handle all chunks).
-        """
-        if num_states_dict is None:
-            num_states_dict = {}
+        for app_name, df_list in train_appliances:
+            df_list = pd.concat(df_list, axis=0)
+            train_app_tmp.append((app_name, df_list))
 
-        if self.model:
-            raise RuntimeError(
-                "This implementation of Combinatorial Optimisation"
-                " does not support multiple calls to `train`.")
+        train_appliances = train_app_tmp
 
-        num_meters = len(metergroup.meters)
-        if num_meters > 12:
+        print("...............CO partial_fit running.............")
+        num_on_states = None
+        if len(train_appliances) > 12:
             max_num_clusters = 2
         else:
             max_num_clusters = 3
+        appliance_in_model = [d['appliance_name'] for d in self.model]
 
-        for i, meter in enumerate(metergroup.submeters().meters):
-            print("Training model for submeter '{}'".format(meter))
-            power_series = meter.power_series(**load_kwargs)
-            chunk = next(power_series)
-            num_total_states = num_states_dict.get(meter)
-            if num_total_states is not None:
-                num_on_states = num_total_states - 1
+        for appliance, readings in train_appliances:
+            #print(appliance," ",readings)
+            if appliance in appliance_in_model:
+                #     raise RuntimeError(
+                #     "Appliance {} is already in model!"
+                #     "  Can't train twice on the same meter!",appliance)
+                print("Trained on " + appliance + " before.")
+
             else:
-                num_on_states = None
-            self.train_on_chunk(chunk, meter, max_num_clusters, num_on_states)
-
-            # Check to see if there are any more chunks.
-            # TODO handle multiple chunks per appliance.
-            try:
-                next(power_series)
-            except StopIteration:
-                pass
-            else:
-                warn("The current implementation of CombinatorialOptimisation"
-                     " can only handle a single chunk.  But there are multiple"
-                     " chunks available.  So have only trained on the"
-                     " first chunk!")
-
-        print("Done training!")
-
-    def train_on_chunk(self, chunk, meter, max_num_clusters, num_on_states):
-        # Check if we've already trained on this meter
-        meters_in_model = [d['training_metadata'] for d in self.model]
-        if meter in meters_in_model:
-            raise RuntimeError(
-                "Meter {} is already in model!"
-                "  Can't train twice on the same meter!"
-                .format(meter))
-
-        states = cluster(chunk, max_num_clusters, num_on_states)
-        self.model.append({
-            'states': states,
-            'training_metadata': meter})
+                states = cluster(readings, max_num_clusters, num_on_states)
+                self.model.append({
+                    'states': states,
+                    'appliance_name': appliance})
 
     def _set_state_combinations_if_necessary(self):
         """Get centroids"""
@@ -115,70 +91,8 @@ class CombinatorialOptimisation(Disaggregator):
                 self.state_combinations.shape[1] != len(self.model)):
             from sklearn.utils.extmath import cartesian
             centroids = [model['states'] for model in self.model]
+            #print("centroids ...",centroids)
             self.state_combinations = cartesian(centroids)
-
-    def disaggregate(self, mains, output_datastore,**load_kwargs):
-        '''Disaggregate mains according to the model learnt previously.
-
-        Parameters
-        ----------
-        mains : nilmtk.ElecMeter or nilmtk.MeterGroup
-        output_datastore : instance of nilmtk.DataStore subclass
-            For storing power predictions from disaggregation algorithm.
-        sample_period : number, optional
-            The desired sample period in seconds.  Set to 60 by default.
-        sections : TimeFrameGroup, optional
-            Set to mains.good_sections() by default.
-        **load_kwargs : key word arguments
-            Passed to `mains.power_series(**kwargs)`
-        '''
-        load_kwargs = self._pre_disaggregation_checks(load_kwargs)
-
-        load_kwargs.setdefault('sample_period', 60)
-        load_kwargs.setdefault('sections', mains.good_sections())
-
-        timeframes = []
-        building_path = '/building{}'.format(mains.building())
-        mains_data_location = building_path + '/elec/meter1'
-        data_is_available = False
-
-        for chunk in mains.power_series(**load_kwargs):
-            # Check that chunk is sensible size
-            if len(chunk) < self.MIN_CHUNK_LENGTH:
-                continue
-
-            # Record metadata
-            timeframes.append(chunk.timeframe)
-            measurement = chunk.name
-
-            appliance_powers = self.disaggregate_chunk(chunk)
-
-            for i, model in enumerate(self.model):
-                appliance_power = appliance_powers.iloc[:, i]
-                if len(appliance_power) == 0:
-                    continue
-                data_is_available = True
-                cols = pd.MultiIndex.from_tuples([chunk.name])
-                meter_instance = model['training_metadata'].instance()
-                df = pd.DataFrame(
-                    appliance_power.values, index=appliance_power.index,
-                    columns=cols)
-                key = '{}/elec/meter{}'.format(building_path, meter_instance)
-                output_datastore.append(key, df)
-
-            # Copy mains data to disag output
-            mains_df = pd.DataFrame(chunk, columns=cols)
-            output_datastore.append(key=mains_data_location, value=mains_df)
-
-        if data_is_available:
-            self._save_metadata_for_disaggregation(
-                output_datastore=output_datastore,
-                sample_period=load_kwargs['sample_period'],
-                measurement=measurement,
-                timeframes=timeframes,
-                building=mains.building(),
-                meters=[d['training_metadata'] for d in self.model]
-            )
 
     def disaggregate_chunk(self, mains):
         """In-memory disaggregation.
@@ -194,14 +108,17 @@ class CombinatorialOptimisation(Disaggregator):
             disaggregated appliance.  Column names are the integer index
             into `self.model` for the appliance in question.
         """
-        if not self.model:
+        '''if not self.model:
             raise RuntimeError(
                 "The model needs to be instantiated before"
                 " calling `disaggregate`.  The model"
-                " can be instantiated by running `train`.")
+                " can be instantiated by running `train`.")'''
 
-        if len(mains) < self.MIN_CHUNK_LENGTH:
-            raise RuntimeError("Chunk is too short.")
+        print("...............CO disaggregate_chunk running.............")
+
+        # sklearn produces lots of DepreciationWarnings with PyTables
+        import warnings
+        warnings.filterwarnings("ignore", category=DeprecationWarning)
 
         # Because CombinatorialOptimisation could have been trained using
         # either train() or train_on_chunk(), we must
@@ -223,55 +140,32 @@ class CombinatorialOptimisation(Disaggregator):
             state_combinations = self.state_combinations
         """
 
-
         state_combinations = self.state_combinations
-
         summed_power_of_each_combination = np.sum(state_combinations, axis=1)
         # summed_power_of_each_combination is now an array where each
         # value is the total power demand for each combination of states.
 
         # Start disaggregation
-        indices_of_state_combinations, residual_power = find_nearest(
-            summed_power_of_each_combination, mains.values)
 
-        appliance_powers_dict = {}
-        for i, model in enumerate(self.model):
-            print("Estimating power demand for '{}'"
-                  .format(model['training_metadata']))
-            predicted_power = state_combinations[
-                indices_of_state_combinations, i].flatten()
-            column = pd.Series(predicted_power, index=mains.index, name=i)
-            appliance_powers_dict[self.model[i]['training_metadata']] = column
-        appliance_powers = pd.DataFrame(appliance_powers_dict, dtype='float32')
-        return appliance_powers
+        test_prediction_list = []
 
-    def import_model(self, filename):
-        with open(filename, 'rb') as in_file:
-            imported_model = pickle.load(in_file)
-            
-        self.model = imported_model.model
-        
-        # Recreate datastores from filenames
-        for pair in self.model:
-            store_filename = pair['training_metadata'].store
-            pair['training_metadata'].store = HDFDataStore(store_filename)
-            
-        self.state_combinations = imported_model.state_combinations
-        self.MIN_CHUNK_LENGTH = imported_model.MIN_CHUNK_LENGTH
+        for test_df in mains:
 
-    def export_model(self, filename):
-        # Can't pickle datastore, so convert to filenames
-        original_stores = []
-        for pair in self.model:
-            original_store = pair['training_metadata'].store
-            original_stores.append(original_store)
-            pair['training_metadata'].store = original_store.store.filename
-    
-        try:
-            with open(filename, 'wb') as out_file:
-                pickle.dump(self, out_file)
-        finally:
-            # Restore the stores even if the pickling fails
-            for original_store, pair in zip(original_stores, self.model):
-                pair['training_metadata'].store = original_store
-                
+            appliance_powers_dict = {}
+            indices_of_state_combinations, residual_power = find_nearest(
+                summed_power_of_each_combination, test_df.values)
+
+            for i, model in enumerate(self.model):
+                print("Estimating power demand for '{}'"
+                      .format(model['appliance_name']),end="\r")
+                predicted_power = state_combinations[
+                    indices_of_state_combinations, i].flatten()
+                column = pd.Series(
+                    predicted_power, index=test_df.index, name=i)
+                appliance_powers_dict[self.model[i]['appliance_name']] = column
+
+            appliance_powers = pd.DataFrame(
+                appliance_powers_dict, dtype='float32')
+            test_prediction_list.append(appliance_powers)
+
+        return test_prediction_list

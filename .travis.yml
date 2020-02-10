@@ -2,11 +2,11 @@ sudo: false  # use new container infrastructure on Travis CI
 
 language: python
 
-python: 2.7
+python: 3.7
 
 before_install:
   # Install miniconda.
-  - wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+  - wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
   - bash miniconda.sh -b -p $HOME/miniconda
   - rm miniconda.sh
   - export PATH="$HOME/miniconda/bin:$PATH"
@@ -17,18 +17,19 @@ before_install:
 
 install:
   # create and activate env using NILMTK's environment.yml
-  - conda env create 
+  - conda env create -f environment-dev.yml
   - source activate nilmtk-env
 
-  # Install nilm_metadata (can't yet install using pip / conda)
-  #- pip install 'git+https://github.com/nilmtk/nilm_metadata.git#egg=nilm_metadata'
+  # Install nilm_metadata (development version)
+  - pip install 'git+https://github.com/nilmtk/nilm_metadata.git#egg=nilm_metadata'
 
-  # Finally, install nilmtk...
-  #- pip install 'git+https://github.com/nilmtk/nilmtk.git#egg=nilmtk'
+  # Finally, install nilmtk (development version)
+  - pip install .
 
 script:
   - python -c 'from nilmtk.utils import show_versions; show_versions()'
   - nosetests
+  - bash ci/build_conda_package.sh
 
 after_script:
   - source deactivate

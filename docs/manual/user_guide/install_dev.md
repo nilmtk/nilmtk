@@ -1,7 +1,7 @@
 
 # Install NILMTK
 
-We recommend using [Anaconda](https://www.anaconda.com/distribution/), which bundles togther most of the required packages. We recommend Anaconda for Python 3.6+ since Python 2.7 will soon be not supported.
+We recommend using [Anaconda](https://www.anaconda.com/distribution/), which bundles togther most of the required packages. NILMTK requires Python 3.6+ due to the module it depends upon.
 
 If you prefer to avoid Anaconda, you could install most packages using `pip` but you will require a compatible C compiler for your Python distribution. Be sure to use the package versions listed in the file `environment-dev.yml`.
 

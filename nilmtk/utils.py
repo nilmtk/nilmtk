@@ -1,4 +1,3 @@
-from __future__ import print_function, division
 from os.path import isdir, dirname, abspath
 from os import getcwd
 from inspect import currentframe, getfile, getsourcefile
@@ -7,15 +6,11 @@ from collections import OrderedDict, defaultdict
 import datetime, re
 import pytz
 import warnings
-
 import numpy as np
 import pandas as pd
 import networkx as nx
 from IPython.core.display import HTML, display
 from sklearn.metrics import mean_squared_error
-# Python 2/3 compatibility
-from six import iteritems
-from past.builtins import basestring
 
 from nilmtk.datastore import HDFDataStore, CSVDataStore
 
@@ -49,7 +44,7 @@ def show_versions():
     else:
         print("")
 
-    for k, v in iteritems(output):
+    for k, v in output.items():
         print("{}: {}".format(k, v))
 
 
@@ -138,7 +133,7 @@ def find_nearest(known_array, test_array):
 
 
 def container_to_string(container, sep='_'):
-    if isinstance(container, basestring):
+    if isinstance(container, str):
         string = container
     else:
         try:
@@ -161,7 +156,7 @@ def simplest_type_for(values):
 def flatten_2d_list(list2d):
     list1d = []
     for item in list2d:
-        if isinstance(item, basestring):
+        if isinstance(item, str):
             list1d.append(item)
         else:
             try:
@@ -222,7 +217,7 @@ def get_module_directory():
 def dict_to_html(dictionary):
     def format_string(value):
         try:
-            if isinstance(value, basestring) and 'http' in value:
+            if isinstance(value, str) and 'http' in value:
                 html = re.sub(r'(http[^\s\)]+)', r'<a href="\1">\1</a>', value)
             else:
                 html = '{}'.format(value)
@@ -231,7 +226,7 @@ def dict_to_html(dictionary):
         return html
 
     html = '<ul>'
-    for key, value in iteritems(dictionary):
+    for key, value in dictionary.items():
         html += '<li><strong>{}</strong>: '.format(key)
         if isinstance(value, list):
             html += '<ul>'
@@ -295,7 +290,7 @@ def timestamp_is_naive(timestamp):
     -------
     True if `timestamp` is naive (i.e. if it does not have a
     timezone associated with it).  See:
-    https://docs.python.org/2/library/datetime.html#available-types
+    https://docs.python.org/3/library/datetime.html#available-types
     """
     if timestamp.tzinfo is None:
         return True

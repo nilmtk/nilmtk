@@ -1,5 +1,3 @@
-#!/usr/bin/python
-from __future__ import print_function, division
 import unittest
 from ..totalenergy import TotalEnergy, _energy_for_power_series
 from ...preprocessing import Clip

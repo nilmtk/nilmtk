@@ -1,4 +1,3 @@
-
 '''
 DRED Dataset converter.
 The .h5 format is hosted in DRED official website. But the file is not fully compatible with NILMTK.
@@ -9,7 +8,6 @@ Official Website :- http://www.st.ewi.tudelft.nl/~akshay/dred/
 
 '''
 
-from __future__ import print_function, division
 import pandas as pd
 import numpy as np
 from copy import deepcopy

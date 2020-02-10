@@ -1,4 +1,3 @@
-from __future__ import print_function, division
 import matplotlib.pyplot as plt
 import pandas as pd
 from datetime import timedelta

@@ -1,8 +1,6 @@
-from __future__ import print_function, division
 from warnings import warn
 from collections import namedtuple
 from copy import deepcopy
-from six import iteritems
 from .hashable import Hashable
 from .utils import flatten_2d_list
 from nilm_metadata import get_appliance_types
@@ -117,7 +115,7 @@ class Appliance(Hashable):
             raise TypeError()
 
         match = True
-        for k, v in iteritems(key):
+        for k, v in key.items():
             if hasattr(self.identifier, k):
                 if Appliance.allow_synonyms and k == 'type':
                     synonyms = self.type.get('synonyms', [])

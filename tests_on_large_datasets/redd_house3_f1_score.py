@@ -1,6 +1,5 @@
-from __future__ import print_function, division
 from nilmtk import DataSet, HDFDataStore
-from nilmtk.disaggregate import fhmm_exact
+from nilmtk.legacy.disaggregate import fhmm_exact
 from nilmtk.metrics import f1_score
 from os.path import join
 import matplotlib.pyplot as plt

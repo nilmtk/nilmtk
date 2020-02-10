@@ -1,4 +1,3 @@
-from __future__ import print_function, division
 import pandas as pd
 from datetime import timedelta
 from nilmtk.tests.testingtools import data_dir

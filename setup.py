@@ -21,16 +21,25 @@ import sys
 import warnings
 # import numpy
 
-MAJOR = 0
-MINOR = 3
-MICRO = 2
-DEV = 0 # For multiple dev pre-releases, please increment this value
-ISRELEASED = True
-VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
-QUALIFIER = ''
+TRAVIS_TAG = os.environ.get('TRAVIS_TAG', '')
+
+if TRAVIS_TAG:
+    #TODO: validate if the tag is a valid version number
+    VERSION = TRAVIS_TAG
+    ISRELEASED = not ('dev' in TRAVIS_TAG)
+    QUALIFIER = ''
+else:
+    MAJOR = 0
+    MINOR = 4
+    MICRO = 0
+    DEV = 1 # For multiple dev pre-releases, please increment this value
+    ISRELEASED = False
+    VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
+    QUALIFIER = ''
+
 
 FULLVERSION = VERSION
-if not ISRELEASED:
+if not ISRELEASED and not TRAVIS_TAG:
     try:
         import subprocess
         try:
@@ -88,7 +97,7 @@ setup(
         'scikit-learn>=0.21.2',
         'hmmlearn>=0.2.1',
         'pyyaml',
-        'matplotlib>=2.2.0',
+        'matplotlib>=3.1.0',
         'jupyter'
     ],
     description='Estimate the energy consumed by individual appliances from '
