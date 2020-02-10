@@ -43,7 +43,7 @@ def convert_dataport(input_path, hdf_filename,
     check_directory_exists(input_path)
     # List csv files in directory
     # We will only use the ones of 1Hz frequency
-    files = [f for f in listdir(input_path) if isfile(join(input_path, f)) and
+    files = [f for f in os.listdir(input_path) if isfile(join(input_path, f)) and
              '.csv' in f and '.gz' not in f and '1s' in f]
     # Sorting Lexicographically
     files.sort()
