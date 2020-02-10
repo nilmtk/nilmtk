@@ -1,14 +1,3 @@
-import numpy as np
-import pandas as pd
-from os.path import *
-from os import getcwd
-from os import listdir
-from nilmtk.datastore import Key
-from nilmtk.measurement import LEVEL_NAMES
-from nilmtk.utils import check_directory_exists, get_datastore, get_module_directory
-from nilm_metadata import convert_yaml_to_hdf5
-from sys import getfilesystemencoding
-
 import os
 import re
 import datetime
@@ -22,19 +11,20 @@ from nilmtk.measurement import measurement_columns
 from nilmtk.measurement import LEVEL_NAMES
 from nilmtk.datastore import Key
 from nilm_metadata import convert_yaml_to_hdf5
-from nilmtk.utils import get_module_directory
+from nilmtk.utils import check_directory_exists, get_datastore, get_module_directory
 import shutil
 import tempfile
 
 # This script is based upon download_dataport.py
 # We import from it all the common functions and variables
-from nilmtk.dataset_converters.dataport.download_dataport import feed_mapping, feed_ignore, database_assert, _dataport_dataframe_to_hdf    
+from nilmtk.dataset_converters.dataport.download_dataport import feed_mapping, feed_ignore
+from nilmtk.dataset_converters.dataport.download_dataport import database_assert, _dataport_dataframe_to_hdf    
     
 
 def convert_dataport(input_path, hdf_filename,
                      user_selected_table='eg_realpower_1s',
                      time_column="localminute"):
-    """Converts the Pecan Dataport dataset to NILMTK HDF5 format.
+    """Converts the Pecan Dataport sample dataset to NILMTK HDF5 format.
 
     For more information about the Pecan Dataport dataset, and to download
     it, please see https://www.pecanstreet.org/dataport/
@@ -61,7 +51,7 @@ def convert_dataport(input_path, hdf_filename,
     # Assert that the type of selected table exist
     database_assert(user_selected_table)
     
-    # set up a new HDF5 datastore (overwrites existing store)
+    # Set up a new HDF5 datastore (overwrites existing store)
     store = pd.HDFStore(hdf_filename, 'w', complevel=9, complib='zlib')
 
     # Create a temporary metadata dir, remove existing building
@@ -141,9 +131,3 @@ def convert_dataport(input_path, hdf_filename,
 
     # remote the temporary dir when finished
     shutil.rmtree(tmp_dir)
-
-    
-if __name__ == "__main__":
-    path_project = os.path.dirname(os.path.realpath(__file__)).rsplit('/', 4)[0]
-    path_data = f"{path_project}/nilm/data/"
-    convert_dataport(f"{path_data}dataport", f"{path_data}nilmtk/dataport.h5")
