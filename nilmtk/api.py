@@ -213,7 +213,7 @@ class API():
                     self.test_submeters = test_appliances
                     print("Results for Dataset {dataset} Building {building} Chunk {chunk_num}".format(dataset=dataset,building=building,chunk_num=chunk_num))
                     self.storing_key = str(dataset) + "_" + str(building) + "_" + str(chunk_num) 
-                    self.call_predict(self.classifiers)
+                    self.call_predict(self.classifiers, test.metadata['timezone'])
 
 
     def train_jointly(self,clf,d):
@@ -292,7 +292,7 @@ class API():
                     self.test_submeters.append((appliance_name,[appliance_readings[i]]))
                 
                 self.storing_key = str(dataset) + "_" + str(building) 
-                self.call_predict(self.classifiers)
+                self.call_predict(self.classifiers, test.metadata['timezone'])
             
 
     def dropna(self,mains_df, appliance_dfs):
@@ -330,7 +330,7 @@ class API():
                 print ("\n\nThe method {model_name} specied does not exist. \n\n".format(model_name=name))
                 print (e)
     
-    def call_predict(self,classifiers):
+    def call_predict(self, classifiers, timezone):
 
         """
         This functions computers the predictions on the self.test_mains using all the trained models and then compares different learn't models using the metrics specified
@@ -339,7 +339,7 @@ class API():
         pred_overall={}
         gt_overall={}
         for name,clf in classifiers:
-            gt_overall,pred_overall[name]=self.predict(clf,self.test_mains,self.test_submeters, self.sample_period,'Europe/London')
+            gt_overall,pred_overall[name]=self.predict(clf,self.test_mains,self.test_submeters, self.sample_period, timezone)
 
         self.gt_overall=gt_overall
         self.pred_overall=pred_overall
