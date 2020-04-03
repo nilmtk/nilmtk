@@ -1,7 +1,11 @@
 if [ -n "$TRAVIS_TAG" ]; then # only run conda-build on tags, sometimes takes too long
     echo Building conda package...
-    conda install conda-build anaconda-client
-    conda update -q conda-build
+
+    conda create -n builder conda-build anaconda-client
+    source activate builder
+
+    #conda install conda-build anaconda-client
+    #conda update -q conda-build
     #conda info -a
 
     # Build conda packages
