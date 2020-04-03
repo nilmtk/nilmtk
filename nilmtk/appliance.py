@@ -82,7 +82,7 @@ class Appliance(Hashable):
         else:
             label = str(tuple(self.identifier))
 
-        if self.identifier.type is 'unknown':
+        if self.identifier.type == 'unknown':
             label += ', original name = {}'.format(
                 self.metadata.get('original_name'))
         return label
