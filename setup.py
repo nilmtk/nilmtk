@@ -90,7 +90,7 @@ setup(
         'future',
         'six',
         'psycopg2-binary',
-        'pandas==0.24.2',
+        'pandas==0.25.3',
         'networkx==2.1',
         'scipy',
         'tables',
