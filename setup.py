@@ -1,5 +1,5 @@
 """
-   Copyright 2013-2019 NILMTK developers
+   Copyright 2013-2020 NILMTK developers
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -105,7 +105,7 @@ setup(
         "scikit-learn>=0.21.2",
         "hmmlearn>=0.2.1",
         "pyyaml",
-        "matplotlib>=3.1.0",
+        "matplotlib==3.1.3",
         "jupyter",
     ],
     description="Estimate the energy consumed by individual appliances from "
