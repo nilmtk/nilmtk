@@ -478,7 +478,8 @@ def safe_resample(data, **resample_kwargs):
 
         fill_method_str = all_resample_kwargs.pop('fill_method', None)
         if fill_method_str:
-            fill_method = lambda df: getattr(df, fill_method_str)()
+            limit = all_resample_kwargs.pop('limit', None)
+            fill_method = lambda df: getattr(df, fill_method_str)(limit=limit)
         else:
             fill_method = lambda df: df
             
@@ -488,8 +489,8 @@ def safe_resample(data, **resample_kwargs):
         else:
             how = lambda df: df
 
-        if resample_kwargs:
-            warnings.warn("Not all resample_kwargs were consumed: {}".format(repr(resample_kwargs))) 
+        if all_resample_kwargs:
+            warnings.warn("Not all resample_kwargs were consumed: {}".format(repr(all_resample_kwargs))) 
         
         return fill_method(how(data.resample(rule, **resample_kwargs)))
        
