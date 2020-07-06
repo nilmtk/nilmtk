@@ -1,6 +1,6 @@
 # Installing NILMTK
 
-We recommend using [Anaconda](https://store.continuum.io/cshop/anaconda/), which bundles together most of the required packages. We recommend using [Anaconda](https://www.anaconda.com/distribution/), which bundles togther most of the required packages. NILMTK requires Python 3.6+ due to the module it depends upon.
+We recommend using [Anaconda](https://store.continuum.io/cshop/anaconda/), which bundles together most of the required packages. NILMTK requires Python 3.6+ due to the module it depends upon.
 
 After Anaconda has been installed, open up the terminal (Unix) or Anaconda prompt (Windows):
 
