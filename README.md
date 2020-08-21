@@ -7,14 +7,9 @@ energy consumed by individual appliances given just a whole-house
 power meter reading.  In other words, it produces an (estimated)
 itemised energy bill from just a single, whole-house power meter.
 
-NILMTK is a toolkit designed to help **researchers** evaluate the accuracy of NILM algorithms. 
+NILMTK is a toolkit designed to help **researchers** evaluate the accuracy of NILM algorithms. If you are a new Python user, it is recommended to educate yourself on [Pandas](https://pandas.pydata.org/), [Pytables](http://www.pytables.org/) and other tools from the Python ecosystem.
 
-**⚠️It may take time for the NILMTK authors to get back to you regarding queries/issues. However, you are more than welcome to propose changes, support!** 
-
-**⚠️The last steps in the development of the next NILMTK version (0.4) are being done in the master git branch. If you are a new user, please refer to the version 0.3.x branch at [https://github.com/nilmtk/nilmtk/tree/0.3.x](https://github.com/nilmtk/nilmtk/tree/0.3.x).**
-
-**⚠The latest release is available through [https://github.com/nilmtk/nilmtk/releases/latest](https://github.com/nilmtk/nilmtk/releases/latest)**
-
+**⚠️It may take time for the NILMTK authors to get back to you regarding queries/issues. However, you are more than welcome to propose changes, support!** Remember to check existing issue tickets, especially the open ones.
 
 # Documentation
 
@@ -49,24 +44,24 @@ NILMTK includes:
 
 # Publications
 
-Please see our [list of NILMTK publications](http://nilmtk.github.io/#publications).  If you use NILMTK in academic work then please consider citing our papers.
+If you use NILMTK in academic work then please consider citing our papers. Here are some of the publications (contributors, please update this as required):
 
-Please note that NILMTK has evolved *a lot* since these papers were published! Please use the
-[online docs](https://github.com/nilmtk/nilmtk/tree/master/docs/manual)
-as a guide to the current API.
+1. Nipun Batra, Jack Kelly, Oliver Parson, Haimonti Dutta, William Knottenbelt, Alex Rogers, Amarjeet Singh, Mani Srivastava. NILMTK: An Open Source Toolkit for Non-intrusive Load Monitoring. In: 5th International Conference on Future Energy Systems (ACM e-Energy), Cambridge, UK. 2014. DOI:[10.1145/2602044.2602051](http://dx.doi.org/10.1145/2602044.2602051). arXiv:[1404.3878](http://arxiv.org/abs/1404.3878).
+2. Nipun Batra, Jack Kelly, Oliver Parson, Haimonti Dutta, William Knottenbelt, Alex Rogers, Amarjeet Singh, Mani Srivastava. NILMTK: An Open Source Toolkit for Non-intrusive Load Monitoring". In: NILM Workshop, Austin, US. 2014 \[[pdf](http://nilmworkshop14.files.wordpress.com/2014/05/batra_nilmtk.pdf)\]
+3. Jack Kelly, Nipun Batra, Oliver Parson, Haimonti Dutta, William Knottenbelt, Alex Rogers, Amarjeet Singh, Mani Srivastava. Demo Abstract: NILMTK v0.2: A Non-intrusive Load Monitoring Toolkit for Large Scale Data Sets. In the first ACM Workshop On Embedded Systems For Energy-Efficient Buildings, 2014. DOI:[10.1145/2674061.2675024](http://dx.doi.org/10.1145/2674061.2675024). arXiv:[1409.5908](http://arxiv.org/abs/1409.5908).
+4. Nipun Batra, Rithwik Kukunuri, Ayush Pandey, Raktim Malakar, Rajat Kumar, Odysseas Krystalakos, Mingjun Zhong, Paulo Meira, and Oliver Parson. 2019. Towards reproducible state-of-the-art energy disaggregation. In Proceedings of the 6th ACM International Conference on Systems for Energy-Efficient Buildings, Cities, and Transportation (BuildSys '19). Association for Computing Machinery, New York, NY, USA, 193–202. DOI:[10.1145/3360322.3360844](https://doi.org/10.1145/3360322.3360844)
 
+Please note that NILMTK has evolved *a lot* since most of these papers were published! Please use the [online docs](https://github.com/nilmtk/nilmtk/tree/master/docs/manual)
+as a guide to the current API. 
 
-# Keeping up to date with NILMTK
+# Brief history
 
-* [NILMTK-Announce mailing list](https://groups.google.com/forum/#!forum/nilmtk-announce): stay up to speed with NILMTK.  This is a low-traffic mailing list.  We'll just announce new versions, new docs etc.
-* [NILMTK on Twitter](https://twitter.com/nilmtk).
-
-
-# History
-
-* April 2014: v0.1 released
-* June 2014: NILMTK presented at [ACM e-Energy](http://conferences.sigcomm.org/eenergy/2014/)
-* July 2014: v0.2 released
+* August 2019: v0.4 released with the new API. See also [NILMTK-Contrib](https://github.com/nilmtk/nilmtk-contrib).
+* June 2019: v0.3.1 released on [Anaconda Cloud](https://anaconda.org/nilmtk/nilmtk/).
+* Jav 2018: Initial Python 3 support on the v0.3 branch
 * Nov 2014: NILMTK wins best demo award at [ACM BuildSys](http://www.buildsys.org/2014/)
+* July 2014: v0.2 released
+* June 2014: NILMTK presented at [ACM e-Energy](http://conferences.sigcomm.org/eenergy/2014/)
+* April 2014: v0.1 released
 
 For more detail, please see our [changelog](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/development_guide/changelog.md).
