@@ -15,6 +15,8 @@ NILMTK is a toolkit designed to help **researchers** evaluate the accuracy of NI
 
 [NILMTK Documentation](https://github.com/nilmtk/nilmtk/tree/master/docs/manual)
 
+If you are a new user, read the [install instructions here](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/user_guide/install_user.md). It came to our attention that some users follow third-party tutorials to install NILMTK. Always remember to check the dates of such tutorials, many are very outdated and don't reflect NILMTK's current version or the recommended/supported setup.
+
 # Why a toolkit for NILM?
 
 We quote our [NILMTK paper](http://arxiv.org/pdf/1404.3878v1.pdf)

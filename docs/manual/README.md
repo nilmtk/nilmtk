@@ -16,8 +16,9 @@
 * [Data](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/user_guide/data.ipynb): convert and load data.
 * [The Load API: Loading data into memory](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/user_guide/loading_data_into_memory.ipynb)
 * [Meter selection and basic statistics](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/user_guide/elecmeter_and_metergroup.ipynb)
-* [Disaggregation and Metrics](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/user_guide/disaggregation_and_metrics.ipynb)
-* [Comparing NILM algorithms](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/user_guide/comparing_nilm_algorithms.ipynb)
+* [New: The experimentation API](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/user_guide/nilmtk_api_tutorial.ipynb): check also [NILMTK-contrib](https://github.com/nilmtk/nilmtk-contrib) for some related material and related paper.
+* [Legacy: Disaggregation and Metrics](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/user_guide/disaggregation_and_metrics.ipynb)
+* [Legacy: Comparing NILM algorithms](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/user_guide/comparing_nilm_algorithms.ipynb)
 
 
 ### [Development Guide](https://github.com/nilmtk/nilmtk/tree/master/docs/manual/development_guide)

@@ -81,6 +81,6 @@ We recommend checking the [Anaconda documentation about environments](https://do
 
 If you want to try out tagged development versions, you can follow the normal installation guide but use the following command for the NILMTK installation (step 4):
 
-	```bash
+```bash
     conda install -c nilmtk -c nilmtk/label/dev nilmtk
-	```
+```
