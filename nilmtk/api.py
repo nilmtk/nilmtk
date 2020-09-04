@@ -37,7 +37,6 @@ class API():
         self.gt_overall = {}
         self.pred_overall = {}
         self.classifiers=[]
-        self.DROP_ALL_NANS = True
         self.mae = pd.DataFrame()
         self.rmse = pd.DataFrame()
         self.errors = []
@@ -50,7 +49,7 @@ class API():
         self.sample_period = params['sample_rate']
         for elems in params['appliances']:
             self.appliances.append(elems)
-        
+
         self.pre_trained = ['pre_trained']
         self.train_datasets_dict = params['train']['datasets']
         self.test_datasets_dict = params['test']['datasets']
@@ -59,6 +58,7 @@ class API():
         self.artificial_aggregate = params.get('artificial_aggregate',self.artificial_aggregate)
         self.chunk_size = params.get('chunk_size',self.chunk_size)
         self.display_predictions  = params.get('display_predictions',False)
+        self.DROP_ALL_NANS = params.get("DROP_ALL_NANS", True)
         self.experiment(params)
 
 
