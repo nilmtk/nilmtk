@@ -59,14 +59,14 @@ class API():
         self.chunk_size = params.get('chunk_size',self.chunk_size)
         self.display_predictions  = params.get('display_predictions',False)
         self.DROP_ALL_NANS = params.get("DROP_ALL_NANS", True)
-        self.experiment(params)
+        self.experiment()
 
 
-    def experiment(self,params):
+    def experiment(self):
         """
         Calls the Experiments with the specified parameters
         """
-        
+
         self.store_classifier_instances()
         d=self.train_datasets_dict
 
