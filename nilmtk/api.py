@@ -11,25 +11,15 @@ from IPython.display import clear_output
 class API():
 
     """
-    The API ia designed for rapid experimentation with NILM Algorithms. 
-
+    The API ia designed for rapid experimentation with NILM Algorithms.
     """
 
     def __init__(self,params):
+        """
+        Initialize the API with default parameters and then start the experiment.
+        """
 
-        """
-        Initializes the API with default parameters
-        """
-        self.power = {}
-        self.sample_period = 1
         self.appliances = []
-        self.methods = {}
-        self.chunk_size = None
-        self.pre_trained = False
-        self.metrics = []
-        self.train_datasets_dict = {}
-        self.test_datasets_dict = {}
-        self.artificial_aggregate = False
         self.train_submeters = []
         self.train_mains = pd.DataFrame()
         self.test_submeters = []
@@ -37,30 +27,22 @@ class API():
         self.gt_overall = {}
         self.pred_overall = {}
         self.classifiers=[]
-        self.mae = pd.DataFrame()
-        self.rmse = pd.DataFrame()
         self.errors = []
-        self.predictions = []
         self.errors_keys = []
-        self.predictions_keys = []
-        self.params = params
-        for elems in params['power']:
-            self.power = params['power']
-        self.sample_period = params['sample_rate']
+        self.power = params['power']
         for elems in params['appliances']:
             self.appliances.append(elems)
 
-        self.pre_trained = ['pre_trained']
         self.train_datasets_dict = params['train']['datasets']
         self.test_datasets_dict = params['test']['datasets']
         self.metrics = params['test']['metrics']
         self.methods = params['methods']
-        self.artificial_aggregate = params.get('artificial_aggregate',self.artificial_aggregate)
-        self.chunk_size = params.get('chunk_size',self.chunk_size)
-        self.display_predictions  = params.get('display_predictions',False)
+        self.sample_period = params.get("sample_rate", 1)
+        self.artificial_aggregate = params.get('artificial_aggregate', False)
+        self.chunk_size = params.get('chunk_size', None)
+        self.display_predictions = params.get('display_predictions', False)
         self.DROP_ALL_NANS = params.get("DROP_ALL_NANS", True)
         self.experiment()
-
 
     def experiment(self):
         """
