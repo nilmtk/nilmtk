@@ -77,7 +77,7 @@ class API():
                     # Training on those many chunks for those many epochs
                     print ("Chunk wise training for ",clf.MODEL_NAME)
                     for i in range(n_epochs):
-                        self.train_chunk_wise(clf,d) 
+                        self.train_chunk_wise(clf, d, i)
 
                 else:
                     print ("Joint training for ",clf.MODEL_NAME)
@@ -104,7 +104,7 @@ class API():
 
 
         
-    def train_chunk_wise(self,clf,d):
+    def train_chunk_wise(self, clf, d, current_epoch):
 
         """
         This function loads the data from buildings and datasets with the specified chunk size and trains on each of them. 
@@ -149,7 +149,7 @@ class API():
 
                     self.train_mains = [train_df]
                     self.train_submeters = train_appliances
-                    clf.partial_fit(self.train_mains,self.train_submeters)
+                    clf.partial_fit(self.train_mains, self.train_submeters, current_epoch)
                 
 
 
