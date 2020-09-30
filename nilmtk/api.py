@@ -42,7 +42,9 @@ class API():
         self.chunk_size = params.get('chunk_size', None)
         self.display_predictions = params.get('display_predictions', False)
         self.DROP_ALL_NANS = params.get("DROP_ALL_NANS", True)
+        self.site_only = params.get('site_only',False)
         self.experiment()
+        
 
     def experiment(self):
         """
@@ -102,10 +104,7 @@ class API():
             print ("Joint Testing for all algorithms")
             self.test_jointly(d)
 
-
-        
     def train_chunk_wise(self, clf, d, current_epoch):
-
         """
         This function loads the data from buildings and datasets with the specified chunk size and trains on each of them. 
         """
@@ -151,7 +150,6 @@ class API():
                     self.train_submeters = train_appliances
                     clf.partial_fit(self.train_mains, self.train_submeters, current_epoch)
                 
-
 
         print("...............Finished the Training Process ...................")
 
@@ -241,43 +239,42 @@ class API():
 
         clf.partial_fit(self.train_mains,self.train_submeters)
 
+    
     def test_jointly(self,d):
-
-
         # store the test_main readings for all buildings
         for dataset in d:
             print("Loading data for ",dataset, " dataset")
             test=DataSet(d[dataset]['path'])
             for building in d[dataset]['buildings']:
                 test.set_window(start=d[dataset]['buildings'][building]['start_time'],end=d[dataset]['buildings'][building]['end_time'])
-                test_mains=next(test.buildings[building].elec.mains().load(physical_quantity='power', ac_type=self.power['mains'], sample_period=self.sample_period))
-                appliance_readings=[]
+                test_mains=next(test.buildings[building].elec.mains().load(physical_quantity='power', ac_type='apparent', sample_period=self.sample_period))
+                if self.DROP_ALL_NANS and self.site_only:
+                    test_mains, _= self.dropna(test_mains,[])
 
-                for appliance in self.appliances:
-                    test_df=next((test.buildings[building].elec[appliance].load(physical_quantity='power', ac_type=self.power['appliance'], sample_period=self.sample_period)))
-                    appliance_readings.append(test_df)
+                if self.site_only != True:
+                    appliance_readings=[]
 
+                    for appliance in self.appliances:
+                        test_df=next((test.buildings[building].elec[appliance].load(physical_quantity='power', ac_type=self.power['appliance'], sample_period=self.sample_period)))
+                        appliance_readings.append(test_df)
+                    
+                    if self.DROP_ALL_NANS:
+                        test_mains , appliance_readings = self.dropna(test_mains,appliance_readings)
                 
-                if self.DROP_ALL_NANS:
-                    test_mains, appliance_readings = self.dropna(test_mains, appliance_readings)
-
-
-                if self.artificial_aggregate:
-                    print ("Creating an Artificial Aggregate")
-                    test_mains = pd.DataFrame(np.zeros(appliance_readings[0].shape),index = appliance_readings[0].index,columns=appliance_readings[0].columns)
-                    for app_reading in appliance_readings:
-                        test_mains+=app_reading
-
+                    if self.artificial_aggregate:
+                        print ("Creating an Artificial Aggregate")
+                        test_mains = pd.DataFrame(np.zeros(appliance_readings[0].shape),index = appliance_readings[0].index,columns=appliance_readings[0].columns)
+                        for app_reading in appliance_readings:
+                            test_mains+=app_reading
+                    for i, appliance_name in enumerate(self.appliances):
+                        self.test_submeters.append((appliance_name,[appliance_readings[i]]))
 
                 self.test_mains = [test_mains]
-                for i, appliance_name in enumerate(self.appliances):
-                    self.test_submeters.append((appliance_name,[appliance_readings[i]]))
-                
                 self.storing_key = str(dataset) + "_" + str(building) 
-                self.call_predict(self.classifiers, test.metadata['timezone'])
-            
+                self.call_predict(self.classifiers, test.metadata["timezone"])
 
-    def dropna(self,mains_df, appliance_dfs):
+
+    def dropna(self,mains_df, appliance_dfs=[]):
         """
         Drops the missing values in the Mains reading and appliance readings and returns consistent data by copmuting the intersection
         """
@@ -285,9 +282,11 @@ class API():
 
         # The below steps are for making sure that data is consistent by doing intersection across appliances
         mains_df = mains_df.dropna()
+        ix = mains_df.index
+        mains_df = mains_df.loc[ix]
         for i in range(len(appliance_dfs)):
             appliance_dfs[i] = appliance_dfs[i].dropna()
-        ix = mains_df.index
+    
         for  app_df in appliance_dfs:
             ix = ix.intersection(app_df.index)
         mains_df = mains_df.loc[ix]
@@ -319,53 +318,47 @@ class API():
         """
         
         pred_overall={}
-        gt_overall={}
+        gt_overall={}           
         for name,clf in classifiers:
             gt_overall,pred_overall[name]=self.predict(clf,self.test_mains,self.test_submeters, self.sample_period, timezone)
 
         self.gt_overall=gt_overall
         self.pred_overall=pred_overall
+        if self.site_only != True:
+            if gt_overall.size==0:
+                print ("No samples found in ground truth")
+                return None
+            for metric in self.metrics:
+                try:
+                    loss_function = globals()[metric]                
+                except:
+                    print ("Loss function ",metric, " is not supported currently!")
+                    continue
 
-        if gt_overall.size==0:
-            print ("No samples found in ground truth")
-            return None
+                computed_metric={}
+                for clf_name,clf in classifiers:
+                    computed_metric[clf_name] = self.compute_loss(gt_overall, pred_overall[clf_name], loss_function)
+                computed_metric = pd.DataFrame(computed_metric)
+                print("............ " ,metric," ..............")
+                print(computed_metric) 
+                self.errors.append(computed_metric)
+                self.errors_keys.append(self.storing_key + "_" + metric)
+
 
         if self.display_predictions:
-
-            for i in gt_overall.columns:
-
-                plt.figure()            
-                #plt.plot(self.test_mains[0],label='Mains reading')
-                plt.plot(gt_overall[i],label='Truth')
-                for clf in pred_overall:                
-                    plt.plot(pred_overall[clf][i],label=clf)
-                    plt.xticks(rotation=90)
-                plt.title(i)
-                plt.legend()
-            plt.show()
-            
+            if self.site_only != True:
+                for i in gt_overall.columns:
+                    plt.figure()
+                    #plt.plot(self.test_mains[0],label='Mains reading')
+                    plt.plot(gt_overall[i],label='Truth')
+                    for clf in pred_overall:                
+                        plt.plot(pred_overall[clf][i],label=clf)
+                        plt.xticks(rotation=90)
+                    plt.title(i)
+                    plt.legend()
+                plt.show()
         
-        for metric in self.metrics:
-            try:
-                loss_function = globals()[metric]                
-            except:
-                print ("Loss function ",metric, " is not supported currently!")
-                continue
-
-            computed_metric={}
-            for clf_name,clf in classifiers:
-                computed_metric[clf_name] = self.compute_loss(gt_overall, pred_overall[clf_name], loss_function)
-            computed_metric = pd.DataFrame(computed_metric)
-            print("............ " ,metric," ..............")
-            print(computed_metric) 
-            self.errors.append(computed_metric)
-            self.errors_keys.append(self.storing_key + "_" + metric)
-
-
-
-                
-                    
-    def predict(self, clf, test_elec, test_submeters, sample_period, timezone):
+    def predict(self, clf, test_elec, test_submeters, sample_period, timezone ):
         print ("Generating predictions for :",clf.MODEL_NAME)        
         """
         Generates predictions on the test dataset using the specified classifier.
@@ -374,7 +367,7 @@ class API():
         # "ac_type" varies according to the dataset used. 
         # Make sure to use the correct ac_type before using the default parameters in this code.   
         
-            
+           
         pred_list = clf.disaggregate_chunk(test_elec)
 
         # It might not have time stamps sometimes due to neural nets
@@ -390,13 +383,26 @@ class API():
 
         gt_overall = pd.DataFrame(gt, dtype='float32')
         pred = {}
-        for app_name in concat_pred_df.columns:
-            app_series_values = concat_pred_df[app_name].values.flatten()
-            # Neural nets do extra padding sometimes, to fit, so get rid of extra predictions
-            app_series_values = app_series_values[:len(gt_overall[app_name])]
-            pred[app_name] = pd.Series(app_series_values, index = gt_overall.index)
-        pred_overall = pd.DataFrame(pred,dtype='float32')
+
+        if self.site_only ==True:
+            for app_name in concat_pred_df.columns:
+                app_series_values = concat_pred_df[app_name].values.flatten()
+                pred[app_name] = pd.Series(app_series_values)
+            pred_overall = pd.DataFrame(pred,dtype='float32')
+            pred_overall.plot(label="Pred")
+            plt.title('Disaggregated Data')
+            plt.legend()
+
+        else:
+            for app_name in concat_pred_df.columns:
+                app_series_values = concat_pred_df[app_name].values.flatten()
+                # Neural nets do extra padding sometimes, to fit, so get rid of extra predictions
+                app_series_values = app_series_values[:len(gt_overall[app_name])]
+                pred[app_name] = pd.Series(app_series_values, index = gt_overall.index)
+            pred_overall = pd.DataFrame(pred,dtype='float32')
+        
         return gt_overall, pred_overall
+
 
     # metrics
     def compute_loss(self,gt,clf_pred, loss_function):

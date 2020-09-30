@@ -1,0 +1,10 @@
+instance: 1   
+original_name: house_1   
+elec_meters:
+  1: &MinionEMS
+    site_meter: true
+    device_model: MinionEMS
+appliances: []
+
+
+

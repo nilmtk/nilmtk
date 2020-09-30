@@ -1,0 +1,36 @@
+MinionEMS:
+  model: MinionEMS
+  manufacturer: MinionLabs India Private Lmited
+  manufacturer_url: https://www.minionlabs.tech/
+  description: Energy Meter
+  sample_period: 60 # the interval between samples. In seconds.
+  max_sample_period: 60
+  measurements:
+  - physical_quantity: power   # power, voltage, energy, current?
+    type: active   # active (real power), reactive or apparent?
+    upper_limit: 10000
+    lower_limit: 0
+  - physical_quantity: power
+    type: apparent
+    upper_limit: 10000
+    lower_limit: 0
+  - physical_quantity: power
+    type: reactive
+    upper_limit: 10000
+    lower_limit: 0
+  - physical_quantity: frequency  
+    type: 
+    upper_limit: 70
+    lower_limit: 0
+  - physical_quantity: voltage 
+    type: 
+    upper_limit: 270
+    lower_limit: 0
+  - physical_quantity: power factor 
+    type: 
+    upper_limit: 1
+    lower_limit: 0
+  - physical_quantity: current  
+    type:  
+    upper_limit: 100
+    lower_limit: 0

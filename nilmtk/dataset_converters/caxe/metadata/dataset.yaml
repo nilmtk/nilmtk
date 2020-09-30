@@ -1,0 +1,22 @@
+name: CAXE
+long_name: CAXE
+creators:
+- Faizan Qazi
+publication_date: 2020
+institution: MinionLabs India Private Limited
+contact: faizanzahid09@hotmail.com
+description: 115 minutes site-meter data
+subject: Disaggregate power demand for building.
+number_of_buildings: 1
+timezone: Asia/Kolkata
+geo_location:
+  locality: Bengaluru  
+  country: IN   
+  latitude: 12.967051 
+  longitude: 77.642802
+related_documents:
+- https://github.com/caxefaizan/nilmtk
+- >
+  Faizan Qazi
+  CAXE: A building data set for energy disaggregation research.
+schema: https://github.com/nilmtk/nilm_metadata/tree/v0.2
