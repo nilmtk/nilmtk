@@ -13,12 +13,22 @@ class Bar(Foo):
     def foo(self):
         pass
 
-Now, Bar.foo.__doc__ == Bar().foo.__doc__ == Foo.foo.__doc__ == "Frobber"
+class Baz(Bar):
+    @doc_inherit
+    def foo(self):
+        pass
 
-from: http://code.activestate.com/recipes/576862-docstring-inheritance-decorator/
+Now, Bar.foo.__doc__ == Bar().foo.__doc__ == Foo.foo.__doc__ == "Frobber"
+and  Baz.foo.__doc__ == Baz().foo.__doc__ == Bar.foo.__doc__ == Foo.foo.__doc__
+
+From: http://code.activestate.com/recipes/576862-docstring-inheritance-decorator/
+and: https://stackoverflow.com/a/38414303/8289769
 """
+import inspect
+
 
 from functools import wraps
+
 
 class DocInherit(object):
     """
@@ -32,23 +42,6 @@ class DocInherit(object):
         self.name = mthd.__name__
 
     def __get__(self, obj, cls):
-        if obj:
-            return self.get_with_inst(obj, cls)
-        else:
-            return self.get_no_inst(cls)
-
-    def get_with_inst(self, obj, cls):
-
-        overridden = getattr(super(cls, obj), self.name, None)
-
-        @wraps(self.mthd, assigned=('__name__', '__module__'))
-        def f(*args, **kwargs):
-            return self.mthd(obj, *args, **kwargs)
-
-        return self.use_parent_doc(f, overridden)
-
-    def get_no_inst(self, cls):
-
         for parent in cls.__mro__[1:]:
             overridden = getattr(parent, self.name, None)
             if overridden:
@@ -56,14 +49,15 @@ class DocInherit(object):
 
         @wraps(self.mthd, assigned=('__name__', '__module__'))
         def f(*args, **kwargs):
-            return self.mthd(*args, **kwargs)
+            if obj:
+                return self.mthd(obj, *args, **kwargs)
+            else:
+                return self.mthd(*args, **kwargs)
 
-        return self.use_parent_doc(f, overridden)
+        doc = inspect.getdoc(overridden)
+        f.__doc__ = doc
+        return f
 
-    def use_parent_doc(self, func, source):
-        if source is None:
-            raise NameError("Can't find '%s' in parents" % self.name)
-        func.__doc__ = source.__doc__
-        return func
 
 doc_inherit = DocInherit
+
