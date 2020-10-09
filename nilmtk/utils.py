@@ -300,22 +300,28 @@ def timestamp_is_naive(timestamp):
         return False
 
 
-def get_datastore(filename, format, mode='a'):
+def get_datastore(filename, format=None, mode='r'):
     """
     Parameters
     ----------
     filename : string
-    format : 'CSV' or 'HDF'
-    mode : 'a' (append) or 'w' (write), optional
+    format : 'CSV' or 'HDF', default: infer from filename ending.
+    mode : 'r' (read-only), 'a' (append) or 'w' (write), default: 'r'
 
     Returns
     -------
     metadata : dict
     """
+    if not format:
+        if filename.endswith(".h5"):
+            format = "HDF"
+        elif filename.endswith(".csv"):
+            format = "CSV"
+
     if filename is not None:
-        if format == 'HDF':
+        if format == "HDF":
             return HDFDataStore(filename, mode)
-        elif format == 'CSV':
+        elif format == "CSV":
             return CSVDataStore(filename)
         else:
             raise ValueError('format not recognised')

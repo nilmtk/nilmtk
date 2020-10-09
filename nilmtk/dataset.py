@@ -35,7 +35,8 @@ class DataSet(object):
             path to data set
 
         format : str
-            format of output. Either 'HDF' or 'CSV'. Defaults to 'HDF'
+            format of output. 'HDF', 'CSV' or None. Defaults to 'HDF'.
+            Use None for automatic inference from file name extension.
         """
         self.store = None
         self.buildings = OrderedDict()
