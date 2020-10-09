@@ -30,6 +30,8 @@ class ElecMeter(Hashable, Electric):
 
     store : nilmtk.DataStore
 
+    cache : nilmtk.TmpDataStore
+
     key : string
         key into nilmtk.DataStore to access data.
 
@@ -51,6 +53,7 @@ class ElecMeter(Hashable, Electric):
         self.metadata = {} if metadata is None else metadata
         assert isinstance(self.metadata, dict)
         self.store = store
+        self.cache = nilmtk.datastore.TmpDataStore()
         self.identifier = meter_id
 
         # Insert self into nilmtk.global_meter_group
@@ -717,11 +720,11 @@ class ElecMeter(Hashable, Electric):
             # Save to disk newly computed stats
             stat_for_store = computed_result.results.export_to_cache()
             try:
-                self.store.append(key_for_cached_stat, stat_for_store)
+                self.cache.append(key_for_cached_stat, stat_for_store)
             except ValueError:
                 # the old table probably had different columns
-                self.store.remove(key_for_cached_stat)
-                self.store.put(key_for_cached_stat, results_obj.export_to_cache())
+                self.cache.remove(key_for_cached_stat)
+                self.cache.put(key_for_cached_stat, results_obj.export_to_cache())
 
         if full_results:
             return results_obj
@@ -798,15 +801,14 @@ class ElecMeter(Hashable, Electric):
         key_for_cached_stat
         get_cached_stat
         """
-        if self.store is not None:
-            key_for_cache = self.key_for_cached_stat('')
-            try:
-                self.store.remove(key_for_cache)
-            except KeyError:
-                if verbose:
-                    print("No existing cache for", key_for_cache)
-            else:
-                print("Removed", key_for_cache)
+        key_for_cache = self.key_for_cached_stat('')
+        try:
+            self.cache.remove(key_for_cache)
+        except KeyError:
+            if verbose:
+                print("No existing cache for", key_for_cache)
+        else:
+            print("Removed", key_for_cache)
 
     def get_cached_stat(self, key_for_stat):
         """
@@ -825,14 +827,12 @@ class ElecMeter(Hashable, Electric):
         key_for_cached_stat
         clear_cache
         """
-        if self.store is None:
-            return pd.DataFrame()
         try:
-            stat_from_cache = self.store[key_for_stat]
+            stat_from_cache = self.cache[key_for_stat]
         except KeyError:
-            return pd.DataFrame()
-        else:
-            return pd.DataFrame() if stat_from_cache is None else stat_from_cache
+            stat_from_cache = None
+
+        return pd.DataFrame() if stat_from_cache is None else stat_from_cache
 
     # def total_on_duration(self):
     #     """Return timedelta"""
