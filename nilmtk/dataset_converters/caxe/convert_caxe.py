@@ -1,14 +1,13 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[1]:
-
-
 import pandas as pd
 import numpy as np
 from nilmtk.datastore import Key
 from nilmtk.utils import check_directory_exists, get_datastore, get_module_directory
 from nilm_metadata import convert_yaml_to_hdf5
+
+TIMESTAMP_COLUMN_NAME = "timestamp"
+TIMEZONE = "Asia/Kolkata"
+FREQ = "1T"
+LEVEL_NAMES = ['physical_quantity', 'type']
 
 def convert_caxe(file_path):
     '''
@@ -29,10 +28,7 @@ def convert_caxe(file_path):
         'A': ('power', 'apparent'),
     }
 
-    TIMESTAMP_COLUMN_NAME = "timestamp"
-    TIMEZONE = "Asia/Kolkata"
-    FREQ = "1T"
-    LEVEL_NAMES = ['physical_quantity', 'type']
+
     output_filename = 'test.h5'
 
     # Open data store
@@ -59,8 +55,6 @@ def convert_caxe(file_path):
 
     print("Done converting test data to HDF5!")
 
-
-# In[ ]:
 
 
 
