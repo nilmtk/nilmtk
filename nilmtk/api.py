@@ -354,17 +354,8 @@ class API():
             if self.site_only != True:
                 for i in gt_overall.columns:
                     plt.figure()
+                    #plt.plot(self.test_mains[0],label='Mains reading')
                     plt.plot(gt_overall[i],label='Truth')
-                    for clf in pred_overall:                
-                        plt.plot(pred_overall[clf][i],label=clf)
-                        plt.xticks(rotation=90)
-                    plt.title(i)
-                    plt.legend()
-                plt.show()
-            else:
-                for i in pred_overall.columns:
-                    plt.figure()
-                    plt.plot(self.test_mains[0],label='Mains reading')
                     for clf in pred_overall:                
                         plt.plot(pred_overall[clf][i],label=clf)
                         plt.xticks(rotation=90)
@@ -381,7 +372,7 @@ class API():
         # "ac_type" varies according to the dataset used. 
         # Make sure to use the correct ac_type before using the default parameters in this code.   
         
-            
+           
         pred_list = clf.disaggregate_chunk(test_elec)
 
         # It might not have time stamps sometimes due to neural nets
@@ -401,14 +392,11 @@ class API():
         if self.site_only ==True:
             for app_name in concat_pred_df.columns:
                 app_series_values = concat_pred_df[app_name].values.flatten()
-                # Neural nets do extra padding sometimes, to fit, so get rid of extra predictions
-                app_series_values = app_series_values
                 pred[app_name] = pd.Series(app_series_values)
             pred_overall = pd.DataFrame(pred,dtype='float32')
             pred_overall.plot(label="Pred")
+            plt.title('Disaggregated Data')
             plt.legend()
-            return gt_overall,pred_overall
-
 
         else:
             for app_name in concat_pred_df.columns:
@@ -417,7 +405,8 @@ class API():
                 app_series_values = app_series_values[:len(gt_overall[app_name])]
                 pred[app_name] = pd.Series(app_series_values, index = gt_overall.index)
             pred_overall = pd.DataFrame(pred,dtype='float32')
-            return gt_overall, pred_overall
+        
+        return gt_overall, pred_overall
 
 
     # metrics
