@@ -250,7 +250,7 @@ class API():
             for building in d[dataset]['buildings']:
                 test.set_window(start=d[dataset]['buildings'][building]['start_time'],end=d[dataset]['buildings'][building]['end_time'])
                 test_mains=next(test.buildings[building].elec.mains().load(physical_quantity='power', ac_type='apparent', sample_period=self.sample_period))
-                if self.DROP_ALL_NANS:
+                if self.DROP_ALL_NANS and self.site_only:
                     test_mains, _= self.dropna(test_mains,[])
 
                 if self.site_only != True:
