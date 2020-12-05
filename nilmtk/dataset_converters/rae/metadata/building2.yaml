@@ -1,0 +1,137 @@
+instance: 2
+original_name: RAE
+elec_meters:
+  1: &PS24_mains
+    site_meter: true
+    device_model: PS24
+  2: &PS24
+    submeter_of: 0
+    device_model: PS24
+  3: *PS24
+  4: *PS24
+  5: *PS24
+  6: *PS24
+  7: *PS24
+  8: *PS24
+  9: *PS24
+  10: *PS24
+  11: *PS24
+  12: *PS24
+  13: *PS24
+  14: *PS24
+  15: *PS24
+  16: *PS24
+  17: *PS24
+  18: *PS24
+  19: *PS24
+appliances:
+
+- original_name: sub3
+  type: light
+  description: Lights & Plugs (general label)
+  instance: 1
+  meters: [2]
+
+- original_name: sub4+sub5
+  type: tumble dryer
+  description: Clothes Dryer L1 and L2
+  instance: 1
+  meters: [3]
+
+- original_name: sub6
+  type: sockets
+  description: Bedroom Plugs
+  instance: 1
+  meters: [4]
+
+- original_name: sub7
+  type: vacuum cleaner
+  description: Built-in Vacuum
+  instance: 1
+  meters: [5]
+
+- original_name: sub8
+  type: boiler
+  description: Boiler (for hot water and radiant heating)
+  instance: 1
+  meters: [6]
+
+- original_name: sub9
+  type: light
+  description: Lights & Plugs (general label)
+  instance: 2
+  meters: [7]
+
+- original_name: sub10
+  type: washing machine
+  description: Clothes Washer
+  instance: 1
+  meters: [8]
+
+- original_name: sub11
+  type: fridge
+  description: Kitchen Fridge
+  instance: 1
+  meters: [9]
+
+- original_name: sub12
+  type: modem
+  description: Lights & Plugs (general label, incl. Internet modem and network equipment)
+  instance: 1
+  meters: [10]
+
+- original_name: sub13
+  type: sockets
+  description: Bedrooms AFCI Arc-Fault Plugs
+  instance: 2
+  meters: [11]
+
+- original_name: sub14
+  type: sockets
+  description: Kitchen Counter Plugs
+  instance: 3
+  meters: [12]
+
+- original_name: sub15
+  type: sockets
+  description: Kitchen Counter Plugs
+  instance: 4
+  meters: [13]
+
+- original_name: sub16
+  type: light
+  description: Lights & Plugs (general label)
+  instance: 3
+  meters: [14]
+
+- original_name: sub17
+  type: light
+  description: Lights & Plugs (general label)
+  instance: 4
+  meters: [15]
+
+- original_name: sub18
+  type: sockets
+  description: Outside Plugs
+  instance: 5
+  meters: [16]
+
+- original_name: sub19
+  type: dishwasher
+  description: Dishwasher
+  instance: 1
+  meters: [17]
+
+- original_name: sub20
+  type: light
+  description: Lights & Plugs (general label)
+  instance: 5
+  meters: [18]
+
+- original_name: sub21
+  type: mobile phone charger
+  description: Mobile Phone Changers (garburator & microwave not installed)
+  instance: 1
+  meters: [19]
+
+construction_year: 1995

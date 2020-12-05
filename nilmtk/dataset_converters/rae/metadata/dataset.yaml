@@ -1,0 +1,22 @@
+contact: smakonin@sfu.ca
+creators:
+- Makonin, Stephen
+- Wang, Jane
+- Tumpach, Chris
+date_created: '2018-02-12'
+description: the rainforest automation energy dataset for smart grid meter data analysis
+geo_location:
+  country: CA
+  latitude: 49.282730
+  locality: Vancouver
+  longitude: -123.120735
+institution: Simon Fraser University
+long_name: RAE - The Rainforest Automation Energy Dataset for Smart Grid Meter Data Analysis
+name: RAE
+number_of_buildings: 2
+publication_date: 2017
+related_documents:
+- https://github.com/smakonin/RAEdataset/
+sampling_interval: 1
+timezone: America/Vancouver
+schema: https://github.com/nilmtk/nilm_metadata/tree/v0.2
