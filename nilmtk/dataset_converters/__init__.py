@@ -12,3 +12,4 @@ from .iawe.convert_iawe import convert_iawe
 from .smart.convert_smart import convert_smart
 from .caxe.convert_caxe import convert_caxe
 from .ideal.convert_ideal import convert_ideal
+from .rae.convert_rae import convert_rae

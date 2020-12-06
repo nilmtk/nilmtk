@@ -8,11 +8,11 @@ from os.path import join, isfile, isdir
 from os import listdir, getcwd
 from nilmtk.datastore import Key
 from nilmtk.measurement import LEVEL_NAMES
-from nilmtk.utils import check_directory_exists, get_datastore
+from nilmtk.utils import check_directory_exists, get_datastore, get_module_directory
 from nilm_metadata import convert_yaml_to_hdf5
 from datetime import datetime
 
-def convert_RAE(input_path, output_filename,format='HDF'):
+def convert_rae(input_path, output_filename='RAE.h5', format='HDF'):
 
     """
     Parameters
@@ -25,6 +25,11 @@ def convert_RAE(input_path, output_filename,format='HDF'):
         format of output. Either 'HDF' or 'CSV'. Defaults to 'HDF'
     """
 
+    """
+        Convert the data
+    """
+    input_path = join(getcwd(), input_path)
+
     check_directory_exists(input_path)
     files = [f for f in listdir(input_path) if isfile(join(input_path, f)) and
              '.csv' in f and '.swp' not in f]
@@ -35,7 +40,7 @@ def convert_RAE(input_path, output_filename,format='HDF'):
     store = get_datastore(output_filename, format, mode='w')
     print('\n\n\n')
     for i, csv_file in enumerate(files):
-        metadata_path = join(getcwd(), 'metadata')
+        metadata_path = join(get_module_directory(), 'dataset_converters', 'rae', 'metadata')
         if 'power' in csv_file:
             print('Loading file #', (i + 1), ': ', csv_file, '. Please wait...')
             df_rae = pd.read_csv(join(input_path, csv_file))
@@ -45,9 +50,8 @@ def convert_RAE(input_path, output_filename,format='HDF'):
                 active_power_loader(df_rae, store, building=2)
             print("Done with file #", (i + 1), '\n\n')
         else:
-            print('File', (i+1), 'not recognized for converting.')
+            print('Skipping File', (i+1), 'because it doesn`t contain power readings.')
             print('Please do not change the original file names.')
-            print('Also, please make sure you are using the RAE datasets starting with house_i_power\n')
 
     print('Processing metadata...')
     convert_yaml_to_hdf5(metadata_path, output_filename)
@@ -103,10 +107,3 @@ def active_power_loader(df_rae, store, building=1):
         df = df.astype(np.float32)
         store.put(str(key), df)
     return 0
-
-"""
-    Convert the data
-"""
-input_path = join(getcwd(), 'rae_datasets')
-output_filename = 'rae.h5'
-convert_RAE(input_path, output_filename)
