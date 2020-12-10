@@ -24,8 +24,10 @@ After Anaconda has been installed, open up the terminal (Unix) or Anaconda promp
 4. Install the NILMTK package
 
 	```bash
-	conda install -c nilmtk nilmtk
+	conda install -c nilmtk nilmtk=0.4.2
 	```
+	
+    Replace "0.4.2" with the version you want to install. For older versions, you may need to specify versions for other packages in order to get a working environment. E.g. for NILMTK v0.4.1, using `conda install -c nilmtk nilmtk=0.4.1 matplotlib=3.1.3` should work.
 
 5. The installed package import for python/ ipython can be  tested in the terminal using the following command:
 	```bash
