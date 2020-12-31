@@ -1,6 +1,6 @@
+import os
 from datetime import datetime
 from nilmtk.timeframe import merge_timeframes, TimeFrame
-
 
 class Disaggregator(object):
     """Provides a common interface to all disaggregation classes.
@@ -16,6 +16,9 @@ class Disaggregator(object):
         A short name for this type of model.
         e.g. 'CO' for combinatorial optimisation.
     """
+    
+    # file_prefix is used to track temporary files
+    file_prefix = None
 
     def partial_fit(self, train_mains, train_appliances, **load_kwargs):
         """ Trains the model given a metergroup containing appliance meters
@@ -66,3 +69,15 @@ class Disaggregator(object):
         """
         raise NotImplementedError()
 
+    def clear_model_checkpoints(self):
+        """
+        If a file_prefix is set for this disaggregator, remove temporary
+        files that matched it. Otherwise, return silently.
+        """
+        if self.file_prefix is None:
+            return
+            
+        with os.scandir() as path_list:
+            if not entry.is_file() and entry.name.startswith(self.file_prefix) and entry.name.endswith(".h5"):
+                print("{}: Removing {}".format(self.MODEL_NAME, entry.path))
+                os.remove(entry.path)
