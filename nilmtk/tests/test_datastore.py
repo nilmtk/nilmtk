@@ -1,10 +1,12 @@
-import unittest
-from os.path import join
+import numpy as np
 import pandas as pd
-from datetime import timedelta
+import unittest
+
 from .testingtools import data_dir
-from nilmtk.datastore import HDFDataStore, CSVDataStore
+from datetime import timedelta
+from nilmtk.datastore import HDFDataStore, CSVDataStore, TmpDataStore
 from nilmtk import TimeFrame
+from os.path import join, isfile
 
 
 # class name can't begin with test
@@ -137,10 +139,34 @@ class TestCSVDataStore(unittest.TestCase, SuperTestDataStore):
         filename = join(data_dir(), 'random_csv')
         cls.datastore = CSVDataStore(filename)
         cls.keys = ['/building1/elec/meter{:d}'.format(i) for i in range(1, 6)]
-                                        
+
     @classmethod
     def tearDownClass(cls):
         cls.datastore.close()
-    
+
+
+class TestTmpDataStore(unittest.TestCase, SuperTestDataStore):
+    @classmethod
+    def setUpClass(cls):
+        cls.datastore = TmpDataStore()
+        cls.keys = ['/building1/elec/meter{:d}'.format(i) for i in range(1, 6)]
+        for key in cls.keys:
+            col_names = [ ( "power", "active" ) ]
+            n_rows = int(SuperTestDataStore.NROWS)
+            idx = pd.date_range(
+                    start=SuperTestDataStore.START_DATE,
+                    end=SuperTestDataStore.END_DATE,
+                    periods=n_rows
+            )
+            data = pd.DataFrame(100 * np.random.rand(n_rows, 1), index=idx)
+            data.columns = pd.MultiIndex.from_tuples(col_names)
+            cls.datastore.put(key, data)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.datastore.close()
+
+
 if __name__ == '__main__':
     unittest.main()
+
