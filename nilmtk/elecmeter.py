@@ -53,7 +53,7 @@ class ElecMeter(Hashable, Electric):
         self.metadata = {} if metadata is None else metadata
         assert isinstance(self.metadata, dict)
         self.store = store
-        self.cache = nilmtk.datastore.TmpDataStore()
+        self.cache = nilmtk.STATS_CACHE
         self.identifier = meter_id
 
         # Insert self into nilmtk.global_meter_group

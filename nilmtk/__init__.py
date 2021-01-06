@@ -7,13 +7,14 @@ with warnings.catch_warnings():
     from nilmtk.version import version as __version__
     from nilmtk.timeframe import TimeFrame
     from nilmtk.elecmeter import ElecMeter
-    from nilmtk.datastore import DataStore, HDFDataStore, CSVDataStore, Key
+    from nilmtk.datastore import DataStore, HDFDataStore, CSVDataStore, TmpDataStore, Key
     from nilmtk.metergroup import MeterGroup
     from nilmtk.appliance import Appliance
     from nilmtk.building import Building
     from nilmtk.dataset import DataSet
 
 global_meter_group = MeterGroup()
+STATS_CACHE = TmpDataStore()
 
 def setup_package():
     """Nosetests package setup function (run when tests are done).
