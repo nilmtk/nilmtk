@@ -76,8 +76,9 @@ class Disaggregator(object):
         """
         if self.file_prefix is None:
             return
-            
+
         with os.scandir() as path_list:
-            if not entry.is_file() and entry.name.startswith(self.file_prefix) and entry.name.endswith(".h5"):
-                print("{}: Removing {}".format(self.MODEL_NAME, entry.path))
-                os.remove(entry.path)
+            for entry in path_list:
+                if entry.is_file() and entry.name.startswith(self.file_prefix) and entry.name.endswith(".h5"):
+                    print("{}: Removing {}".format(self.MODEL_NAME, entry.path))
+                    os.remove(entry.path)
