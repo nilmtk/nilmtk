@@ -4,7 +4,13 @@ import matplotlib.dates as mdates
 import numpy as np
 from math import sqrt
 
-_to_ordinalf_np_vectorized = np.vectorize(mdates._to_ordinalf)
+try:
+    _to_ordinalf_np_vectorized = np.vectorize(mdates._to_ordinalf)
+except:
+    try:
+        _to_ordinalf_np_vectorized = np.vectorize(mdates._dt64_to_ordinalf)
+    except:
+        raise RuntimeError('This matplotlib version is not supported.')
 
 
 def plot_series(series, ax=None, fig=None, 
@@ -33,6 +39,7 @@ def plot_series(series, ax=None, fig=None,
     if fig is None:
         fig = plt.gcf()
 
+    #TODO: we probably don't need this anymore
     x = _to_ordinalf_np_vectorized(series.index.to_pydatetime())
     ax.plot(x, series, **kwargs)
     tz = series.index.tzinfo if tz_localize else None
