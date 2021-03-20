@@ -14,7 +14,7 @@ requirements:
         - setuptools
     run: 
         - python>=3.6
-        - numpy>=1.13.3,numpy<1.20
+        - numpy>=1.13.3,<1.20
         - pytables
         - pandas>=0.25.3,<1.0
         - matplotlib-base>=3.1.0,<3.2.0
