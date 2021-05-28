@@ -356,6 +356,8 @@ class API():
                         plt.xticks(rotation=90)
                     plt.title(i)
                     plt.legend()
+                    plt.xlabel('Time')
+                    plt.ylabel('Power (W)')
                 plt.show()
         
     def predict(self, clf, test_elec, test_submeters, sample_period, timezone ):
