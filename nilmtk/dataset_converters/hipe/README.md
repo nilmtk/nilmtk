@@ -20,7 +20,7 @@ To create the NILMTK-compatible HIPE data:
 1. Download the [data](https://www.energystatusdata.kit.edu/hipe.php), either one week or three months.
 1. Run the `convert_hipe.py` script. `<infolder>` refers to the folder with the HIPE CSV files.
     
-	python convert_hipe.py <infolder> <outfile>
+    `python convert_hipe.py <infolder> <outfile>`
 	
 1. Check the example notebooks.
 
