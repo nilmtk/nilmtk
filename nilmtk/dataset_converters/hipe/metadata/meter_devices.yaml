@@ -1,0 +1,31 @@
+HIPE_EEM_MA600:
+  model: EEM MA600
+  manufacturer: Phoenix Contact
+  manufacturer_url: https://www.phoenixcontact.com
+  description: >
+    Energy measurement device to measure electrical parameters in low voltage installations up to 700 V, acquisition of individual harmonic oscillations - can be extended with communication and special functional modules.
+  sample_period: 5   # the interval between samples. In seconds.
+  max_sample_period: 50   # Max allowable interval between samples. Seconds.
+  measurements:
+  - physical_quantity: power   # power, voltage, energy, current?
+    type: active   # active (real power), reactive or apparent?
+    upper_limit: 5000
+    lower_limit: 0
+  wireless: false
+
+# well, we want "apparent" for the mains, else the framework won't accept our data
+HIPE_EEM_MA600_apparent:
+  model: EEM MA600
+  manufacturer: Phoenix Contact
+  manufacturer_url: https://www.phoenixcontact.com
+  description: >
+    Energy measurement device to measure electrical parameters in low voltage installations up to 700 V, acquisition of individual harmonic oscillations - can be extended with communication and special functional modules.
+  sample_period: 5   # the interval between samples. In seconds.
+  max_sample_period: 50   # Max allowable interval between samples. Seconds.
+  measurements:
+  - physical_quantity: power   # power, voltage, energy, current?
+    type: apparent   # active (real power), reactive or apparent?
+    upper_limit: 5000
+    lower_limit: 0
+  wireless: false
+

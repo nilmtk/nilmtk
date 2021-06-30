@@ -1,0 +1,98 @@
+instance: 1   # this is the first (and only) building in the dataset
+original_name: factory_1
+elec_meters:
+  1: 
+    site_meter: true
+    device_model: HIPE_EEM_MA600_apparent
+  2:
+    submeter_of: 0 
+    device_model: HIPE_EEM_MA600
+    name: Chip Press
+  3:
+    submeter_of: 0 
+    device_model: HIPE_EEM_MA600
+    name: Chip Saw
+  4:
+    submeter_of: 0 
+    device_model: HIPE_EEM_MA600
+    name: High Temperature Oven
+  5:
+    submeter_of: 0 
+    device_model: HIPE_EEM_MA600
+    name: Pick And Place Unit
+  6:
+    submeter_of: 0 
+    device_model: HIPE_EEM_MA600
+    name: Screen Printer
+  7:
+    submeter_of: 0 
+    device_model: HIPE_EEM_MA600
+    name: Soldering Oven
+  8:
+    submeter_of: 0 
+    device_model: HIPE_EEM_MA600
+    name: Vacuum Oven
+  9:
+    submeter_of: 0 
+    device_model: HIPE_EEM_MA600
+    name: Vacuum Pump
+  10:
+    submeter_of: 0 
+    device_model: HIPE_EEM_MA600
+    name: Vacuum Pump
+  11:
+    submeter_of: 0 
+    device_model: HIPE_EEM_MA600
+    name: Washing Machine
+  
+appliances:
+- original_name: chip_press
+  type: motor
+  instance: 1
+  meters: [2] 
+
+- original_name: chip_saw
+  type: motor
+  instance: 2
+  meters: [3]
+
+- original_name: high_temperature_oven
+  type: oven
+  instance: 1
+  meters: [4]
+
+- original_name: pick_and_place_unit
+  type: motor
+  instance: 3
+  meters: [5]
+
+- original_name: screen_printer
+  type: printer
+  instance: 1
+  meters: [6]
+
+- original_name: soldering_oven
+  type: oven
+  instance: 2
+  meters: [7]
+
+- original_name: vacuum_oven
+  type:  oven
+  instance: 3
+  meters: [8]
+
+- original_name: vacuum_pump
+  type: motor
+  instance: 4
+  meters: [9]
+
+- original_name: vacuum_pump
+  type: motor
+  instance: 5
+  meters: [10]
+
+- original_name: washing_machine
+  type: washing machine 
+  instance: 1
+  meters: [11]
+
