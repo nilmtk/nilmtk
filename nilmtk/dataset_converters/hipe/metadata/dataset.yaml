@@ -1,0 +1,28 @@
+name: HIPE
+long_name: An Energy-Status-Data Set from Industrial Production
+creators:
+- Bischof, Simon
+- Trittenbach, Holger
+- Vollmer, Michael
+- Werle, Dominik
+- Blank, Thomas
+- Boehm, Klemens
+publication_date: 2018
+institution: Karlsruhe Institute of Technology (KIT)
+contact: firstname.lastname@kit.edu
+description: High-resolution Industrial Production Energy data set
+subject: 
+number_of_buildings: 1
+timezone: Europe/Berlin
+geo_location:
+  locality: Karlsruhe
+  country: DE # standard two-letter country code defined by ISO 3166-1 alpha-2
+  latitude: 49.099398
+  longitude: 8.433545
+related_documents:
+- https://www.energystatusdata.kit.edu/hipe.php
+- >
+  Simon Bischof, Holger Trittenbach, Michael Vollmer, Dominik Werle, Thomas Blank, Klemens Böhm: HIPE: An Energy-Status-Data Set from Industrial Production. e-Energy 2018: 599-603. https://doi.org/10.1145/3208903.3210278
+- >
+  Florian Kalinke, Pawel Bielski, Snigdha Singh, Edouard Fouché, Klemens Böhm: An Evaluation of NILM Approaches on Industrial Energy-Consumption Data. e-Energy 2021: 239-243. https://doi.org/10.1145/3447555.3464863
+
