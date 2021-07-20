@@ -1,0 +1,21 @@
+name: DEDDIAG
+long_name: Domestic Energy Demand Dataset of Individual Appliances Germany
+creators:
+- Anastasia Hort
+- Marc Wenninger
+publication_date: 2020
+contact:
+- anastasia.hort@stud.fh-rosenheim.de
+- marc.wenninger@th-rosenheim.de
+description: Several years of power data for 1 home.
+subject: Disaggregated power demand from domestic buildings.
+number_of_buildings: 1
+timezone: Europe/Berlin
+geo_location:
+  locality: ''
+  country: Germany
+related_documents:
+- https://figshare.com/s/932ab256b7ed407792b0
+- DEDDIAG: >
+    Real-world domestic energy demand datasets are the key enabler for developing and evaluating machine learning algorithms that facilitate analysis of demand attribution and usage behaviour.
+schema: https://github.com/nilmtk/nilm_metadata/tree/v0.2

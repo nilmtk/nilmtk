@@ -1,0 +1,55 @@
+instance: 8
+original_name: house_8
+elec_meters:
+  59: &id001
+    site_meter: true
+    device_model: DEDDIAG_whole_house
+  53: &id053
+    site_meter: true
+    device_model: DEDDIAG_whole_house
+    phase: 3
+    disabled: true
+  52: &id052
+    site_meter: true
+    device_model: DEDDIAG_whole_house
+    phase: 2
+    disabled: true
+  51: &id051
+    site_meter: true
+    device_model: DEDDIAG_whole_house
+    phase: 1
+    disabled: true
+  35: &id002
+    submeter_of: 0
+    device_model: eMonitor
+  28: *id002
+  27: *id002
+  26: *id002
+  24: *id002
+appliances:
+- original_name: Refrigerator
+  type: fridge
+  instance: 1
+  meters:
+  - 35
+- original_name: Office Desk
+  type: sockets
+  instance: 1
+  meters:
+  - 28
+  room: lounge
+- original_name: Coffee Machine
+  type: coffee maker
+  instance: 1
+  meters:
+  - 27
+- original_name: Dish Washer
+  type: dish washer
+  instance: 1
+  meters:
+  - 26
+- original_name: Washing Machine
+  type: washing machine
+  instance: 1
+  meters:
+  - 24
