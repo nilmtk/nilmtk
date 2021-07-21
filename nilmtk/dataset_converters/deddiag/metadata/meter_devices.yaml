@@ -1,0 +1,26 @@
+eMonitor:
+  model: eMonitor
+  manufacturer: TP-Link SmartPlug HS111
+  manufacturer_url: ''
+  description: >
+    The  dataset contains appliances that have the potential for automated load-shifting. Appliances falling under these terms are washing machines, dishwashers, fridges and freezers, thus the datasets will mostly contain these appliances.As part of the project a statistic based appliance usage prediction algorithm has been developed that will help to reduce the complexity of RTP behavior recommendations systems as well as an event segmentation algorithm that help to identify appliances usages in raw energy measurements
+  sample_period: 1
+  max_sample_period: 3900 # 65 minutes Max allowable interval between samples. Seconds.
+  measurements:
+  - physical_quantity: power
+    type: active
+    upper_limit: 3680
+    lower_limit: 0
+  wireless: false
+DEDDIAG_whole_house:
+  description: >
+    One home also includes three-phase mains readings that can be used for disaggregation tasks. In total the dataset contains 15 homes with a total of 50 appliances. One home also includes three-phase mains readings that can be used for disaggregation tasks
+  manufacturer: ABB B23 112-100
+  sample_period: 1
+  max_sample_period: 3900 # 65 minutes Max allowable interval between samples. Seconds.
+  measurements:
+  - physical_quantity: power
+    type: active
+    upper_limit: 14950
+    lower_limit: 0
+  wireless: false
