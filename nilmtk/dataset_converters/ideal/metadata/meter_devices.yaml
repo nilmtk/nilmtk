@@ -1,0 +1,14 @@
+IDEAL_whole_house:
+  sample_period: 1
+  max_sample_period: 1  
+  measurements:
+  - physical_quantity: power   # power, voltage, energy, current?
+    type: apparent  # active (real power), reactive or apparent?
+
+appliance_meter:
+  model: appliance_meter
+  sample_period: 1
+  max_sample_period: 5
+  measurements:
+  - physical_quantity: power   # power, voltage, energy, current?
+    type: active   # active (real power), reactive or apparent?

@@ -1,0 +1,35 @@
+instance: 65
+original_name: home65
+elec_meters:
+  1910: {site_meter: true, device_model: IDEAL_whole_house}
+  8861: &id001 {submeter_of: 0, device_model: appliance_meter}
+  3111: *id001
+  15880: *id001
+  5306: *id001
+  3109: *id001
+  3110: *id001
+appliances:
+- original_name: vacuumcleaner
+  type: vacuum cleaner
+  instance: 1
+  meters: [8861]
+- original_name: dishwasher
+  type: dish washer
+  instance: 1
+  meters: [3111]
+- original_name: vacuumcleaner
+  type: vacuum cleaner
+  instance: 2
+  meters: [15880]
+- original_name: vacuumcleaner
+  type: vacuum cleaner
+  instance: 3
+  meters: [5306]
+- original_name: kettle
+  type: kettle
+  instance: 1
+  meters: [3109]
+- original_name: washingmachine
+  type: washing machine
+  instance: 1
+  meters: [3110]

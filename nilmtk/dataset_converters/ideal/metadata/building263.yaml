@@ -1,0 +1,35 @@
+instance: 263
+original_name: home263
+elec_meters:
+  16104: {site_meter: true, device_model: IDEAL_whole_house}
+  18177: &id001 {submeter_of: 0, device_model: appliance_meter}
+  21723: *id001
+  18320: *id001
+  18176: *id001
+  18178: *id001
+  18319: *id001
+appliances:
+- original_name: electricoven
+  type: electric oven
+  instance: 1
+  meters: [18177]
+- original_name: toaster
+  type: toaster
+  instance: 1
+  meters: [21723]
+- original_name: washingmachinetumbledrier
+  type: tumble dryer
+  instance: 1
+  meters: [18320]
+- original_name: fridgefreezer
+  type: fridge
+  instance: 1
+  meters: [18176]
+- original_name: microwave
+  type: microwave
+  instance: 1
+  meters: [18178]
+- original_name: dishwasher
+  type: dish washer
+  instance: 1
+  meters: [18319]

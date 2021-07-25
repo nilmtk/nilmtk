@@ -1,0 +1,60 @@
+instance: 136
+original_name: home136
+elec_meters:
+  6597: {site_meter: true, device_model: IDEAL_whole_house}
+  9475: &id001 {submeter_of: 0, device_model: appliance_meter}
+  9272: *id001
+  21312: *id001
+  9274: *id001
+  9273: *id001
+  9271: *id001
+  21311: *id001
+  9275: *id001
+  9471: *id001
+  9269: *id001
+  9270: *id001
+appliances:
+- original_name: dishwasher
+  type: dish washer
+  instance: 1
+  meters: [9475]
+- original_name: dehumidifier
+  type: dehumidifier
+  instance: 1
+  meters: [9272]
+- original_name: microwave
+  type: microwave
+  instance: 1
+  meters: [21312]
+- original_name: freezer
+  type: fridge
+  instance: 1
+  meters: [9274]
+- original_name: fridge
+  type: fridge
+  instance: 2
+  meters: [9273]
+- original_name: kettle
+  type: kettle
+  instance: 1
+  meters: [9271]
+- original_name: kettle
+  type: kettle
+  instance: 2
+  meters: [21311]
+- original_name: vacuumcleaner
+  type: vacuum cleaner
+  instance: 1
+  meters: [9275]
+- original_name: washingmachine
+  type: washing machine
+  instance: 1
+  meters: [9471]
+- original_name: microwave
+  type: microwave
+  instance: 2
+  meters: [9269]
+- original_name: freezer
+  type: fridge
+  instance: 3
+  meters: [9270]

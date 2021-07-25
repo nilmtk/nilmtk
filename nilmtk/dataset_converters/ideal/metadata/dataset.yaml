@@ -1,0 +1,24 @@
+name: IDEAL
+long_name: Intelligent Domestic Energy Advice Loop
+creators:
+- Martin Pullinger
+- Jonathan Kilgour
+Version date: April 2021
+timezone: 'Europe/London'  
+number_of_buildings: 39
+related_documents:
+- https://datashare.ed.ac.uk/handle/10283/3647
+- >
+  Goddard, Nigel; Kilgour, Jonathan; Pullinger, 
+  Martin; Arvind, D.K; Lovell, Heather; Moore, Johanna; 
+  Shipworth, David; Sutton, Charles; Webb, Jan; Berliner, 
+  Niklas; Brewitt, Cillian; Dzikovska, Myroslava; Farrow, 
+  Edmund; Farrow, Elaine; Mann, Janek; Morgan, Evan; Webb, 
+  Lynda; Zhong, Mingjun. (2021). 
+  IDEAL Household Energy Dataset [dataset]. 
+  University of Edinburgh. School of Informatics. 
+  https://doi.org/10.7488/ds/2836.
+  
+schema: https://github.com/nilmtk/nilm_metadata/tree/v0.2
+
+ 

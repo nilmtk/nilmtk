@@ -1,0 +1,25 @@
+instance: 106
+original_name: home106
+elec_meters:
+  4891: {site_meter: true, device_model: IDEAL_whole_house}
+  5211: &id001 {submeter_of: 0, device_model: appliance_meter}
+  5212: *id001
+  5213: *id001
+  5210: *id001
+appliances:
+- original_name: microwave
+  type: microwave
+  instance: 1
+  meters: [5211]
+- original_name: washingmachine
+  type: washing machine
+  instance: 1
+  meters: [5212]
+- original_name: fridgefreezer
+  type: fridge
+  instance: 1
+  meters: [5213]
+- original_name: kettle
+  type: kettle
+  instance: 1
+  meters: [5210]

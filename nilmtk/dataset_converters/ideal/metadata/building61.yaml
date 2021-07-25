@@ -1,0 +1,20 @@
+instance: 61
+original_name: home61
+elec_meters:
+  1563: {site_meter: true, device_model: IDEAL_whole_house}
+  1967: &id001 {submeter_of: 0, device_model: appliance_meter}
+  1971: *id001
+  1969: *id001
+appliances:
+- original_name: kettle
+  type: kettle
+  instance: 1
+  meters: [1967]
+- original_name: microwave
+  type: microwave
+  instance: 1
+  meters: [1971]
+- original_name: dishwasher
+  type: dish washer
+  instance: 1
+  meters: [1969]

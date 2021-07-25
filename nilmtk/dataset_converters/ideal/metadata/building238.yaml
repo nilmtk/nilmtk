@@ -1,0 +1,35 @@
+instance: 238
+original_name: home238
+elec_meters:
+  14058: {site_meter: true, device_model: IDEAL_whole_house}
+  21682: &id001 {submeter_of: 0, device_model: appliance_meter}
+  21681: *id001
+  22085: *id001
+  21703: *id001
+  21683: *id001
+  21684: *id001
+appliances:
+- original_name: microwave
+  type: microwave
+  instance: 1
+  meters: [21682]
+- original_name: toaster
+  type: toaster
+  instance: 1
+  meters: [21681]
+- original_name: vacuumcleaner
+  type: vacuum cleaner
+  instance: 1
+  meters: [22085]
+- original_name: dishwasher
+  type: dish washer
+  instance: 1
+  meters: [21703]
+- original_name: washingmachine
+  type: washing machine
+  instance: 1
+  meters: [21683]
+- original_name: other
+  type: unknown
+  instance: 1
+  meters: [21684]
