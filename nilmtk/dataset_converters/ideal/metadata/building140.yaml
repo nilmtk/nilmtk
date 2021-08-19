@@ -1,0 +1,15 @@
+instance: 140
+original_name: home140
+elec_meters:
+  6850: {site_meter: true, device_model: IDEAL_whole_house}
+  10464: &id001 {submeter_of: 0, device_model: appliance_meter}
+  10457: *id001
+appliances:
+- original_name: electricheater
+  type: electric space heater
+  instance: 1
+  meters: [10464]
+- original_name: fridgefreezer
+  type: fridge
+  instance: 1
+  meters: [10457]

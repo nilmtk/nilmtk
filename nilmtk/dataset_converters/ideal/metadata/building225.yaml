@@ -1,0 +1,25 @@
+instance: 225
+original_name: home225
+elec_meters:
+  13027: {site_meter: true, device_model: IDEAL_whole_house}
+  17458: &id001 {submeter_of: 0, device_model: appliance_meter}
+  17465: *id001
+  17457: *id001
+  17459: *id001
+appliances:
+- original_name: toaster
+  type: toaster
+  instance: 1
+  meters: [17458]
+- original_name: fridgefreezer
+  type: fridge
+  instance: 1
+  meters: [17465]
+- original_name: other
+  type: unknown
+  instance: 1
+  meters: [17457]
+- original_name: freezer
+  type: fridge
+  instance: 2
+  meters: [17459]
