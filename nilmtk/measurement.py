@@ -10,7 +10,7 @@ PHYSICAL_QUANTITIES = ['power', 'energy', 'cumulative energy',
                        'voltage', 'current', 'pf', 'frequency', 'power factor', 
                        'state', 'phase angle']
 PHYSICAL_QUANTITIES_WITH_AC_TYPES = ['power', 'energy', 'cumulative energy']
-PHYSICAL_QUANTITIES_TO_AVERAGE = ['voltage', 'pf', 'frequency', 'power factor']
+PHYSICAL_QUANTITIES_TO_AVERAGE = ['voltage', 'pf', 'frequency', 'power factor','phase_angle']
 LEVEL_NAMES = ['physical_quantity', 'type']
 
 def check_ac_type(ac_type):
