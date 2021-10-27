@@ -43,6 +43,7 @@ class API():
         self.display_predictions = params.get('display_predictions', False)
         self.DROP_ALL_NANS = params.get("DROP_ALL_NANS", True)
         self.site_only = params.get('site_only',False)
+        self.specific_appliance=params.get('specific_appliance',None)
         self.experiment()
         
 

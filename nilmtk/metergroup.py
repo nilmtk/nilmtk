@@ -197,7 +197,7 @@ class MeterGroup(Electric):
         * `'toaster', 2` - retrieves meter or group upstream of toaster instance 2
         * `{'dataset': 'redd', 'building': 3, 'type': 'toaster', 'instance': 2}`
           - specify an appliance
-
+        * `['light,1,17]` - retrieves ElecMeter with instance 17 for appliance-light and building-1
         Returns
         -------
         ElecMeter or MeterGroup
@@ -234,8 +234,20 @@ class MeterGroup(Electric):
                 if (set(group.identifier.meters) == key_meters):
                     return group
             raise KeyError(key)
-        # find MeterGroup from list of ElecMeterIDs
+        
         elif isinstance(key, list):
+            # Find specific appliance according to ElecMeter instance if appliance repeating more than once 
+            # If not specified then default
+            if(isinstance(key[0],str)):
+                match_meter=False
+                for meter in self.meters:
+                    if(meter.identifier.instance==key[2]):
+                        match_meter=True
+                        return meter
+                if match_meter!= True:
+                    return self[key[0]
+
+            # find MeterGroup from list of ElecMeterIDs
             if not all([isinstance(item, tuple) for item in key]):
                 raise TypeError("requires a list of ElecMeterID objects.")
             for meter in self.meters:  # TODO: write unit tests for this
