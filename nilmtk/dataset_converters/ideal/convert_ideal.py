@@ -24,6 +24,19 @@ TODO:
 
 def convert_ideal(ideal_path, output_filename, format='HDF'):
     """
+    Convert the IDEAL dataset to NILMTK HDF5 format.
+    From https://datashare.ed.ac.uk/handle/10283/3647 download these zips below:
+        - household_sensors.zip (14.77Gb).
+        - room_and_appliance_sensors.zip (9.317Gb).
+    Both zips contain a folder called "sensorsdata".
+    Create a new folder, e.g. called "ideal_dataset", and into it
+        - Extract the folder "household_sensors.zip/sensordata" with the name 
+          household_sensordata
+        - Extract the folder "room_and_appliance_sensors/sensordata" with the 
+          name rooms_appliance_sensensensordata
+
+    Then run the function convert_ideal with ideal_path="ideal_dataset".
+
     Parameters
     ----------
     ideal_path : str
@@ -60,18 +73,14 @@ def convert_ideal(ideal_path, output_filename, format='HDF'):
         # Convert raw data to DataStore
         _convert(input_path, store, _ideal_measurement_mapping_func, 'Europe/London',valid_home_id)
 
-    s=join(get_module_directory(),
+    metadata_path = join(get_module_directory(),
                               'dataset_converters',
                               'ideal',
                               'metadata')
 
 
     # Add metadata
-    save_yaml_to_datastore(join(get_module_directory(), 
-                              'dataset_converters', 
-                              'ideal', 
-                              'metadata'),
-                         store)
+    save_yaml_to_datastore(metadata_path, store)
     store.close()
 
     print("Done converting ideal to HDF5!")
