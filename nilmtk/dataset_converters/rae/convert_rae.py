@@ -1,8 +1,5 @@
-from __future__ import print_function, division
-
 import numpy as np
 import pandas as pd
-import csv
 from os.path import join, isfile, isdir
 
 from os import listdir, getcwd
@@ -10,7 +7,6 @@ from nilmtk.datastore import Key
 from nilmtk.measurement import LEVEL_NAMES
 from nilmtk.utils import check_directory_exists, get_datastore, get_module_directory
 from nilm_metadata import convert_yaml_to_hdf5
-from datetime import datetime
 
 def convert_rae(input_path, output_filename='RAE.h5', format='HDF'):
 
