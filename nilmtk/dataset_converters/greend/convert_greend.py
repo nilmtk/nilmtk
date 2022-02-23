@@ -115,6 +115,9 @@ def convert_greend(greend_path, hdf_filename, use_mp=True):
     use_mp : bool 
         Defaults to True. Use multiprocessing to load the files for
         each building.
+    
+    The raw dataset can be downloaded from:
+        https://docs.google.com/forms/d/e/1FAIpQLSf3Tbr7IDoSORNFw7dAGD2PB6kSO98RRiVpmKOWOZ52ULAMzA/viewform
     """
     store = pd.HDFStore(hdf_filename, 'w', complevel=5, complib='zlib')
     houses = sorted(_get_houses(greend_path))
@@ -170,11 +173,12 @@ def convert_greend(greend_path, hdf_filename, use_mp=True):
             
         h += 1
 
-    store.close()
-	
 	# retrieve the dataset metadata in the metadata subfolder
     metadata_dir = join(get_module_directory(), 'dataset_converters', 'greend', 'metadata')
     convert_yaml_to_hdf5(metadata_dir, hdf_filename)
+    
+    # close h5
+    store.close()
 
 #is only called when this file is the main file... only test purpose
 if __name__ == '__main__':
