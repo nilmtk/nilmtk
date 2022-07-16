@@ -48,7 +48,7 @@ meters).
 
 #### Illustration
 
-|                           |  power | energy   | voltage |
+|                           |  power |   power  | voltage |
 | ------------------------- | ------ | -------- | ------- |
 |                           | active | reactive |         |
 | 2014-07-01T05:00:14+00:00 |    0.1 |     0.01 |   231.1 |
