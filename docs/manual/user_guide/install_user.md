@@ -27,8 +27,8 @@ After Anaconda has been installed, open up the terminal (Unix) or Anaconda promp
 	conda install -c nilmtk nilmtk
 	```
 	
-    This will install the latest version of nilmtk. As of June 2023 is the lastest version if nilmtk 0.4.3. 
-    For older versions, you may need to specify versions for other packages in order to get a working environment. E.g. for NILMTK v0.4.1, using `conda install -c nilmtk nilmtk=0.4.1 matplotlib=3.1.3` should work. It should be noted that as of June 2023 the only version available on the channels of anaconda.org is the version 0.4.3, attempts to install older version may lead to errors such as "PackageNotFoundError".
+    This will install the latest version of nilmtk. As of June 2023 is the lastest version if nilmtk 0.4.3. You can equivalently use `conda install -c nilmtk nilmtk=0.4.3`.
+    For older versions, you may need to specify versions for other packages in order to get a working environment. E.g. for NILMTK v0.4.1, use `conda install -c nilmtk nilmtk=0.4.1 matplotlib=3.1.3`. It should be noted that as of June 2023 the only version available on the channels of anaconda.org is the version 0.4.3, attempts to install older version may lead to errors such as "PackageNotFoundError" on the terminal.
 
 5. The installed package import for python/ ipython can be  tested in the terminal using the following command:
 	```bash
