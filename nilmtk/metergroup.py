@@ -538,7 +538,7 @@ class MeterGroup(Electric):
 
     def __repr__(self):
         s = "{:s}(meters=\n".format(self.__class__.__name__)
-        s += "\n".join(["  " + str(meter).replace("\n", "\n  ") for meter in self.meters]) + ")"
+        s += "\n".join(["  " + str(meter).replace("\n", "\n  ") for meter in self.meters]) + "\n)"
         return s
 
     @property
