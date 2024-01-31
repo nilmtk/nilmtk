@@ -20,10 +20,8 @@ class API():
         """
 
         self.appliances = []
-        self.train_submeters = []
-        self.train_mains = pd.DataFrame()
-        self.test_submeters = []
-        self.test_mains = pd.DataFrame()
+        self.test_data = {}
+        self.train_data = {}
         self.gt_overall = {}
         self.pred_overall = {}
         self.classifiers=[]
@@ -35,6 +33,8 @@ class API():
 
         self.train_datasets_dict = params['train']['datasets']
         self.test_datasets_dict = params['test']['datasets']
+        self.use_activations = params.get("use_activations", False)
+        self.appliances_params = params.get("appliances_params", {})
         self.metrics = params['test']['metrics']
         self.methods = params['methods']
         self.sample_period = params.get("sample_rate", 1)
@@ -141,14 +141,15 @@ class API():
                         train_df = pd.DataFrame(np.zeros(appliance_readings[0].shape),index = appliance_readings[0].index,columns=appliance_readings[0].columns)
                         for app_reading in appliance_readings:
                             train_df+=app_reading
-                    train_appliances = []
 
-                    for cnt,i in enumerate(appliance_readings):
-                        train_appliances.append((self.appliances[cnt],[i]))
+                    for i,appliance_name in enumerate(self.appliances):
+                        if appliance_name in self.train_data:
+                            self.train_data[appliance_name]["mains"].append(train_df)
+                            self.train_data[appliance_name]["appliance"].append(appliance_readings[i])
+                        else:
+                            self.train_data[appliance_name] = { "mains" : [train_df], "appliance" : [appliance_readings[i]]}
 
-                    self.train_mains = [train_df]
-                    self.train_submeters = train_appliances
-                    clf.partial_fit(self.train_mains, self.train_submeters, current_epoch)
+                    clf.partial_fit(self.train_data, current_epoch)
                 
 
         print("...............Finished the Training Process ...................")
@@ -184,13 +185,13 @@ class API():
                         for app_reading in appliance_readings:
                             test_df+=app_reading
 
-                    test_appliances = []
-
-                    for cnt,i in enumerate(appliance_readings):
-                        test_appliances.append((self.appliances[cnt],[i]))
-
-                    self.test_mains = [test_df]
-                    self.test_submeters = test_appliances
+                    for i, appliance_name in enumerate(self.appliances):
+                            if appliance_name in self.test_data:
+                                self.test_data[appliance_name]["mains"].append(test_df)
+                                self.test_data[appliance_name]["appliance"].append(appliance_readings[i])
+                            else:
+                                self.test_data[appliance_name] = { "mains" : [test_df], "appliance" : [appliance_readings[i]]}
+                    
                     print("Results for Dataset {dataset} Building {building} Chunk {chunk_num}".format(dataset=dataset,building=building,chunk_num=chunk_num))
                     self.storing_key = str(dataset) + "_" + str(building) + "_" + str(chunk_num) 
                     self.call_predict(self.classifiers, test.metadata['timezone'])
@@ -208,36 +209,93 @@ class API():
             train=DataSet(d[dataset]['path'])
             for building in d[dataset]['buildings']:
                 print("Loading building ... ",building)
-                train.set_window(start=d[dataset]['buildings'][building]['start_time'],end=d[dataset]['buildings'][building]['end_time'])
-                train_df = next(train.buildings[building].elec.mains().load(physical_quantity='power', ac_type=self.power['mains'], sample_period=self.sample_period))
-                train_df = train_df[[list(train_df.columns)[0]]]
-                appliance_readings = []
-                
-                for appliance_name in self.appliances:
-                    appliance_df = next(train.buildings[building].elec[appliance_name].load(physical_quantity='power', ac_type=self.power['appliance'], sample_period=self.sample_period))
-                    appliance_df = appliance_df[[list(appliance_df.columns)[0]]]
-                    appliance_readings.append(appliance_df)
 
-                if self.DROP_ALL_NANS:
-                    train_df, appliance_readings = self.dropna(train_df, appliance_readings)
+                if self.use_activations:
+                    print("Getting appliance activations")
+                    for appliance_name in self.appliances:
+                        train.set_window(start=d[dataset]['buildings'][building]['start_time'],
+                                         end=d[dataset]['buildings'][building]['end_time'])
 
-                if self.artificial_aggregate:
-                    print ("Creating an Artificial Aggregate")
-                    train_df = pd.DataFrame(np.zeros(appliance_readings[0].shape),index = appliance_readings[0].index,columns=appliance_readings[0].columns)
-                    for app_reading in appliance_readings:
-                        train_df+=app_reading
+                        activations = train.buildings[building].elec[appliance_name].activation_series(
+                                self.appliances_params[appliance_name]["min_off_time"], 
+                                self.appliances_params[appliance_name]["min_on_time"], 
+                                self.appliances_params[appliance_name]["number_of_activation_padding"], 
+                                self.appliances_params[appliance_name]["min_on_power"])
+                            
+                        for period in activations:
+                            timestamp = period.index[0]
+                            tz_offset = (timestamp.replace(tzinfo=None) - 
+                                        timestamp.tz_convert('UTC').replace(tzinfo=None))
+                            tz_offset_bg = np.timedelta64(tz_offset)
 
-                self.train_mains.append(train_df)
-                for i,appliance_name in enumerate(self.appliances):
-                    self.train_submeters[i].append(appliance_readings[i])
+                            timestamp = period.index[-1]
+                            tz_offset = (timestamp.replace(tzinfo=None) - 
+                                        timestamp.tz_convert('UTC').replace(tzinfo=None))
 
-        appliance_readings = []
-        for i,appliance_name in enumerate(self.appliances):
-            appliance_readings.append((appliance_name, self.train_submeters[i]))
+                            tz_offset_end = np.timedelta64(tz_offset)
 
-        self.train_submeters = appliance_readings   
+                            if tz_offset_bg > tz_offset_end:
+                                beg = period.index[0].tz_localize(None) - tz_offset_bg
+                                end = period.index[-1].tz_localize(None)
+                            elif tz_offset_bg < tz_offset_end: 
+                                beg = period.index[0].tz_localize(None)
+                                end = period.index[-1].tz_localize(None) - tz_offset_end 
+                            else:
+                                beg = period.index[0].tz_localize(None)
+                                end = period.index[-1].tz_localize(None)
 
-        clf.partial_fit(self.train_mains,self.train_submeters)
+                            train.set_window(
+                                    start=beg,
+                                    end=end
+                                    )
+
+                            mains_df = next(train.buildings[building].elec.mains().load(physical_quantity='power', ac_type=self.power['mains'], sample_period=self.sample_period))
+                            
+                            if not mains_df.empty:
+                                mains_df = mains_df[[list(mains_df.columns)[0]]]
+
+                                appliance_df = next(train.buildings[building].elec[appliance_name].load(physical_quantity='power', ac_type=self.power['appliance'], sample_period=self.sample_period))
+                                appliance_df = appliance_df[[list(appliance_df.columns)[0]]]
+                                
+                                if self.DROP_ALL_NANS:
+                                    mains_df, appliance_df = self.dropna(mains_df, [appliance_df])
+
+                                if appliance_name in self.train_data:
+                                    self.train_data[appliance_name]["mains"].append(mains_df)
+                                    self.train_data[appliance_name]["appliance"].append(appliance_df[0])
+                                else:
+                                    self.train_data[appliance_name] = { "mains" : [mains_df], "appliance" : appliance_df}
+
+                else:
+
+                    train.set_window(start=d[dataset]['buildings'][building]['start_time'],end=d[dataset]['buildings'][building]['end_time'])
+                    train_df = next(train.buildings[building].elec.mains().load(physical_quantity='power', ac_type=self.power['mains'], sample_period=self.sample_period))
+                    train_df = train_df[[list(train_df.columns)[0]]]
+                    appliance_readings = []
+                    
+                    for appliance_name in self.appliances:
+                        appliance_df = next(train.buildings[building].elec[appliance_name].load(physical_quantity='power', ac_type=self.power['appliance'], sample_period=self.sample_period))
+                        appliance_df = appliance_df[[list(appliance_df.columns)[0]]]
+                        appliance_readings.append(appliance_df)
+
+                    if self.DROP_ALL_NANS:
+                        train_df, appliance_readings = self.dropna(train_df, appliance_readings)
+
+                    if self.artificial_aggregate:
+                        print ("Creating an Artificial Aggregate")
+                        train_df = pd.DataFrame(np.zeros(appliance_readings[0].shape),index = appliance_readings[0].index,columns=appliance_readings[0].columns)
+                        for app_reading in appliance_readings:
+                            train_df+=app_reading
+
+                    self.train_mains.append(train_df)
+                    for i,appliance_name in enumerate(self.appliances):
+                        if appliance_name in self.train_data:
+                            self.train_data[appliance_name]["mains"].append(mains_df)
+                            self.train_data[appliance_name]["appliance"].append(appliance_readings[i])
+                        else:
+                            self.train_data[appliance_name] = { "mains" : [mains_df], "appliance" : [appliance_readings[i]]}
+
+        clf.partial_fit(self.train_data)
 
     
     def test_jointly(self,d):
@@ -246,40 +304,94 @@ class API():
             print("Loading data for ",dataset, " dataset")
             test=DataSet(d[dataset]['path'])
             for building in d[dataset]['buildings']:
-                test.set_window(start=d[dataset]['buildings'][building]['start_time'],end=d[dataset]['buildings'][building]['end_time'])
-                test_mains=next(test.buildings[building].elec.mains().load(physical_quantity='power', ac_type=self.power['mains'], sample_period=self.sample_period))
-                if self.DROP_ALL_NANS and self.site_only:
-                    test_mains, _= self.dropna(test_mains,[])
+                self.test_data = {}
 
-                if self.site_only != True:
-                    appliance_readings=[]
+                if self.use_activations:
+                    print("Getting appliance activations")
+                    for appliance_name in self.appliances:
+                        test.set_window(start=d[dataset]['buildings'][building]['start_time'],
+                                         end=d[dataset]['buildings'][building]['end_time'])
 
-                    for appliance in self.appliances:
-                        test_df=next((test.buildings[building].elec[appliance].load(physical_quantity='power', ac_type=self.power['appliance'], sample_period=self.sample_period)))
-                        appliance_readings.append(test_df)
+                        activations = test.buildings[building].elec[appliance_name].activation_series(
+                            self.appliances_params[appliance_name]["min_off_time"], 
+                            self.appliances_params[appliance_name]["min_on_time"], 
+                            self.appliances_params[appliance_name]["number_of_activation_padding"], 
+                            self.appliances_params[appliance_name]["min_on_power"])
+                        
+                        for period in activations:
+                            timestamp = period.index[0]
+                            tz_offset = (timestamp.replace(tzinfo=None) - 
+                                        timestamp.tz_convert('UTC').replace(tzinfo=None))
+                            tz_offset_bg = np.timedelta64(tz_offset)
+
+                            timestamp = period.index[-1]
+                            tz_offset = (timestamp.replace(tzinfo=None) - 
+                                        timestamp.tz_convert('UTC').replace(tzinfo=None))
+
+                            tz_offset_end = np.timedelta64(tz_offset)
+
+                            if tz_offset_bg > tz_offset_end:
+                                beg = period.index[0].tz_localize(None) - tz_offset_bg
+                                end = period.index[-1].tz_localize(None)
+                            else:
+                                beg = period.index[0].tz_localize(None)
+                                end = period.index[-1].tz_localize(None)
+                            test.set_window(start=beg,end=end)
+
+                            test_mains=next(test.buildings[building].elec.mains().load(physical_quantity='power', ac_type=self.power['mains'], sample_period=self.sample_period))
+
+                            if not test_mains.empty:
+                                appliance_df = next((test.buildings[building].elec[appliance_name].load(physical_quantity='power', ac_type=self.power['appliance'], sample_period=self.sample_period)))
+
+                                if self.DROP_ALL_NANS:
+                                    test_mains , appliance_df = self.dropna(test_mains, [appliance_df])
+
+                                if appliance_name in self.test_data:
+                                    self.test_data[appliance_name]["mains"].append(test_mains)
+                                    self.test_data[appliance_name]["appliance"].append(appliance_df[0])
+                                else:
+                                    self.test_data[appliance_name] = { "mains" : [test_mains], "appliance" : appliance_df}
+
+                    self.storing_key = str(dataset) + "_" + str(building) 
+                    self.call_predict(self.classifiers, test.metadata["timezone"])
+
+                else:
+                    test.set_window(start=d[dataset]['buildings'][building]['start_time'],end=d[dataset]['buildings'][building]['end_time'])
+                    test_mains=next(test.buildings[building].elec.mains().load(physical_quantity='power', ac_type=self.power['mains'], sample_period=self.sample_period))
+                    if self.DROP_ALL_NANS and self.site_only:
+                        test_mains, _= self.dropna(test_mains,[])
+
+                    if self.site_only != True:
+                        appliance_readings=[]
+
+                        for appliance in self.appliances:
+                            test_df=next((test.buildings[building].elec[appliance].load(physical_quantity='power', ac_type=self.power['appliance'], sample_period=self.sample_period)))
+                            appliance_readings.append(test_df)
+                        
+                        if self.DROP_ALL_NANS:
+                            test_mains , appliance_readings = self.dropna(test_mains,appliance_readings)
                     
-                    if self.DROP_ALL_NANS:
-                        test_mains , appliance_readings = self.dropna(test_mains,appliance_readings)
-                
-                    if self.artificial_aggregate:
-                        print ("Creating an Artificial Aggregate")
-                        test_mains = pd.DataFrame(np.zeros(appliance_readings[0].shape),index = appliance_readings[0].index,columns=appliance_readings[0].columns)
-                        for app_reading in appliance_readings:
-                            test_mains+=app_reading
-                    for i, appliance_name in enumerate(self.appliances):
-                        self.test_submeters.append((appliance_name,[appliance_readings[i]]))
+                        if self.artificial_aggregate:
+                            print ("Creating an Artificial Aggregate")
+                            test_mains = pd.DataFrame(np.zeros(appliance_readings[0].shape),index = appliance_readings[0].index,columns=appliance_readings[0].columns)
+                            for app_reading in appliance_readings:
+                                test_mains+=app_reading
 
-                self.test_mains = [test_mains]
-                self.storing_key = str(dataset) + "_" + str(building) 
-                self.call_predict(self.classifiers, test.metadata["timezone"])
+                        for i, appliance_name in enumerate(self.appliances):
+                            if appliance_name in self.test_data:
+                                self.test_data[appliance_name]["mains"].append(test_mains)
+                                self.test_data[appliance_name]["appliance"].append(appliance_readings[i])
+                            else:
+                                self.test_data[appliance_name] = { "mains" : [test_mains], "appliance" : [appliance_readings[i]]}
+
+                    self.storing_key = str(dataset) + "_" + str(building) 
+                    self.call_predict(self.classifiers, test.metadata["timezone"])
 
 
     def dropna(self,mains_df, appliance_dfs=[]):
         """
         Drops the missing values in the Mains reading and appliance readings and returns consistent data by copmuting the intersection
         """
-        print ("Dropping missing values")
-
         # The below steps are for making sure that data is consistent by doing intersection across appliances
         mains_df = mains_df.dropna()
         ix = mains_df.index
@@ -320,7 +432,7 @@ class API():
         pred_overall={}
         gt_overall={}           
         for name,clf in classifiers:
-            gt_overall,pred_overall[name]=self.predict(clf,self.test_mains,self.test_submeters, self.sample_period, timezone)
+            gt_overall,pred_overall[name]=self.predict(clf, self.test_data, self.sample_period, timezone)
 
         self.gt_overall=gt_overall
         self.pred_overall=pred_overall
@@ -360,7 +472,7 @@ class API():
                     plt.ylabel('Power (W)')
                 plt.show()
         
-    def predict(self, clf, test_elec, test_submeters, sample_period, timezone ):
+    def predict(self, clf, test_data, sample_period, timezone ):
         print ("Generating predictions for :",clf.MODEL_NAME)        
         """
         Generates predictions on the test dataset using the specified classifier.
@@ -368,20 +480,25 @@ class API():
         
         # "ac_type" varies according to the dataset used. 
         # Make sure to use the correct ac_type before using the default parameters in this code.   
-        
-           
-        pred_list = clf.disaggregate_chunk(test_elec)
+        pred_list = []
 
-        # It might not have time stamps sometimes due to neural nets
-        # It has the readings for all the appliances
+        for app_name in test_data:   
+            pred = clf.disaggregate_chunk(test_data[app_name]["mains"], app_name)
 
-        concat_pred_df = pd.concat(pred_list,axis=0)
+            # It might not have time stamps sometimes due to neural nets
+            # It has the readings for all the appliances
+
+            concat_pred_df = pd.concat(pred, axis=0)
+
+            pred_list.append(concat_pred_df)
+
+        concat_pred_df = pd.concat(pred_list, axis=1)
 
         gt = {}
-        for meter,data in test_submeters:
-                concatenated_df_app = pd.concat(data,axis=1)
+        for app_name in test_data:
+                concatenated_df_app = pd.concat(test_data[app_name]["appliance"],axis=0)
                 index = concatenated_df_app.index
-                gt[meter] = pd.Series(concatenated_df_app.values.flatten(),index=index)
+                gt[app_name] = pd.Series(concatenated_df_app.values.flatten(),index=index)
 
         gt_overall = pd.DataFrame(gt, dtype='float32')
         pred = {}
