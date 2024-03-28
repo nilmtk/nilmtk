@@ -717,7 +717,7 @@ class MeterGroup(Electric):
             tz = None if start.tz is None else start.tz.zone
             index = pd.date_range(
                 start.tz_localize(None), section.end.tz_localize(None), tz=tz,
-                closed='left', freq=freq)
+                inclusive='left', freq=freq)
             chunk = combine_chunks_from_generators(
                 index, columns, self.meters, kwargs)
             yield chunk
