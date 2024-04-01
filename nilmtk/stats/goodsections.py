@@ -109,7 +109,7 @@ def get_good_sections(df, max_sample_period, look_ahead=None,
     timedeltas_check = concatenate(
         [[previous_chunk_ended_with_open_ended_good_section],
          timedeltas_check])
-    transitions = diff(timedeltas_check.astype(np.int))
+    transitions = diff(timedeltas_check.astype(np.int64))
 
     # Memory management
     last_timedeltas_check = timedeltas_check[-1]
