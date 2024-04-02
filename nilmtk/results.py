@@ -74,7 +74,7 @@ class Results(object):
         row['end'] = timeframe.end
         for key, val in new_results.items():
             row[key] = val
-        self._data = self._data.append(row, verify_integrity=True, sort=False)
+        self._data = pd.concat([self._data , row] ,verify_integrity=True, sort=False)
         self._data.sort_index(inplace=True)
 
     def check_for_overlap(self):
@@ -105,7 +105,7 @@ class Results(object):
         if new_result._data.empty:
             return
 
-        self._data = self._data.append(new_result._data, sort=False)
+        self._data = pd.concat([self._data ,new_result._data], sort=False)
         self._data.sort_index(inplace=True)
         self.check_for_overlap()
 
