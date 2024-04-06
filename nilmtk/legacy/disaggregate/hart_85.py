@@ -182,8 +182,8 @@ class PairBuffer(object):
                 self.matched_pairs = pd.DataFrame(
                     new_matched_pairs, columns=self.pair_columns)
             else:
-                self.matched_pairs = self.matched_pairs.append(
-                    pd.DataFrame(new_matched_pairs, columns=self.pair_columns))
+                self.matched_pairs = pd.concat(
+                    [self.matched_pairs, pd.DataFrame(new_matched_pairs, columns=self.pair_columns)])
 
         return pairmatched
 
