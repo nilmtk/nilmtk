@@ -167,7 +167,7 @@ class HDFDataStore(DataStore):
     @doc_inherit
     def put(self, key, value):
         self.store.put(key, value, format='table', 
-                       expectedrows=len(value), index=False)
+                       index=False)
         self.store.create_table_index(key, columns=['index'], 
                                       kind='full', optlevel=9)
         self.store.flush()
