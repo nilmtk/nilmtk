@@ -23,7 +23,7 @@ def power_data(simple=True):
         STEP = 10
         data = [0,  0,  0, 100, 100, 100, 150,
                 150, 200,   0,   0, 100, 5000,    0]
-        secs = np.arange(start=0, stop=len(data) * STEP, step=STEP)
+        secs = np.arange(start=0, stop=len(data) * STEP, step=STEP).tolist()
     else:
         data = [0,  0,  0, 100, 100, 100, 150,
                 150, 200,   0,   0, 100, 5000,    0]
