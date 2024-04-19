@@ -148,7 +148,7 @@ def decode_hmm(length_sequence, centroids, appliance_list, states):
         total_num_combinations *= len(centroids[appliance])
 
     for appliance in appliance_list:
-        hmm_states[appliance] = np.zeros(length_sequence, dtype=np.int)
+        hmm_states[appliance] = np.zeros(length_sequence, dtype=np.int64)
         hmm_power[appliance] = np.zeros(length_sequence)
 
     for i in range(length_sequence):
