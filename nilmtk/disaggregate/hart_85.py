@@ -526,10 +526,10 @@ class Hart85(Disaggregator):
                     # print("A", values[i], i)
                     on = True
                     i = i + 1
-                    power[i] = self.centroids.ix[appliance].values
+                    power[i] = self.centroids.loc[appliance].values
                     while values[i] != 0 and i < len(values) - 1:
                         # print("B", values[i], i)
-                        power[i] = self.centroids.ix[appliance].values
+                        power[i] = self.centroids.loc[appliance].values
                         i = i + 1
                 elif values[i] == 0:
                     # print("C", values[i], i)
@@ -562,10 +562,10 @@ class Hart85(Disaggregator):
                     else:
                         # print("H", values[i], i)
                         on = True
-                        power[i] = self.centroids.ix[appliance].values
+                        power[i] = self.centroids.loc[appliance].values
                         while values[i] != 0 and i < len(values) - 1:
                             # print("I", values[i], i)
-                            power[i] = self.centroids.ix[appliance].values
+                            power[i] = self.centroids.loc[appliance].values
                             i = i + 1
 
             di[appliance] = power
