@@ -293,7 +293,7 @@ class Electric(object):
 
         other_ac_types = other_total_energy.keys()
         self_ac_types = total_energy.keys()
-        shared_ac_types = set(other_ac_types).intersection(self_ac_types)
+        shared_ac_types = list(set(other_ac_types).intersection(self_ac_types))
         n_shared_ac_types = len(shared_ac_types)
         if n_shared_ac_types > 1:
             return (total_energy[shared_ac_types] / 
