@@ -95,9 +95,9 @@ setup(
     packages=find_packages(),
     package_data={"": ["*.yaml"]},
     install_requires=[
-        "pandas==0.25.3",
-        "numpy >= 1.13.3, < 1.20.0",
-        "networkx==2.1",
+        "pandas>=2.1.0",
+        "numpy >= 1.26.0",
+        "networkx>=3.2.1",
         "scipy",
         "tables",
         "scikit-learn>=0.21.2",
