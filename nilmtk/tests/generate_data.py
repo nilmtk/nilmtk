@@ -23,7 +23,7 @@ def power_data(simple=True):
         STEP = 10
         data = [0,  0,  0, 100, 100, 100, 150,
                 150, 200,   0,   0, 100, 5000,    0]
-        secs = np.arange(start=0, stop=len(data) * STEP, step=STEP)
+        secs = np.arange(start=0, stop=len(data) * STEP, step=STEP).tolist()
     else:
         data = [0,  0,  0, 100, 100, 100, 150,
                 150, 200,   0,   0, 100, 5000,    0]
@@ -61,7 +61,7 @@ def power_data(simple=True):
 
 
 def create_random_df_hierarchical_column_index():
-    N_PERIODS = 1E4
+    N_PERIODS = 10000
     N_METERS = 5
     N_MEASUREMENTS_PER_METER = 3
 
@@ -84,7 +84,7 @@ MEASUREMENTS = [('power', 'active'), ('energy', 'reactive'), ('voltage', '')]
 
 
 def create_random_df():
-    N_PERIODS = 1E4
+    N_PERIODS = 10000
     rng = pd.date_range('2012-01-01', freq='S', periods=N_PERIODS)
     data = np.random.randint(
         low=0, high=1000, size=(N_PERIODS, len(MEASUREMENTS)))
