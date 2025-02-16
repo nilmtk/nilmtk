@@ -1,28 +1,28 @@
 from os.path import join
 from sys import stdout
-from nilmtk.utils import get_datastore
-from nilmtk.datastore import Key
-from nilmtk.measurement import LEVEL_NAMES
-from nilmtk.utils import get_module_directory
-from nilm_metadata import convert_yaml_to_hdf5, save_yaml_to_datastore
-import pandas as pd
 
+import pandas as pd
+from nilm_metadata import save_yaml_to_datastore
 from pandas import Timestamp
+
+from ...datastore.key import Key
+from ...measurement import LEVEL_NAMES
+from ...utils import get_datastore, get_module_directory
 
 # check whether deddiag-loader package has already installed
 try:
-    from deddiag_loader import Connection, Items, MeasurementsExpanded
+    from deddiag_loader import MeasurementsExpanded
 except ImportError:
     raise ImportError('Please install package deddiag-loader with "pip install deddiag-loader"')
 
 # DEDDIAG measurements [[(physical_quantity, ac_type)]]
-measurements_conf = [['power'], ['active']]
+measurements_conf = [["power"], ["active"]]
 
-DEFAULT_TZ = 'Europe/Berlin'
+DEFAULT_TZ = "Europe/Berlin"
 
 # Analyzed time period
-DEFAULT_START_DATE = Timestamp('2017-10-21 00:00:00', freq='MS')
-DEFAULT_END_DATE = Timestamp('2018-01-18 23:59:59', freq='MS')
+DEFAULT_START_DATE = Timestamp("2017-10-21 00:00:00", freq="MS")
+DEFAULT_END_DATE = Timestamp("2018-01-18 23:59:59", freq="MS")
 
 # channels
 channels = [24, 26, 27, 28, 35, 51, 52, 53, 59]
@@ -31,12 +31,14 @@ channels = [24, 26, 27, 28, 35, 51, 52, 53, 59]
 house_nr = 8
 
 
-def convert_deddiag(connection,
-                    output_filename,
-                    format='HDF',
-                    start_date=DEFAULT_START_DATE,
-                    end_date=DEFAULT_END_DATE,
-                    tz=DEFAULT_TZ):
+def convert_deddiag(
+    connection,
+    output_filename,
+    format="HDF",
+    start_date=DEFAULT_START_DATE,
+    end_date=DEFAULT_END_DATE,
+    tz=DEFAULT_TZ,
+):
     """
     Parameters
     ----------
@@ -53,12 +55,12 @@ def convert_deddiag(connection,
     # Open DataStore
     # todo try catch
 
-    dest_file = get_datastore(output_filename, format, mode='w')
+    dest_file = get_datastore(output_filename, format, mode="w")
 
     # Convert raw data to DataStore
     _convert(connection, dest_file, start_date, end_date, tz)
 
-    path_to_metadata = join(get_module_directory(), 'dataset_converters', 'deddiag', 'metadata')
+    path_to_metadata = join(get_module_directory(), "dataset_converters", "deddiag", "metadata")
 
     # Add metadata
     save_yaml_to_datastore(path_to_metadata, dest_file)
@@ -89,13 +91,14 @@ def _convert(connection, dest_file, start_date, end_date, tz, sort_index=True):
         stdout.flush()
 
         measurements = MeasurementsExpanded(channel, start_date, end_date).request(connection)
-        measurements.drop(columns='item_id', inplace=True)
-        measurements['time'] = pd.to_datetime(measurements['time'], utc=True, unit='s')
-        measurements.set_index('time', inplace=True)
+        measurements.drop(columns="item_id", inplace=True)
+        measurements["time"] = pd.to_datetime(measurements["time"], utc=True, unit="s")
+        measurements.set_index("time", inplace=True)
         # set index und columns as LEVEL_NAMES
         measurements = measurements.tz_convert(tz)
-        measurements.columns = pd.MultiIndex.from_arrays(measurements_conf,
-                                                         names=LEVEL_NAMES)  # measurements_conf = [['power'], ['active']]
+        measurements.columns = pd.MultiIndex.from_arrays(
+            measurements_conf, names=LEVEL_NAMES
+        )  # measurements_conf = [['power'], ['active']]
 
         if sort_index:
             measurements.sort_index(inplace=True)
@@ -103,4 +106,3 @@ def _convert(connection, dest_file, start_date, end_date, tz, sort_index=True):
         key = Key(building=house_nr, meter=channel)
         # write data
         dest_file.put(str(key), measurements)
-

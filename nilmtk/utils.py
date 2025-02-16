@@ -1,33 +1,44 @@
-from os.path import isdir, dirname, abspath
-from os import getcwd
-from inspect import currentframe, getfile, getsourcefile
-from sys import getfilesystemencoding, stdout
-from collections import OrderedDict, defaultdict
-import datetime, re
-import pytz
+import datetime
+import re
 import warnings
+from collections import OrderedDict, defaultdict
+from inspect import currentframe, getfile, getsourcefile
+from os import getcwd
+from os.path import abspath, dirname, isdir
+from sys import getfilesystemencoding, stdout
+
+import networkx as nx
 import numpy as np
 import pandas as pd
-import networkx as nx
-from IPython.core.display import HTML, display
+import pytz
+from IPython.core.display import HTML
+from IPython.display import display
 from sklearn.metrics import mean_squared_error
 
-from nilmtk.datastore import HDFDataStore, CSVDataStore
+from .datastore.csvdatastore import CSVDataStore
+from .datastore.hdfdatastore import HDFDataStore
+
 
 def show_versions():
     """Prints versions of various dependencies"""
     output = OrderedDict()
     output["Date"] = str(datetime.datetime.now())
-    import sys
     import platform
+    import sys
+
     output["Platform"] = str(platform.platform())
     system_information = sys.version_info
-    output["System version"] = "{}.{}".format(system_information.major,
-                                              system_information.minor)
+    output["System version"] = "{}.{}".format(system_information.major, system_information.minor)
 
     PACKAGES = [
-        "nilmtk", "nilm_metadata", "numpy", "matplotlib", "pandas", "sklearn",
-        "hmmlearn"]
+        "nilmtk",
+        "nilm_metadata",
+        "numpy",
+        "matplotlib",
+        "pandas",
+        "sklearn",
+        "hmmlearn",
+    ]
     for package_name in PACKAGES:
         key = package_name + " version"
         try:
@@ -62,7 +73,7 @@ def timedelta64_to_secs(timedelta):
     if len(timedelta) == 0:
         return np.array([])
     else:
-        return timedelta / np.timedelta64(1, 's')
+        return timedelta / np.timedelta64(1, "s")
 
 
 def tree_root(graph):
@@ -74,13 +85,12 @@ def tree_root(graph):
     """
     # from http://stackoverflow.com/a/4123177/732596
     assert isinstance(graph, nx.Graph)
-    roots = [node for node, in_degree in graph.in_degree()
-             if in_degree == 0]
+    roots = [node for node, in_degree in graph.in_degree() if in_degree == 0]
     n_roots = len(roots)
     if n_roots > 1:
-        raise RuntimeError('Tree has more than one root!')
+        raise RuntimeError("Tree has more than one root!")
     if n_roots == 0:
-        raise RuntimeError('Tree has no root!')
+        raise RuntimeError("Tree has no root!")
     return roots[0]
 
 
@@ -121,8 +131,8 @@ def find_nearest(known_array, test_array):
     known_array_sorted = known_array[index_sorted]
 
     idx1 = np.searchsorted(known_array_sorted, test_array)
-    idx2 = np.clip(idx1 - 1, 0, len(known_array_sorted)-1)
-    idx3 = np.clip(idx1,     0, len(known_array_sorted)-1)
+    idx2 = np.clip(idx1 - 1, 0, len(known_array_sorted) - 1)
+    idx3 = np.clip(idx1, 0, len(known_array_sorted) - 1)
 
     diff1 = known_array_sorted[idx3] - test_array
     diff2 = test_array - known_array_sorted[idx2]
@@ -132,7 +142,7 @@ def find_nearest(known_array, test_array):
     return indices, residuals
 
 
-def container_to_string(container, sep='_'):
+def container_to_string(container, sep="_"):
     if isinstance(container, str):
         string = container
     else:
@@ -183,7 +193,7 @@ def get_index(data):
     elif isinstance(data, pd.DatetimeIndex):
         index = data
     else:
-        raise TypeError('wrong type for `data`.')
+        raise TypeError("wrong type for `data`.")
     return index
 
 
@@ -210,35 +220,35 @@ def get_module_directory():
         abspath(getsourcefile(lambda _: None))
     if not isdir(path_to_this_file):
         path_to_this_file = getcwd()
-    assert isdir(path_to_this_file), path_to_this_file + ' is not a directory'
+    assert isdir(path_to_this_file), path_to_this_file + " is not a directory"
     return path_to_this_file
 
 
 def dict_to_html(dictionary):
     def format_string(value):
         try:
-            if isinstance(value, str) and 'http' in value:
-                html = re.sub(r'(http[^\s\)]+)', r'<a href="\1">\1</a>', value)
+            if isinstance(value, str) and "http" in value:
+                html = re.sub(r"(http[^\s\)]+)", r'<a href="\1">\1</a>', value)
             else:
-                html = '{}'.format(value)
+                html = "{}".format(value)
         except UnicodeEncodeError:
-            html = ''
+            html = ""
         return html
 
-    html = '<ul>'
+    html = "<ul>"
     for key, value in dictionary.items():
-        html += '<li><strong>{}</strong>: '.format(key)
+        html += "<li><strong>{}</strong>: ".format(key)
         if isinstance(value, list):
-            html += '<ul>'
+            html += "<ul>"
             for item in value:
-                html += '<li>{}</li>'.format(format_string(item))
-            html += '</ul>'
+                html += "<li>{}</li>".format(format_string(item))
+            html += "</ul>"
         elif isinstance(value, dict):
             html += dict_to_html(value)
         else:
             html += format_string(value)
-        html += '</li>'
-    html += '</ul>'
+        html += "</li>"
+    html += "</ul>"
     return html
 
 
@@ -249,7 +259,7 @@ def print_dict(dictionary):
 
 def offset_alias_to_seconds(alias):
     """Seconds for each period length."""
-    dr = pd.date_range('00:00', periods=2, freq=alias)
+    dr = pd.date_range("00:00", periods=2, freq=alias)
     return (dr[-1] - dr[0]).total_seconds()
 
 
@@ -266,7 +276,7 @@ def tz_localize_naive(timestamp, tz):
 
     timestamp = pd.Timestamp(timestamp)
     if timestamp_is_naive(timestamp):
-        timestamp = timestamp.tz_localize('UTC')
+        timestamp = timestamp.tz_localize("UTC")
 
     return timestamp.tz_convert(tz)
 
@@ -300,7 +310,7 @@ def timestamp_is_naive(timestamp):
         return False
 
 
-def get_datastore(filename, format=None, mode='r'):
+def get_datastore(filename, format=None, mode="r"):
     """
     Parameters
     ----------
@@ -324,9 +334,9 @@ def get_datastore(filename, format=None, mode='r'):
         elif format == "CSV":
             return CSVDataStore(filename)
         else:
-            raise ValueError('format not recognised')
+            raise ValueError("format not recognised")
     else:
-        ValueError('filename is None')
+        ValueError("filename is None")
 
 
 def normalise_timestamp(timestamp, freq):
@@ -392,26 +402,26 @@ def compute_rmse(ground_truth, predictions, pretty=True):
 
     Parameters
     ----------
-    ground_truth : `pandas.DataFrame` containing the ground truth series 
+    ground_truth : `pandas.DataFrame` containing the ground truth series
                   for the appliances.
-    
+
     predictions : `pandas.DataFrame` containing the predicted time-series
-                  for each appliance. If a appliance is present in 
+                  for each appliance. If a appliance is present in
                   `ground_truth` but absent in `predictions` (or only
                   contains NA values), it is not listed in the output.
-    
+
     pretty : If `True`, tries to use the appliance labels if possible. If
              a type of appliance is present more than once, resulting in
-             duplicate labels, building and instance number are added 
-             to differentiate them. 
-    
+             duplicate labels, building and instance number are added
+             to differentiate them.
+
     Returns
     -------
     pandas.Series with the RMSe for each appliance
-    """ 
-    
+    """
+
     # This was initially added to simplify examples, see #652.
-    
+
     rms_error = []
     app_counts = defaultdict(int)
     for app_idx, app in enumerate(ground_truth.columns):
@@ -423,22 +433,22 @@ def compute_rmse(ground_truth, predictions, pretty=True):
                 app_label = app
         else:
             app_label = app
-        
+
         gt_app = ground_truth.iloc[:, app_idx]
         pred_app = predictions.iloc[:, app_idx]
-        if pred_app.empty: 
+        if pred_app.empty:
             continue
-            
-        df_app = pd.DataFrame({'gt': gt_app, 'pr': pred_app}, index=gt_app.index).dropna()
-        
+
+        df_app = pd.DataFrame({"gt": gt_app, "pr": pred_app}, index=gt_app.index).dropna()
+
         if not df_app.empty:
-            app_rms_error = np.sqrt(mean_squared_error(df_app['gt'], df_app['pr']))
+            app_rms_error = np.sqrt(mean_squared_error(df_app["gt"], df_app["pr"]))
         else:
             app_rms_error = np.NaN
 
         if pretty:
             app_counts[app_label] += 1
-            
+
         rms_error.append([app, app_label, app_rms_error])
 
     if pretty:
@@ -452,70 +462,65 @@ def compute_rmse(ground_truth, predictions, pretty=True):
                     continue
 
                 app = app_data[0]
-                app_data[1] = '{} ({}, {})'.format(
-                    current_label,
-                    app.building,
-                    app.instance
-                )
-            
-    return pd.Series(dict(
-        (item[1], item[2]) for item in rms_error
-    ))
+                app_data[1] = "{} ({}, {})".format(current_label, app.building, app.instance)
+
+    return pd.Series(dict((item[1], item[2]) for item in rms_error))
 
 
 def safe_resample(data, **resample_kwargs):
     if data.empty:
         return data
-    
-    def _resample_chain(data, all_resample_kwargs):
-        """_resample_chain provides a compatibility function for 
-        deprecated/removed DataFrame.resample kwargs"""
-        
 
-        rule = all_resample_kwargs.pop('rule')
-        axis = all_resample_kwargs.pop('axis', None)
-        on = all_resample_kwargs.pop('on', None)
-        level = all_resample_kwargs.pop('level', None)
+    def _resample_chain(data, all_resample_kwargs):
+        """_resample_chain provides a compatibility function for
+        deprecated/removed DataFrame.resample kwargs"""
+
+        rule = all_resample_kwargs.pop("rule")
+        axis = all_resample_kwargs.pop("axis", None)
+        on = all_resample_kwargs.pop("on", None)
+        level = all_resample_kwargs.pop("level", None)
 
         resample_kwargs = {}
-        if axis is not None: resample_kwargs['axis'] = axis
-        if on is not None: resample_kwargs['on'] = on
-        if level is not None: resample_kwargs['level'] = level
+        if axis is not None:
+            resample_kwargs["axis"] = axis
+        if on is not None:
+            resample_kwargs["on"] = on
+        if level is not None:
+            resample_kwargs["level"] = level
 
-        fill_method_str = all_resample_kwargs.pop('fill_method', None)
+        fill_method_str = all_resample_kwargs.pop("fill_method", None)
         if fill_method_str:
-            limit = all_resample_kwargs.pop('limit', None)
+            limit = all_resample_kwargs.pop("limit", None)
             fill_method = lambda df: getattr(df, fill_method_str)(limit=limit)
         else:
             fill_method = lambda df: df
-            
-        how_str = all_resample_kwargs.pop('how', None)
+
+        how_str = all_resample_kwargs.pop("how", None)
         if how_str:
             how = lambda df: getattr(df, how_str)()
         else:
             how = lambda df: df
 
         if all_resample_kwargs:
-            warnings.warn("Not all resample_kwargs were consumed: {}".format(repr(all_resample_kwargs))) 
-        
+            warnings.warn("Not all resample_kwargs were consumed: {}".format(repr(all_resample_kwargs)))
+
         return fill_method(how(data.resample(rule, **resample_kwargs)))
-       
 
     try:
-        dups_in_index = data.index.duplicated(keep='first')
+        dups_in_index = data.index.duplicated(keep="first")
 
-        #TODO: remove this after validation tests are ready
+        # TODO: remove this after validation tests are ready
         if dups_in_index.any():
             warnings.warn("Found duplicate index. Keeping first value")
             data = data[~dups_in_index]
-            
+
         data = _resample_chain(data, resample_kwargs)
     except pytz.AmbiguousTimeError:
         # Work-around for
         # https://github.com/pydata/pandas/issues/10117
         tz = data.index.tz.zone
-        data = data.tz_convert('UTC')
+        data = data.tz_convert("UTC")
         data = _resample_chain(data, resample_kwargs)
-        
+
         data = data.tz_convert(tz)
     return data

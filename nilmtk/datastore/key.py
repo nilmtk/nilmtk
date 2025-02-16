@@ -1,6 +1,6 @@
 class Key(object):
     """A location of data or metadata within NILMTK.
-    
+
     Attributes
     ----------
     building : int
@@ -22,17 +22,18 @@ class Key(object):
             self.building = building
             self.meter = meter
         else:
-            split = string.strip('/').split('/')
-            assert split[0].startswith('building'), "The first element must be 'building<I>', e.g. 'building1'; not '{}'.".format(split[0])
+            split = string.strip("/").split("/")
+            assert split[0].startswith(
+                "building"
+            ), "The first element must be 'building<I>', e.g. 'building1'; not '{}'.".format(split[0])
             try:
                 self.building = int(split[0].replace("building", ""))
             except ValueError as e:
-                raise ValueError("'building' must be followed by an integer.\n{}"
-                                 .format(e))
+                raise ValueError("'building' must be followed by an integer.\n{}".format(e))
             if len(split) > 1:
                 self.utility = split[1]
             if len(split) == 3:
-                assert split[2].startswith('meter')
+                assert split[2].startswith("meter")
                 self.meter = int(split[-1].replace("meter", ""))
             else:
                 self.meter = None

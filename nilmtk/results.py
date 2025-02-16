@@ -1,8 +1,11 @@
 import abc
-import pandas as pd
 import copy
+
+import pandas as pd
+
 from .timeframe import TimeFrame
-from nilmtk.utils import get_tz, tz_localize_naive
+from .utils import get_tz, tz_localize_naive
+
 
 class Results(object):
     """Stats results from each node need to be assigned to a specific
@@ -11,13 +14,13 @@ class Results(object):
     averaged, and gaps need to be merged across chunk boundaries.  Results
     objects contain a DataFrame, the index of which is the start timestamp for
     which the results are valid; the first column ('end') is the end
-    timestamp for which the results are valid.  Other columns are accumulators 
+    timestamp for which the results are valid.  Other columns are accumulators
     for the results.
 
     Attributes
     ----------
     _data : DataFrame
-        Index is period start.  
+        Index is period start.
         Columns are: `end` and any columns for internal storage of stats.
 
     Static Attributes
@@ -25,10 +28,11 @@ class Results(object):
     name : str
         The string used to cache this results object.
     """
+
     __metaclass__ = abc.ABCMeta
 
     def __init__(self):
-        self._data = pd.DataFrame(columns=['end'])
+        self._data = pd.DataFrame(columns=["end"])
 
     def combined(self):
         """Return all results from each chunk combined.  Either return single
@@ -40,7 +44,7 @@ class Results(object):
         return self._data[self._columns_with_end_removed()].sum()
 
     def per_period(self):
-        """return a DataFrame.  Index is period start.  
+        """return a DataFrame.  Index is period start.
         Columns are: end and <stat name>
         """
         return copy.deepcopy(self._data)
@@ -58,20 +62,17 @@ class Results(object):
         new_results : dict
         """
         if not isinstance(timeframe, TimeFrame):
-            raise TypeError("`timeframe` must be of type 'nilmtk.TimeFrame',"
-                            " not '{}' type.".format(type(timeframe)))
+            raise TypeError("`timeframe` must be of type 'nilmtk.TimeFrame'," " not '{}' type.".format(type(timeframe)))
         if not isinstance(new_results, dict):
-            raise TypeError("`new_results` must of a dict, not '{}' type."
-                            .format(type(new_results)))
-        
+            raise TypeError("`new_results` must of a dict, not '{}' type.".format(type(new_results)))
+
         # check that there is no overlap
         for index, series in self._data.iterrows():
-            tf = TimeFrame(index, series['end'])
+            tf = TimeFrame(index, series["end"])
             tf.check_for_overlap(timeframe)
 
-        row = pd.DataFrame(index=[timeframe.start],
-                           columns=['end'] + list(new_results))
-        row['end'] = timeframe.end
+        row = pd.DataFrame(index=[timeframe.start], columns=["end"] + list(new_results))
+        row["end"] = timeframe.end
         for key, val in new_results.items():
             row[key] = val
         self._data = pd.concat([self._data, row], verify_integrity=True, sort=False)
@@ -83,24 +84,23 @@ class Results(object):
         index = self._data.index
         for i in range(n):
             row1 = self._data.iloc[i]
-            tf1 = TimeFrame(index[i], row1['end'])
-            for j in range(i+1, n):
+            tf1 = TimeFrame(index[i], row1["end"])
+            for j in range(i + 1, n):
                 row2 = self._data.iloc[j]
-                tf2 = TimeFrame(index[j], row2['end'])
+                tf2 = TimeFrame(index[j], row2["end"])
                 tf1.check_for_overlap(tf2)
 
     def update(self, new_result):
         """Add results from a new chunk.
-        
-        Parameters 
-        ---------- 
+
+        Parameters
+        ----------
         new_result : Results subclass (same
             class as self) from new chunk of data.
 
         """
         if not isinstance(new_result, self.__class__):
-            raise TypeError("new_results must be of type '{}'"
-                            .format(self.__class__))
+            raise TypeError("new_results must be of type '{}'".format(self.__class__))
 
         if new_result._data.empty:
             return
@@ -122,11 +122,10 @@ class Results(object):
         """
         assert isinstance(other, self.__class__)
         for i, row in self._data.iterrows():
-            if (other._data['end'].loc[i] != row['end'] or
-                i not in other._data.index):
-                raise RuntimeError("The sections we are trying to merge"
-                                   " do not have the same end times so we"
-                                   " cannot merge them.")
+            if other._data["end"].loc[i] != row["end"] or i not in other._data.index:
+                raise RuntimeError(
+                    "The sections we are trying to merge" " do not have the same end times so we" " cannot merge them."
+                )
 
     def import_from_cache(self, cached_stat, sections):
         """
@@ -146,8 +145,8 @@ class Results(object):
             row = row.astype(object)
             # We stripped off the timezone when exporting to cache
             # so now we must put the timezone back.
-            row['end'] = tz_localize_naive(row['end'], tz)
-            if row['end'] == section.end:
+            row["end"] = tz_localize_naive(row["end"], tz)
+            if row["end"] == section.end:
                 usable_sections_from_cache.append(row)
 
         for section in sections:
@@ -184,20 +183,19 @@ class Results(object):
         timezones (e.g. Europe/London across a daylight saving
         boundary).
         """
-        return self._data.apply(pd.to_numeric, errors='ignore')
+        return self._data.apply(pd.to_numeric, errors="ignore")
 
     def timeframes(self):
         """Returns a list of timeframes covered by this Result."""
-        # For some reason, using `iterrows()` messes with the 
+        # For some reason, using `iterrows()` messes with the
         # timezone of the index, hence we need to 'manually' iterate
         # over the rows.
-        return [TimeFrame(self._data.index[i], self._data.iloc[i]['end'])
-                for i in range(len(self._data))]
+        return [TimeFrame(self._data.index[i], self._data.iloc[i]["end"]) for i in range(len(self._data))]
 
     def _columns_with_end_removed(self):
         cols = set(self._data.columns)
         if len(cols) > 0:
-            cols.remove('end')
+            cols.remove("end")
         cols = list(cols)
         return cols
 

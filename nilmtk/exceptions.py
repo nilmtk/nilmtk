@@ -1,5 +1,4 @@
-"""File defining custom nilmtk exception classes.
-"""
+"""File defining custom nilmtk exception classes."""
 
 
 class TooFewSamplesError(Exception):

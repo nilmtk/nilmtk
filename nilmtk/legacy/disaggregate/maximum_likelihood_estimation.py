@@ -1,16 +1,16 @@
-from datetime import datetime
-import pandas as pd
+from datetime import datetime, timedelta
+
 import numpy as np
-from ...timeframe import merge_timeframes, TimeFrame
-from .disaggregator import Disaggregator
+import pandas as pd
 from matplotlib import pyplot as plt
-from datetime import timedelta
-from scipy.stats import poisson, norm
+from scipy.stats import norm, poisson
 from sklearn import mixture
+
+from ...timeframe import TimeFrame, merge_timeframes
+from .disaggregator import Disaggregator
 
 
 class MLE(Disaggregator):
-
     """
     Disaggregation of a single appliance based on its features and
     using the maximum likelihood of all features.
@@ -80,26 +80,26 @@ class MLE(Disaggregator):
         self.sample_period = None
         self.sampling_method = None
         # FEATURES:
-        self.onpower = {'name': 'gmm', 'model': mixture.GMM(n_components=1)}
-        self.offpower = {'name': 'gmm', 'model': mixture.GMM(n_components=1)}
-        self.duration = {'name': 'poisson', 'model': poisson(0)}
+        self.onpower = {"name": "gmm", "model": mixture.GMM(n_components=1)}
+        self.offpower = {"name": "gmm", "model": mixture.GMM(n_components=1)}
+        self.duration = {"name": "poisson", "model": poisson(0)}
 
         # Trainings:
-        self.onpower_train = pd.DataFrame(columns=['onpower'])
-        self.offpower_train = pd.DataFrame(columns=['offpower'])
-        self.duration_train = pd.DataFrame(columns=['duration'])
+        self.onpower_train = pd.DataFrame(columns=["onpower"])
+        self.offpower_train = pd.DataFrame(columns=["offpower"])
+        self.duration_train = pd.DataFrame(columns=["duration"])
 
         # Constrains
-        self.powerNoise = 0    # Background noise in the main
+        self.powerNoise = 0  # Background noise in the main
         self.powerPair = 0  # Max diff between onpower and offpower
-        self.timeWindow = 0        # To avoid high computation
+        self.timeWindow = 0  # To avoid high computation
 
     def __retrain(self, feature, feature_train):
 
         print("Training " + feature_train.columns[0])
         mu, std = norm.fit(feature_train)
-        feature['model'] = norm(loc=mu, scale=std)
-        '''if feature['name'] == 'gmm':
+        feature["model"] = norm(loc=mu, scale=std)
+        """if feature['name'] == 'gmm':
             feature['model'].fit(feature_train)
         elif feature['name'] == 'norm':
             mu, std = norm.fit(feature_train)
@@ -110,9 +110,9 @@ class MLE(Disaggregator):
             raise NameError(
                 "Name of the model for " + 
                 str(feature_train.columns[0]) + 
-                " unknown or not implemented")       ''' 
+                " unknown or not implemented")       """
 
-    def __physical_quantity(self, chunk): 
+    def __physical_quantity(self, chunk):
 
         if not self.resistive:
             print("Checking units")
@@ -122,10 +122,15 @@ class MLE(Disaggregator):
                     units = name
                     units_mismatched = False
             if units_mismatched:
-                stringError = self.appliance + " cannot be disaggregated. " + self.appliance + \
-                    " is a non-resistive element and  units mismatches: disaggregated data is in " + \
-                    str(self.units) + \
-                    " and aggregated data is " + str(units)
+                stringError = (
+                    self.appliance
+                    + " cannot be disaggregated. "
+                    + self.appliance
+                    + " is a non-resistive element and  units mismatches: disaggregated data is in "
+                    + str(self.units)
+                    + " and aggregated data is "
+                    + str(units)
+                )
                 raise ValueError(stringError)
         else:
             units = chunk.columns[0]
@@ -133,35 +138,33 @@ class MLE(Disaggregator):
 
     def __pdf(self, feature, delta):
 
-        if feature['name'] == 'norm':
-            score = feature['model'].pdf(delta)
-        elif feature['name'] == 'gmm':
-            #score = np.exp(feature['model'].score([delta]))[0]
-            score = feature['model'].pdf(delta)
-        elif feature['name'] == 'poisson':
+        if feature["name"] == "norm":
+            score = feature["model"].pdf(delta)
+        elif feature["name"] == "gmm":
+            # score = np.exp(feature['model'].score([delta]))[0]
+            score = feature["model"].pdf(delta)
+        elif feature["name"] == "poisson":
             # Decimal values produce odd values in poisson (bug)
             delta = np.round(delta)
-            #score = feature['model'].pmf(delta)
-            score = feature['model'].pdf(delta)
+            # score = feature['model'].pmf(delta)
+            score = feature["model"].pdf(delta)
         else:
-            raise AttributeError("Wrong model for" + feature['name'] +
-                                 " It must be: gmm, norm or poisson")
-        return score   
+            raise AttributeError("Wrong model for" + feature["name"] + " It must be: gmm, norm or poisson")
+        return score
 
     def __pdf2(self, feature, delta):
 
-        if feature['name'] == 'norm':
-            score = feature['model'].pdf(delta)
-        elif feature['name'] == 'gmm':
-            score = np.exp(feature['model'].score([delta]))
-        elif feature['name'] == 'poisson':
+        if feature["name"] == "norm":
+            score = feature["model"].pdf(delta)
+        elif feature["name"] == "gmm":
+            score = np.exp(feature["model"].score([delta]))
+        elif feature["name"] == "poisson":
             # Decimal values produce odd values in poisson (bug)
             delta = np.round(delta)
-            score = feature['model'].pmf(delta)
+            score = feature["model"].pmf(delta)
         else:
-            raise AttributeError("Wrong model for" + feature['name'] +
-                                 " It must be: gmm, norm or poisson")
-        return score   
+            raise AttributeError("Wrong model for" + feature["name"] + " It must be: gmm, norm or poisson")
+        return score
 
     def update(self, **kwargs):
         """
@@ -198,12 +201,12 @@ class MLE(Disaggregator):
         """
         # Inizialise stats and training data:
         self.stats = []
-        self.onpower_train = pd.DataFrame(columns=['onpower'])
-        self.offpower_train = pd.DataFrame(columns=['offpower'])
-        self.duration_train = pd.DataFrame(columns=['duration'])
+        self.onpower_train = pd.DataFrame(columns=["onpower"])
+        self.offpower_train = pd.DataFrame(columns=["offpower"])
+        self.duration_train = pd.DataFrame(columns=["duration"])
 
         # Calling train_on_chunk by meter:
-        instance = 1    # initial instance.
+        instance = 1  # initial instance.
         for meter in metergroup.meters:
             for chunk in meter.power_series():
                 if chunk.empty:
@@ -214,11 +217,8 @@ class MLE(Disaggregator):
                         how = lambda df: getattr(df, self.sampling_method)()
                     else:
                         how = lambda df: df.mean()
-                        
-                    self.train_on_chunk(how(pd.DataFrame(chunk.resample(
-                        self.sample_period))),
-                        meter
-                    )
+
+                    self.train_on_chunk(how(pd.DataFrame(chunk.resample(self.sample_period))), meter)
 
             instance += 1
 
@@ -242,32 +242,31 @@ class MLE(Disaggregator):
         """
         # EXTRACT FEATURES:
         # find units:
-        self.__setattr__('units', chunk.columns[0])
+        self.__setattr__("units", chunk.columns[0])
         # Loading treshold for getting events:
-        thDelta = getattr(self, 'thDelta')
-        chunk.index.name = 'date_time'
+        thDelta = getattr(self, "thDelta")
+        chunk.index.name = "date_time"
         # To prevent learning many samples at the middle of a edge:
         chunk.ix[:, 0][chunk.ix[:, 0] < thDelta] = 0
         # Learning edges
-        chunk['delta'] = chunk.ix[:, 0].diff()
+        chunk["delta"] = chunk.ix[:, 0].diff()
         chunk.delta.fillna(0, inplace=True)
-        edges = chunk[np.abs(chunk['delta']) > thDelta].delta
+        edges = chunk[np.abs(chunk["delta"]) > thDelta].delta
         # Pairing on/off events
-        #print(chunk)
+        # print(chunk)
         if len(edges) > 1:
             offpower = edges[edges.apply(np.sign).diff() == -2]
             onpower = edges[edges.apply(np.sign).diff(-1) == 2]
-            duration = offpower.reset_index().date_time - \
-                onpower.reset_index().date_time
-            duration = duration.astype('timedelta64[s]')
+            duration = offpower.reset_index().date_time - onpower.reset_index().date_time
+            duration = duration.astype("timedelta64[s]")
 
             # Set consistent index for concatenation:
             onpower = pd.DataFrame(onpower).reset_index(drop=True)
-            onpower.columns = ['onpower']
+            onpower.columns = ["onpower"]
             offpower = pd.DataFrame(offpower).reset_index(drop=True)
-            offpower.columns = ['offpower']
+            offpower.columns = ["offpower"]
             duration = pd.DataFrame(duration).reset_index(drop=True)
-            duration.columns = ['duration']
+            duration.columns = ["duration"]
 
             # Len of samples:
             print("Samples of onpower: " + str(len(onpower)))
@@ -276,19 +275,18 @@ class MLE(Disaggregator):
 
             number_of_events = len(onpower)
             # Features (concatenation)
-            self.onpower_train = pd.concat(
-                [self.onpower_train, onpower]).reset_index(drop=True)
-            self.offpower_train = pd.concat(
-                [self.offpower_train, offpower]).reset_index(drop=True)
-            self.duration_train = pd.concat(
-                [self.duration_train, duration]).reset_index(drop=True)
-        
+            self.onpower_train = pd.concat([self.onpower_train, onpower]).reset_index(drop=True)
+            self.offpower_train = pd.concat([self.offpower_train, offpower]).reset_index(drop=True)
+            self.duration_train = pd.concat([self.duration_train, duration]).reset_index(drop=True)
+
         else:
             number_of_events = 0
-            print("""WARNING: No paired events found on this chunk.
-            Is it thDelta too high?""")
-        
-        self.duration_train = self.duration_train[self.duration_train.duration<400]
+            print(
+                """WARNING: No paired events found on this chunk.
+            Is it thDelta too high?"""
+            )
+
+        self.duration_train = self.duration_train[self.duration_train.duration < 400]
 
         # RE-TRAIN FEATURE MODELS:
         self.__retrain(self.onpower, self.onpower_train)
@@ -296,18 +294,15 @@ class MLE(Disaggregator):
         self.__retrain(self.duration, self.duration_train)
 
         # UPDATE STATS:
-        stat_dict = {'appliance': meter.identifier[
-            0], 'instance': meter.identifier[1], 'Nevents': number_of_events}
+        stat_dict = {"appliance": meter.identifier[0], "instance": meter.identifier[1], "Nevents": number_of_events}
         instanceFound = False
         if len(self.stats) == 0:
             self.stats.append(stat_dict)
         else:
             for stat in self.stats:
-                if ((stat['appliance'] == stat_dict['appliance']) and
-                        (stat['instance'] == stat_dict['instance'])):
+                if (stat["appliance"] == stat_dict["appliance"]) and (stat["instance"] == stat_dict["instance"]):
                     index = self.stats.index(stat)
-                    self.stats[index]['Nevents'] = self.stats[
-                        index]['Nevents'] + number_of_events
+                    self.stats[index]["Nevents"] = self.stats[index]["Nevents"] + number_of_events
                     instanceFound = True
             if not instanceFound:
                 self.stats.append(stat_dict)
@@ -326,43 +321,41 @@ class MLE(Disaggregator):
         output_datastore : instance of nilmtk.DataStore or str of datastore location
 
         """
-        
-        building_path = '/building{}'.format(mains.building())
+
+        building_path = "/building{}".format(mains.building())
         # only writes one appliance and meter per building
         meter_instance = 2
-        mains_data_location = '{}/elec/meter1'.format(building_path)
-        
-        #dis_main = pd.DataFrame()
+        mains_data_location = "{}/elec/meter1".format(building_path)
+
+        # dis_main = pd.DataFrame()
         chunk_number = 0
         timeframes = []
 
         for chunk in mains.power_series():
-        
+
             # Record metadata
             timeframes.append(chunk.timeframe)
             measurement = chunk.name
             cols = pd.MultiIndex.from_tuples([chunk.name])
-            
+
             dis_chunk = self.disaggregate_chunk(
-                pd.DataFrame(chunk.resample(self.sample_period, how=self.sampling_method)))
-            #dis_main = pd.concat([dis_main, dis_chunk])
+                pd.DataFrame(chunk.resample(self.sample_period, how=self.sampling_method))
+            )
+            # dis_main = pd.concat([dis_main, dis_chunk])
             chunk_number += 1
             print(str(chunk_number) + " chunks disaggregated")
-            
+
             # Write appliance data to disag output
-            key = '{}/elec/meter{}'.format(building_path, meter_instance)
-            df = pd.DataFrame(
-                    dis_chunk.values, index=dis_chunk.index,
-                    columns=cols)
+            key = "{}/elec/meter{}".format(building_path, meter_instance)
+            df = pd.DataFrame(dis_chunk.values, index=dis_chunk.index, columns=cols)
             output_datastore.append(key, df)
 
             # Copy mains data to disag output
-            output_datastore.append(key=mains_data_location,
-                                    value=pd.DataFrame(chunk, columns=cols))
+            output_datastore.append(key=mains_data_location, value=pd.DataFrame(chunk, columns=cols))
 
         # Saving output datastore:
-        #output_datastore.append(key=mains.key, value=dis_main)
-        
+        # output_datastore.append(key=mains.key, value=dis_main)
+
         ##################################
         # Add metadata to output_datastore
 
@@ -370,89 +363,78 @@ class MLE(Disaggregator):
         # TODO: split this metadata code into a separate function
         # TODO: submeter measurement should probably be the mains
         #       measurement we used to train on, not the mains measurement.
-        
-        date_now = datetime.now().isoformat().split('.')[0]
-        output_name = 'NILMTK_MLE_' + date_now
+
+        date_now = datetime.now().isoformat().split(".")[0]
+        output_name = "NILMTK_MLE_" + date_now
         resample_seconds = 10
-        mains_data_location = '{}/elec/meter1'.format(building_path)
+        mains_data_location = "{}/elec/meter1".format(building_path)
 
         # DataSet and MeterDevice metadata:
         meter_devices = {
-            'MLE': {
-                'model': 'MLE',
-                'sample_period': resample_seconds,
-                'max_sample_period': resample_seconds,
-                'measurements': [{
-                    'physical_quantity': measurement[0],
-                    'type': measurement[1]
-                }]
+            "MLE": {
+                "model": "MLE",
+                "sample_period": resample_seconds,
+                "max_sample_period": resample_seconds,
+                "measurements": [{"physical_quantity": measurement[0], "type": measurement[1]}],
             },
-            'mains': {
-                'model': 'mains',
-                'sample_period': resample_seconds,
-                'max_sample_period': resample_seconds,
-                'measurements': [{
-                    'physical_quantity': measurement[0],
-                    'type': measurement[1]
-                }]
-            }
+            "mains": {
+                "model": "mains",
+                "sample_period": resample_seconds,
+                "max_sample_period": resample_seconds,
+                "measurements": [{"physical_quantity": measurement[0], "type": measurement[1]}],
+            },
         }
 
         merged_timeframes = merge_timeframes(timeframes, gap=resample_seconds)
-        total_timeframe = TimeFrame(merged_timeframes[0].start,
-                                    merged_timeframes[-1].end)
+        total_timeframe = TimeFrame(merged_timeframes[0].start, merged_timeframes[-1].end)
 
-        dataset_metadata = {'name': output_name, 'date': date_now,
-                            'meter_devices': meter_devices,
-                            'timeframe': total_timeframe.to_dict()}
-        output_datastore.save_metadata('/', dataset_metadata)
+        dataset_metadata = {
+            "name": output_name,
+            "date": date_now,
+            "meter_devices": meter_devices,
+            "timeframe": total_timeframe.to_dict(),
+        }
+        output_datastore.save_metadata("/", dataset_metadata)
 
         # Building metadata
 
         # Mains meter:
         elec_meters = {
             1: {
-                'device_model': 'mains',
-                'site_meter': True,
-                'data_location': mains_data_location,
-                'preprocessing_applied': {},  # TODO
-                'statistics': {
-                    'timeframe': total_timeframe.to_dict()
-                }
+                "device_model": "mains",
+                "site_meter": True,
+                "data_location": mains_data_location,
+                "preprocessing_applied": {},  # TODO
+                "statistics": {"timeframe": total_timeframe.to_dict()},
             }
         }
 
         # Appliances and submeters:
         appliances = []
         appliance = {
-            'meters': [meter_instance],
-            'type': 'kettle',
-            'instance': 1
+            "meters": [meter_instance],
+            "type": "kettle",
+            "instance": 1,
             # TODO this `instance` will only be correct when the
             # model is trained on the same house as it is tested on.
             # https://github.com/nilmtk/nilmtk/issues/194
         }
         appliances.append(appliance)
 
-        elec_meters.update({
-            meter_instance: {
-                'device_model': 'MLE',
-                'submeter_of': 1,
-                'data_location': ('{}/elec/meter{}'
-                                      .format(building_path, meter_instance)),
-                'preprocessing_applied': {},  # TODO
-                'statistics': {
-                    'timeframe': total_timeframe.to_dict()
+        elec_meters.update(
+            {
+                meter_instance: {
+                    "device_model": "MLE",
+                    "submeter_of": 1,
+                    "data_location": ("{}/elec/meter{}".format(building_path, meter_instance)),
+                    "preprocessing_applied": {},  # TODO
+                    "statistics": {"timeframe": total_timeframe.to_dict()},
                 }
             }
-        })
-        elec_meters[meter_instance]['name'] = 'kettle'
+        )
+        elec_meters[meter_instance]["name"] = "kettle"
 
-        building_metadata = {
-            'instance': mains.building(),
-            'elec_meters': elec_meters,
-            'appliances': appliances
-        }
+        building_metadata = {"instance": mains.building(), "elec_meters": elec_meters, "appliances": appliances}
 
         output_datastore.save_metadata(building_path, building_metadata)
 
@@ -487,12 +469,12 @@ class MLE(Disaggregator):
 
         # EVENTS OUT OF THE CHUNK:
         # Delta values:
-        column_name = 'diff_' + units[1]
+        column_name = "diff_" + units[1]
         chunk[column_name] = chunk.loc[:, units].diff()
 
         # Filter the noise.
-        chunk['onpower'] = (chunk[column_name] > self.powerNoise)
-        chunk['offpower'] = (chunk[column_name] < -self.powerNoise)
+        chunk["onpower"] = chunk[column_name] > self.powerNoise
+        chunk["offpower"] = chunk[column_name] < -self.powerNoise
         events = chunk[(chunk.onpower == True) | (chunk.offpower == True)]
 
         detection_list = []
@@ -502,11 +484,13 @@ class MLE(Disaggregator):
             # onTime = onevent[0]
             # deltaOn = onevent[1][1]
             # windowning:
-            offevents = events[(events.offpower == True) & (events.index > onevent[0]) & (
-                events.index < onevent[0] + timedelta(seconds=self.timeWindow))]
+            offevents = events[
+                (events.offpower == True)
+                & (events.index > onevent[0])
+                & (events.index < onevent[0] + timedelta(seconds=self.timeWindow))
+            ]
             # Filter paired events:
-            offevents = offevents[
-                abs(onevent[1][1] - offevents[column_name].abs()) < self.powerPair]
+            offevents = offevents[abs(onevent[1][1] - offevents[column_name].abs()) < self.powerPair]
 
             # Max likelihood computation:
             if not offevents.empty:
@@ -517,42 +501,48 @@ class MLE(Disaggregator):
                     # poff = self.__pdf(self.offpower, offevent[1][1])
                     # duration = offevent[0] - onTime
                     # pduration = self.__pdf(self.duration, (offevent[0] - onTime).total_seconds())
-                    likelihood = self.__pdf(self.onpower, onevent[1][1]) * \
-                                    self.__pdf(self.offpower, offevent[1][1]) * \
-                                    self.__pdf(self.duration, (offevent[0] - \
-                                        onevent[0]).total_seconds())
+                    likelihood = (
+                        self.__pdf(self.onpower, onevent[1][1])
+                        * self.__pdf(self.offpower, offevent[1][1])
+                        * self.__pdf(self.duration, (offevent[0] - onevent[0]).total_seconds())
+                    )
                     detection_list.append(
-                        {'likelihood': likelihood, 'onTime': onevent[0], 
-                        'offTime': offevent[0], 'deltaOn': onevent[1][1]})
+                        {
+                            "likelihood": likelihood,
+                            "onTime": onevent[0],
+                            "offTime": offevent[0],
+                            "deltaOn": onevent[1][1],
+                        }
+                    )
             else:
                 singleOnevent += 1
 
         # Passing detections to a pandas.DataFrame
-        detections = pd.DataFrame(
-            columns=('onTime', 'offTime', 'likelihood', 'deltaOn'))
+        detections = pd.DataFrame(columns=("onTime", "offTime", "likelihood", "deltaOn"))
 
         for i in range(len(detection_list)):
-            detections.loc[i] = [detection_list[i]['onTime'], detection_list[i][
-                'offTime'], detection_list[i]['likelihood'], detection_list[i]['deltaOn']]
+            detections.loc[i] = [
+                detection_list[i]["onTime"],
+                detection_list[i]["offTime"],
+                detection_list[i]["likelihood"],
+                detection_list[i]["deltaOn"],
+            ]
 
         detections = detections[detections.likelihood >= self.thLikelihood]
 
         # Constructing dis_chunk (power of disaggregated appliance)
-        dis_chunk = pd.DataFrame(
-            index=chunk.index, columns=[str(units[0]) + '_' + str(units[1])])
+        dis_chunk = pd.DataFrame(index=chunk.index, columns=[str(units[0]) + "_" + str(units[1])])
         dis_chunk.fillna(0, inplace=True)
 
         # Ruling out overlapped detecttions ordering by likelihood value.
-        detections = detections.sort('likelihood', ascending=False)
+        detections = detections.sort("likelihood", ascending=False)
         for row in detections.iterrows():
             # onTime = row[1][0] offTime = row[1][1] deltaOn = row[1][3]
-            #import ipdb
-            #ipdb.set_trace()
-            if ((dis_chunk[(dis_chunk.index >= row[1][0]) &
-                    (dis_chunk.index < row[1][1])].sum().values[0]) == 0):
+            # import ipdb
+            # ipdb.set_trace()
+            if (dis_chunk[(dis_chunk.index >= row[1][0]) & (dis_chunk.index < row[1][1])].sum().values[0]) == 0:
                 # delta = chunk[chunk.index == onTime][column_name].values[0]
-                dis_chunk[(dis_chunk.index >= row[1][0]) & (
-                    dis_chunk.index < row[1][1])] = row[1][3]
+                dis_chunk[(dis_chunk.index >= row[1][0]) & (dis_chunk.index < row[1][1])] = row[1][3]
 
         # Stat information:
         print(str(len(events)) + " events found.")
@@ -564,7 +554,7 @@ class MLE(Disaggregator):
     def no_overfitting(self):
         """
         Crops feature_train(onpower_train, offpower_train and duration_train)
-        to get same samples from different appliances(same model-appliance) 
+        to get same samples from different appliances(same model-appliance)
         and avoids overfittings to a many samples appliance.
         Updates stats attribute.
         Does the retraining.
@@ -572,7 +562,7 @@ class MLE(Disaggregator):
 
         # Instance with minimun length should be the maximum length
         train_len = []
-        [train_len.append(st['Nevents']) for st in self.stats]
+        [train_len.append(st["Nevents"]) for st in self.stats]
         train_len = np.array(train_len)
         max_len = train_len[train_len != 0].min()
 
@@ -583,12 +573,12 @@ class MLE(Disaggregator):
         start = 0
         end = 0
         for ind in np.arange(len(self.stats)):
-            if self.stats[ind]['Nevents'] != 0:
+            if self.stats[ind]["Nevents"] != 0:
                 if ind == 0:
                     start = 0
                 else:
                     start = end
-                end += self.stats[ind]['Nevents']
+                end += self.stats[ind]["Nevents"]
 
                 aux = self.onpower_train[start:end]
                 aux = aux[:max_len]
@@ -603,7 +593,7 @@ class MLE(Disaggregator):
                 duration_train = pd.concat([duration_train, aux])
 
                 # udating stats:
-                self.stats[ind]['Nevents'] = max_len
+                self.stats[ind]["Nevents"] = max_len
 
         self.onpower_train = onpower_train
         self.offpower_train = offpower_train
@@ -686,28 +676,31 @@ class MLE(Disaggregator):
         """
 
         # Selecting bins automatically:
-        bins_onpower = np.arange(self.onpower_train.min().values[0],
-                                 self.onpower_train.max().values[0],
-                                 (self.onpower_train.max().values[0] -
-                                  self.onpower_train.min().values[0]) / 50)
+        bins_onpower = np.arange(
+            self.onpower_train.min().values[0],
+            self.onpower_train.max().values[0],
+            (self.onpower_train.max().values[0] - self.onpower_train.min().values[0]) / 50,
+        )
 
-        bins_offpower = np.arange(self.offpower_train.min().values[0],
-                                  self.offpower_train.max().values[0],
-                                  (self.offpower_train.max().values[0] -
-                                   self.offpower_train.min().values[0]) / 50)
+        bins_offpower = np.arange(
+            self.offpower_train.min().values[0],
+            self.offpower_train.max().values[0],
+            (self.offpower_train.max().values[0] - self.offpower_train.min().values[0]) / 50,
+        )
 
-        bins_duration = np.arange(self.duration_train.min().values[0],
-                                  self.duration_train.max().values[0],
-                                  (self.duration_train.max().values[0] -
-                                   self.duration_train.min().values[0]) / 50)
+        bins_duration = np.arange(
+            self.duration_train.min().values[0],
+            self.duration_train.max().values[0],
+            (self.duration_train.max().values[0] - self.duration_train.min().values[0]) / 50,
+        )
 
         # If a bin has been specified update the bin sizes.
         for key in kwargs:
-            if key == 'bins_onpower':
+            if key == "bins_onpower":
                 bins_onpower = kwargs[key]
-            elif key == 'bins_offpower':
+            elif key == "bins_offpower":
                 bins_offpower = kwargs[key]
-            elif key == 'bins_duration':
+            elif key == "bins_duration":
                 bins_duration = kwargs[key]
             else:
                 print("Non valid kwarg")
@@ -720,55 +713,55 @@ class MLE(Disaggregator):
 
         # Evaluating score for:
         # Onpower
-        x = np.arange(bins_onpower.min(), bins_onpower.max() + \
-            np.diff(bins_onpower)[0], np.diff(bins_onpower)[0] / float(1000)).reshape(-1, 1)
+        x = np.arange(
+            bins_onpower.min(), bins_onpower.max() + np.diff(bins_onpower)[0], np.diff(bins_onpower)[0] / float(1000)
+        ).reshape(-1, 1)
         y = self.__pdf(self.onpower, x)
-        norm = pd.cut(
-            self.onpower_train.onpower, bins=bins_onpower).value_counts().max() / max(y)
+        norm = pd.cut(self.onpower_train.onpower, bins=bins_onpower).value_counts().max() / max(y)
         # Plots for Onpower
-        ax1.hist(
-            self.onpower_train.onpower.values, bins=bins_onpower, alpha=0.5)
+        ax1.hist(self.onpower_train.onpower.values, bins=bins_onpower, alpha=0.5)
         ax1.plot(x, y * norm)
-        #ax1.set_title("Feature: Onpower")
-        #ax1.set_ylabel("Counts")
-        #ax1.set_xlabel("On power (W)")
+        # ax1.set_title("Feature: Onpower")
+        # ax1.set_ylabel("Counts")
+        # ax1.set_xlabel("On power (W)")
         ax1.set_ylabel("On power counts")
 
         # Offpower
-        x = np.arange(bins_offpower.min(), bins_offpower.max() + \
-            np.diff(bins_offpower)[0], np.diff(bins_offpower)[0] / float(1000)).reshape(-1, 1)
+        x = np.arange(
+            bins_offpower.min(),
+            bins_offpower.max() + np.diff(bins_offpower)[0],
+            np.diff(bins_offpower)[0] / float(1000),
+        ).reshape(-1, 1)
         y = self.__pdf(self.offpower, x)
-        norm = pd.cut(self.offpower_train.offpower,
-                      bins=bins_offpower).value_counts().max() / max(y)
+        norm = pd.cut(self.offpower_train.offpower, bins=bins_offpower).value_counts().max() / max(y)
         # Plots for Offpower
-        ax2.hist(self.offpower_train.offpower.values,
-                 bins=bins_offpower, alpha=0.5)
+        ax2.hist(self.offpower_train.offpower.values, bins=bins_offpower, alpha=0.5)
         ax2.plot(x, y * norm)
-        #ax2.set_title("Feature: Offpower")
-        #ax2.set_ylabel("Counts")
-        #ax2.set_xlabel("Off power (W)")
+        # ax2.set_title("Feature: Offpower")
+        # ax2.set_ylabel("Counts")
+        # ax2.set_xlabel("Off power (W)")
         ax2.set_ylabel("Off power counts")
 
         # Duration
-        x = np.arange(bins_duration.min(), bins_duration.max() + \
-            np.diff(bins_duration)[0], np.diff(bins_duration)[0] / float(1000)).reshape(-1, 1)
+        x = np.arange(
+            bins_duration.min(),
+            bins_duration.max() + np.diff(bins_duration)[0],
+            np.diff(bins_duration)[0] / float(1000),
+        ).reshape(-1, 1)
         y = self.__pdf(self.duration, x)
-        norm = pd.cut(self.duration_train.duration,
-                      bins=bins_duration).value_counts().max() / max(y)
+        norm = pd.cut(self.duration_train.duration, bins=bins_duration).value_counts().max() / max(y)
         # Plots for duration
-        ax3.hist(self.duration_train.duration.values,
-                 bins=bins_duration, alpha=0.5)
+        ax3.hist(self.duration_train.duration.values, bins=bins_duration, alpha=0.5)
         ax3.plot(x, y * norm)
-        #ax3.set_title("Feature: Duration")
-        #ax3.set_ylabel("Counts")
-        #ax3.set_xlabel("Duration (seconds)")
+        # ax3.set_title("Feature: Duration")
+        # ax3.set_ylabel("Counts")
+        # ax3.set_xlabel("Duration (seconds)")
         ax3.set_ylabel("Duration counts")
-    
 
     def featuresHist_colors(self, **kwargs):
         """
-        Visualization tool to check if samples for feature training 
-        (onpower_train, offpower_train and duration_train) are equal 
+        Visualization tool to check if samples for feature training
+        (onpower_train, offpower_train and duration_train) are equal
         for each appliance (same model appliance).
         Each appliance represented by a different color.
 
@@ -778,29 +771,32 @@ class MLE(Disaggregator):
             bins_feature: numpy.arange for plotting the hist with specified bin sizes.
         """
         # Selecting bins automatically:
-        bins_onpower = np.arange(self.onpower_train.min().values[0],
-                                 self.onpower_train.max().values[0],
-                                 (self.onpower_train.max().values[0] -
-                                  self.onpower_train.min().values[0]) / 50)
+        bins_onpower = np.arange(
+            self.onpower_train.min().values[0],
+            self.onpower_train.max().values[0],
+            (self.onpower_train.max().values[0] - self.onpower_train.min().values[0]) / 50,
+        )
 
-        bins_offpower = np.arange(self.offpower_train.min().values[0],
-                                  self.offpower_train.max().values[0],
-                                  (self.offpower_train.max().values[0] -
-                                   self.offpower_train.min().values[0]) / 50)
+        bins_offpower = np.arange(
+            self.offpower_train.min().values[0],
+            self.offpower_train.max().values[0],
+            (self.offpower_train.max().values[0] - self.offpower_train.min().values[0]) / 50,
+        )
 
-        bins_duration = np.arange(self.duration_train.min().values[0],
-                                  self.duration_train.max().values[0],
-                                  (self.duration_train.max().values[0] -
-                                   self.duration_train.min().values[0]) / 50)
+        bins_duration = np.arange(
+            self.duration_train.min().values[0],
+            self.duration_train.max().values[0],
+            (self.duration_train.max().values[0] - self.duration_train.min().values[0]) / 50,
+        )
 
         # If a bin has been specified update the bin sizes.
         # Updating bins with specified values.
         for key in kwargs:
-            if key == 'bins_onpower':
+            if key == "bins_onpower":
                 bins_onpower = kwargs[key]
-            elif key == 'bins_offpower':
+            elif key == "bins_offpower":
                 bins_offpower = kwargs[key]
-            elif key == 'bins_duration':
+            elif key == "bins_duration":
                 bins_duration = kwargs[key]
             else:
                 print("Non valid kwarg")
@@ -815,18 +811,15 @@ class MLE(Disaggregator):
         end = 0
         for ind in np.arange(len(self.stats)):
 
-            if self.stats[ind]['Nevents'] != 0:
+            if self.stats[ind]["Nevents"] != 0:
                 if ind == 0:
                     start = 0
                 else:
                     start = end
-                end += self.stats[ind]['Nevents']
-                ax1.hist(
-                    self.onpower_train[start:end].onpower.values, bins=bins_onpower, alpha=0.5)
-                ax2.hist(
-                    self.offpower_train[start:end].offpower.values, bins=bins_offpower, alpha=0.5)
-                ax3.hist(
-                    self.duration_train[start:end].duration.values, bins=bins_duration, alpha=0.5)
+                end += self.stats[ind]["Nevents"]
+                ax1.hist(self.onpower_train[start:end].onpower.values, bins=bins_onpower, alpha=0.5)
+                ax2.hist(self.offpower_train[start:end].offpower.values, bins=bins_offpower, alpha=0.5)
+                ax3.hist(self.duration_train[start:end].duration.values, bins=bins_duration, alpha=0.5)
 
         ax1.set_title("Feature: Onpower")
         ax1.set_xlabel("Watts")

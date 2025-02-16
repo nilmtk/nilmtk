@@ -1,27 +1,32 @@
+import warnings
 from copy import deepcopy
 from os.path import isfile
-import warnings
 
 import numpy as np
 import pandas as pd
 
-from nilmtk.timeframe import TimeFrame
-from nilmtk.timeframegroup import TimeFrameGroup
-from .datastore import DataStore, MAX_MEM_ALLOWANCE_IN_BYTES
-from nilmtk.docinherit import doc_inherit
+from ..docinherit import doc_inherit
+from ..timeframe import TimeFrame
+from ..timeframegroup import TimeFrameGroup
+from .datastore import MAX_MEM_ALLOWANCE_IN_BYTES, DataStore
+
 
 class HDFDataStore(DataStore):
 
     @doc_inherit
     def __init__(self, filename, mode="r"):
-        if mode in [ "r", "a" ] and not isfile(filename):
-            raise IOError("No such file as " + filename)
+        if mode in ["r", "a"] and not isfile(filename):
+            raise IOError(f"No such file as {filename}")
 
         with warnings.catch_warnings():
             # Silence pytables warnings with numpy, out of our control
-            warnings.filterwarnings('ignore', category=RuntimeWarning, message='.*numpy.ufunc size changed.*')
+            warnings.filterwarnings(
+                "ignore",
+                category=RuntimeWarning,
+                message=".*numpy.ufunc size changed.*",
+            )
 
-            self.store = pd.HDFStore(filename, mode, complevel=9, complib='blosc')
+            self.store = pd.HDFStore(filename, mode, complevel=9, complib="blosc")
             super(HDFDataStore, self).__init__()
 
     @doc_inherit
@@ -29,15 +34,22 @@ class HDFDataStore(DataStore):
         return self.store[key]
 
     @doc_inherit
-    def load(self, key, columns=None, sections=None, n_look_ahead_rows=0,
-             chunksize=MAX_MEM_ALLOWANCE_IN_BYTES, verbose=False):
+    def load(
+        self,
+        key,
+        columns=None,
+        sections=None,
+        n_look_ahead_rows=0,
+        chunksize=MAX_MEM_ALLOWANCE_IN_BYTES,
+        verbose=False,
+    ):
         # TODO: calculate chunksize default based on physical
         # memory installed and number of columns
 
         # Make sure key has a slash at the front but not at the end.
-        if key[0] != '/':
-            key = '/' + key
-        if len(key) > 1 and key[-1] == '/':
+        if key[0] != "/":
+            key = "/" + key
+        if len(key) > 1 and key[-1] == "/":
             key = key[:-1]
 
         # Make sure chunksize is an int otherwise `range` complains later.
@@ -49,13 +61,13 @@ class HDFDataStore(DataStore):
 
         # Replace any Nones with '' in columns:
         if columns is not None:
-            columns = [('' if pq is None else pq, '' if ac is None else ac)
-                    for pq, ac in columns]
+            columns = [("" if pq is None else pq, "" if ac is None else ac) for pq, ac in columns]
 
         if verbose:
-            print("HDFDataStore.load(key='{}', columns='{}', sections='{}',"
-                  " n_look_ahead_rows='{}', chunksize='{}')"
-                  .format(key, columns, sections, n_look_ahead_rows, chunksize))
+            print(
+                "HDFDataStore.load(key='{}', columns='{}', sections='{}',"
+                " n_look_ahead_rows='{}', chunksize='{}')".format(key, columns, sections, n_look_ahead_rows, chunksize)
+            )
 
         self.all_sections_smaller_than_chunksize = True
 
@@ -70,7 +82,7 @@ class HDFDataStore(DataStore):
                 yield data
                 continue
 
-            terms = window_intersect.query_terms('window_intersect')
+            terms = window_intersect.query_terms("window_intersect")
             if terms is None:
                 section_start_i = 0
                 section_end_i = self.store.get_storer(key).nrows
@@ -83,8 +95,7 @@ class HDFDataStore(DataStore):
                 try:
                     coords = self.store.select_as_coordinates(key=key, where=terms)
                 except AttributeError as e:
-                    if str(e) == ("'NoneType' object has no attribute "
-                                  "'read_coordinates'"):
+                    if str(e) == ("'NoneType' object has no attribute " "'read_coordinates'"):
                         raise KeyError("key '{}' not found".format(key))
                     else:
                         raise
@@ -96,7 +107,7 @@ class HDFDataStore(DataStore):
                     continue
 
                 section_start_i = coords[0]
-                section_end_i   = coords[-1]
+                section_end_i = coords[-1]
                 del coords
 
             slice_starts = range(section_start_i, section_end_i, chunksize)
@@ -107,14 +118,13 @@ class HDFDataStore(DataStore):
 
             for chunk_i, chunk_start_i in enumerate(slice_starts):
                 chunk_end_i = chunk_start_i + chunksize
-                there_are_more_subchunks = (chunk_i < n_chunks-1)
+                there_are_more_subchunks = chunk_i < n_chunks - 1
 
                 if chunk_end_i > section_end_i:
                     chunk_end_i = section_end_i
                 chunk_end_i += 1
 
-                data = self.store.select(key=key, columns=columns,
-                                         start=chunk_start_i, stop=chunk_end_i)
+                data = self.store.select(key=key, columns=columns, start=chunk_start_i, stop=chunk_end_i)
 
                 # if len(data) <= 2:
                 #     yield pd.DataFrame()
@@ -126,24 +136,27 @@ class HDFDataStore(DataStore):
                         look_ahead_end_i = look_ahead_start_i + n_look_ahead_rows
                         try:
                             look_ahead = self.store.select(
-                                key=key, columns=columns,
+                                key=key,
+                                columns=columns,
                                 start=look_ahead_start_i,
-                                stop=look_ahead_end_i
+                                stop=look_ahead_end_i,
                             )
                         except ValueError:
                             look_ahead = pd.DataFrame()
                     else:
                         look_ahead = pd.DataFrame()
-                            
-                    with warnings.catch_warnings():
-                        # Silence "Pandas doesn't allow columns to be created via a new attribute name" 
-                        # since we're not adding a column
-                        warnings.filterwarnings('ignore', category=UserWarning, message=".*Pandas doesn't allow columns.*")
-                        setattr(data, 'look_ahead', look_ahead)
 
-                data.timeframe = _timeframe_for_chunk(there_are_more_subchunks, 
-                                                      chunk_i, window_intersect,
-                                                      data.index)
+                    with warnings.catch_warnings():
+                        # Silence "Pandas doesn't allow columns to be created via a new attribute name"
+                        # since we're not adding a column
+                        warnings.filterwarnings(
+                            "ignore",
+                            category=UserWarning,
+                            message=".*Pandas doesn't allow columns.*",
+                        )
+                        setattr(data, "look_ahead", look_ahead)
+
+                data.timeframe = _timeframe_for_chunk(there_are_more_subchunks, chunk_i, window_intersect, data.index)
                 yield data
                 del data
 
@@ -166,10 +179,8 @@ class HDFDataStore(DataStore):
 
     @doc_inherit
     def put(self, key, value):
-        self.store.put(key, value, format='table', 
-                        index=False)
-        self.store.create_table_index(key, columns=['index'], 
-                                      kind='full', optlevel=9)
+        self.store.put(key, value, format="table", index=False)
+        self.store.create_table_index(key, columns=["index"], kind="full", optlevel=9)
         self.store.flush()
 
     @doc_inherit
@@ -177,8 +188,8 @@ class HDFDataStore(DataStore):
         self.store.remove(key)
 
     @doc_inherit
-    def load_metadata(self, key='/'):
-        if key == '/':
+    def load_metadata(self, key="/"):
+        if key == "/":
             node = self.store.root
         else:
             node = self.store.get_node(key)
@@ -188,7 +199,7 @@ class HDFDataStore(DataStore):
 
     @doc_inherit
     def save_metadata(self, key, metadata):
-        if key == '/':
+        if key == "/":
             node = self.store.root
         else:
             node = self.store.get_node(key)
@@ -197,8 +208,8 @@ class HDFDataStore(DataStore):
         self.store.flush()
 
     @doc_inherit
-    def elements_below_key(self, key='/'):
-        if key == '/' or not key:
+    def elements_below_key(self, key="/"):
+        if key == "/" or not key:
             node = self.store.root
         else:
             node = self.store.get_node(key)
@@ -209,9 +220,9 @@ class HDFDataStore(DataStore):
         self.store.close()
 
     @doc_inherit
-    def open(self, mode='a'):
+    def open(self, mode="a"):
         self.store.open(mode=mode)
-        
+
     @doc_inherit
     def get_timeframe(self, key):
         """
@@ -223,20 +234,19 @@ class HDFDataStore(DataStore):
         data_end_date = self.store.select(key, start=-1).index[0]
         timeframe = TimeFrame(data_start_date, data_end_date)
         return self.window.intersection(timeframe)
-    
+
     def _check_columns(self, key, columns):
         if columns is None:
             return
         if not self._table_has_column_names(key, columns):
-            raise KeyError('at least one of ' + str(columns) + 
-                           ' is not a valid column')
+            raise KeyError("at least one of " + str(columns) + " is not a valid column")
 
     def _table_has_column_names(self, key, columns):
         """
         Parameters
         ----------
         columns : string or list of strings
-        
+
         Returns
         -------
         boolean
@@ -246,7 +256,7 @@ class HDFDataStore(DataStore):
         if isinstance(columns, str):
             columns = [columns]
         query_cols = set(columns)
-        table_cols = set(self._column_names(key) + ['index'])
+        table_cols = set(self._column_names(key) + ["index"])
         return query_cols.issubset(table_cols)
 
     def _column_names(self, key):
@@ -259,9 +269,9 @@ class HDFDataStore(DataStore):
         # Check we won't use too much memory
         mem_requirement = self._estimate_memory_requirement(key, nrows, columns)
         if mem_requirement > MAX_MEM_ALLOWANCE_IN_BYTES:
-            raise MemoryError('Requested data would use {:.3f}MBytes:'
-                              ' too much memory.'
-                              .format(mem_requirement / 1E6))
+            raise MemoryError(
+                "Requested data would use {:.3f}MBytes:" " too much memory.".format(mem_requirement / 1e6)
+            )
 
     def _estimate_memory_requirement(self, key, nrows, columns=None, paranoid=False):
         """Returns estimated mem requirement in bytes."""
@@ -276,11 +286,11 @@ class HDFDataStore(DataStore):
         ncols = len(columns)
         est_mem_usage_for_data = nrows * ncols * BYTES_PER_ELEMENT
         est_mem_usage_for_index = nrows * BYTES_PER_TIMESTAMP
-        if columns == ['index']:
+        if columns == ["index"]:
             return est_mem_usage_for_index
         else:
             return est_mem_usage_for_data + est_mem_usage_for_index
-       
+
     def _nrows(self, key, timeframe=None):
         """
         Returns
@@ -291,14 +301,14 @@ class HDFDataStore(DataStore):
         if timeframe_intersect.empty:
             nrows = 0
         elif timeframe_intersect:
-            terms = timeframe_intersect.query_terms('timeframe_intersect')
+            terms = timeframe_intersect.query_terms("timeframe_intersect")
             coords = self.store.select_as_coordinates(key, terms)
             nrows = len(coords)
         else:
             storer = self._get_storer(key)
             nrows = storer.nrows
         return nrows
-    
+
     def _keys(self):
         return self.store.keys()
 
@@ -307,7 +317,7 @@ class HDFDataStore(DataStore):
         storer = self.store.get_storer(key)
         assert storer is not None, "cannot get storer for key = " + key
         return storer
-    
+
     def _check_key(self, key):
         """
         Parameters
@@ -315,8 +325,8 @@ class HDFDataStore(DataStore):
         key : string
         """
         if key not in self._keys():
-            raise KeyError(key + ' not in store')
-        
+            raise KeyError(key + " not in store")
+
 
 def _timeframe_for_chunk(there_are_more_subchunks, chunk_i, window_intersect, index):
     start = None

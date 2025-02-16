@@ -1,25 +1,31 @@
-from warnings import warn
 from collections import namedtuple
 from copy import deepcopy
+from warnings import warn
+
 import numpy as np
 import pandas as pd
-from .preprocessing import Clip
-from .stats import TotalEnergy, GoodSections, DropoutRate
-from .hashable import Hashable
-from .measurement import (select_best_ac_type, PHYSICAL_QUANTITIES,
-                          check_ac_type, check_physical_quantity)
-from .node import Node
-from .electric import Electric
-from nilmtk.exceptions import MeasurementError
-from .utils import flatten_2d_list, capitalise_first_letter
-from nilmtk.timeframegroup import TimeFrameGroup
-import nilmtk
 
-ElecMeterID = namedtuple('ElecMeterID', ['instance', 'building', 'dataset'])
+import nilmtk
+from nilmtk.exceptions import MeasurementError
+from nilmtk.timeframegroup import TimeFrameGroup
+
+from .electric import Electric
+from .hashable import Hashable
+from .measurement import (
+    PHYSICAL_QUANTITIES,
+    check_ac_type,
+    check_physical_quantity,
+    select_best_ac_type,
+)
+from .node import Node
+from .preprocessing import Clip
+from .stats import DropoutRate, GoodSections, TotalEnergy
+from .utils import capitalise_first_letter, flatten_2d_list
+
+ElecMeterID = namedtuple("ElecMeterID", ["instance", "building", "dataset"])
 
 
 class ElecMeter(Hashable, Electric):
-
     """Represents a physical electricity meter.
 
     Attributes
@@ -64,24 +70,24 @@ class ElecMeter(Hashable, Electric):
 
     @property
     def key(self):
-        return self.metadata['data_location']
+        return self.metadata["data_location"]
 
     def instance(self):
-        return self._identifier_attr('instance')
+        return self._identifier_attr("instance")
 
     def building(self):
-        return self._identifier_attr('building')
+        return self._identifier_attr("building")
 
     def dataset(self):
-        return self._identifier_attr('dataset')
+        return self._identifier_attr("dataset")
 
     @property
     def name(self):
-        return self.metadata.get('name')
+        return self.metadata.get("name")
 
     @name.setter
     def name(self, value):
-        self.metadata['name'] = value
+        self.metadata["name"] = value
 
     def _identifier_attr(self, attr):
         if self.identifier is None:
@@ -95,8 +101,9 @@ class ElecMeter(Hashable, Electric):
 
     def _check_store(self):
         if self.store is None:
-            raise RuntimeError("ElecMeter needs `store` attribute set to an"
-                               " instance of a `nilmtk.DataStore` subclass")
+            raise RuntimeError(
+                "ElecMeter needs `store` attribute set to an" " instance of a `nilmtk.DataStore` subclass"
+            )
 
     def upstream_meter(self, raise_warning=True):
         """
@@ -106,28 +113,26 @@ class ElecMeter(Hashable, Electric):
         """
         if self.is_site_meter():
             if raise_warning:
-                warn("There is no meter upstream of this meter '{}' because"
-                     " it is a site meter.".format(self.identifier))
+                warn(
+                    "There is no meter upstream of this meter '{}' because"
+                    " it is a site meter.".format(self.identifier)
+                )
             return
 
-        submeter_of = self.metadata.get('submeter_of')
+        submeter_of = self.metadata.get("submeter_of")
 
         # Sanity checks
         if submeter_of is None:
-            raise ValueError(
-                "This meter has no 'submeter_of' metadata attribute.")
+            raise ValueError("This meter has no 'submeter_of' metadata attribute.")
         if submeter_of < 0:
             raise ValueError("'submeter_of' must be >= 0.")
-        upstream_meter_in_building = self.metadata.get(
-            'upstream_meter_in_building')
-        if (upstream_meter_in_building is not None and
-                upstream_meter_in_building != self.identifier.building):
-            raise NotImplementedError(
-                "'upstream_meter_in_building' not implemented yet.")
+        upstream_meter_in_building = self.metadata.get("upstream_meter_in_building")
+        if upstream_meter_in_building is not None and upstream_meter_in_building != self.identifier.building:
+            raise NotImplementedError("'upstream_meter_in_building' not implemented yet.")
 
-        id_of_upstream = ElecMeterID(instance=submeter_of,
-                                     building=self.identifier.building,
-                                     dataset=self.identifier.dataset)
+        id_of_upstream = ElecMeterID(
+            instance=submeter_of, building=self.identifier.building, dataset=self.identifier.dataset
+        )
 
         upstream_meter = nilmtk.global_meter_group[id_of_upstream]
         if upstream_meter is None:
@@ -136,9 +141,8 @@ class ElecMeter(Hashable, Electric):
 
     @classmethod
     def load_meter_devices(cls, store):
-        dataset_metadata = store.load_metadata('/')
-        ElecMeter.meter_devices.update(
-            dataset_metadata.get('meter_devices', {}))
+        dataset_metadata = store.load_metadata("/")
+        ElecMeter.meter_devices.update(dataset_metadata.get("meter_devices", {}))
 
     def save(self, destination, key):
         """
@@ -157,7 +161,7 @@ class ElecMeter(Hashable, Electric):
         -------
         dict describing the MeterDevice for this meter (sample period etc).
         """
-        device_model = self.metadata.get('device_model')
+        device_model = self.metadata.get("device_model")
         if device_model:
             return deepcopy(ElecMeter.meter_devices[device_model])
         else:
@@ -166,10 +170,10 @@ class ElecMeter(Hashable, Electric):
     def sample_period(self):
         device = self.device
         if device:
-            return device['sample_period']
+            return device["sample_period"]
 
     def is_site_meter(self):
-        return self.metadata.get('site_meter', False)
+        return self.metadata.get("site_meter", False)
 
     def dominant_appliance(self):
         """Tries to find the most dominant appliance on this meter,
@@ -183,11 +187,14 @@ class ElecMeter(Hashable, Electric):
             return self.appliances[0]
         else:
             for app in self.appliances:
-                if app.metadata.get('dominant_appliance'):
+                if app.metadata.get("dominant_appliance"):
                     return app
-            warn('Multiple appliances are associated with meter {}'
-                 ' but none are marked as the dominant appliance. Hence'
-                 ' returning the first appliance in the list.', RuntimeWarning)
+            warn(
+                "Multiple appliances are associated with meter {}"
+                " but none are marked as the dominant appliance. Hence"
+                " returning the first appliance in the list.",
+                RuntimeWarning,
+            )
             return self.appliances[0]
 
     def label(self, pretty=True):
@@ -209,13 +216,13 @@ class ElecMeter(Hashable, Electric):
 
         meter_names = []
         if self.is_site_meter():
-            meter_names.append('SITE METER')
+            meter_names.append("SITE METER")
         elif "name" in self.metadata:
             meter_names.append(self.metadata["name"])
         else:
             for appliance in self.appliances:
                 appliance_name = appliance.label()
-                if appliance.metadata.get('dominant_appliance'):
+                if appliance.metadata.get("dominant_appliance"):
                     appliance_name = appliance_name.upper()
                 meter_names.append(appliance_name)
         label = ", ".join(meter_names)
@@ -226,14 +233,14 @@ class ElecMeter(Hashable, Electric):
         if name:
             label = name
         elif self.is_site_meter():
-            label = 'Site meter'
+            label = "Site meter"
         elif self.dominant_appliance() is not None:
             label = self.dominant_appliance().identifier.type
         else:
             meter_names = []
             for appliance in self.appliances:
                 appliance_name = appliance.label()
-                if appliance.metadata.get('dominant_appliance'):
+                if appliance.metadata.get("dominant_appliance"):
                     appliance_name = appliance_name.upper()
                 meter_names.append(appliance_name)
             label = ", ".join(meter_names)
@@ -258,13 +265,12 @@ class ElecMeter(Hashable, Electric):
             return list(set(flatten_2d_list(ac_types)))
 
         if physical_quantity not in PHYSICAL_QUANTITIES:
-            raise ValueError("`physical_quantity` must by one of '{}', not '{}'"
-                             .format(PHYSICAL_QUANTITIES, physical_quantity))
+            raise ValueError(
+                "`physical_quantity` must by one of '{}', not '{}'".format(PHYSICAL_QUANTITIES, physical_quantity)
+            )
 
-        measurements = self.device['measurements']
-        return [m['type'] for m in measurements
-                if m['physical_quantity'] == physical_quantity
-                and 'type' in m]
+        measurements = self.device["measurements"]
+        return [m["type"] for m in measurements if m["physical_quantity"] == physical_quantity and "type" in m]
 
     def available_physical_quantities(self):
         """
@@ -272,8 +278,8 @@ class ElecMeter(Hashable, Electric):
         -------
         list of strings e.g. ['power', 'energy']
         """
-        measurements = self.device['measurements']
-        return list(set([m['physical_quantity'] for m in measurements]))
+        measurements = self.device["measurements"]
+        return list(set([m["physical_quantity"] for m in measurements]))
 
     def available_columns(self):
         """
@@ -281,9 +287,8 @@ class ElecMeter(Hashable, Electric):
         -------
         list of 2-tuples of strings e.g. [('power', 'active')]
         """
-        measurements = self.device['measurements']
-        return list(set([(m['physical_quantity'], m.get('type', ''))
-                         for m in measurements]))
+        measurements = self.device["measurements"]
+        return list(set([(m["physical_quantity"], m.get("type", "")) for m in measurements]))
 
     def __repr__(self):
         string = super(ElecMeter, self).__repr__()
@@ -291,18 +296,18 @@ class ElecMeter(Hashable, Electric):
         string = string[:-1]  # remove last bracket
 
         # Site meter
-        if self.metadata.get('site_meter'):
-            string += ', site_meter'
+        if self.metadata.get("site_meter"):
+            string += ", site_meter"
 
         # Appliances
-        string += ', appliances={}'.format(self.appliances)
+        string += ", appliances={}".format(self.appliances)
 
         # METER ROOM
-        room = self.metadata.get('room')
+        room = self.metadata.get("room")
         if room:
-            string += ', room={}'.format(room)
+            string += ", room={}".format(room)
 
-        string += ')'
+        string += ")"
         return string
 
     def matches(self, key):
@@ -334,8 +339,7 @@ class ElecMeter(Hashable, Electric):
 
             elif k in self.device:
                 metadata_value = self.device[k]
-                if (isinstance(metadata_value, list) and
-                        not isinstance(v, list)):
+                if isinstance(metadata_value, list) and not isinstance(v, list):
                     if v not in metadata_value:
                         match = False
                 elif metadata_value != v:
@@ -409,32 +413,33 @@ class ElecMeter(Hashable, Electric):
         nilmtk.exceptions.MeasurementError if a measurement is specified
         which is not available.
         """
-        verbose = kwargs.get('verbose')
+        verbose = kwargs.get("verbose")
         if verbose:
             print()
             print("ElecMeter.load")
             print(self)
 
-        if 'sample_period' in kwargs:
-            kwargs.setdefault('resample', True)
+        if "sample_period" in kwargs:
+            kwargs.setdefault("resample", True)
 
-        if kwargs.get('resample'):
+        if kwargs.get("resample"):
             # Set default key word arguments for resampling.
-            resample_kwargs = kwargs.setdefault('resample_kwargs', {})
-            resample_kwargs.setdefault('fill_method', 'ffill')
-            resample_kwargs.setdefault('how', 'mean')
-            if 'limit' not in resample_kwargs:
+            resample_kwargs = kwargs.setdefault("resample_kwargs", {})
+            resample_kwargs.setdefault("fill_method", "ffill")
+            resample_kwargs.setdefault("how", "mean")
+            if "limit" not in resample_kwargs:
                 default_sample_period = self.sample_period()
-                sample_period = kwargs.get('sample_period', default_sample_period)
-                
-                if default_sample_period is not None and sample_period < default_sample_period:
-                    warn("The provided sample_period ({}) is shorter than the meter's sample_period ({})".format(
-                        sample_period, default_sample_period
-                    ))
+                sample_period = kwargs.get("sample_period", default_sample_period)
 
-                max_number_of_rows_to_ffill = int(
-                    np.ceil(self.device['max_sample_period'] / sample_period))
-                resample_kwargs.update({'limit': max_number_of_rows_to_ffill})
+                if default_sample_period is not None and sample_period < default_sample_period:
+                    warn(
+                        "The provided sample_period ({}) is shorter than the meter's sample_period ({})".format(
+                            sample_period, default_sample_period
+                        )
+                    )
+
+                max_number_of_rows_to_ffill = int(np.ceil(self.device["max_sample_period"] / sample_period))
+                resample_kwargs.update({"limit": max_number_of_rows_to_ffill})
 
         if verbose:
             print("kwargs after setting resample setting:")
@@ -447,7 +452,7 @@ class ElecMeter(Hashable, Electric):
             print(kwargs)
 
         # Get source node
-        preprocessing = kwargs.pop('preprocessing', [])
+        preprocessing = kwargs.pop("preprocessing", [])
         last_node = self.get_source_node(**kwargs)
         generator = last_node.generator
 
@@ -468,8 +473,7 @@ class ElecMeter(Hashable, Electric):
             return list(set(flatten_2d_list(cols2d)))
 
         check_ac_type(ac_type)
-        cols_matching = [col for col in self.available_columns()
-                         if col[1] == ac_type]
+        cols_matching = [col for col in self.available_columns() if col[1] == ac_type]
         return cols_matching
 
     def _physical_quantity_to_columns(self, physical_quantity):
@@ -477,13 +481,11 @@ class ElecMeter(Hashable, Electric):
             return []
 
         if isinstance(physical_quantity, list):
-            cols2d = [self._physical_quantity_to_columns(p_q)
-                      for p_q in physical_quantity]
+            cols2d = [self._physical_quantity_to_columns(p_q) for p_q in physical_quantity]
             return list(set(flatten_2d_list(cols2d)))
 
         check_physical_quantity(physical_quantity)
-        cols_matching = [col for col in self.available_columns()
-                         if col[0] == physical_quantity]
+        cols_matching = [col for col in self.available_columns() if col[0] == physical_quantity]
         return cols_matching
 
     def _get_columns_with_best_ac_type(self, physical_quantity=None):
@@ -512,27 +514,27 @@ class ElecMeter(Hashable, Electric):
             return [(physical_quantity, best_ac_type)]
 
     def _convert_physical_quantity_and_ac_type_to_cols(
-            self, physical_quantity=None, ac_type=None, columns=None,
-            **kwargs):
+        self, physical_quantity=None, ac_type=None, columns=None, **kwargs
+    ):
         """Returns kwargs dict with physical_quantity and ac_type removed
         and columns populated appropriately."""
         if columns:
-            if (ac_type or physical_quantity):
-                raise ValueError("Cannot use `ac_type` and/or `physical_quantity`"
-                                 " with `columns` parameter.")
+            if ac_type or physical_quantity:
+                raise ValueError("Cannot use `ac_type` and/or `physical_quantity`" " with `columns` parameter.")
             else:
                 if set(columns).issubset(self.available_columns()):
-                    kwargs['columns'] = columns
+                    kwargs["columns"] = columns
                     return kwargs
                 else:
-                    msg = ("'{}' is not a subset of the available columns: '{}'"
-                           .format(columns, self.available_columns()))
+                    msg = "'{}' is not a subset of the available columns: '{}'".format(
+                        columns, self.available_columns()
+                    )
                     raise MeasurementError(msg)
 
         msg = ""
         if not (ac_type or physical_quantity):
             columns = self.available_columns()
-        elif ac_type == 'best':
+        elif ac_type == "best":
             columns = self._get_columns_with_best_ac_type(physical_quantity)
             if not columns:
                 msg += "No AC types for physical quantity {}".format(physical_quantity)
@@ -545,13 +547,11 @@ class ElecMeter(Hashable, Electric):
             if physical_quantity:
                 cols_matching_pq = self._physical_quantity_to_columns(physical_quantity)
                 if not cols_matching_pq:
-                    msg += ("Physical quantity '{}' not available. "
-                            .format(physical_quantity))
+                    msg += "Physical quantity '{}' not available. ".format(physical_quantity)
                 if columns:
                     columns = list(set(columns).intersection(cols_matching_pq))
                     if not columns:
-                        msg += ("No measurement matching ({}, {}). "
-                                .format(physical_quantity, ac_type))
+                        msg += "No measurement matching ({}, {}). ".format(physical_quantity, ac_type)
                 else:
                     columns = cols_matching_pq
 
@@ -559,7 +559,7 @@ class ElecMeter(Hashable, Electric):
             msg += "Available columns = {}. ".format(self.available_columns())
             raise MeasurementError(msg)
 
-        kwargs['columns'] = columns
+        kwargs["columns"] = columns
         return kwargs
 
     def dry_run_metadata(self):
@@ -570,12 +570,11 @@ class ElecMeter(Hashable, Electric):
 
     def get_source_node(self, **loader_kwargs):
         if self.store is None:
-            raise RuntimeError(
-                "Cannot get source node if meter.store is None!")
+            raise RuntimeError("Cannot get source node if meter.store is None!")
 
         loader_kwargs = self._convert_physical_quantity_and_ac_type_to_cols(**loader_kwargs)
         generator = self.store.load(key=self.key, **loader_kwargs)
-        self.metadata['device'] = self.device
+        self.metadata["device"] = self.device
         return Node(self, generator=generator)
 
     def total_energy(self, **loader_kwargs):
@@ -591,8 +590,7 @@ class ElecMeter(Hashable, Electric):
         else returns a pd.Series with a row for each AC type.
         """
         nodes = [Clip, TotalEnergy]
-        return self._get_stat_from_cache_or_compute(
-            nodes, TotalEnergy.results_class(), loader_kwargs)
+        return self._get_stat_from_cache_or_compute(nodes, TotalEnergy.results_class(), loader_kwargs)
 
     def dropout_rate(self, ignore_gaps=True, **loader_kwargs):
         """
@@ -610,10 +608,9 @@ class ElecMeter(Hashable, Electric):
         """
         nodes = [DropoutRate]
         if ignore_gaps:
-            loader_kwargs['sections'] = self.good_sections(**loader_kwargs)
+            loader_kwargs["sections"] = self.good_sections(**loader_kwargs)
 
-        return self._get_stat_from_cache_or_compute(
-            nodes, DropoutRate.results_class(), loader_kwargs)
+        return self._get_stat_from_cache_or_compute(nodes, DropoutRate.results_class(), loader_kwargs)
 
     def good_sections(self, **loader_kwargs):
         """
@@ -627,11 +624,10 @@ class ElecMeter(Hashable, Electric):
         if `full_results` is True then return nilmtk.stats.GoodSectionsResults
         object otherwise return list of TimeFrame objects.
         """
-        loader_kwargs.setdefault('n_look_ahead_rows', 10)
+        loader_kwargs.setdefault("n_look_ahead_rows", 10)
         nodes = [GoodSections]
-        results_obj = GoodSections.results_class(self.device['max_sample_period'])
-        return self._get_stat_from_cache_or_compute(
-            nodes, results_obj, loader_kwargs)
+        results_obj = GoodSections.results_class(self.device["max_sample_period"])
+        return self._get_stat_from_cache_or_compute(nodes, results_obj, loader_kwargs)
 
     def _get_stat_from_cache_or_compute(self, nodes, results_obj, loader_kwargs):
         """General function for computing statistics and/or loading them from
@@ -664,16 +660,16 @@ class ElecMeter(Hashable, Electric):
         key_for_cached_stat
         get_cached_stat
         """
-        full_results = loader_kwargs.pop('full_results', False)
-        verbose = loader_kwargs.get('verbose')
-        if 'ac_type' in loader_kwargs or 'physical_quantity' in loader_kwargs:
+        full_results = loader_kwargs.pop("full_results", False)
+        verbose = loader_kwargs.get("verbose")
+        if "ac_type" in loader_kwargs or "physical_quantity" in loader_kwargs:
             loader_kwargs = self._convert_physical_quantity_and_ac_type_to_cols(**loader_kwargs)
-        columns = loader_kwargs.get('columns', [])
+        columns = loader_kwargs.get("columns", [])
         ac_types = set([m[1] for m in columns if m[1]])
         results_obj_copy = deepcopy(results_obj)
 
         # Prepare `sections` list
-        sections = loader_kwargs.get('sections')
+        sections = loader_kwargs.get("sections")
         if sections is None:
             tf = self.get_timeframe()
             tf.include_end = True
@@ -683,7 +679,7 @@ class ElecMeter(Hashable, Electric):
 
         # Retrieve usable stats from cache
         key_for_cached_stat = self.key_for_cached_stat(results_obj.name)
-        if loader_kwargs.get('preprocessing') is None:
+        if loader_kwargs.get("preprocessing") is None:
             cached_stat = self.get_cached_stat(key_for_cached_stat)
             results_obj.import_from_cache(cached_stat, sections)
 
@@ -693,6 +689,7 @@ class ElecMeter(Hashable, Electric):
                 sections_to_compute = set(sections) - set(results_obj_timeframes)
                 sections_to_compute = sorted(sections_to_compute)
                 return sections_to_compute
+
             try:
                 ac_type_keys = results_obj.simple().keys()
             except:
@@ -711,7 +708,7 @@ class ElecMeter(Hashable, Electric):
 
         # If we get to here then we have to compute some stats
         if sections_to_compute:
-            loader_kwargs['sections'] = sections_to_compute
+            loader_kwargs["sections"] = sections_to_compute
             computed_result = self._compute_stat(nodes, loader_kwargs)
 
             # Merge cached results with newly computed
@@ -789,8 +786,7 @@ class ElecMeter(Hashable, Electric):
         else:
             meter_str = "{:d}".format(self.instance())
 
-        return ("building{:d}/elec/cache/meter{}/{:s}"
-                .format(self.building(), meter_str, stat_name))
+        return "building{:d}/elec/cache/meter{}/{:s}".format(self.building(), meter_str, stat_name)
 
     def clear_cache(self, verbose=False):
         """
@@ -801,7 +797,7 @@ class ElecMeter(Hashable, Electric):
         key_for_cached_stat
         get_cached_stat
         """
-        key_for_cache = self.key_for_cached_stat('')
+        key_for_cache = self.key_for_cached_stat("")
         try:
             self.cache.remove(key_for_cache)
         except KeyError:

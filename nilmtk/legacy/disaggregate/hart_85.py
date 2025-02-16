@@ -1,11 +1,14 @@
 import pickle
 from collections import OrderedDict, deque
+
 import numpy as np
 import pandas as pd
 from sklearn.metrics import mean_squared_error
+
 from ...feature_detectors.cluster import hart85_means_shift_cluster
 from ...feature_detectors.steady_states import find_steady_states_transients
-from . import Disaggregator
+from .disaggregator import Disaggregator
+
 
 class MyDeque(deque):
     def popmiddle(self, pos):
@@ -22,8 +25,15 @@ class PairBuffer(object):
     * matchedPairs (dataframe containing matched pairs of transitions)
     """
 
-    def __init__(self, columns, buffer_size, min_tolerance, percent_tolerance,
-                 large_transition, num_measurements):
+    def __init__(
+        self,
+        columns,
+        buffer_size,
+        min_tolerance,
+        percent_tolerance,
+        large_transition,
+        num_measurements,
+    ):
         """
         Parameters
         ----------
@@ -50,16 +60,20 @@ class PairBuffer(object):
         self._num_measurements = num_measurements
         if self._num_measurements == 3:
             # Both active and reactive power is available
-            self.pair_columns = ['T1 Time', 'T1 Active', 'T1 Reactive',
-                                 'T2 Time', 'T2 Active', 'T2 Reactive']
+            self.pair_columns = [
+                "T1 Time",
+                "T1 Active",
+                "T1 Reactive",
+                "T2 Time",
+                "T2 Active",
+                "T2 Reactive",
+            ]
         elif self._num_measurements == 2:
             # Only active power is available
-            if columns[0][1] == 'active':
-                self.pair_columns = ['T1 Time', 'T1 Active',
-                                     'T2 Time', 'T2 Active']
-            elif columns[0][1] == 'apparent':
-                self.pair_columns = ['T1 Time', 'T1 Apparent',
-                                     'T2 Time', 'T2 Apparent']
+            if columns[0][1] == "active":
+                self.pair_columns = ["T1 Time", "T1 Active", "T2 Time", "T2 Active"]
+            elif columns[0][1] == "apparent":
+                self.pair_columns = ["T1 Time", "T1 Apparent", "T2 Time", "T2 Apparent"]
         self.matched_pairs = pd.DataFrame(columns=self.pair_columns)
 
     def clean_buffer(self):
@@ -137,8 +151,9 @@ class PairBuffer(object):
                         if compval[self._num_measurements] is False:
                             # Add the two elements for comparison
                             vsum = np.add(
-                                val[1:self._num_measurements],
-                                compval[1:self._num_measurements])
+                                val[1 : self._num_measurements],
+                                compval[1 : self._num_measurements],
+                            )
                             # Set the allowable tolerance for reactive and
                             # active
                             matchtols = [self._min_tol, self._min_tol]
@@ -149,11 +164,7 @@ class PairBuffer(object):
                                     else (self._percent_tol * max(np.fabs([val[ix], compval[ix]])))
                                 )
                             if self._num_measurements == 3:
-                                condition = (
-                                    np.fabs(
-                                        vsum[0]) < matchtols[0]) and (
-                                    np.fabs(
-                                        vsum[1]) < matchtols[1])
+                                condition = (np.fabs(vsum[0]) < matchtols[0]) and (np.fabs(vsum[1]) < matchtols[1])
 
                             elif self._num_measurements == 2:
                                 condition = np.fabs(vsum[0]) < matchtols[0]
@@ -166,8 +177,7 @@ class PairBuffer(object):
 
                                 # Append the OFF transition to the ON. Add to
                                 # the list.
-                                matchedpair = val[0:self._num_measurements] + \
-                                    compval[0:self._num_measurements]
+                                matchedpair = val[0 : self._num_measurements] + compval[0 : self._num_measurements]
                                 new_matched_pairs.append(matchedpair)
 
                     # Iterate Index
@@ -179,11 +189,14 @@ class PairBuffer(object):
         # dataframe)
         if pairmatched:
             if self.matched_pairs.empty:
-                self.matched_pairs = pd.DataFrame(
-                    new_matched_pairs, columns=self.pair_columns)
+                self.matched_pairs = pd.DataFrame(new_matched_pairs, columns=self.pair_columns)
             else:
                 self.matched_pairs = pd.concat(
-                    [self.matched_pairs, pd.DataFrame(new_matched_pairs, columns=self.pair_columns)])
+                    [
+                        self.matched_pairs,
+                        pd.DataFrame(new_matched_pairs, columns=self.pair_columns),
+                    ]
+                )
 
         return pairmatched
 
@@ -206,16 +219,15 @@ class Hart85(Disaggregator):
     def train(
         self,
         metergroup,
-        columns=[
-            ('power',
-             'active')],
+        columns=[("power", "active")],
         buffer_size=20,
         noise_level=70,
         state_threshold=15,
         min_tolerance=100,
         percent_tolerance=0.035,
         large_transition=1000,
-            **kwargs):
+        **kwargs,
+    ):
         """
         Train using Hart85. Places the learnt model in `model` attribute.
 
@@ -241,9 +253,9 @@ class Hart85(Disaggregator):
         self.state_threshold = state_threshold
         self.noise_level = noise_level
         [self.steady_states, self.transients] = find_steady_states_transients(
-            metergroup, columns, noise_level, state_threshold, **kwargs)
-        self.pair_df = self.pair(
-            buffer_size, min_tolerance, percent_tolerance, large_transition)
+            metergroup, columns, noise_level, state_threshold, **kwargs
+        )
+        self.pair_df = self.pair(buffer_size, min_tolerance, percent_tolerance, large_transition)
         self.centroids = hart85_means_shift_cluster(self.pair_df, columns)
 
         self.model = dict(
@@ -253,11 +265,10 @@ class Hart85(Disaggregator):
             steady_states=self.steady_states,
             transients=self.transients,
             # pair_df=self.pair_df,
-            centroids=self.centroids
+            centroids=self.centroids,
         )
 
-    def pair(self, buffer_size, min_tolerance, percent_tolerance,
-             large_transition):
+    def pair(self, buffer_size, min_tolerance, percent_tolerance, large_transition):
         subset = list(self.transients.itertuples())
         buffer = PairBuffer(
             columns=self.columns,
@@ -265,8 +276,8 @@ class Hart85(Disaggregator):
             buffer_size=buffer_size,
             percent_tolerance=percent_tolerance,
             large_transition=large_transition,
-            num_measurements=len(
-                self.transients.columns) + 1)
+            num_measurements=len(self.transients.columns) + 1,
+        )
         for s in subset:
             # if len(buffer.transitionList) < bsize
             if len(buffer.transition_list) == buffer_size:
@@ -290,8 +301,7 @@ class Hart85(Disaggregator):
             with same index as `chunk`.
         """
 
-        states = pd.DataFrame(
-            -1, index=chunk.index, columns=self.centroids.index.values)
+        states = pd.DataFrame(-1, index=chunk.index, columns=self.centroids.index.values)
         for transient_tuple in transients.itertuples():
             if transient_tuple[0] < chunk.index[0]:
                 # Transient occurs before chunk has started; do nothing
@@ -303,22 +313,19 @@ class Hart85(Disaggregator):
                 # Absolute value of transient
                 abs_value = np.abs(transient_tuple[1:])
                 positive = transient_tuple[1] > 0
-                abs_value_transient_minus_centroid = pd.DataFrame(
-                    (self.centroids - abs_value).abs())
+                abs_value_transient_minus_centroid = pd.DataFrame((self.centroids - abs_value).abs())
                 if len(transient_tuple) == 2:
                     # 1d data
-                    index_least_delta = (
-                        abs_value_transient_minus_centroid.idxmin().values[0])
+                    index_least_delta = abs_value_transient_minus_centroid.idxmin().values[0]
                 else:
                     # 2d data.
                     # Need to find absolute value before computing minimum
                     columns = abs_value_transient_minus_centroid.columns
                     abs_value_transient_minus_centroid["multidim"] = (
                         abs_value_transient_minus_centroid[columns[0]] ** 2
-                        +
-                        abs_value_transient_minus_centroid[columns[1]] ** 2)
-                    index_least_delta = (
-                        abs_value_transient_minus_centroid["multidim"].idxmin())
+                        + abs_value_transient_minus_centroid[columns[1]] ** 2
+                    )
+                    index_least_delta = abs_value_transient_minus_centroid["multidim"].idxmin()
                 if positive:
                     # Turned on
                     states.loc[transient_tuple[0]][index_least_delta] = 1
@@ -345,10 +352,7 @@ class Hart85(Disaggregator):
 
             columns = pd.MultiIndex.from_tuples(tuples)
 
-            temp_df = pd.DataFrame(
-                power_chunk_dict,
-                index=chunk.index,
-                columns=columns)
+            temp_df = pd.DataFrame(power_chunk_dict, index=chunk.index, columns=columns)
 
             for i in range(len(chunk.index)):
                 for j in range(len(self.centroids.index.values)):
@@ -434,17 +438,21 @@ class Hart85(Disaggregator):
         """
         load_kwargs = self._pre_disaggregation_checks(load_kwargs)
 
-        load_kwargs.setdefault('sample_period', 60)
-        load_kwargs.setdefault('sections', mains.good_sections())
+        load_kwargs.setdefault("sample_period", 60)
+        load_kwargs.setdefault("sections", mains.good_sections())
 
         timeframes = []
-        building_path = '/building{}'.format(mains.building())
-        mains_data_location = building_path + '/elec/meter1'
+        building_path = "/building{}".format(mains.building())
+        mains_data_location = building_path + "/elec/meter1"
         data_is_available = False
 
         [_, transients] = find_steady_states_transients(
-            mains, columns=self.columns, state_threshold=self.state_threshold,
-            noise_level=self.noise_level, **load_kwargs)
+            mains,
+            columns=self.columns,
+            state_threshold=self.state_threshold,
+            noise_level=self.noise_level,
+            **load_kwargs,
+        )
 
         # For now ignoring the first transient
         # transients = transients[1:]
@@ -460,15 +468,14 @@ class Hart85(Disaggregator):
         if len(self.columns) == 1:
             ac_type = self.columns[0][1]
         else:
-            ac_type = ['active', 'reactive']
+            ac_type = ["active", "reactive"]
 
         for chunk in mains.power_series(**load_kwargs):
             # Record metadata
 
             timeframes.append(chunk.timeframe)
             measurement = chunk.name
-            power_df, dimen = self.disaggregate_chunk(
-                chunk, prev, transients)
+            power_df, dimen = self.disaggregate_chunk(chunk, prev, transients)
 
             if dimen == 2:
                 columns = pd.MultiIndex.from_tuples([chunk.name])
@@ -481,32 +488,31 @@ class Hart85(Disaggregator):
                 data_is_available = True
                 df = power_df[[meter]]
                 df.columns = columns
-                df.columns.names = ['physical_quantity', 'type']
-                key = '{}/elec/meter{:d}'.format(building_path, meter + 2)
-                val = df.apply(pd.to_numeric).astype('float32')
+                df.columns.names = ["physical_quantity", "type"]
+                key = "{}/elec/meter{:d}".format(building_path, meter + 2)
+                val = df.apply(pd.to_numeric).astype("float32")
                 output_datastore.append(key, value=val)
-            print('Next Chunk..')
+            print("Next Chunk..")
 
-        print('Appending mains data to datastore')
+        print("Appending mains data to datastore")
 
         for chunk_mains in mains.load(ac_type=ac_type):
             chunk_df = chunk_mains
 
-        chunk_df = chunk_df.apply(pd.to_numeric).astype('float32')
-        print('Done')
+        chunk_df = chunk_df.apply(pd.to_numeric).astype("float32")
+        print("Done")
 
-        output_datastore.append(key=mains_data_location,
-                                value=chunk_df)
+        output_datastore.append(key=mains_data_location, value=chunk_df)
         # save metadata
         if data_is_available:
             self._save_metadata_for_disaggregation(
                 output_datastore=output_datastore,
-                sample_period=load_kwargs['sample_period'],
+                sample_period=load_kwargs["sample_period"],
                 measurement=measurement,
                 timeframes=timeframes,
                 building=mains.building(),
                 supervised=False,
-                num_meters=len(self.centroids)
+                num_meters=len(self.centroids),
             )
         return power_df
 
@@ -518,13 +524,13 @@ class Hart85(Disaggregator):
     def import_model(self, filename):
         with open(filename, "rb") as pickle_in:
             self.model = pickle.load(pickle_in)
-            self.columns = self.model['columns']
-            self.state_threshold = self.model['state_threshold']
-            self.noise_level = self.model['noise_level']
-            self.steady_states = self.model['steady_states']
-            self.transients = self.model['transients']
+            self.columns = self.model["columns"]
+            self.state_threshold = self.model["state_threshold"]
+            self.noise_level = self.model["noise_level"]
+            self.steady_states = self.model["steady_states"]
+            self.transients = self.model["transients"]
             # pair_df=self.pair_df,
-            self.centroids = self.model['centroids']
+            self.centroids = self.model["centroids"]
 
     def best_matched_appliance(self, submeters, pred_df):
         """
@@ -541,24 +547,16 @@ class Hart85(Disaggregator):
 
         rms_error = {}
         submeters_df = submeters.dataframe_of_meters()
-        new_df = pd.merge(
-            pred_df,
-            submeters_df,
-            left_index=True,
-            right_index=True)
+        new_df = pd.merge(pred_df, submeters_df, left_index=True, right_index=True)
 
         rmse_all = []
         for pred_appliance in pred_df.columns:
             rmse = {}
             for appliance in submeters_df.columns:
-                temp_value = (
-                    np.sqrt(
-                        mean_squared_error(
-                            new_df[pred_appliance],
-                            new_df[appliance])))
+                temp_value = np.sqrt(mean_squared_error(new_df[pred_appliance], new_df[appliance]))
                 rmse[appliance] = temp_value
             rmse_all.append(rmse)
         match = []
         for i in range(len(rmse_all)):
             key_min = min(rmse_all[i].keys(), key=(lambda k: rmse_all[i][k]))
-            print('Best Matched Pair is', (i, key_min))
+            print("Best Matched Pair is", (i, key_min))

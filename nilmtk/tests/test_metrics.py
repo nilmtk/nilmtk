@@ -1,20 +1,29 @@
 import unittest
 from os.path import join
-from nilmtk.tests.testingtools import data_dir
-from nilmtk import (Appliance, MeterGroup, ElecMeter, HDFDataStore, 
-                    global_meter_group, TimeFrame, DataSet)
-from nilmtk.utils import tree_root, nodes_adjacent_to_root
-from nilmtk.elecmeter import ElecMeterID
+
+from nilmtk import (
+    Appliance,
+    DataSet,
+    ElecMeter,
+    HDFDataStore,
+    MeterGroup,
+    TimeFrame,
+    global_meter_group,
+)
 from nilmtk.building import BuildingID
+from nilmtk.elecmeter import ElecMeterID
 from nilmtk.legacy.disaggregate import CombinatorialOptimisation
 from nilmtk.metrics import f1_score
+from nilmtk.tests.testingtools import data_dir
+from nilmtk.utils import nodes_adjacent_to_root, tree_root
+
 
 class TestMetrics(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        filename = join(data_dir(), 'co_test.h5')
+        filename = join(data_dir(), "co_test.h5")
         cls.dataset = DataSet(filename)
-        
+
     @classmethod
     def tearDownClass(cls):
         cls.dataset.store.close()
@@ -35,5 +44,6 @@ class TestMetrics(unittest.TestCase):
         f1 = f1_score(disag_elec, self.dataset.buildings[1].elec)
         """
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

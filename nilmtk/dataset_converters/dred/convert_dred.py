@@ -1,4 +1,4 @@
-'''
+"""
 DRED Dataset converter.
 The .h5 format is hosted in DRED official website. But the file is not fully compatible with NILMTK.
 
@@ -6,30 +6,30 @@ Download All_data.csv from the official website and use this converter
 
 Official Website :- http://www.st.ewi.tudelft.nl/~akshay/dred/
 
-'''
+"""
 
-import pandas as pd
-import numpy as np
-from copy import deepcopy
-from os.path import join, isdir, isfile
-from os import listdir
 import fnmatch
-import re
-from sys import stdout
-from nilmtk.utils import get_datastore
-from nilmtk.datastore import Key
-from nilmtk.timeframe import TimeFrame
-from nilmtk.measurement import LEVEL_NAMES
-from nilmtk.utils import get_module_directory, check_directory_exists
-from nilm_metadata import convert_yaml_to_hdf5, save_yaml_to_datastore
-import pickle
 import glob
-import numpy as np
+import pickle
+import re
 import time
+from copy import deepcopy
 from datetime import datetime
+from os import listdir
+from os.path import isdir, isfile, join
+from sys import stdout
+
+import numpy as np
+import pandas as pd
+from nilm_metadata import convert_yaml_to_hdf5, save_yaml_to_datastore
+
+from nilmtk.datastore import Key
+from nilmtk.measurement import LEVEL_NAMES
+from nilmtk.timeframe import TimeFrame
+from nilmtk.utils import check_directory_exists, get_datastore, get_module_directory
 
 
-def convert_dred(input_path, output_filename, format='HDF'):
+def convert_dred(input_path, output_filename, format="HDF"):
     """
     Parameters
     ----------
@@ -40,18 +40,14 @@ def convert_dred(input_path, output_filename, format='HDF'):
     format : str
         format of output. Either 'HDF' or 'CSV'. Defaults to 'HDF'
     """
-        
+
     # Open DataStore
-    store = get_datastore(output_filename, format, mode='w')
+    store = get_datastore(output_filename, format, mode="w")
 
     # Convert raw data to DataStore
-    _convert(input_path, store, 'Europe/Amsterdam')
+    _convert(input_path, store, "Europe/Amsterdam")
     # Add metadata
-    save_yaml_to_datastore(join(get_module_directory(), 
-                              'dataset_converters', 
-                              'dred', 
-                              'metadata'),
-                         store)
+    save_yaml_to_datastore(join(get_module_directory(), "dataset_converters", "dred", "metadata"), store)
     store.close()
 
     print("Done converting DRED to HDF5!")
@@ -70,7 +66,7 @@ def _convert(csv_filename, store, tz, sort_index=True):
             - house_id
             - chan_id
         Function should return a list of tuples e.g. [('power', 'apparent')]
-    tz : str 
+    tz : str
         Timezone e.g. 'Europe/Amsterdam'
     sort_index : bool
     """
@@ -82,32 +78,41 @@ def _convert(csv_filename, store, tz, sort_index=True):
         nilmtk_house_id += 1
         print("Loading house", house_id, end="... ")
         stdout.flush()
-        
-        usecols=['Timestamp','mains',
-                 'television','fan','fridge',
-                 'laptop computer','electric heating element',
-                 'oven','unknown','washing machine',
-                 'microwave','toaster',
-                 'sockets','cooker'
-                ]
+
+        usecols = [
+            "Timestamp",
+            "mains",
+            "television",
+            "fan",
+            "fridge",
+            "laptop computer",
+            "electric heating element",
+            "oven",
+            "unknown",
+            "washing machine",
+            "microwave",
+            "toaster",
+            "sockets",
+            "cooker",
+        ]
         df = _load_csv(csv_filename, usecols, 3, tz)
 
         if sort_index:
-            df = df.sort_index() # might not be sorted...
+            df = df.sort_index()  # might not be sorted...
         chan_id = 0
         for col in df.columns:
             chan_id += 1
             print(chan_id, end=" ")
             stdout.flush()
             key = Key(building=nilmtk_house_id, meter=chan_id)
-            
+
             chan_df = pd.DataFrame(df[col])
-            chan_df.columns = pd.MultiIndex.from_tuples([('power', 'apparent')])
-            
+            chan_df.columns = pd.MultiIndex.from_tuples([("power", "apparent")])
+
             # Modify the column labels to reflect the power measurements recorded.
             chan_df.columns.set_names(LEVEL_NAMES, inplace=True)
             store.put(str(key), chan_df)
-        print('')
+        print("")
 
 
 def _load_csv(filename, usecols, skip, tz):
@@ -126,8 +131,8 @@ def _load_csv(filename, usecols, skip, tz):
     # Load data
     df = pd.read_csv(filename, skiprows=skip, header=None)
     df.columns = usecols
-    df['Timestamp'] = pd.to_datetime(df['Timestamp'], utc=True)
-    df.set_index('Timestamp', inplace=True)
+    df["Timestamp"] = pd.to_datetime(df["Timestamp"], utc=True)
+    df.set_index("Timestamp", inplace=True)
     df = df.tz_convert(tz)
-    
+
     return df

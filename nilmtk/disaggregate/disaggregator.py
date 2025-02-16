@@ -1,6 +1,5 @@
 import os
-from datetime import datetime
-from nilmtk.timeframe import merge_timeframes, TimeFrame
+
 
 class Disaggregator(object):
     """Provides a common interface to all disaggregation classes.
@@ -16,12 +15,12 @@ class Disaggregator(object):
         A short name for this type of model.
         e.g. 'CO' for combinatorial optimisation.
     """
-    
+
     # file_prefix is used to track temporary files
     file_prefix = None
 
     def partial_fit(self, train_mains, train_appliances, **load_kwargs):
-        """ Trains the model given a metergroup containing appliance meters
+        """Trains the model given a metergroup containing appliance meters
         (supervised) or a site meter (unsupervised).  Will have a
         default implementation in super class.
         train_main: list of pd.DataFrames with pd.DatetimeIndex as index and 1

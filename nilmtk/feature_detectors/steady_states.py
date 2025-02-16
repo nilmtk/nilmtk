@@ -1,9 +1,10 @@
-import numpy as np
-import pandas as pd
 import sys
 
-def find_steady_states_transients(metergroup, columns, noise_level,
-                                  state_threshold, **load_kwargs):
+import numpy as np
+import pandas as pd
+
+
+def find_steady_states_transients(metergroup, columns, noise_level, state_threshold, **load_kwargs):
     """
     Returns
     -------
@@ -25,16 +26,13 @@ def find_steady_states_transients(metergroup, columns, noise_level,
         if power_dataframe.empty:
             continue
 
-        x, y = find_steady_states(
-            power_dataframe, noise_level=noise_level,
-            state_threshold=state_threshold)
+        x, y = find_steady_states(power_dataframe, noise_level=noise_level, state_threshold=state_threshold)
         steady_states_list.append(x)
         transients_list.append(y)
     return [pd.concat(steady_states_list), pd.concat(transients_list)]
 
 
-def find_steady_states(dataframe, min_n_samples=2, state_threshold=15,
-                       noise_level=70):
+def find_steady_states(dataframe, min_n_samples=2, state_threshold=15, noise_level=70):
     """Finds steady states given a DataFrame of power.
 
     Parameters
@@ -71,7 +69,7 @@ def find_steady_states(dataframe, min_n_samples=2, state_threshold=15,
     time = dataframe.iloc[0].name  # first state starts at beginning
 
     # Iterate over the rows performing algorithm
-    print ("Finding Edges, please wait ...", end="\n")
+    print("Finding Edges, please wait ...", end="\n")
     sys.stdout.flush()
 
     for row in dataframe.itertuples():
@@ -89,8 +87,7 @@ def find_steady_states(dataframe, min_n_samples=2, state_threshold=15,
         # logging.debug('The previous measurement is: %s' %
         # (previousMeasurement,))
 
-        state_change = np.fabs(
-            np.subtract(this_measurement, previous_measurement))
+        state_change = np.fabs(np.subtract(this_measurement, previous_measurement))
         # logging.debug('The State Change is: %s' % (stateChange,))
 
         if np.sum(state_change > state_threshold):
@@ -102,8 +99,7 @@ def find_steady_states(dataframe, min_n_samples=2, state_threshold=15,
         if instantaneous_change and (not ongoing_change):
 
             # Calculate transition size
-            last_transition = np.subtract(
-                estimated_steady_power, last_steady_power)
+            last_transition = np.subtract(estimated_steady_power, last_steady_power)
             # logging.debug('The steady state transition is: %s' %
             # (lastTransition,))
 
@@ -135,9 +131,7 @@ def find_steady_states(dataframe, min_n_samples=2, state_threshold=15,
             N = 0
 
         # Hart step 5: update our estimate for steady state's energy
-        estimated_steady_power = np.divide(
-            np.add(np.multiply(N, estimated_steady_power),
-                   this_measurement), (N + 1))
+        estimated_steady_power = np.divide(np.add(np.multiply(N, estimated_steady_power), this_measurement), (N + 1))
         # logging.debug('The steady power estimate is: %s' %
         #    (estimatedSteadyPower,))
         # Step 6: increment counter
@@ -161,8 +155,10 @@ def find_steady_states(dataframe, min_n_samples=2, state_threshold=15,
     # than the noise threshold
     #  https://github.com/nilmtk/nilmtk/issues/400
 
-    if np.sum(
-            steady_states[0] > noise_level) and index_transitions[0] == index_steady_states[0] == dataframe.iloc[0].name:
+    if (
+        np.sum(steady_states[0] > noise_level)
+        and index_transitions[0] == index_steady_states[0] == dataframe.iloc[0].name
+    ):
         transitions = transitions[1:]
         index_transitions = index_transitions[1:]
         steady_states = steady_states[1:]
@@ -173,26 +169,22 @@ def find_steady_states(dataframe, min_n_samples=2, state_threshold=15,
     print("Creating transition frame ...")
     sys.stdout.flush()
 
-    cols_transition = {1: ['active transition'],
-                       2: ['active transition', 'reactive transition']}
+    cols_transition = {1: ["active transition"], 2: ["active transition", "reactive transition"]}
 
-    cols_steady = {1: ['active average'],
-                   2: ['active average', 'reactive average']}
+    cols_steady = {1: ["active average"], 2: ["active average", "reactive average"]}
 
     if len(index_transitions) == 0:
         # No events
         return pd.DataFrame(), pd.DataFrame()
     else:
-        transitions = pd.DataFrame(data=transitions, index=index_transitions,
-                                   columns=cols_transition[num_measurements])
+        transitions = pd.DataFrame(data=transitions, index=index_transitions, columns=cols_transition[num_measurements])
         print("Transition frame created.")
 
         print("Creating states frame ...")
         sys.stdout.flush()
         steady_states = pd.DataFrame(
-            data=steady_states,
-            index=index_steady_states,
-            columns=cols_steady[num_measurements])
+            data=steady_states, index=index_steady_states, columns=cols_steady[num_measurements]
+        )
         print("States frame created.")
         print("Finished.")
         return steady_states, transitions
@@ -258,7 +250,7 @@ def _transform_data(data):
 
 
 def _apply_clustering(X, max_num_clusters):
-    '''
+    """
     Parameters
     ----------
     X : ndarray
@@ -268,10 +260,10 @@ def _apply_clustering(X, max_num_clusters):
     -------
     centroids : list of numbers
         List of power in different states of an appliance
-    '''
+    """
     # If we import sklearn at the top of the file then it makes autodoc fail
-    from sklearn.cluster import KMeans
     from sklearn import metrics
+    from sklearn.cluster import KMeans
 
     # Finds whether 2 or 3 gives better Silhouellete coefficient
     # Whichever is higher serves as the number of clusters for that
@@ -284,14 +276,13 @@ def _apply_clustering(X, max_num_clusters):
     for n_clusters in range(1, max_num_clusters):
 
         try:
-            k_means = KMeans(init='k-means++', n_clusters=n_clusters)
+            k_means = KMeans(init="k-means++", n_clusters=n_clusters)
             k_means.fit(X)
             k_means_labels[n_clusters] = k_means.labels_
             k_means_cluster_centers[n_clusters] = k_means.cluster_centers_
             k_means_labels_unique[n_clusters] = np.unique(k_means_labels)
             try:
-                sh_n = metrics.silhouette_score(
-                    X, k_means_labels[n_clusters], metric='euclidean')
+                sh_n = metrics.silhouette_score(X, k_means_labels[n_clusters], metric="euclidean")
 
                 if sh_n > sh:
                     sh = sh_n

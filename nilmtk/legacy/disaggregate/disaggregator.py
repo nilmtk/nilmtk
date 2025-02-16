@@ -1,5 +1,6 @@
 from datetime import datetime
-from ...timeframe import merge_timeframes, TimeFrame
+
+from ...timeframe import TimeFrame, merge_timeframes
 
 
 class Disaggregator(object):
@@ -83,20 +84,26 @@ class Disaggregator(object):
             raise RuntimeError(
                 "The model needs to be instantiated before"
                 " calling `disaggregate`.  For example, the"
-                " model can be instantiated by running `train`.")
+                " model can be instantiated by running `train`."
+            )
 
-        if 'resample_seconds' in load_kwargs:
-            DeprecationWarning("'resample_seconds' is deprecated."
-                               "  Please use 'sample_period' instead.")
-            load_kwargs['sample_period'] = load_kwargs.pop('resample_seconds')
+        if "resample_seconds" in load_kwargs:
+            DeprecationWarning("'resample_seconds' is deprecated." "  Please use 'sample_period' instead.")
+            load_kwargs["sample_period"] = load_kwargs.pop("resample_seconds")
 
         return load_kwargs
 
-    def _save_metadata_for_disaggregation(self, output_datastore,
-                                          sample_period, measurement,
-                                          timeframes, building,
-                                          meters=None, num_meters=None,
-                                          supervised=True):
+    def _save_metadata_for_disaggregation(
+        self,
+        output_datastore,
+        sample_period,
+        measurement,
+        timeframes,
+        building,
+        meters=None,
+        num_meters=None,
+        supervised=True,
+    ):
         """Add metadata for disaggregated appliance estimates to datastore.
 
         This method returns nothing.  It sets the metadata
@@ -133,72 +140,61 @@ class Disaggregator(object):
         #       measurement we used to train on, not the mains measurement.
 
         # DataSet and MeterDevice metadata:
-        building_path = '/building{}'.format(building)
-        mains_data_location = building_path + '/elec/meter1'
+        building_path = "/building{}".format(building)
+        mains_data_location = building_path + "/elec/meter1"
 
         meter_devices = {
-            self.MODEL_NAME : {
-                'model': self.MODEL_NAME,
-                'sample_period': sample_period,
-                'max_sample_period': sample_period,
-                'measurements': [{
-                    'physical_quantity': measurement[0],
-                    'type': measurement[1]
-                }]
+            self.MODEL_NAME: {
+                "model": self.MODEL_NAME,
+                "sample_period": sample_period,
+                "max_sample_period": sample_period,
+                "measurements": [{"physical_quantity": measurement[0], "type": measurement[1]}],
             },
-            'mains': {
-                'model': 'mains',
-                'sample_period': sample_period,
-                'max_sample_period': sample_period,
-                'measurements': [{
-                    'physical_quantity': measurement[0],
-                    'type': measurement[1]
-                }]
-            }
+            "mains": {
+                "model": "mains",
+                "sample_period": sample_period,
+                "max_sample_period": sample_period,
+                "measurements": [{"physical_quantity": measurement[0], "type": measurement[1]}],
+            },
         }
 
         merged_timeframes = merge_timeframes(timeframes, gap=sample_period)
-        total_timeframe = TimeFrame(merged_timeframes[0].start,
-                                    merged_timeframes[-1].end)
+        total_timeframe = TimeFrame(merged_timeframes[0].start, merged_timeframes[-1].end)
 
-        date_now = datetime.now().isoformat().split('.')[0]
+        date_now = datetime.now().isoformat().split(".")[0]
         dataset_metadata = {
-            'name': self.MODEL_NAME,
-            'date': date_now,
-            'meter_devices': meter_devices,
-            'timeframe': total_timeframe.to_dict()
+            "name": self.MODEL_NAME,
+            "date": date_now,
+            "meter_devices": meter_devices,
+            "timeframe": total_timeframe.to_dict(),
         }
-        output_datastore.save_metadata('/', dataset_metadata)
+        output_datastore.save_metadata("/", dataset_metadata)
 
         # Building metadata
 
         # Mains meter:
         elec_meters = {
             1: {
-                'device_model': 'mains',
-                'site_meter': True,
-                'data_location': mains_data_location,
-                'preprocessing_applied': {},  # TODO
-                'statistics': {
-                    'timeframe': total_timeframe.to_dict()
-                }
+                "device_model": "mains",
+                "site_meter": True,
+                "data_location": mains_data_location,
+                "preprocessing_applied": {},  # TODO
+                "statistics": {"timeframe": total_timeframe.to_dict()},
             }
         }
 
         def update_elec_meters(meter_instance):
-            elec_meters.update({
-                meter_instance: {
-                    'device_model': self.MODEL_NAME,
-                    'submeter_of': 1,
-                    'data_location': (
-                        '{}/elec/meter{}'.format(
-                            building_path, meter_instance)),
-                    'preprocessing_applied': {},  # TODO
-                    'statistics': {
-                        'timeframe': total_timeframe.to_dict()
+            elec_meters.update(
+                {
+                    meter_instance: {
+                        "device_model": self.MODEL_NAME,
+                        "submeter_of": 1,
+                        "data_location": ("{}/elec/meter{}".format(building_path, meter_instance)),
+                        "preprocessing_applied": {},  # TODO
+                        "statistics": {"timeframe": total_timeframe.to_dict()},
                     }
                 }
-            })
+            )
 
         # Appliances and submeters:
         appliances = []
@@ -209,9 +205,9 @@ class Disaggregator(object):
 
                 for app in meter.appliances:
                     appliance = {
-                        'meters': [meter_instance],
-                        'type': app.identifier.type,
-                        'instance': app.identifier.instance
+                        "meters": [meter_instance],
+                        "type": app.identifier.type,
+                        "instance": app.identifier.instance,
                         # TODO this `instance` will only be correct when the
                         # model is trained on the same house as it is tested on
                         # https://github.com/nilmtk/nilmtk/issues/194
@@ -221,32 +217,28 @@ class Disaggregator(object):
                 # Setting the name if it exists
                 if meter.name:
                     if len(meter.name) > 0:
-                        elec_meters[meter_instance]['name'] = meter.name
+                        elec_meters[meter_instance]["name"] = meter.name
         else:  # Unsupervised
             # Submeters:
             # Starts at 2 because meter 1 is mains.
             for chan in range(2, num_meters + 2):
                 update_elec_meters(meter_instance=chan)
                 appliance = {
-                    'meters': [chan],
-                    'type': 'unknown',
-                    'instance': chan - 1
+                    "meters": [chan],
+                    "type": "unknown",
+                    "instance": chan - 1,
                     # TODO this `instance` will only be correct when the
                     # model is trained on the same house as it is tested on
                     # https://github.com/nilmtk/nilmtk/issues/194
                 }
                 appliances.append(appliance)
 
-        building_metadata = {
-            'instance': building,
-            'elec_meters': elec_meters,
-            'appliances': appliances
-        }
+        building_metadata = {"instance": building, "elec_meters": elec_meters, "appliances": appliances}
 
         output_datastore.save_metadata(building_path, building_metadata)
 
     def _write_disaggregated_chunk_to_datastore(self, chunk, datastore):
-        """ Writes disaggregated chunk to NILMTK datastore.
+        """Writes disaggregated chunk to NILMTK datastore.
         Should not need to be overridden by sub-classes.
 
         Parameters
