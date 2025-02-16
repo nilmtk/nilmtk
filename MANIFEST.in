@@ -1,0 +1,10 @@
+graft data
+graft docs
+graft nilmtk
+# `-> adds all files inside a directory
+
+prune **/__pycache__
+prune ci
+prune docs/build
+prune tests_on_large_datasets
+# `-> excludes all files inside a directory

@@ -1,0 +1,80 @@
+[build-system]
+requires = ["setuptools >= 75.0", "setuptools_scm[toml]", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nilmtk"
+dynamic = ["version"]
+dependencies = [
+    "pandas",
+    "numpy",
+    "networkx",
+    "scipy",
+    "tables",
+    "scikit-learn",
+    "hmmlearn",
+    "pyyaml",
+    "matplotlib",
+    "jupyterlab",
+    # "nilm_metadata>=0.2.5"
+    "nilm_metadata @ file:///home/arch/nilmtk/nilm_metadata-0.2.5.dev3+ge194fa2-py2.py3-none-any.whl",
+]
+requires-python = ">= 3.11"
+authors = [{ name = "NILMTK developers" }]
+description = "Estimate the energy consumed by individual appliances from whole-house power meter readings"
+readme = "README.md"
+license = { file = "LICENSE" }
+keywords = [
+    "smartmeters",
+    "power",
+    "electricity",
+    "energy",
+    "analytics",
+    "redd",
+    "disaggregation",
+    "nilm",
+    "nialm",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache 2.0",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Mathematics",
+]
+
+[project.optional-dependencies]
+dev = ["black", "coverage", "coveralls", "isort", "pytest", "sphinx"]
+full = ["deddiag-loader", "psycopg2"]
+
+[project.urls]
+Repository = "https://github.com/nilmtk/nilmtk"
+Download = "https://github.com/nilmtk/nilmtk/tarball/master#egg=nilmtk-dev"
+
+[tool.setuptools]
+packages = ["nilmtk"]
+
+[tool.setuptools_scm]
+version_scheme = "guess-next-dev"
+local_scheme = "node-and-date"
+fallback_version = "0.0.1.dev0+unknown"
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q"
+testpaths = [
+    "nilmtk/datastore/tests",
+    "nilmtk/preprocessing/tests",
+    "nilmtk/stats/tests",
+    "nilmtk/tests",
+]
+
+[tool.black]
+line-length = 120
+target-version = ['py311']
+
+[tool.isort]
+profile = "black"

@@ -16,6 +16,10 @@ notebooks/*.h5
 .idea/*
 .idea
 .DS_Store
+.venv/
+venv/
+__pycache__/
+.pytest_cache/
 
 # Ignoring Local datasets: 
 data/REDD
@@ -23,4 +27,3 @@ data/ukdale
 *.h5
 *.tar
 *.dat
-
