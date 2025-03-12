@@ -8,25 +8,15 @@ Official Website :- http://www.st.ewi.tudelft.nl/~akshay/dred/
 
 """
 
-import fnmatch
-import glob
-import pickle
-import re
-import time
-from copy import deepcopy
-from datetime import datetime
-from os import listdir
-from os.path import isdir, isfile, join
+from os.path import join
 from sys import stdout
 
-import numpy as np
 import pandas as pd
-from nilm_metadata import convert_yaml_to_hdf5, save_yaml_to_datastore
+from nilm_metadata import save_yaml_to_datastore
 
 from nilmtk.datastore import Key
 from nilmtk.measurement import LEVEL_NAMES
-from nilmtk.timeframe import TimeFrame
-from nilmtk.utils import check_directory_exists, get_datastore, get_module_directory
+from nilmtk.utils import get_datastore, get_module_directory
 
 
 def convert_dred(input_path, output_filename, format="HDF"):

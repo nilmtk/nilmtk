@@ -6,7 +6,6 @@ from .dropoutrateresults import DropoutRateResults
 
 
 class DropoutRate(Node):
-
     requirements = {"device": {"sample_period": "ANY VALUE"}}
     postconditions = {"statistics": {"dropout_rate": None}}
     results_class = DropoutRateResults
@@ -38,7 +37,7 @@ def get_dropout_rate(data, sample_period):
     """
     MIN_N_SAMPLES = 5
     if len(data) < MIN_N_SAMPLES:
-        return np.NaN
+        return np.nan
 
     index = get_index(data)
     assert index[-1] > index[0]

@@ -1,4 +1,5 @@
 import warnings
+from collections.abc import Iterator
 from copy import deepcopy
 from os.path import isfile
 
@@ -12,7 +13,6 @@ from .datastore import MAX_MEM_ALLOWANCE_IN_BYTES, DataStore
 
 
 class HDFDataStore(DataStore):
-
     @doc_inherit
     def __init__(self, filename, mode="r"):
         if mode in ["r", "a"] and not isfile(filename):
@@ -42,7 +42,7 @@ class HDFDataStore(DataStore):
         n_look_ahead_rows=0,
         chunksize=MAX_MEM_ALLOWANCE_IN_BYTES,
         verbose=False,
-    ):
+    ) -> Iterator[tuple[pd.DataFrame, pd.DataFrame | None]]:
         # TODO: calculate chunksize default based on physical
         # memory installed and number of columns
 
@@ -79,7 +79,7 @@ class HDFDataStore(DataStore):
             if window_intersect.empty:
                 data = pd.DataFrame()
                 data.timeframe = section
-                yield data
+                yield tuple(data, None)
                 continue
 
             terms = window_intersect.query_terms("window_intersect")
@@ -89,13 +89,13 @@ class HDFDataStore(DataStore):
                 if section_end_i <= 1:
                     data = pd.DataFrame()
                     data.timeframe = section
-                    yield data
+                    yield tuple(data, None)
                     continue
             else:
                 try:
                     coords = self.store.select_as_coordinates(key=key, where=terms)
                 except AttributeError as e:
-                    if str(e) == ("'NoneType' object has no attribute " "'read_coordinates'"):
+                    if str(e) == ("'NoneType' object has no attribute 'read_coordinates'"):
                         raise KeyError("key '{}' not found".format(key))
                     else:
                         raise
@@ -103,7 +103,7 @@ class HDFDataStore(DataStore):
                 if n_coords == 0:
                     data = pd.DataFrame()
                     data.timeframe = window_intersect
-                    yield data
+                    yield tuple(data, None)
                     continue
 
                 section_start_i = coords[0]
@@ -146,19 +146,9 @@ class HDFDataStore(DataStore):
                     else:
                         look_ahead = pd.DataFrame()
 
-                    with warnings.catch_warnings():
-                        # Silence "Pandas doesn't allow columns to be created via a new attribute name"
-                        # since we're not adding a column
-                        warnings.filterwarnings(
-                            "ignore",
-                            category=UserWarning,
-                            message=".*Pandas doesn't allow columns.*",
-                        )
-                        setattr(data, "look_ahead", look_ahead)
-
                 data.timeframe = _timeframe_for_chunk(there_are_more_subchunks, chunk_i, window_intersect, data.index)
-                yield data
-                del data
+                yield tuple(data, look_ahead)
+                del data, look_ahead
 
     @doc_inherit
     def append(self, key, value):
@@ -269,9 +259,7 @@ class HDFDataStore(DataStore):
         # Check we won't use too much memory
         mem_requirement = self._estimate_memory_requirement(key, nrows, columns)
         if mem_requirement > MAX_MEM_ALLOWANCE_IN_BYTES:
-            raise MemoryError(
-                "Requested data would use {:.3f}MBytes:" " too much memory.".format(mem_requirement / 1e6)
-            )
+            raise MemoryError("Requested data would use {:.3f}MBytes: too much memory.".format(mem_requirement / 1e6))
 
     def _estimate_memory_requirement(self, key, nrows, columns=None, paranoid=False):
         """Returns estimated mem requirement in bytes."""

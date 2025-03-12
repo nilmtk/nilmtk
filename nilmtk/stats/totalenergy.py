@@ -10,7 +10,6 @@ from .totalenergyresults import TotalEnergyResults
 
 
 class TotalEnergy(Node):
-
     requirements = {
         "device": {"max_sample_period": "ANY VALUE"},
         "preprocessing_applied": {"clip": "ANY VALUE"},

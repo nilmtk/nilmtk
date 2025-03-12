@@ -5,21 +5,14 @@ from warnings import warn
 import numpy as np
 import pandas as pd
 
-import nilmtk
-from nilmtk.exceptions import MeasurementError
-from nilmtk.timeframegroup import TimeFrameGroup
-
+from .exceptions import MeasurementError
 from .electric import Electric
 from .hashable import Hashable
-from .measurement import (
-    PHYSICAL_QUANTITIES,
-    check_ac_type,
-    check_physical_quantity,
-    select_best_ac_type,
-)
+from .measurement import PHYSICAL_QUANTITIES, check_ac_type, check_physical_quantity, select_best_ac_type
 from .node import Node
 from .preprocessing import Clip
 from .stats import DropoutRate, GoodSections, TotalEnergy
+from .timeframegroup import TimeFrameGroup
 from .utils import capitalise_first_letter, flatten_2d_list
 
 ElecMeterID = namedtuple("ElecMeterID", ["instance", "building", "dataset"])
@@ -54,19 +47,21 @@ class ElecMeter(Hashable, Electric):
     meter_devices = {}
 
     def __init__(self, store=None, metadata=None, meter_id=None):
+        from . import GLOBAL_METER_GROUP, STATS_CACHE
+
         # Store and check parameters
         self.appliances = []
         self.metadata = {} if metadata is None else metadata
         assert isinstance(self.metadata, dict)
         self.store = store
-        self.cache = nilmtk.STATS_CACHE
+        self.cache = STATS_CACHE
         self.identifier = meter_id
 
-        # Insert self into nilmtk.global_meter_group
+        # Insert self into GLOBAL_METER_GROUP
         if self.identifier is not None:
             assert isinstance(self.identifier, ElecMeterID)
-            if self not in nilmtk.global_meter_group.meters:
-                nilmtk.global_meter_group.meters.append(self)
+            if self not in GLOBAL_METER_GROUP.meters:
+                GLOBAL_METER_GROUP.meters.append(self)
 
     @property
     def key(self):
@@ -101,9 +96,7 @@ class ElecMeter(Hashable, Electric):
 
     def _check_store(self):
         if self.store is None:
-            raise RuntimeError(
-                "ElecMeter needs `store` attribute set to an" " instance of a `nilmtk.DataStore` subclass"
-            )
+            raise RuntimeError("ElecMeter needs `store` attribute set to an instance of a `nilmtk.DataStore` subclass")
 
     def upstream_meter(self, raise_warning=True):
         """
@@ -111,11 +104,12 @@ class ElecMeter(Hashable, Electric):
         -------
         ElecMeterID of upstream meter or None if is site meter.
         """
+        from . import GLOBAL_METER_GROUP
+
         if self.is_site_meter():
             if raise_warning:
                 warn(
-                    "There is no meter upstream of this meter '{}' because"
-                    " it is a site meter.".format(self.identifier)
+                    "There is no meter upstream of this meter '{}' because it is a site meter.".format(self.identifier)
                 )
             return
 
@@ -134,7 +128,7 @@ class ElecMeter(Hashable, Electric):
             instance=submeter_of, building=self.identifier.building, dataset=self.identifier.dataset
         )
 
-        upstream_meter = nilmtk.global_meter_group[id_of_upstream]
+        upstream_meter = GLOBAL_METER_GROUP[id_of_upstream]
         if upstream_meter is None:
             warn("No upstream meter found for '{}'.".format(self.identifier))
         return upstream_meter
@@ -520,7 +514,7 @@ class ElecMeter(Hashable, Electric):
         and columns populated appropriately."""
         if columns:
             if ac_type or physical_quantity:
-                raise ValueError("Cannot use `ac_type` and/or `physical_quantity`" " with `columns` parameter.")
+                raise ValueError("Cannot use `ac_type` and/or `physical_quantity` with `columns` parameter.")
             else:
                 if set(columns).issubset(self.available_columns()):
                     kwargs["columns"] = columns
@@ -692,7 +686,7 @@ class ElecMeter(Hashable, Electric):
 
             try:
                 ac_type_keys = results_obj.simple().keys()
-            except:
+            except Exception:  # TODO constrain exception
                 sections_to_compute = find_sections_to_compute()
             else:
                 if ac_types.issubset(ac_type_keys):
@@ -730,7 +724,7 @@ class ElecMeter(Hashable, Electric):
             if ac_types:
                 try:
                     ac_type_keys = res.keys()
-                except:
+                except Exception:  # TODO constrain exception
                     return res
                 else:
                     if res.empty:

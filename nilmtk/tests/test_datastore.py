@@ -1,6 +1,6 @@
 import unittest
 from datetime import timedelta
-from os.path import isfile, join
+from os.path import join
 
 import numpy as np
 import pandas as pd
@@ -48,7 +48,7 @@ class SuperTestDataStore(object):
         self.datastore.window.clear()
         chunks = self.datastore.load(key=self.keys[0])
         i = 0
-        for chunk in chunks:
+        for chunk, _ in chunks:
             i += 1
             self.assertEqual(chunk.index[0], self.TIMEFRAME.start)
             self.assertEqual(chunk.index[-1], self.TIMEFRAME.end)
@@ -61,7 +61,7 @@ class SuperTestDataStore(object):
         ]
         chunks = self.datastore.load(key=self.keys[0], sections=timeframes)
         i = 0
-        for chunk in chunks:
+        for chunk, _ in chunks:
             self.assertEqual(chunk.index[0], timeframes[i].start)
             self.assertEqual(chunk.index[-1], timeframes[i].end - timedelta(seconds=1))
             self.assertEqual(len(chunk), 5)
@@ -72,7 +72,7 @@ class SuperTestDataStore(object):
         self.datastore.window = TimeFrame("2012-01-01 00:10:02", "2012-01-01 00:10:10")
         chunks = self.datastore.load(key=self.keys[0], sections=timeframes)
         i = 0
-        for chunk in chunks:
+        for chunk, _ in chunks:
             if chunk.empty:
                 continue
             self.assertEqual(chunk.index[0], pd.Timestamp("2012-01-01 00:10:02"))
@@ -90,7 +90,7 @@ class SuperTestDataStore(object):
         chunks = self.datastore.load(key=self.keys[0], sections=timeframes, chunksize=20)
         one_sec = timedelta(seconds=1)
 
-        for i, chunk in enumerate(chunks):
+        for chunk, _ in chunks:
             self.assertEqual(chunk.index[0], chunk.timeframe.start)
             self.assertTrue((chunk.timeframe.end - one_sec) <= chunk.index[-1] <= chunk.timeframe.end)
 

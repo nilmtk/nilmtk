@@ -1,9 +1,8 @@
 from pathlib import Path
 
-import pytest
 import yaml
 
-from nilmtk.datastore.datastore import convert_datastore, join_key, write_yaml_to_file
+from nilmtk.datastore.datastore import join_key, write_yaml_to_file
 
 GENERIC_YAML = """# Scalars
 string: "Hello, YAML!"

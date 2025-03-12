@@ -23,9 +23,9 @@ class Key(object):
             self.meter = meter
         else:
             split = string.strip("/").split("/")
-            assert split[0].startswith(
-                "building"
-            ), "The first element must be 'building<I>', e.g. 'building1'; not '{}'.".format(split[0])
+            assert split[0].startswith("building"), (
+                "The first element must be 'building<I>', e.g. 'building1'; not '{}'.".format(split[0])
+            )
             try:
                 self.building = int(split[0].replace("building", ""))
             except ValueError as e:

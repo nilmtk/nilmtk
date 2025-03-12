@@ -1,4 +1,3 @@
-import itertools
 from collections import OrderedDict
 from datetime import timedelta
 from os.path import join
@@ -72,7 +71,7 @@ def create_random_df_hierarchical_column_index():
 
     columns = [meters, level2, level3]
     columns = pd.MultiIndex.from_arrays(columns)
-    rng = pd.date_range("2012-01-01", freq="S", periods=N_PERIODS)
+    rng = pd.date_range("2012-01-01", freq="s", periods=N_PERIODS)
     data = np.random.randint(low=0, high=1000, size=(N_PERIODS, N_METERS * N_MEASUREMENTS_PER_METER))
     return pd.DataFrame(data=data, index=rng, columns=columns, dtype=np.float32)
 
@@ -82,7 +81,7 @@ MEASUREMENTS = [("power", "active"), ("energy", "reactive"), ("voltage", "")]
 
 def create_random_df():
     N_PERIODS = 10000
-    rng = pd.date_range("2012-01-01", freq="S", periods=N_PERIODS)
+    rng = pd.date_range("2012-01-01", freq="s", periods=N_PERIODS)
     data = np.random.randint(low=0, high=1000, size=(N_PERIODS, len(MEASUREMENTS)))
     return pd.DataFrame(data=data, index=rng, dtype=np.float32, columns=measurement_columns(MEASUREMENTS))
 
@@ -112,7 +111,7 @@ def create_co_test_hdf5():
     N_METERS = 3
     chunk = 1000
     N_PERIODS = 4 * chunk
-    rng = pd.date_range("2012-01-01", freq="S", periods=N_PERIODS)
+    rng = pd.date_range("2012-01-01", freq="s", periods=N_PERIODS)
 
     dfs = OrderedDict()
     data = OrderedDict()

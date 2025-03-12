@@ -97,7 +97,6 @@ def find_steady_states(dataframe, min_n_samples=2, state_threshold=15, noise_lev
 
         # Step 3: Identify if transition is just starting, if so, process it
         if instantaneous_change and (not ongoing_change):
-
             # Calculate transition size
             last_transition = np.subtract(estimated_steady_power, last_steady_power)
             # logging.debug('The steady state transition is: %s' %
@@ -274,7 +273,6 @@ def _apply_clustering(X, max_num_clusters):
     k_means_cluster_centers = {}
     k_means_labels_unique = {}
     for n_clusters in range(1, max_num_clusters):
-
         try:
             k_means = KMeans(init="k-means++", n_clusters=n_clusters)
             k_means.fit(X)

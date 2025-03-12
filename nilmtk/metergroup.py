@@ -287,7 +287,7 @@ class MeterGroup(Electric):
                             print(
                                 "Meter",
                                 key,
-                                "is in a nested meter group." " Retrieving just the ElecMeter.",
+                                "is in a nested meter group. Retrieving just the ElecMeter.",
                             )
                             meters_found.append(meter[key])
                         else:
@@ -611,7 +611,7 @@ class MeterGroup(Electric):
             # Try using graphviz layout...
             pos = nx.drawing.nx_agraph.graphviz_layout(graph, prog="dot")
             used_graphviz = True
-        except:
+        except Exception:  # TODO constrain exception
             # ...and fallback to shell layout if graphviz is not installed or
             # doesn't work
             pos = nx.shell_layout(graph)
@@ -714,7 +714,7 @@ class MeterGroup(Electric):
             names=LEVEL_NAMES,
         )
         freq = "{:d}S".format(int(sample_period))
-        verbose = kwargs.get("verbose")
+        _verbose = kwargs.get("verbose")
 
         # Check for empty sections
         sections = [section for section in sections if section]
@@ -838,7 +838,7 @@ class MeterGroup(Electric):
         unique_upstream_meters = list(set(upstream_meters))
         if len(unique_upstream_meters) > 1:
             raise RuntimeError(
-                "{:d} upstream meters found for meter group." "  Should be 1.".format(len(unique_upstream_meters))
+                "{:d} upstream meters found for meter group.  Should be 1.".format(len(unique_upstream_meters))
             )
         return unique_upstream_meters[0]
 
@@ -1110,7 +1110,7 @@ class MeterGroup(Electric):
                 print("   {:.2%}".format(prop))
 
         if all_nan:
-            proportion = np.NaN
+            proportion = np.nan
         return proportion
 
     def available_ac_types(self, physical_quantity):
@@ -1179,7 +1179,7 @@ class MeterGroup(Electric):
                 meter_energy = meter.average_energy_per_period(offset_alias=per_period, **load_kwargs)
             energy_per_meter[meter.identifier] = meter_energy
 
-        energy_per_meters = energy_per_meter.dropna(how="all")
+        _energy_per_meters = energy_per_meter.dropna(how="all")
 
         if use_meter_labels:
             energy_per_meter.columns = self.get_labels(energy_per_meter.columns)
@@ -1528,11 +1528,11 @@ class MeterGroup(Electric):
 
     def plot_when_on(self, **load_kwargs):
         meter_identifiers = list(self.identifier.meters)
-        fig, ax = plt.subplots()
+        _, ax = plt.subplots()
         for i, meter in enumerate(self.meters):
-            id_meter = meter.identifier
+            _id_meter = meter.identifier
             for chunk_when_on in meter.when_on(**load_kwargs):
-                series_to_plot = chunk_when_on[chunk_when_on == True]
+                series_to_plot = chunk_when_on[chunk_when_on == True]  # noqa: E712, TODO can probably be fixed with iloc and where
                 if len(series_to_plot.index):
                     (series_to_plot + i - 1).plot(ax=ax, style="k.")
         labels = self.get_labels(meter_identifiers)
@@ -1747,7 +1747,7 @@ class MeterGroup(Electric):
         try:
             series["proportion_uptime"] = mains_uptime.total_seconds() / timeframe.timedelta.total_seconds()
         except ZeroDivisionError:
-            series["proportion_uptime"] = np.NaN
+            series["proportion_uptime"] = np.nan
         series["average_mains_energy_per_day"] = self.mains().average_energy_per_period()
 
         return series
@@ -1816,7 +1816,7 @@ def combine_chunks_from_generators(index, columns, meters, kwargs):
     # See http://stackoverflow.com/a/27526721/732596
 
     DTYPE = np.float32
-    cumulator = pd.DataFrame(np.NaN, index=index, columns=columns, dtype=DTYPE)
+    cumulator = pd.DataFrame(np.nan, index=index, columns=columns, dtype=DTYPE)
     cumulator_arr = cumulator.values
     columns_to_average_counter = pd.DataFrame(dtype=np.uint16)
     timeframe = None
@@ -1855,7 +1855,7 @@ def combine_chunks_from_generators(index, columns, meters, kwargs):
             cumulator_col = cumulator_arr[:, i]
             where_both_are_nan = np.isnan(cumulator_col) & np.isnan(aligned)
             np.nansum([cumulator_col, aligned], axis=0, out=cumulator_col, dtype=DTYPE)
-            cumulator_col[where_both_are_nan] = np.NaN
+            cumulator_col[where_both_are_nan] = np.nan
             del aligned
             del where_both_are_nan
             gc.collect()
@@ -1892,4 +1892,5 @@ def combine_chunks_from_generators(index, columns, meters, kwargs):
     return cumulator
 
 
+GLOBAL_METER_GROUP = MeterGroup()
 meter_sorting_key = lambda meter: meter.instance()

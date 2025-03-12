@@ -214,7 +214,6 @@ def database_assert(database_table):
 
 
 def view_database_tables(database_username, database_password, database_schema):
-
     database_host = "dataport.pecanstreet.org"
     database_port = "5434"
     database_name = "dataport"
@@ -253,7 +252,6 @@ def view_database_tables(database_username, database_password, database_schema):
 
 
 def view_buildings(database_username, database_password, database_schema, database_table):
-
     database_assert(database_table)
     database_host = "dataport.pecanstreet.org"
     database_port = "5434"
@@ -292,7 +290,6 @@ def view_data_window(
     database_table,
     building_no=None,
 ):
-
     database_assert(database_table)
     database_host = "dataport.pecanstreet.org"
     database_port = "5434"
@@ -479,7 +476,7 @@ def download_dataport(
         sys.stdout.flush()
 
         # create new list of chunks for concatenating later
-        dataframe_list = []
+        _dataframe_list = []
 
         # for each table of 1 month data
         for database_table in database_tables:
@@ -591,7 +588,7 @@ def download_dataport(
                         # nilmtk requires building indices to start at 1
                         nilmtk_building_id = buildings_to_load.index(building_id) + 1
                         # convert to nilmtk-df and save to disk
-                        nilmtk_dataframe = _dataport_dataframe_to_hdf(
+                        _nilmtk_dataframe = _dataport_dataframe_to_hdf(
                             chunk_dataframe,
                             store,
                             nilmtk_building_id,
@@ -673,8 +670,7 @@ def _dataport_dataframe_to_hdf(
 
     meter_id = 1
     for column in feeds_dataframe.columns:
-        if feeds_dataframe[column].notnull().sum() > 0 and not column in feed_ignore:
-
+        if feeds_dataframe[column].notnull().sum() > 0 and column not in feed_ignore:
             # convert timeseries into dataframe
             feed_dataframe = pd.DataFrame(feeds_dataframe[column])
 
@@ -703,7 +699,7 @@ def _dataport_dataframe_to_hdf(
                 # appliance type and room if available
                 appliance_metadata.update(feed_mapping[column])
                 # appliance instance number
-                if instance_counter.get(appliance_metadata["type"]) == None:
+                if instance_counter.get(appliance_metadata["type"]) is None:
                     instance_counter[appliance_metadata["type"]] = 0
                 instance_counter[appliance_metadata["type"]] += 1
                 appliance_metadata["instance"] = instance_counter[appliance_metadata["type"]]

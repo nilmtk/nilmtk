@@ -1,7 +1,7 @@
 import unittest
 
-from ... import TimeFrame
-from ..totalenergyresults import TotalEnergyResults
+from nilmtk import TimeFrame
+from nilmtk.stats.totalenergyresults import TotalEnergyResults
 
 
 class TestEnergyResults(unittest.TestCase):

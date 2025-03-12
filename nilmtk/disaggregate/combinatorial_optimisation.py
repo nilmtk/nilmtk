@@ -1,5 +1,3 @@
-from warnings import warn
-
 import numpy as np
 import pandas as pd
 
@@ -44,7 +42,6 @@ class CO(Disaggregator):
         self.MIN_CHUNK_LENGTH = 100
 
     def partial_fit(self, train_main, train_appliances, do_preprocessing=True, **load_kwargs):
-
         train_main = pd.concat(train_main, axis=0)
         train_app_tmp = []
 
@@ -141,7 +138,6 @@ class CO(Disaggregator):
         test_prediction_list = []
 
         for test_df in mains:
-
             appliance_powers_dict = {}
             indices_of_state_combinations, residual_power = find_nearest(
                 summed_power_of_each_combination, test_df.values

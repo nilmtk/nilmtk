@@ -45,7 +45,7 @@ def convert_smart(smart_path, output_filename, format="HDF"):
     s = join(get_module_directory(), "dataset_converters", "smart", "metadata")
 
     # Add metadata
-    save_yaml_to_datastore(join(get_module_directory(), "dataset_converters", "smart", "metadata"), store)
+    save_yaml_to_datastore(s, store)
     store.close()
 
     print("Done converting SMART to HDF5!")
@@ -198,9 +198,9 @@ def _find_all_csv_paths(input_path, house_id, year):
     list of csv paths of data (with respect to a house and a particular year )
     """
     house_year_path = input_path + "/" + "Home" + house_id + "/" + year
-    extension = "csv"
+    _extension = "csv"
     os.chdir(house_year_path)
-    csv_names = glob.glob(house_year_path + "/*.csv")
+    _csv_names = glob.glob(house_year_path + "/*.csv")
 
     txt_paths = glob.glob(house_year_path + "/*.txt")
 

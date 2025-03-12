@@ -129,7 +129,7 @@ class Electric(object):
 
         if sample_period is None:
             sample_period = self.sample_period()
-        elif resample != False:
+        elif resample:
             resample = True
         sample_period = int(round(sample_period))
 
@@ -138,7 +138,7 @@ class Electric(object):
                 resample_kwargs = {}
 
             def resample_func(df):
-                resample_kwargs["rule"] = "{:d}S".format(sample_period)
+                resample_kwargs["rule"] = "{:d}s".format(sample_period)
                 return safe_resample(df, **resample_kwargs)
 
             kwargs.setdefault("preprocessing", []).append(Apply(func=resample_func))
@@ -257,16 +257,14 @@ class Electric(object):
         """
         if "sections" in load_kwargs:
             raise RuntimeError(
-                "Please do not pass in 'sections' into"
-                " 'average_energy_per_period'.  Instead"
-                " use 'use_uptime' param."
+                "Please do not pass in 'sections' into 'average_energy_per_period'.  Instead use 'use_uptime' param."
             )
         if use_uptime:
             td = self.uptime(**load_kwargs)
         else:
             td = self.get_timeframe().timedelta
         if not td:
-            return np.NaN
+            return np.nan
         uptime_secs = td.total_seconds()
         periods = uptime_secs / offset_alias_to_seconds(offset_alias)
         energy = self.total_energy(**load_kwargs)
@@ -293,7 +291,7 @@ class Electric(object):
         # TODO test effect of setting `sections` for other
         other_total_energy = other.total_energy(**loader_kwargs)
         if other_total_energy.sum() == 0:
-            return np.NaN
+            return np.nan
 
         total_energy = self.total_energy(**loader_kwargs)
         if total_energy.empty:
@@ -308,9 +306,7 @@ class Electric(object):
         elif n_shared_ac_types == 0:
             ac_type = select_best_ac_type(self_ac_types)
             other_ac_type = select_best_ac_type(other_ac_types)
-            warn(
-                "No shared AC types.  Using '{:s}' for submeter" " and '{:s}' for other.".format(ac_type, other_ac_type)
-            )
+            warn("No shared AC types.  Using '{:s}' for submeter and '{:s}' for other.".format(ac_type, other_ac_type))
         elif n_shared_ac_types == 1:
             ac_type = list(shared_ac_types)[0]
             other_ac_type = ac_type
@@ -344,11 +340,11 @@ class Electric(object):
 
         x_n, x_sum = sum_and_count(self)
         if x_n <= 1:
-            return np.NaN
+            return np.nan
 
         y_n, y_sum = sum_and_count(other)
         if y_n <= 1:
-            return np.NaN
+            return np.nan
 
         x_bar = x_sum / x_n
         y_bar = y_sum / y_n
@@ -529,7 +525,6 @@ class Electric(object):
             num_elements = len(x)
             x = x.reshape((num_elements, 1))
             if num_elements > MAX_SIZE_ENTROPY:
-
                 splits = num_elements / MAX_SIZE_ENTROPY + 1
                 y = np.array_split(x, splits)
                 for z in y:
@@ -613,7 +608,7 @@ class Electric(object):
                   use `available_ac_types('power').`
         """
         warn(
-            "`available_power_ac_types` is deprecated.  Please use" " `available_ac_types('power')` instead.",
+            "`available_power_ac_types` is deprecated.  Please use `available_ac_types('power')` instead.",
             DeprecationWarning,
         )
         return self.available_ac_types("power")
@@ -685,7 +680,7 @@ class Electric(object):
         """
         n_bins = offset_alias_to_seconds(period) / offset_alias_to_seconds(bin_duration)
         if n_bins != int(n_bins):
-            raise ValueError("`bin_duration` must exactly divide the" " chosen `period`")
+            raise ValueError("`bin_duration` must exactly divide the chosen `period`")
         n_bins = int(n_bins)
 
         # Resample to `bin_duration` and load
@@ -720,7 +715,6 @@ class Electric(object):
         return hist
 
     def plot_activity_histogram(self, ax=None, period="D", bin_duration="H", plot_kwargs=None, **kwargs):
-
         # Some common labels
         freq_labels = {
             "H": "hour",
@@ -779,7 +773,7 @@ class Electric(object):
           Please use `get_activations` instead.
         """
         warn(
-            "`activation_series()` is deprecated." "  Please use `get_activations()` instead!",
+            "`activation_series()` is deprecated.  Please use `get_activations()` instead!",
             DeprecationWarning,
         )
         return self.get_activations(*args, **kwargs)
@@ -907,7 +901,7 @@ def activation_series_for_chunk(*args, **kwargs):
       Please use `get_activations` instead.
     """
     warn(
-        "`activation_series_for_chunk()` is deprecated." "  Please use `get_activations()` instead!",
+        "`activation_series_for_chunk()` is deprecated.  Please use `get_activations()` instead!",
         DeprecationWarning,
     )
     return get_activations(*args, **kwargs)

@@ -148,7 +148,6 @@ def decode_hmm(length_sequence, centroids, appliance_list, states):
         hmm_power[appliance] = np.zeros(length_sequence)
 
     for i in range(length_sequence):
-
         factor = total_num_combinations
         for appliance in appliance_list:
             # assuming integer division (will cause errors in Python 3x)
@@ -161,7 +160,6 @@ def decode_hmm(length_sequence, centroids, appliance_list, states):
 
 
 class FHMMExact(Disaggregator):
-
     def __init__(self, params):
         self.model = {}
         self.MODEL_NAME = "FHMM"  # Add the name for the algorithm
@@ -199,7 +197,6 @@ class FHMMExact(Disaggregator):
             max_num_clusters = 3
 
         for appliance, meter in train_appliances:
-
             meter_data = meter.dropna()
             X = meter_data.values.reshape((-1, 1))
 
@@ -272,7 +269,6 @@ class FHMMExact(Disaggregator):
         test_prediction_list = []
 
         for test_mains in test_mains_list:
-
             learnt_states_array = []
             if len(test_mains) == 0:
                 tmp = pd.DataFrame(index=test_mains.index, columns=self.app_names)

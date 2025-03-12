@@ -18,9 +18,8 @@ class Mean(Disaggregator):
             self.load_model(self.load_model_path)
 
     def partial_fit(self, train_main, train_appliances, **load_kwargs):
-
         for app_name, power in train_appliances:
-            print("Training %s in %s model".format(app_name, self.MODEL_NAME), end="\r")
+            print(f"Training {app_name} in {self.MODEL_NAME} model", end="\r")
             power_ = pd.concat(power, axis=0)
             app_dict = self.model.get(app_name, {"sum": 0, "n_elem": 0})
             app_dict["sum"] += int(np.nansum(power_.values))

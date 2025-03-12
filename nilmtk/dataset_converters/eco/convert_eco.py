@@ -141,7 +141,7 @@ def convert_eco(dataset_loc, hdf_filename, timezone):
                             )
 
                         df_phase.columns.set_names(LEVEL_NAMES, inplace=True)
-                        if not key in store:
+                        if key not in store:
                             store.put(key, df_phase, format="Table")
                         else:
                             store.append(key, df_phase, format="Table")
@@ -191,7 +191,7 @@ def convert_eco(dataset_loc, hdf_filename, timezone):
                         )
 
                     # If table not present in hdf5, create or else append to existing data
-                    if not key in store:
+                    if key not in store:
                         store.put(key, df, format="Table")
                         print(
                             "Building",
@@ -215,7 +215,10 @@ def convert_eco(dataset_loc, hdf_filename, timezone):
 
     if not found_any_plug or not found_any_sm:
         raise RuntimeError(
-            'The files were not found! Please check the folder structure. Extract each ZIP file into a folder with its base name (e.g. extract "01_plugs_csv.zip" into a folder named "01_plugs_csv", etc.)'
+            "The files were not found! "
+            "Please check the folder structure. "
+            "Extract each ZIP file into a folder with its base name "
+            "(e.g. extract '01_plugs_csv.zip' into a folder named '01_plugs_csv', etc.)"
         )
 
     print("Data storage completed.")

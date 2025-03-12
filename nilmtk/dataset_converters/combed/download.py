@@ -14,7 +14,7 @@ def download():
     START_TIME = int(time.mktime(time.strptime(START_TIME_STR, pattern))) * 1000
     END_TIME = int(time.mktime(time.strptime(END_TIME_STR, pattern))) * 1000
 
-    SMAP_URL = raw_input("Enter SMAP URL")
+    SMAP_URL = input("Enter SMAP URL:")
     UUID_URL = join(SMAP_URL, "backend/api/query")
 
     MEASUREMENTS = ["Power", "Energy", "Current"]
@@ -36,7 +36,13 @@ def download():
 
     academic_building = {"Academic Block": academic_block, "Lecture Block": lecture_block}
 
-    query = """select *  where Metadata/Extra/Block = '{}' and (Metadata/SourceName = '{}') and Metadata/Extra/Type = '{}' and Metadata/Location/Floor = '{}' and Metadata/Extra/PhysicalParameter = '{}'"""
+    query = """
+    select * where Metadata/Extra/Block = '{}' 
+    and Metadata/SourceName = '{}' 
+    and Metadata/Extra/Type = '{}' 
+    and Metadata/Location/Floor = '{}' 
+    and Metadata/Extra/PhysicalParameter = '{}'
+    """
 
     for block_name, block in academic_building.items():
         for load, floors in block.items():

@@ -268,7 +268,7 @@ class TimeFrame(object):
         generator of new TimeFrame objects
         """
         if not self:
-            raise ValueError("Cannot split a TimeFrame if `start` or `end`" " is None")
+            raise ValueError("Cannot split a TimeFrame if `start` or `end` is None")
 
         if duration_threshold >= self.timedelta.total_seconds():
             yield self

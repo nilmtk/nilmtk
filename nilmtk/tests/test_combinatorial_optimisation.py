@@ -1,11 +1,9 @@
 import unittest
-from os import remove
 from os.path import join
 
 import pandas as pd
 
 from nilmtk import DataSet
-from nilmtk.datastore import HDFDataStore
 from nilmtk.legacy.disaggregate import CombinatorialOptimisation
 
 from .testingtools import data_dir

@@ -53,7 +53,6 @@ class GoodSectionsResults(Results):
             # Check if first TimeFrame of row_sections needs to be merged with
             # last TimeFrame of previous section
             if end_date_of_prev_row is not None:
-
                 rows_are_adjacent = (end_date_of_prev_row - self.max_sample_period_td) <= index <= end_date_of_prev_row
 
                 if rows_are_adjacent and row_sections[0].start is None:

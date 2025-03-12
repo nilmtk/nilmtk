@@ -1,4 +1,5 @@
 import re
+from collections.abc import Iterator
 from os import listdir, makedirs, remove
 from os.path import dirname, exists, isdir, isfile, join
 from shutil import rmtree
@@ -15,10 +16,8 @@ from .key import Key
 
 
 class CSVDataStore(DataStore):
-
     @doc_inherit
     def __init__(self, filename):
-
         self.filename = filename
         # make root directory
         path = self._key_to_abs_path("/")
@@ -32,7 +31,6 @@ class CSVDataStore(DataStore):
 
     @doc_inherit
     def __getitem__(self, key):
-
         file_path = self._key_to_abs_path(key)
         if isfile(file_path):
             return pd.read_csv(file_path)
@@ -47,8 +45,7 @@ class CSVDataStore(DataStore):
         sections=None,
         n_look_ahead_rows=0,
         chunksize=MAX_MEM_ALLOWANCE_IN_BYTES,
-    ):
-
+    ) -> Iterator[tuple[pd.DataFrame, pd.DataFrame | None]]:
         file_path = self._key_to_abs_path(key)
 
         # Set `sections` variable
@@ -72,7 +69,6 @@ class CSVDataStore(DataStore):
 
             # iterate through all chunks in file
             for chunk_idx, chunk in enumerate(text_file_reader):
-
                 # filter dataframe by specified columns
                 if columns:
                     chunk = chunk[columns]
@@ -95,7 +91,7 @@ class CSVDataStore(DataStore):
                         if len(subchunk.index) > 0:
                             rows_to_skip = (len(header_rows) + 1) + (chunk_idx * chunksize) + subchunk_end + 1
                             try:
-                                subchunk.look_ahead = pd.read_csv(
+                                look_ahead_chunk = pd.read_csv(
                                     file_path,
                                     index_col=0,
                                     header=None,
@@ -104,15 +100,14 @@ class CSVDataStore(DataStore):
                                     nrows=n_look_ahead_rows,
                                 )
                             except ValueError:
-                                subchunk.look_ahead = pd.DataFrame()
+                                look_ahead_chunk = pd.DataFrame()
                         else:
-                            subchunk.look_ahead = pd.DataFrame()
+                            look_ahead_chunk = pd.DataFrame()
 
-                    yield subchunk
+                    yield tuple(subchunk, look_ahead_chunk)
 
     @doc_inherit
     def append(self, key, value):
-
         file_path = self._key_to_abs_path(key)
         path = dirname(file_path)
         if not exists(path):
@@ -121,7 +116,6 @@ class CSVDataStore(DataStore):
 
     @doc_inherit
     def put(self, key, value):
-
         file_path = self._key_to_abs_path(key)
         path = dirname(file_path)
         if not exists(path):
@@ -138,7 +132,6 @@ class CSVDataStore(DataStore):
 
     @doc_inherit
     def load_metadata(self, key="/"):
-
         if key == "/":
             filepath = self._get_metadata_path()
             metadata = _load_file(filepath, "dataset.yaml")
@@ -163,7 +156,6 @@ class CSVDataStore(DataStore):
 
     @doc_inherit
     def save_metadata(self, key, metadata):
-
         if key == "/":
             # Extract meter_devices
             meter_devices_metadata = metadata["meter_devices"]
@@ -187,7 +179,6 @@ class CSVDataStore(DataStore):
 
     @doc_inherit
     def elements_below_key(self, key="/"):
-
         elements = []
         if key == "/":
             for directory in listdir(self.filename):
@@ -215,7 +206,6 @@ class CSVDataStore(DataStore):
 
     @doc_inherit
     def get_timeframe(self, key):
-
         file_path = self._key_to_abs_path(key)
         text_file_reader = pd.read_csv(
             file_path,

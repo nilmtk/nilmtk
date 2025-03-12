@@ -44,7 +44,7 @@ def convert_redd(redd_path, output_filename, format="HDF"):
     s = join(get_module_directory(), "dataset_converters", "redd", "metadata")
 
     # Add metadata
-    save_yaml_to_datastore(join(get_module_directory(), "dataset_converters", "redd", "metadata"), store)
+    save_yaml_to_datastore(s, store)
     store.close()
 
     print("Done converting REDD to HDF5!")

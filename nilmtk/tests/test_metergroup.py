@@ -1,19 +1,11 @@
 import unittest
 from os.path import join
 
-from nilmtk import (
-    Appliance,
-    DataSet,
-    ElecMeter,
-    HDFDataStore,
-    MeterGroup,
-    TimeFrame,
-    global_meter_group,
-)
+from nilmtk import Appliance, DataSet, ElecMeter, MeterGroup, GLOBAL_METER_GROUP
 from nilmtk.building import BuildingID
+from nilmtk.datastore import HDFDataStore
 from nilmtk.elecmeter import ElecMeterID
 from nilmtk.tests.testingtools import data_dir
-from nilmtk.utils import nodes_adjacent_to_root, tree_root
 
 
 class TestMeterGroup(unittest.TestCase):
@@ -109,7 +101,7 @@ class TestMeterGroup(unittest.TestCase):
         for i in range(1, 6):
             meters.append(ElecMeter(meter_id=ElecMeterID(i, 1, None)))
 
-        mg = global_meter_group.from_list(
+        mg = GLOBAL_METER_GROUP.from_list(
             [
                 ElecMeterID(1, 1, None),
                 (ElecMeterID(2, 1, None), (ElecMeterID(3, 1, None), ElecMeterID(4, 1, None), ElecMeterID(5, 1, None))),

@@ -55,7 +55,8 @@ class API:
             # If the model is a neural net, it has an attribute n_epochs, Ex: DAE, Seq2Point
             print("Started training for ", clf.MODEL_NAME)
 
-            # If the model has the filename specified for loading the pretrained model, then we don't need to load training data
+            # If the model has the filename specified for loading the pretrained model,
+            # then we don't need to load training data
 
             if hasattr(clf, "load_model_path"):
                 if clf.load_model_path:
@@ -103,7 +104,8 @@ class API:
 
     def train_chunk_wise(self, clf, d, current_epoch):
         """
-        This function loads the data from buildings and datasets with the specified chunk size and trains on each of them.
+        This function loads the data from buildings and datasets with the specified chunk size
+        and trains on each of them.
         """
 
         for dataset in d:
@@ -185,7 +187,6 @@ class API:
         print("...............Finished the Training Process ...................")
 
     def test_chunk_wise(self, d):
-
         print("...............Started  the Testing Process ...................")
 
         for dataset in d:
@@ -266,7 +267,6 @@ class API:
                     self.call_predict(self.classifiers, test.metadata["timezone"])
 
     def train_jointly(self, clf, d):
-
         # This function has a few issues, which should be addressed soon
         print("............... Loading Data for training ...................")
         # store the train_main readings for all buildings
@@ -353,7 +353,7 @@ class API:
                 if self.DROP_ALL_NANS and self.site_only:
                     test_mains, _ = self.dropna(test_mains, [])
 
-                if self.site_only != True:
+                if not self.site_only:
                     appliance_readings = []
 
                     for appliance in self.appliances:
@@ -391,7 +391,8 @@ class API:
 
     def dropna(self, mains_df, appliance_dfs=[]):
         """
-        Drops the missing values in the Mains reading and appliance readings and returns consistent data by copmuting the intersection
+        Drops the missing values in the Mains reading and appliance readings
+        and returns consistent data by copmuting the intersection
         """
         print("Dropping missing values")
 
@@ -416,7 +417,6 @@ class API:
         """
         for name in self.methods:
             try:
-
                 clf = self.methods[name]
                 self.classifiers.append((name, clf))
 
@@ -426,7 +426,8 @@ class API:
 
     def call_predict(self, classifiers, timezone):
         """
-        This functions computers the predictions on the self.test_mains using all the trained models and then compares different learn't models using the metrics specified
+        This functions computers the predictions on the self.test_mains using all the trained models
+        and then compares different learn't models using the metrics specified
         """
 
         pred_overall = {}
@@ -438,14 +439,14 @@ class API:
 
         self.gt_overall = gt_overall
         self.pred_overall = pred_overall
-        if self.site_only != True:
+        if not self.site_only:
             if gt_overall.size == 0:
                 print("No samples found in ground truth")
                 return None
             for metric in self.metrics:
                 try:
                     loss_function = globals()[metric]
-                except:
+                except Exception:  # TODO constrain this exception
                     print("Loss function ", metric, " is not supported currently!")
                     continue
 
@@ -459,7 +460,7 @@ class API:
                 self.errors_keys.append(self.storing_key + "_" + metric)
 
         if self.display_predictions:
-            if self.site_only != True:
+            if not self.site_only:
                 for i in gt_overall.columns:
                     plt.figure()
                     # plt.plot(self.test_mains[0],label='Mains reading')
@@ -498,7 +499,7 @@ class API:
         gt_overall = pd.DataFrame(gt, dtype="float32")
         pred = {}
 
-        if self.site_only == True:
+        if self.site_only:
             for app_name in concat_pred_df.columns:
                 app_series_values = concat_pred_df[app_name].values.flatten()
                 pred[app_name] = pd.Series(app_series_values)

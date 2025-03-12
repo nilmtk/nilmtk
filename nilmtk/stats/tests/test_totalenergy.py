@@ -6,12 +6,13 @@ from os.path import join
 import numpy as np
 import pandas as pd
 
-from ... import ElecMeter, HDFDataStore, TimeFrame
-from ...consts import JOULES_PER_KWH
-from ...elecmeter import ElecMeterID
-from ...preprocessing import Clip
-from ...tests.testingtools import data_dir
-from ..totalenergy import TotalEnergy, _energy_for_power_series
+from nilmtk import ElecMeter
+from nilmtk.consts import JOULES_PER_KWH
+from nilmtk.datastore import HDFDataStore
+from nilmtk.elecmeter import ElecMeterID
+from nilmtk.preprocessing import Clip
+from nilmtk.tests.testingtools import data_dir
+from nilmtk.stats.totalenergy import TotalEnergy, _energy_for_power_series
 
 METER_ID = ElecMeterID(instance=1, building=1, dataset="REDD")
 

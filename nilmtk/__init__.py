@@ -5,6 +5,11 @@ from .elecmeter import ElecMeter
 from .metergroup import MeterGroup
 from .timeframe import TimeFrame
 from .timeframegroup import TimeFrameGroup
+from .datastore.tmpdatastore import TmpDataStore
+
+
+GLOBAL_METER_GROUP = MeterGroup()
+STATS_CACHE = TmpDataStore()
 
 __all__ = [
     "Appliance",
@@ -14,4 +19,6 @@ __all__ = [
     "MeterGroup",
     "TimeFrame",
     "TimeFrameGroup",
+    "GLOBAL_METER_GROUP",
+    "STATS_CACHE",
 ]

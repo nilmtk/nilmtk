@@ -260,9 +260,9 @@ class Hart85(Disaggregator):
         print("...........................Hart_85 Partial Fit Running...............")
 
         train_main = train_main[0]
-        l = []
-        l.append(train_main.columns[0])
-        columns = l
+        layers = []
+        layers.append(train_main.columns[0])
+        columns = layers
         self.columns = columns
         self.state_threshold = state_threshold
         self.noise_level = noise_level
@@ -325,7 +325,6 @@ class Hart85(Disaggregator):
         # Check whether 1d data or 2d data and converting dict to dataframe
         # print('LEN of Transient Tuple',len(transient_tuple))
         if len(transient_tuple) == 2:
-
             temp_df = pd.DataFrame(power_chunk_dict, index=chunk.index)
         else:
             tuples = []
@@ -404,7 +403,6 @@ class Hart85(Disaggregator):
         test_predictions_list = []
 
         for chunk in test_mains:
-
             [_, transients] = find_steady_states(
                 test_mains[0],
                 state_threshold=self.state_threshold,
@@ -457,7 +455,6 @@ class Hart85(Disaggregator):
             self.chunk_index = chunk.index
             # Check whether 1d data or 2d data and converting dict to dataframe
             if len(transient_tuple) == 2:
-
                 temp_df = pd.DataFrame(power_chunk_dict, index=chunk.index)
 
             else:
@@ -487,7 +484,6 @@ class Hart85(Disaggregator):
         return test_predictions_list
 
     def min_rmse_column(self, temp_df, gt_df):
-
         rmse_all = []
         a = len(temp_df)
         b = len(gt_df)
@@ -515,7 +511,7 @@ class Hart85(Disaggregator):
             while i < len(values) - 1:
                 if values[i] == 1:
                     # print("A", values[i], i)
-                    on = True
+                    _on = True
                     i = i + 1
                     power[i] = self.centroids.loc[appliance].values
                     while values[i] != 0 and i < len(values) - 1:
@@ -524,7 +520,7 @@ class Hart85(Disaggregator):
                         i = i + 1
                 elif values[i] == 0:
                     # print("C", values[i], i)
-                    on = False
+                    _on = False
                     i = i + 1
                     power[i] = 0
                     while values[i] != 1 and i < len(values) - 1:
@@ -541,7 +537,7 @@ class Hart85(Disaggregator):
                     # use that. Else, it defaults to 0
                     if prev[appliance] == -1 or prev[appliance] == 0:
                         # print("F", values[i], i)
-                        on = False
+                        _on = False
                         power[i] = 0
                         while values[i] != 1 and i < len(values) - 1:
                             # print("G", values[i], i)
@@ -552,7 +548,7 @@ class Hart85(Disaggregator):
                             i = i + 1
                     else:
                         # print("H", values[i], i)
-                        on = True
+                        _on = True
                         power[i] = self.centroids.loc[appliance].values
                         while values[i] != 0 and i < len(values) - 1:
                             # print("I", values[i], i)
@@ -566,7 +562,6 @@ class Hart85(Disaggregator):
     # filename=model.pickle
 
     def export_model(self, filename):
-
         example_dict = self.model
 
         pickle_out = open(filename, "wb")
@@ -597,7 +592,7 @@ class Hart85(Disaggregator):
 
         """
 
-        rms_error = {}
+        _rms_error = {}
         submeters_df = submeters.dataframe_of_meters()
         new_df = pd.merge(pred_df, submeters_df, left_index=True, right_index=True)
 
@@ -608,7 +603,7 @@ class Hart85(Disaggregator):
                 temp_value = np.sqrt(mean_squared_error(new_df[pred_appliance], new_df[appliance]))
                 rmse[appliance] = temp_value
             rmse_all.append(rmse)
-        match = []
+        _match = []
         for i in range(len(rmse_all)):
             key_min = min(rmse_all[i].keys(), key=(lambda k: rmse_all[i][k]))
             print("Best Matched Pair is", (i, key_min))

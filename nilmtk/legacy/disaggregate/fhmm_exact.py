@@ -8,8 +8,6 @@ import numpy as np
 import pandas as pd
 from hmmlearn import hmm
 
-import nilmtk
-
 from ...datastore import HDFDataStore
 from ...feature_detectors import cluster
 from .disaggregator import Disaggregator
@@ -220,7 +218,6 @@ class FHMM(Disaggregator):
         **load_kwargs,
     ):
         """
-
         :param ds: nilmtk.Dataset
         :param list_of_buildings: List of buildings to use for training
         :param list_of_appliances: List of appliances (nilm-metadata names)
@@ -228,7 +225,8 @@ class FHMM(Disaggregator):
         :param load_kwargs:
         :return:
         """
-
+        from . import GLOBAL_METER_GROUP
+        
         _check_memory(len(list_of_appliances))
 
         self.list_of_appliances = list_of_appliances
@@ -276,7 +274,7 @@ class FHMM(Disaggregator):
         self.individual = new_learnt_models
         self.model = learnt_model_combined
         self.meters = [
-            nilmtk.global_meter_group.select_using_appliances(type=appliance).meters[0]
+            GLOBAL_METER_GROUP.select_using_appliances(type=appliance).meters[0]
             for appliance in self.individual.keys()
         ]
 

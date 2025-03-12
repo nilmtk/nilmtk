@@ -5,7 +5,8 @@ from collections import OrderedDict, defaultdict
 from inspect import currentframe, getfile, getsourcefile
 from os import getcwd
 from os.path import abspath, dirname, isdir
-from sys import getfilesystemencoding, stdout
+from pathlib import PurePath
+from sys import stdout
 
 import networkx as nx
 import numpy as np
@@ -50,7 +51,7 @@ def show_versions():
 
     try:
         print(pd.show_versions())
-    except:
+    except ImportError:
         pass
     else:
         print("")
@@ -214,8 +215,7 @@ def get_module_directory():
     # Taken from http://stackoverflow.com/a/6098238/732596
     path_to_this_file = dirname(getfile(currentframe()))
     if not isdir(path_to_this_file):
-        encoding = getfilesystemencoding()
-        path_to_this_file = dirname(unicode(__file__, encoding))
+        path_to_this_file = PurePath(__file__).parent.as_posix()
     if not isdir(path_to_this_file):
         abspath(getsourcefile(lambda _: None))
     if not isdir(path_to_this_file):
@@ -344,7 +344,7 @@ def normalise_timestamp(timestamp, freq):
     in the set of timestamps returned by pd.DataFrame.resample(freq=freq)
     """
     timestamp = pd.Timestamp(timestamp)
-    series = pd.Series(np.NaN, index=[timestamp])
+    series = pd.Series(np.nan, index=[timestamp])
     resampled = series.resample(freq).mean()
     return resampled.index[0]
 
@@ -428,7 +428,7 @@ def compute_rmse(ground_truth, predictions, pretty=True):
         if pretty:
             try:
                 app_label = app.label()
-            except:
+            except Exception:  # TODO constrain exception
                 pretty = False
                 app_label = app
         else:
@@ -444,7 +444,7 @@ def compute_rmse(ground_truth, predictions, pretty=True):
         if not df_app.empty:
             app_rms_error = np.sqrt(mean_squared_error(df_app["gt"], df_app["pr"]))
         else:
-            app_rms_error = np.NaN
+            app_rms_error = np.nan
 
         if pretty:
             app_counts[app_label] += 1

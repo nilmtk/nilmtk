@@ -106,7 +106,6 @@ def _apply_clustering(X, max_num_clusters, exact_num_clusters=None):
     # Exact number of clusters are not specified, use the cluster validity measures
     # to find the optimal number
     for n_clusters in range(1, max_num_clusters):
-
         try:
             labels, centers = _apply_clustering_n_clusters(X, n_clusters)
             k_means_labels[n_clusters] = labels
@@ -130,7 +129,6 @@ def _apply_clustering(X, max_num_clusters, exact_num_clusters=None):
 
 
 def hart85_means_shift_cluster(pair_buffer_df, columns):
-
     from sklearn.cluster import MeanShift
 
     # Creating feature vector
@@ -157,5 +155,5 @@ def hart85_means_shift_cluster(pair_buffer_df, columns):
     ms.fit(X)
     labels = ms.labels_
     cluster_centers = ms.cluster_centers_
-    labels_unique = np.unique(labels)
+    _labels_unique = np.unique(labels)
     return pd.DataFrame(cluster_centers, columns=columns)

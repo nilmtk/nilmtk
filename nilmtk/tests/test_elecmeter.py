@@ -1,12 +1,11 @@
 import unittest
-from datetime import timedelta
 from os.path import join
 
 import pandas as pd
 
-from ..datastore import HDFDataStore
-from ..elecmeter import ElecMeter, ElecMeterID
-from ..stats.tests.test_totalenergy import check_energy_numbers
+from nilmtk.datastore import HDFDataStore
+from nilmtk.elecmeter import ElecMeter, ElecMeterID
+from nilmtk.stats.tests.test_totalenergy import check_energy_numbers
 from .testingtools import WarningTestMixin, data_dir
 
 METER_ID = ElecMeterID(instance=1, building=1, dataset="REDD")
@@ -54,13 +53,13 @@ class TestElecMeter(WarningTestMixin, unittest.TestCase):
         meter1 = ElecMeter(metadata={"site_meter": True}, meter_id=METER_ID)
         self.assertIsNone(meter1.upstream_meter())
         meter2 = ElecMeter(metadata={"submeter_of": 1}, meter_id=METER_ID2)
-        self.assertEquals(meter2.upstream_meter(), meter1)
+        self.assertEqual(meter2.upstream_meter(), meter1)
         meter3 = ElecMeter(metadata={"submeter_of": 2}, meter_id=METER_ID3)
-        self.assertEquals(meter3.upstream_meter(), meter2)
+        self.assertEqual(meter3.upstream_meter(), meter2)
 
     def test_proportion_of_energy(self):
         meter = ElecMeter(store=self.datastore, metadata=self.meter_meta, meter_id=METER_ID)
-        self.assertEquals(meter.proportion_of_energy(meter), 1.0)
+        self.assertEqual(meter.proportion_of_energy(meter), 1.0)
 
     def correlation(self):
         meter_1 = ElecMeter(store=self.datastore, metadata=self.meter_meta, meter_id=METER_ID)
@@ -77,9 +76,8 @@ class TestElecMeter(WarningTestMixin, unittest.TestCase):
         # Let us now compute the value using Pandas functions
         corr12_pandas = df1.corr(df2)
         print("Correlation using pandas:", corr12_pandas)
-        from pandas.util.testing import assert_frame_equal
 
-        assert_frame_equal(corr12_nilmtk, corr12_pandas)
+        pd.testing.assert_frame_equal(corr12_nilmtk, corr12_pandas)
 
         # self.assertEqual(corr12_nilmtk, corr12_pandas)
         # print("Correlation using pandas:", corr12_pandas)

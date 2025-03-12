@@ -1,5 +1,7 @@
+from collections.abc import Iterator
 from io import open
 
+from pandas import DataFrame
 import yaml
 
 from ..timeframe import TimeFrame
@@ -74,7 +76,7 @@ class DataStore(object):
         sections=None,
         n_look_ahead_rows=0,
         chunksize=MAX_MEM_ALLOWANCE_IN_BYTES,
-    ):
+    ) -> Iterator[tuple[DataFrame, DataFrame | None]]:
         """
         Parameters
         ----------
@@ -88,20 +90,19 @@ class DataStore(object):
             then each `section` will be intersected with `self.window`.
         n_look_ahead_rows : int, optional, defaults to 0
             If >0 then each returned DataFrame will have a `look_ahead`
-            property which will be a DataFrame of length `n_look_ahead_rows`
-            of the data immediately in front of the data in the main DataFrame.
+            DataFrame of length `n_look_ahead_rows` with the data immediately
+            in front of the data in the main DataFrame.
         chunksize : int, optional
 
         Returns
         -------
-        generator of DataFrame objects
-            Each DataFrame is has extra attributes:
+        generator of tuple of DataFrame objects
+            Main DataFrame has extra attributes:
                 - timeframe : TimeFrame of section intersected with self.window
-                - look_ahead : pd.DataFrame:
-                    with `n_look_ahead_rows` rows.  The first row will be for
-                    `section.end`.  `look_ahead` stores data which appears on
-                    disk immediately after `section.end`; i.e. it ignores
-                    the next `section.start`.
+            `look_ahead` DataFrame with len `n_look_ahead_rows`
+                Note: The first row will be for `section.end`.
+                `look_ahead` stores data which appears on disk immediately after
+                `section.end`; i.e. it ignores the next `section.start`.
 
             Returns an empty DataFrame if no data is available for the
             specified section (or if the section.intersection(self.window)

@@ -33,13 +33,13 @@ LEVEL_NAMES = ["physical_quantity", "type"]
 
 def check_ac_type(ac_type):
     if ac_type not in AC_TYPES:
-        msg = "'{}' is not a valid AC type." " Valid AC types = {}.".format(ac_type, AC_TYPES)
+        msg = "'{}' is not a valid AC type. Valid AC types = {}.".format(ac_type, AC_TYPES)
         raise MeasurementError(msg)
 
 
 def check_physical_quantity(physical_quantity):
     if physical_quantity not in PHYSICAL_QUANTITIES:
-        msg = "'{}' is not a valid physical quantity." " Valid physical quantities = {}.".format(
+        msg = "'{}' is not a valid physical quantity. Valid physical quantities = {}.".format(
             physical_quantity, PHYSICAL_QUANTITIES
         )
         raise MeasurementError(msg)

@@ -3,8 +3,6 @@
 # coding: utf-8
 import argparse
 import glob
-import os
-import time
 
 import nbformat
 from nbconvert.preprocessors import ExecutePreprocessor

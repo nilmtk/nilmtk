@@ -62,7 +62,7 @@ class Results(object):
         new_results : dict
         """
         if not isinstance(timeframe, TimeFrame):
-            raise TypeError("`timeframe` must be of type 'nilmtk.TimeFrame'," " not '{}' type.".format(type(timeframe)))
+            raise TypeError("`timeframe` must be of type 'nilmtk.TimeFrame', not '{}' type.".format(type(timeframe)))
         if not isinstance(new_results, dict):
             raise TypeError("`new_results` must of a dict, not '{}' type.".format(type(new_results)))
 
@@ -75,7 +75,8 @@ class Results(object):
         row["end"] = timeframe.end
         for key, val in new_results.items():
             row[key] = val
-        self._data = pd.concat([self._data, row], verify_integrity=True, sort=False)
+        valid = self._data.notna() & self._data.notnull()
+        self._data = pd.concat([self._data[valid], row], verify_integrity=True, sort=False)
         self._data.sort_index(inplace=True)
 
     def check_for_overlap(self):
@@ -124,7 +125,7 @@ class Results(object):
         for i, row in self._data.iterrows():
             if other._data["end"].loc[i] != row["end"] or i not in other._data.index:
                 raise RuntimeError(
-                    "The sections we are trying to merge" " do not have the same end times so we" " cannot merge them."
+                    "The sections we are trying to merge do not have the same end times so we cannot merge them."
                 )
 
     def import_from_cache(self, cached_stat, sections):

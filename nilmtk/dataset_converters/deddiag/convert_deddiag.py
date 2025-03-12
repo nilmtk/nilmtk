@@ -44,7 +44,7 @@ def convert_deddiag(
     ----------
     connection: Connection
         Connection to the DEDDIAG database
-        Example: connection = Connection(host="localhost", port="5432", db_name="postgres", user="postgres", password="password")
+        Example: connection = Connection(host="localhost", port="5432", db_name="pg", user="admin", password="pass")
     output_filename : str
         The destination filename including path and suffix
         Example: ./data/deddiag.h5

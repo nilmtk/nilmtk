@@ -7,10 +7,10 @@ import numpy as np
 
 try:
     _to_ordinalf_np_vectorized = np.vectorize(mdates._to_ordinalf)
-except:
+except Exception:
     try:
         _to_ordinalf_np_vectorized = np.vectorize(mdates._dt64_to_ordinalf)
-    except:
+    except Exception:
         raise RuntimeError("This matplotlib version is not supported.")
 
 
@@ -134,7 +134,6 @@ def latexify(fig_width=None, fig_height=None, columns=1, fontsize=8):
 
 
 def format_axes(ax, spine_color="gray"):
-
     for spine in ["top", "right"]:
         ax.spines[spine].set_visible(False)
 

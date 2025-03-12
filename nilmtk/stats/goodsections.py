@@ -32,16 +32,16 @@ class GoodSections(Node):
             self._process_chunk(chunk, metadata)
             yield chunk
 
-    def _process_chunk(self, df, metadata):
+    def _process_chunk(self, df, metadata, look_ahead=None):
         """
         Parameters
         ----------
         df : pd.DataFrame
             with attributes:
-            - look_ahead : pd.DataFrame
             - timeframe : nilmtk.TimeFrame
         metadata : dict
             with ['device']['max_sample_period'] attribute
+        look_ahead : pd.DataFrame
 
         Returns
         -------
@@ -58,7 +58,6 @@ class GoodSections(Node):
         """
         # Retrieve relevant metadata
         max_sample_period = metadata["device"]["max_sample_period"]
-        look_ahead = getattr(df, "look_ahead", None)
         timeframe = df.timeframe
 
         # Process dataframe
@@ -71,9 +70,7 @@ class GoodSections(Node):
 
         # Set self.previous_chunk_ended_with_open_ended_good_section
         if good_sections:
-            self.previous_chunk_ended_with_open_ended_good_section = (
-                good_sections[-1].end is None
-            )
+            self.previous_chunk_ended_with_open_ended_good_section = good_sections[-1].end is None
 
             # Update self.results
             self.results.append(timeframe, {"sections": [good_sections]})
@@ -114,9 +111,7 @@ def get_good_sections(
     del timedeltas_sec
     gc.collect()
 
-    timedeltas_check = concatenate(
-        [[previous_chunk_ended_with_open_ended_good_section], timedeltas_check]
-    )
+    timedeltas_check = concatenate([[previous_chunk_ended_with_open_ended_good_section], timedeltas_check])
     transitions = diff(timedeltas_check.astype(np.int64))
 
     # Memory management
@@ -153,8 +148,7 @@ def get_good_sections(
     # Work out if this chunk ends with an open ended good section
     if len(good_sect_ends) == 0:
         ends_with_open_ended_good_section = (
-            len(good_sect_starts) > 0
-            or previous_chunk_ended_with_open_ended_good_section
+            len(good_sect_starts) > 0 or previous_chunk_ended_with_open_ended_good_section
         )
     elif len(good_sect_starts) > 0:
         # We have good_sect_ends and good_sect_starts
