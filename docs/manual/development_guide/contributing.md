@@ -43,7 +43,7 @@ The basic process to contribute a modification or new code or documentation is t
 
 1. Fork the main NILMTK project on github to your own github account.
 2. Clone your forked version of NILMTK to your development machine.
-3. Create a new git branch using `git checkout -b <branch name>`.  For example, if you are submitting a fix for issue 123 then create a new branch called 'fix_issue_123' by running `git checkout -b fix_issue_123`.  Please ensure all the modifications in a branch are *specific* to the issue you are trying to fix or the feature your are adding.
+3. Create a new git branch using `git switch -c <branch name>`.  For example, if you are submitting a fix for issue 123 then create a new branch called 'fix_issue_123' by running `git switch -c fix_issue_123`.  Please ensure all the modifications in a branch are *specific* to the issue you are trying to fix or the feature your are adding.
 4. If you are working on addressing a specific issue then please post to the issue queue just before you start work to make sure no one else wastes their time trying to fix the same issue at the same time! 
 5. Make your modifications.
 6. Ideally, please also create a unittest which demonstrates an existing bug (i.e. create a test which fails and your aim is to modify NILMTK so the test passes) or, if you are adding a new feature, please add a test for it.
@@ -92,8 +92,7 @@ As usual make changes to `.rst` files in `~/nilmtk/docs/source` to contribute to
 Build your documentation::
 
 ```bash
-cd ~/nilmtk/docs
-make html
+make -C ~/nilmtk/docs html
 ```
 
 Now, built documentation should lie in `~/nilmtksite/html` directory. You can use your browser to check if everything got built properly.

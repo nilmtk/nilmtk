@@ -1,4 +1,4 @@
-'''Metrics to compare disaggregation performance against ground truth
+"""Metrics to compare disaggregation performance against ground truth
 data.
 
 All metrics functions have the same interface.  Each function takes
@@ -11,7 +11,7 @@ of ints for MeterGroups.
 Notation
 --------
 
-Below is the notation used to mathematically define each metric. 
+Below is the notation used to mathematically define each metric.
 
 :math:`T` - number of time slices.
 
@@ -32,22 +32,23 @@ Below is the notation used to mathematically define each metric.
 Functions
 ---------
 
-'''
+"""
+
+import math
+from warnings import warn
 
 import numpy as np
 import pandas as pd
-import math
-from warnings import warn
-from .metergroup import MeterGroup
-from .metergroup import iterate_through_submeters_of_two_metergroups
+
 from .electric import align_two_meters
+from .metergroup import MeterGroup, iterate_through_submeters_of_two_metergroups
 
 
 def error_in_assigned_energy(predictions, ground_truth):
     """Compute error in assigned energy.
 
     .. math::
-        error^{(n)} = 
+        error^{(n)} =
         \\left | \\sum_t y^{(n)}_t - \\sum_t \\hat{y}^{(n)}_t \\right |
 
     Parameters
@@ -62,8 +63,7 @@ def error_in_assigned_energy(predictions, ground_truth):
         in kWh.
     """
     errors = {}
-    both_sets_of_meters = iterate_through_submeters_of_two_metergroups(
-        predictions, ground_truth)
+    both_sets_of_meters = iterate_through_submeters_of_two_metergroups(predictions, ground_truth)
     for pred_meter, ground_truth_meter in both_sets_of_meters:
         sections = pred_meter.good_sections()
         ground_truth_energy = ground_truth_meter.total_energy(sections=sections)
@@ -73,16 +73,16 @@ def error_in_assigned_energy(predictions, ground_truth):
 
 
 def fraction_energy_assigned_correctly(predictions, ground_truth):
-    '''Compute fraction of energy assigned correctly
-    
+    """Compute fraction of energy assigned correctly
+
     .. math::
-        fraction = 
-        \\sum_n min \\left ( 
-        \\frac{\\sum_n y}{\\sum_{n,t} y}, 
-        \\frac{\\sum_n \\hat{y}}{\\sum_{n,t} \\hat{y}} 
+        fraction =
+        \\sum_n min \\left (
+        \\frac{\\sum_n y}{\\sum_{n,t} y},
+        \\frac{\\sum_n \\hat{y}}{\\sum_{n,t} \\hat{y}}
         \\right )
 
-    Ignores distinction between different AC types, instead if there are 
+    Ignores distinction between different AC types, instead if there are
     multiple AC types for each meter then we just take the max value across
     the AC types.
 
@@ -94,12 +94,10 @@ def fraction_energy_assigned_correctly(predictions, ground_truth):
     -------
     fraction : float in the range [0,1]
         Fraction of Energy Correctly Assigned.
-    '''
-
+    """
 
     predictions_submeters = MeterGroup(meters=predictions.submeters().meters)
     ground_truth_submeters = MeterGroup(meters=ground_truth.submeters().meters)
-
 
     fraction_per_meter_predictions = predictions_submeters.fraction_per_meter()
     fraction_per_meter_ground_truth = ground_truth_submeters.fraction_per_meter()
@@ -109,16 +107,15 @@ def fraction_energy_assigned_correctly(predictions, ground_truth):
 
     fraction = 0
     for meter_instance in predictions_submeters.instance():
-        fraction += min(fraction_per_meter_ground_truth[meter_instance],
-                        fraction_per_meter_predictions[meter_instance])
+        fraction += min(fraction_per_meter_ground_truth[meter_instance], fraction_per_meter_predictions[meter_instance])
     return fraction
 
 
 def mean_normalized_error_power(predictions, ground_truth):
-    '''Compute mean normalized error in assigned power
-        
+    """Compute mean normalized error in assigned power
+
     .. math::
-        error^{(n)} = 
+        error^{(n)} =
         \\frac
         { \\sum_t {\\left | y_t^{(n)} - \\hat{y}_t^{(n)} \\right |} }
         { \\sum_t y_t^{(n)} }
@@ -132,16 +129,14 @@ def mean_normalized_error_power(predictions, ground_truth):
     mne : pd.Series
         Each index is an meter instance int (or tuple for MeterGroups).
         Each value is the MNE for that appliance.
-    '''
+    """
 
     mne = {}
-    both_sets_of_meters = iterate_through_submeters_of_two_metergroups(
-        predictions, ground_truth)
+    both_sets_of_meters = iterate_through_submeters_of_two_metergroups(predictions, ground_truth)
     for pred_meter, ground_truth_meter in both_sets_of_meters:
         total_abs_diff = 0.0
         sum_of_ground_truth_power = 0.0
-        for aligned_meters_chunk in align_two_meters(pred_meter, 
-                                                     ground_truth_meter):
+        for aligned_meters_chunk in align_two_meters(pred_meter, ground_truth_meter):
             diff = aligned_meters_chunk.iloc[:, 0] - aligned_meters_chunk.iloc[:, 1]
             total_abs_diff += sum(abs(diff.dropna()))
             sum_of_ground_truth_power += aligned_meters_chunk.iloc[:, 1].sum()
@@ -152,8 +147,8 @@ def mean_normalized_error_power(predictions, ground_truth):
 
 
 def rms_error_power(predictions, ground_truth):
-    '''Compute RMS error in assigned power
-    
+    """Compute RMS error in assigned power
+
     .. math::
             error^{(n)} = \\sqrt{ \\frac{1}{T} \\sum_t{ \\left ( y_t - \\hat{y}_t \\right )^2 } }
 
@@ -166,20 +161,18 @@ def rms_error_power(predictions, ground_truth):
     error : pd.Series
         Each index is an meter instance int (or tuple for MeterGroups).
         Each value is the RMS error in predicted power for that appliance.
-    '''
+    """
 
     error = {}
 
-    both_sets_of_meters = iterate_through_submeters_of_two_metergroups(
-        predictions, ground_truth)
+    both_sets_of_meters = iterate_through_submeters_of_two_metergroups(predictions, ground_truth)
     for pred_meter, ground_truth_meter in both_sets_of_meters:
         sum_of_squared_diff = 0.0
         n_samples = 0
-        for aligned_meters_chunk in align_two_meters(pred_meter, 
-                                                     ground_truth_meter):
+        for aligned_meters_chunk in align_two_meters(pred_meter, ground_truth_meter):
             diff = aligned_meters_chunk.iloc[:, 0] - aligned_meters_chunk.iloc[:, 1]
             diff.dropna(inplace=True)
-            sum_of_squared_diff += (diff ** 2).sum()
+            sum_of_squared_diff += (diff**2).sum()
             n_samples += len(diff)
 
         error[pred_meter.instance()] = math.sqrt(sum_of_squared_diff / n_samples)
@@ -188,7 +181,7 @@ def rms_error_power(predictions, ground_truth):
 
 
 def f1_score(predictions, ground_truth):
-    '''Compute F1 scores.
+    """Compute F1 scores.
 
     .. math::
         F_{score}^{(n)} = \\frac
@@ -206,39 +199,34 @@ def f1_score(predictions, ground_truth):
         Each value is the F1 score for that appliance.  If there are multiple
         chunks then the value is the weighted mean of the F1 score for
         each chunk.
-    '''
+    """
     # If we import sklearn at top of file then sphinx breaks.
     from sklearn.metrics import f1_score as sklearn_f1_score
 
     f1_scores = {}
-    both_sets_of_meters = iterate_through_submeters_of_two_metergroups(
-        predictions, ground_truth)
+    both_sets_of_meters = iterate_through_submeters_of_two_metergroups(predictions, ground_truth)
     for pred_meter, ground_truth_meter in both_sets_of_meters:
-        scores_for_meter = pd.DataFrame(columns=['score', 'num_samples'])
-        aligned_meters = align_two_meters(
-            pred_meter, ground_truth_meter, 'when_on')
+        scores_for_meter = pd.DataFrame(columns=["score", "num_samples"])
+        aligned_meters = align_two_meters(pred_meter, ground_truth_meter, "when_on")
         for aligned_states_chunk in aligned_meters:
             aligned_states_chunk.dropna(inplace=True)
             aligned_states_chunk = aligned_states_chunk.astype(int)
-            score = sklearn_f1_score(aligned_states_chunk.iloc[:, 0],
-                                     aligned_states_chunk.iloc[:, 1])
+            score = sklearn_f1_score(aligned_states_chunk.iloc[:, 0], aligned_states_chunk.iloc[:, 1])
             scores_for_meter = scores_for_meter.append(
-                {'score': score, 'num_samples': len(aligned_states_chunk)},
-                ignore_index=True)
+                {"score": score, "num_samples": len(aligned_states_chunk)}, ignore_index=True
+            )
 
         # Calculate weighted mean
-        num_samples = scores_for_meter['num_samples'].sum()
+        num_samples = scores_for_meter["num_samples"].sum()
         if num_samples > 0:
-            scores_for_meter['proportion'] = (
-                scores_for_meter['num_samples'] / num_samples)
-            avg_score = (
-                scores_for_meter['score'] * scores_for_meter['proportion']
-            ).sum()
+            scores_for_meter["proportion"] = scores_for_meter["num_samples"] / num_samples
+            avg_score = (scores_for_meter["score"] * scores_for_meter["proportion"]).sum()
         else:
-            warn("No aligned samples when calculating F1-score for prediction"
-                 " meter {} and ground truth meter {}."
-                 .format(pred_meter, ground_truth_meter))
-            avg_score = np.NaN
+            warn(
+                "No aligned samples when calculating F1-score for prediction"
+                " meter {} and ground truth meter {}.".format(pred_meter, ground_truth_meter)
+            )
+            avg_score = np.nan
         f1_scores[pred_meter.instance()] = avg_score
 
     return pd.Series(f1_scores)

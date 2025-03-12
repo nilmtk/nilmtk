@@ -8,104 +8,114 @@ NB: If you have direct access to the SQL database, please prefer using the other
 converter named `download_dataport.py`.
 """
 
-import nilmtk.datastore
-import nilmtk.measurement
-import numpy as np
 import os
 import os.path
-import pandas as pd
 import re
 import shutil
 import tempfile
-import yaml
-
 from collections import OrderedDict
+
+import numpy as np
+import pandas as pd
+import yaml
 from nilm_metadata import convert_yaml_to_hdf5
-from nilmtk.utils import get_module_directory
 
+from ...datastore.key import Key
+from ...measurement import LEVEL_NAMES
+from ...utils import get_module_directory
 
-DATA_AVAILABILITIES = [ "97%", "98%", "99%", "100%" ]
+DATA_AVAILABILITIES = ["97%", "98%", "99%", "100%"]
 METADATA_COLS = [
-        "dataid", "building_type", "city", "state", "house_construction_year",
+    "dataid",
+    "building_type",
+    "city",
+    "state",
+    "house_construction_year",
 ]
 DATABASE_TZ = "US/Central"
-METER_COLS = [ ("power", "active") ]
+METER_COLS = [("power", "active")]
 COL_MAPPING = {
-        "air1": {"type": "air conditioner"},
-        "air2": {"type": "air conditioner"},
-        "air3": {"type": "air conditioner"},
-        "airwindowunit1": {"type": "air conditioner"},
-        "aquarium1": {"type": "appliance"},
-        "bathroom1": {"type": "sockets", "room": "bathroom"},
-        "bathroom2": {"type": "sockets", "room": "bathroom"},
-        "bedroom1": {"type": "sockets", "room": "bedroom"},
-        "bedroom2": {"type": "sockets", "room": "bedroom"},
-        "bedroom3": {"type": "sockets", "room": "bedroom"},
-        "bedroom4": {"type": "sockets", "room": "bedroom"},
-        "bedroom5": {"type": "sockets", "room": "bedroom"},
-        "car1": {"type": "electric vehicle"},
-        "car2": {"type": "electric vehicle"},
-        "clotheswasher1": {"type": "washing machine"},
-        "clotheswasher_dryg1": {"type": "washer dryer"},
-        "diningroom1": {"type": "sockets", "room": "dining room"},
-        "diningroom2": {"type": "sockets", "room": "dining room"},
-        "dishwasher1": {"type": "dish washer"},
-        "disposal1": {"type": "waste disposal unit"},
-        "drye1": {"type": "spin dryer"},
-        "dryg1": {"type": "spin dryer"},
-        "freezer1": {"type": "freezer"},
-        "furnace1": {"type": "electric furnace"},
-        "furnace2": {"type": "electric furnace"},
-        "garage1": {"type": "sockets", "room": "garage"},
-        "garage2": {"type": "sockets", "room": "garage"},
-        "grid": {},
-        "heater1": {"type": "electric space heater"},
-        "heater2": {"type": "electric space heater"},
-        "heater3": {"type": "electric space heater"},
-        "housefan1": {"type": "fan"},
-        "jacuzzi1": {"type": "electric hot tub heater"},
-        "kitchen1": {"type": "sockets", "room": "kitchen"},
-        "kitchen2": {"type": "sockets", "room": "kitchen"},
-        "kitchenapp1": {"type": "sockets", "room": "kitchen"},
-        "kitchenapp2": {"type": "sockets", "room": "kitchen"},
-        "lights_plugs1": {"type": "light"},
-        "lights_plugs2": {"type": "light"},
-        "lights_plugs3": {"type": "light"},
-        "lights_plugs4": {"type": "light"},
-        "lights_plugs5": {"type": "light"},
-        "lights_plugs6": {"type": "light"},
-        "livingroom1": {"type": "sockets", "room": "living room"},
-        "livingroom2": {"type": "sockets", "room": "living room"},
-        "microwave1": {"type": "microwave"},
-        "office1": {"type": "sockets", "room": "office"},
-        "outsidelights_plugs1": {"type": "sockets", "room": "outside"},
-        "outsidelights_plugs2": {"type": "sockets", "room": "outside"},
-        "oven1": {"type": "oven"},
-        "oven2": {"type": "oven"},
-        "pool1": {"type": "electric swimming pool heater"},
-        "pool2": {"type": "electric swimming pool heater"},
-        "poollight1": {"type": "light"},
-        "poolpump1": {"type": "swimming pool pump"},
-        "pump1": {"type": "water pump"},
-        "range1": {"type": "stove"},
-        "refrigerator1": {"type": "fridge"},
-        "refrigerator2": {"type": "fridge"},
-        "security1": {"type": "security alarm"},
-        "sewerpump1": {"type": "water pump"},
-        "shed1": {"type": "sockets", "room": "shed"},
-        "solar": {},
-        "solar2": {},
-        "sprinkler1": {"type": "garden sprinkler"},
-        "sumppump1": {"type": "water pump", "room": "basement"},
-        "utilityroom1": {"type": "sockets", "room": "utility room"},
-        "venthood1": {"type": "stove"},
-        "waterheater1": {"type": "electric water heating appliance"},
-        "waterheater2": {"type": "electric water heating appliance"},
-        "winecooler1": {"type": "cold appliance"},
-        "wellpump1": {"type": "water pump"},
+    "air1": {"type": "air conditioner"},
+    "air2": {"type": "air conditioner"},
+    "air3": {"type": "air conditioner"},
+    "airwindowunit1": {"type": "air conditioner"},
+    "aquarium1": {"type": "appliance"},
+    "bathroom1": {"type": "sockets", "room": "bathroom"},
+    "bathroom2": {"type": "sockets", "room": "bathroom"},
+    "bedroom1": {"type": "sockets", "room": "bedroom"},
+    "bedroom2": {"type": "sockets", "room": "bedroom"},
+    "bedroom3": {"type": "sockets", "room": "bedroom"},
+    "bedroom4": {"type": "sockets", "room": "bedroom"},
+    "bedroom5": {"type": "sockets", "room": "bedroom"},
+    "car1": {"type": "electric vehicle"},
+    "car2": {"type": "electric vehicle"},
+    "clotheswasher1": {"type": "washing machine"},
+    "clotheswasher_dryg1": {"type": "washer dryer"},
+    "diningroom1": {"type": "sockets", "room": "dining room"},
+    "diningroom2": {"type": "sockets", "room": "dining room"},
+    "dishwasher1": {"type": "dish washer"},
+    "disposal1": {"type": "waste disposal unit"},
+    "drye1": {"type": "spin dryer"},
+    "dryg1": {"type": "spin dryer"},
+    "freezer1": {"type": "freezer"},
+    "furnace1": {"type": "electric furnace"},
+    "furnace2": {"type": "electric furnace"},
+    "garage1": {"type": "sockets", "room": "garage"},
+    "garage2": {"type": "sockets", "room": "garage"},
+    "grid": {},
+    "heater1": {"type": "electric space heater"},
+    "heater2": {"type": "electric space heater"},
+    "heater3": {"type": "electric space heater"},
+    "housefan1": {"type": "fan"},
+    "jacuzzi1": {"type": "electric hot tub heater"},
+    "kitchen1": {"type": "sockets", "room": "kitchen"},
+    "kitchen2": {"type": "sockets", "room": "kitchen"},
+    "kitchenapp1": {"type": "sockets", "room": "kitchen"},
+    "kitchenapp2": {"type": "sockets", "room": "kitchen"},
+    "lights_plugs1": {"type": "light"},
+    "lights_plugs2": {"type": "light"},
+    "lights_plugs3": {"type": "light"},
+    "lights_plugs4": {"type": "light"},
+    "lights_plugs5": {"type": "light"},
+    "lights_plugs6": {"type": "light"},
+    "livingroom1": {"type": "sockets", "room": "living room"},
+    "livingroom2": {"type": "sockets", "room": "living room"},
+    "microwave1": {"type": "microwave"},
+    "office1": {"type": "sockets", "room": "office"},
+    "outsidelights_plugs1": {"type": "sockets", "room": "outside"},
+    "outsidelights_plugs2": {"type": "sockets", "room": "outside"},
+    "oven1": {"type": "oven"},
+    "oven2": {"type": "oven"},
+    "pool1": {"type": "electric swimming pool heater"},
+    "pool2": {"type": "electric swimming pool heater"},
+    "poollight1": {"type": "light"},
+    "poolpump1": {"type": "swimming pool pump"},
+    "pump1": {"type": "water pump"},
+    "range1": {"type": "stove"},
+    "refrigerator1": {"type": "fridge"},
+    "refrigerator2": {"type": "fridge"},
+    "security1": {"type": "security alarm"},
+    "sewerpump1": {"type": "water pump"},
+    "shed1": {"type": "sockets", "room": "shed"},
+    "solar": {},
+    "solar2": {},
+    "sprinkler1": {"type": "garden sprinkler"},
+    "sumppump1": {"type": "water pump", "room": "basement"},
+    "utilityroom1": {"type": "sockets", "room": "utility room"},
+    "venthood1": {"type": "stove"},
+    "waterheater1": {"type": "electric water heating appliance"},
+    "waterheater2": {"type": "electric water heating appliance"},
+    "winecooler1": {"type": "cold appliance"},
+    "wellpump1": {"type": "water pump"},
 }
 # Unused variable, all those fields need a mapping in nilm_metadata.
-NEED_MAPPING = [ "battery1", "circpump1", "icemaker1", "solar", "solar2", ]
+NEED_MAPPING = [
+    "battery1",
+    "circpump1",
+    "icemaker1",
+    "solar",
+    "solar2",
+]
 
 
 def load_dataport_metadata(csv_metadata_path):
@@ -127,12 +137,11 @@ def load_dataport_metadata(csv_metadata_path):
         Matrix of the buildings and their characteristics,
         see METADATA_COLS variable.
     """
-    metadata = pd.read_csv(csv_metadata_path,
-                           engine="c", encoding="ISO-8859-1",
-                           skiprows=[1]) # Skip header description
+    metadata = pd.read_csv(
+        csv_metadata_path, engine="c", encoding="ISO-8859-1", skiprows=[1]
+    )  # Skip header description
     buildings = metadata[
-            metadata.egauge_1s_data_availability.isin(DATA_AVAILABILITIES) &
-            metadata.grid.eq("yes")
+        metadata.egauge_1s_data_availability.isin(DATA_AVAILABILITIES) & metadata.grid.eq("yes")
     ].sort_values(by="dataid")
     buildings.reset_index(drop=True, inplace=True)
     return buildings[[*METADATA_COLS]]
@@ -149,16 +158,15 @@ def create_tmp_metadata_dir():
     str
         Path to the temporary metadata directory.
     """
-    nilmtk_static_metadata = os.path.join(
-            get_module_directory(), 'dataset_converters', 'dataport', 'metadata')
+    nilmtk_static_metadata = os.path.join(get_module_directory(), "dataset_converters", "dataport", "metadata")
     tmp_dir = tempfile.mkdtemp()
     metadata_dir = os.path.join(tmp_dir, "metadata")
     shutil.copytree(nilmtk_static_metadata, metadata_dir)
     print("Using temporary dir for metadata:", metadata_dir)
     # Clear dynamic metadata (if any)
     for f in os.listdir(metadata_dir):
-        if re.search('^building', f):
-            os.remove(join(metadata_dir, f))
+        if re.search("^building", f):
+            os.remove(os.path.join(metadata_dir, f))
 
     return metadata_dir
 
@@ -186,11 +194,11 @@ def preprocess_chunk(chunk_data, b_metadata):
         "grid" and "solar" ones.
     """
     cleaned = chunk_data.dropna(axis=1, how="all")
-    cols_to_drop = [ c for c in cleaned.columns if c not in COL_MAPPING ]
+    cols_to_drop = [c for c in cleaned.columns if c not in COL_MAPPING]
     cleaned = cleaned.drop(axis=1, labels=cols_to_drop)
     if "solar" in cleaned.columns or "solar2" in cleaned.columns:
         gen = pd.Series(data=np.zeros(cleaned["grid"].shape), index=cleaned.index)
-        b_metadata["energy_improvements"] = [ "photovoltaics" ]
+        b_metadata["energy_improvements"] = ["photovoltaics"]
 
         if "solar" in cleaned.columns:
             gen += cleaned["solar"]
@@ -205,7 +213,7 @@ def preprocess_chunk(chunk_data, b_metadata):
         cleaned = cleaned.join(use)
         cleaned.drop("grid", axis=1, inplace=True)
     else:
-        cleaned.rename(columns={ "grid": "use" }, inplace=True)
+        cleaned.rename(columns={"grid": "use"}, inplace=True)
 
     return cleaned * 1000
 
@@ -222,17 +230,17 @@ def create_nilmtk_metadata(building_id, dataport_metadata):
         Output of `load_dataport_metadata`. Handy, isn't it?
     """
     locality = ", ".join(
-            dataport_metadata.loc[dataport_metadata.dataid==building_id, "city"].tolist() \
-            + dataport_metadata.loc[dataport_metadata.dataid==building_id, "state"].tolist()
+        dataport_metadata.loc[dataport_metadata.dataid == building_id, "city"].tolist()
+        + dataport_metadata.loc[dataport_metadata.dataid == building_id, "state"].tolist()
     )
     building_metadata = {
-            "original_name": int(building_id),
-            "elec_meters": {},
-            "appliances": [],
-            "geo_location": {
-                "locality": locality,
-                "country": "US",
-            },
+        "original_name": int(building_id),
+        "elec_meters": {},
+        "appliances": [],
+        "geo_location": {
+            "locality": locality,
+            "country": "US",
+        },
     }
     return building_metadata
 
@@ -261,11 +269,7 @@ def extract_building_data(csv_filename, b_id, b_metadata, chunksize, csv_b_cache
         A matrix of measurement indexed with increasing timestamp and with each
         meter as a column.
     """
-    csv_data_gen = pd.read_csv(
-            csv_filename,
-            engine="c", chunksize=chunksize,
-            index_col=[ "localminute" ]
-    )
+    csv_data_gen = pd.read_csv(csv_filename, engine="c", chunksize=chunksize, index_col=["localminute"])
     b_isnew = True
     b_data = pd.DataFrame()
     csv_isnew = csv_filename not in csv_b_cache
@@ -284,7 +288,7 @@ def extract_building_data(csv_filename, b_id, b_metadata, chunksize, csv_b_cache
                 print("Building {} found in {}!".format(b_id, csv_filename))
                 b_isnew = False
 
-            print(msg, end='\r')
+            print(msg, end="\r")
             b_chunk = csv_chunk.loc[csv_chunk.dataid.eq(b_id)].copy()
             b_chunk.index = pd.to_datetime(b_chunk.index, utc=True, infer_datetime_format=True)
             b_chunk = b_chunk.tz_convert(DATABASE_TZ)
@@ -294,14 +298,14 @@ def extract_building_data(csv_filename, b_id, b_metadata, chunksize, csv_b_cache
             else:
                 b_data = b_data.append(b_chunk)
 
-    print("\t" + " " * len(msg), end='\r')
+    print("\t" + " " * len(msg), end="\r")
     if not b_data.empty:
         msg = "\tSorting data..."
-        print(msg, end='\r')
+        print(msg, end="\r")
         # mergesort is 30% faster than quicksort in this case.
         b_data.sort_index(kind="mergesort", inplace=True)
 
-    print("\t" + " " * len(msg), end='\r')
+    print("\t" + " " * len(msg), end="\r")
     return b_data
 
 
@@ -335,21 +339,26 @@ def write_meter_data(hdf_store, b_id, b_data, nilmtk_metadata):
         nilmtk_metadata[b_id]["instance"] = nilmtk_b_id
 
     for m_id, meter in enumerate(b_data.columns):
-        key = nilmtk.datastore.Key(building=nilmtk_b_id, meter=m_id + 1)
+        key = Key(building=nilmtk_b_id, meter=m_id + 1)
         msg = "\tWriting {}".format(str(key))
-        print(msg, end='\r')
+        print(msg, end="\r")
         # Meter data.
         m_data = pd.DataFrame(b_data[meter])
         m_data.columns = pd.MultiIndex.from_tuples(METER_COLS)
-        m_data.columns.set_names(nilmtk.measurement.LEVEL_NAMES, inplace=True)
+        m_data.columns.set_names(LEVEL_NAMES, inplace=True)
         hdf_store.put(str(key), m_data, format="table", append=True)
         hdf_store.flush()
         # Meter & appliance metadata
-        if meter == 'use':
-            meter_metadata = { "device_model": "eGauge", "site_meter": True }
+        if meter == "use":
+            meter_metadata = {"device_model": "eGauge", "site_meter": True}
         else:
-            meter_metadata = { "device_model": "eGauge", "submeter_of": 0 }
-            app_metadata = { "original_name": meter, "meters": [ m_id + 1, ] }
+            meter_metadata = {"device_model": "eGauge", "submeter_of": 0}
+            app_metadata = {
+                "original_name": meter,
+                "meters": [
+                    m_id + 1,
+                ],
+            }
             app_metadata.update(COL_MAPPING[meter])
             app_id = 1
             app_type = app_metadata["type"]
@@ -361,7 +370,7 @@ def write_meter_data(hdf_store, b_id, b_data, nilmtk_metadata):
             nilmtk_metadata[b_id]["appliances"].append(app_metadata)
 
         nilmtk_metadata[b_id]["elec_meters"][m_id + 1] = meter_metadata
-        print("\t" + " " * len(msg), end='\r')
+        print("\t" + " " * len(msg), end="\r")
 
     print("\tWriting done.")
 
@@ -397,19 +406,18 @@ def convert_dataport(csv_filenames, metadata_path, hdf_filename, chunksize=1e6):
         Defaults to 1 million rows.
     """
     csv_filenames.sort()
-    csv_building_cache = {} # cache of the building list per file to speed up the search
+    csv_building_cache = {}  # cache of the building list per file to speed up the search
     store = pd.HDFStore(hdf_filename, "w", complevel=9, complib="zlib")
     metadata_dir = create_tmp_metadata_dir()
     nilmtk_metadata = OrderedDict()
     dataport_metadata = load_dataport_metadata(metadata_path)
-    dataids = [ int(i) for i in dataport_metadata["dataid"].values ]
+    dataids = [int(i) for i in dataport_metadata["dataid"].values]
     for b_id in dataids:
         b_metadata = create_nilmtk_metadata(b_id, dataport_metadata)
         for csv_file in csv_filenames:
-            print("Looking for building {}".format(b_id), end='\r')
+            print("Looking for building {}".format(b_id), end="\r")
             if csv_file not in csv_building_cache or b_id in csv_building_cache[csv_file]:
-                b_data = extract_building_data(
-                         csv_file, b_id, b_metadata, chunksize, csv_building_cache)
+                b_data = extract_building_data(csv_file, b_id, b_metadata, chunksize, csv_building_cache)
 
                 if not b_data.empty:
                     nilmtk_metadata[b_id] = b_metadata
@@ -427,14 +435,13 @@ def convert_dataport(csv_filenames, metadata_path, hdf_filename, chunksize=1e6):
 
 if __name__ == "__main__":
     csvs = [
-            "1s_data_austin_file1/1s_data_austin_file1.csv",
-            "1s_data_austin_file2/1s_data_austin_file2.csv",
-            "1s_data_austin_file3/1s_data_austin_file3.csv",
-            "1s_data_austin_file4/1s_data_austin_file4.csv",
-            "1s_data_newyork_file1/1s_data_newyork_file1.csv",
-            "1s_data_newyork_file2/1s_data_newyork_file2.csv",
-            "1s_data_newyork_file3/1s_data_newyork_file3.csv",
-            "1s_data_newyork_file4/1s_data_newyork_file4.csv",
+        "1s_data_austin_file1/1s_data_austin_file1.csv",
+        "1s_data_austin_file2/1s_data_austin_file2.csv",
+        "1s_data_austin_file3/1s_data_austin_file3.csv",
+        "1s_data_austin_file4/1s_data_austin_file4.csv",
+        "1s_data_newyork_file1/1s_data_newyork_file1.csv",
+        "1s_data_newyork_file2/1s_data_newyork_file2.csv",
+        "1s_data_newyork_file3/1s_data_newyork_file3.csv",
+        "1s_data_newyork_file4/1s_data_newyork_file4.csv",
     ]
     convert_dataport(csvs, "metadata.csv", "dataport.h5", 3e6)
-

@@ -1,18 +1,19 @@
 import unittest
 from os.path import join
-from os import remove
+
 import pandas as pd
-from .testingtools import data_dir
-from nilmtk.datastore import HDFDataStore
+
 from nilmtk import DataSet
 from nilmtk.legacy.disaggregate import CombinatorialOptimisation
+
+from .testingtools import data_dir
 
 
 class TestCO(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        filename = join(data_dir(), 'co_test.h5')
+        filename = join(data_dir(), "co_test.h5")
         cls.dataset = DataSet(filename)
 
     @classmethod
@@ -34,5 +35,5 @@ class TestCO(unittest.TestCase):
         self.assertTrue(gt.equals(pred))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

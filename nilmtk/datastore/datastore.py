@@ -1,6 +1,10 @@
-import yaml
-from nilmtk.timeframe import TimeFrame
+from collections.abc import Iterator
 from io import open
+
+from pandas import DataFrame
+import yaml
+
+from ..timeframe import TimeFrame
 
 MAX_MEM_ALLOWANCE_IN_BYTES = 2**28
 
@@ -30,6 +34,7 @@ class DataStore(object):
     window : nilmtk.TimeFrame
         Defines the timeframe we are interested in.
     """
+
     def __init__(self):
         """
         Parameters
@@ -63,9 +68,15 @@ class DataStore(object):
     def window(self, window):
         window.check_tz()
         self._window = window
-        
-    def load(self, key, columns=None, sections=None, n_look_ahead_rows=0,
-             chunksize=MAX_MEM_ALLOWANCE_IN_BYTES):
+
+    def load(
+        self,
+        key,
+        columns=None,
+        sections=None,
+        n_look_ahead_rows=0,
+        chunksize=MAX_MEM_ALLOWANCE_IN_BYTES,
+    ) -> Iterator[tuple[DataFrame, DataFrame | None]]:
         """
         Parameters
         ----------
@@ -79,20 +90,19 @@ class DataStore(object):
             then each `section` will be intersected with `self.window`.
         n_look_ahead_rows : int, optional, defaults to 0
             If >0 then each returned DataFrame will have a `look_ahead`
-            property which will be a DataFrame of length `n_look_ahead_rows`
-            of the data immediately in front of the data in the main DataFrame.
+            DataFrame of length `n_look_ahead_rows` with the data immediately
+            in front of the data in the main DataFrame.
         chunksize : int, optional
 
         Returns
-        ------- 
-        generator of DataFrame objects
-            Each DataFrame is has extra attributes:
+        -------
+        generator of tuple of DataFrame objects
+            Main DataFrame has extra attributes:
                 - timeframe : TimeFrame of section intersected with self.window
-                - look_ahead : pd.DataFrame:
-                    with `n_look_ahead_rows` rows.  The first row will be for
-                    `section.end`.  `look_ahead` stores data which appears on 
-                    disk immediately after `section.end`; i.e. it ignores
-                    the next `section.start`.
+            `look_ahead` DataFrame with len `n_look_ahead_rows`
+                Note: The first row will be for `section.end`.
+                `look_ahead` stores data which appears on disk immediately after
+                `section.end`; i.e. it ignores the next `section.start`.
 
             Returns an empty DataFrame if no data is available for the
             specified section (or if the section.intersection(self.window)
@@ -103,7 +113,7 @@ class DataStore(object):
         KeyError if `key` is not in store.
         """
         raise NotImplementedError("NotImplementedError")
-        
+
     def append(self, key, value):
         """
         Parameters
@@ -118,7 +128,7 @@ class DataStore(object):
         data in the table, so be careful.
         """
         raise NotImplementedError("NotImplementedError")
-        
+
     def put(self, key, value):
         """
         Parameters
@@ -127,7 +137,7 @@ class DataStore(object):
         value : pd.DataFrame
         """
         raise NotImplementedError("NotImplementedError")
-        
+
     def remove(self, key, value):
         """
         Parameters
@@ -136,8 +146,8 @@ class DataStore(object):
         value : pd.DataFrame
         """
         raise NotImplementedError("NotImplementedError")
-        
-    def load_metadata(self, key='/'):
+
+    def load_metadata(self, key="/"):
         """
         Parameters
         ----------
@@ -149,7 +159,7 @@ class DataStore(object):
         metadata : dict
         """
         raise NotImplementedError("NotImplementedError")
-        
+
     def save_metadata(self, key, metadata):
         """
         Parameters
@@ -158,20 +168,20 @@ class DataStore(object):
         metadata : dict
         """
         raise NotImplementedError("NotImplementedError")
-        
-    def elements_below_key(self, key='/'):
+
+    def elements_below_key(self, key="/"):
         """
         Returns
         -------
         list of strings
         """
-    
+
     def close(self):
         raise NotImplementedError("NotImplementedError")
 
     def open(self):
         raise NotImplementedError("NotImplementedError")
-        
+
     def get_timeframe(self, key):
         """
         Returns
@@ -181,13 +191,13 @@ class DataStore(object):
         raise NotImplementedError("NotImplementedError")
 
 
-def write_yaml_to_file(metadata_filename, metadata):
-    metadata_file = open(metadata_filename, 'w')
+def write_yaml_to_file(metadata_filename: str, metadata) -> None:
+    metadata_file = open(metadata_filename, "w")
     yaml.dump(metadata, metadata_file)
     metadata_file.close()
 
 
-def join_key(*args):
+def join_key(*args: list[str]) -> str:
     """
     Examples
     --------
@@ -200,16 +210,17 @@ def join_key(*args):
     >>> join_key('')
     '/'
     """
-    key = '/'
+    key = "/"
     for arg in args:
-        arg_stripped = str(arg).strip('/')
+        arg_stripped = str(arg).strip("/")
         if arg_stripped:
-            key += arg_stripped + '/'
+            key += arg_stripped + "/"
     if len(key) > 1:
-        key = key[:-1] # remove last trailing slash
+        key = key[:-1]  # remove last trailing slash
     return key
-        
-def convert_datastore(input_store, output_store):
+
+
+def convert_datastore(input_store: DataStore, output_store: DataStore) -> None:
     """
     Parameters
     ----------
@@ -218,21 +229,19 @@ def convert_datastore(input_store, output_store):
     """
     # dataset metadata
     metadata = input_store.load_metadata()
-    output_store.save_metadata('/', metadata)
+    output_store.save_metadata("/", metadata)
     for building in input_store.elements_below_key():
-        building_key = '/'+building
+        building_key = "/" + building
         # building metadata
         metadata = input_store.load_metadata(building_key)
         output_store.save_metadata(building_key, metadata)
         for utility in input_store.elements_below_key(building):
-            utility_key = building_key+'/'+utility
+            utility_key = building_key + "/" + utility
             for meter in input_store.elements_below_key(utility_key):
                 # ignore cache (should this appear as an element below key?)
-                if meter == 'cache':
+                if meter == "cache":
                     continue
-                meter_key = utility_key+'/'+meter
+                meter_key = utility_key + "/" + meter
                 # store meter data
                 for df in input_store.load(meter_key):
                     output_store.append(meter_key, df)
-
-

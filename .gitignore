@@ -1,21 +1,25 @@
+# System, build, IDE files/folders
+__pycache__/
+_build/
+.DS_Store
+.idea
+.ipynb_checkpoints
 .project
 .pydevproject
-*.pyc
-*.*~
-*.log
-profile.txt
-*.so
+.pytest_cache/
+.ropeproject
+.ruff_cache/
+.venv/
 build/
-_build/
-*.egg-info/
 dist/
-.ropeproject/
-.ipynb_checkpoints/
+venv/
+profile.txt
+*.*~
+*.egg-info
+*.log
+*.pyc
+*.so
 *.swp
-notebooks/*.h5
-.idea/*
-.idea
-.DS_Store
 
 # Ignoring Local datasets: 
 data/REDD
@@ -23,4 +27,3 @@ data/ukdale
 *.h5
 *.tar
 *.dat
-

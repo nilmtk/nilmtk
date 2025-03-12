@@ -1,5 +1,7 @@
 import unittest
+
 import pandas as pd
+
 from nilmtk.timeframe import TimeFrame, merge_timeframes
 
 
@@ -27,7 +29,7 @@ class TestTimeFrame(unittest.TestCase):
 
     def test_time_delta(self):
         tf = TimeFrame("2012-01-01 00:00:00", "2013-01-01 00:00:00")
-        self.assertAlmostEqual(tf.timedelta.total_seconds(), 60*60*24*366)
+        self.assertAlmostEqual(tf.timedelta.total_seconds(), 60 * 60 * 24 * 366)
 
     def test_intersection(self):
         tf = TimeFrame("2012-01-01 00:00:00", "2013-01-01 00:00:00")
@@ -120,21 +122,20 @@ class TestTimeFrame(unittest.TestCase):
             self.assertEqual(union.start, ts1)
             self.assertEqual(union.end, ts4)
 
-        test_u("2011-01-01 00:00:00", "2011-02-01 00:00:00",
-               "2011-02-01 00:00:00", "2011-03-01 00:00:00")
-        test_u("2011-01-01 00:00:00", "2011-01-15 00:00:00",
-               "2011-02-01 00:00:00", "2011-03-01 00:00:00")
+        test_u("2011-01-01 00:00:00", "2011-02-01 00:00:00", "2011-02-01 00:00:00", "2011-03-01 00:00:00")
+        test_u("2011-01-01 00:00:00", "2011-01-15 00:00:00", "2011-02-01 00:00:00", "2011-03-01 00:00:00")
 
     def test_merge_timeframes(self):
-        tfs = [TimeFrame("2010-01-01", "2011-01-01"),
-               TimeFrame("2011-01-01", "2011-06-01"),
-               TimeFrame("2012-01-01", "2013-01-01")]
+        tfs = [
+            TimeFrame("2010-01-01", "2011-01-01"),
+            TimeFrame("2011-01-01", "2011-06-01"),
+            TimeFrame("2012-01-01", "2013-01-01"),
+        ]
 
         merged = merge_timeframes(tfs)
-        correct_answer = [TimeFrame("2010-01-01", "2011-06-01"),
-                          TimeFrame("2012-01-01", "2013-01-01")]
+        correct_answer = [TimeFrame("2010-01-01", "2011-06-01"), TimeFrame("2012-01-01", "2013-01-01")]
         self.assertEqual(merged, correct_answer)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

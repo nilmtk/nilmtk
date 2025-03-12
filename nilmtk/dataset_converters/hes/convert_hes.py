@@ -1,15 +1,17 @@
+import shutil
+import tempfile
 from os.path import join
-import pandas as pd
-import numpy as np
-from nilmtk.utils import get_module_directory
-from nilmtk import DataSet
-from nilmtk.utils import get_datastore
-from nilmtk.datastore import Key
-from nilmtk.measurement import LEVEL_NAMES
-from nilm_metadata import convert_yaml_to_hdf5
-import tempfile, shutil
 from sys import stderr
+
+import numpy as np
+import pandas as pd
 import yaml
+from nilm_metadata import convert_yaml_to_hdf5
+
+from ...datastore.key import Key
+from ...measurement import LEVEL_NAMES
+from ...utils import get_datastore, get_module_directory
+
 """
 TODO
 ----
@@ -42,29 +44,28 @@ HES notes
   activation over a year.
 """
 
-FILENAMES = ['agd-{s}/appliance_group_data-{s}.csv'.format(s=s) for s in
-             ['1a','1b','1c','1d','2','3']]
-CHUNKSIZE = 1E6 # number of rows
-COL_NAMES = ['interval id', 'house id', 'appliance code', 'date', 'data', 'time']
+FILENAMES = ["agd-{s}/appliance_group_data-{s}.csv".format(s=s) for s in ["1a", "1b", "1c", "1d", "2", "3"]]
+CHUNKSIZE = 1e6  # number of rows
+COL_NAMES = ["interval id", "house id", "appliance code", "date", "data", "time"]
 LAST_PWR_COLUMN = 250
-NANOSECONDS_PER_TENTH_OF_AN_HOUR = 1E9 * 60 * 6
+NANOSECONDS_PER_TENTH_OF_AN_HOUR = 1e9 * 60 * 6
 MAINS_CODES = [240, 241]
 TEMPERATURE_CODES = list(range(251, 256))
 CIRCUIT_CODES = list(range(208, 218)) + [222]
-#E_MEASUREMENT = Measurement('energy', 'active')
+# E_MEASUREMENT = Measurement('energy', 'active')
+
 
 def load_list_of_house_ids(data_dir):
     """Returns a list of house IDs in HES (ints)."""
-    filename = join(data_dir, 'anonhes', 'ipsos-anonymised-corrected_310713.csv')
+    filename = join(data_dir, "anonhes", "ipsos-anonymised-corrected_310713.csv")
     series = pd.read_csv(filename, usecols=[0], index_col=False, squeeze=True)
     return series.tolist()
-
 
     """Load data from UK Government's Household Electricity Survey 
     (the cleaned version of the dataset released in summer 2013).
     """
 
-    # TODO: re-use code from 
+    # TODO: re-use code from
     # https://github.com/JackKelly/pda/blob/master/scripts/hes/load_hes.py
 
     """
@@ -89,37 +90,42 @@ def load_list_of_house_ids(data_dir):
         * convert keys of `dataset.buildings`
     """
 
-def convert_hes(data_dir, output_filename, format='HDF', max_chunks=None):
-    metadata = {
-        'name': 'HES',
-        'geographic_coordinates': (51.464462,-0.076544), # London
-        'timezone': 'Europe/London'
-    }
-    
+
+def convert_hes(data_dir, output_filename, format="HDF", max_chunks=None):
+    _metadata = {
+        "name": "HES",
+        "geographic_coordinates": (51.464462, -0.076544),
+        "timezone": "Europe/London",
+    }  # London
+
     # Open DataStore
-    store = get_datastore(output_filename, format, mode='w')
-    
+    store = get_datastore(output_filename, format, mode="w")
+
     # load list of appliances
-    hes_to_nilmtk_appliance_lookup = pd.read_csv(join(get_module_directory(), 
-                                        'dataset_converters', 
-                                        'hes', 
-                                        'hes_to_nilmtk_appliance_lookup.csv'))
+    hes_to_nilmtk_appliance_lookup = pd.read_csv(
+        join(
+            get_module_directory(),
+            "dataset_converters",
+            "hes",
+            "hes_to_nilmtk_appliance_lookup.csv",
+        )
+    )
 
     # load list of houses
     hes_house_ids = load_list_of_house_ids(data_dir)
     nilmtk_house_ids = np.arange(1, len(hes_house_ids) + 1)
-    hes_to_nilmtk_house_ids = dict(zip(hes_house_ids, nilmtk_house_ids))
+    _hes_to_nilmtk_house_ids = dict(zip(hes_house_ids, nilmtk_house_ids))
 
     # array of hes_house_codes: nilmtk_building_code = house_codes.index(hes_house_code)
     house_codes = []
-    
-    # map 
+
+    # map
     house_appliance_codes = dict()
 
     # Create a temporary metadata dir
-    original_metadata_dir = join(get_module_directory(), 'dataset_converters', 'hes', 'metadata')
+    original_metadata_dir = join(get_module_directory(), "dataset_converters", "hes", "metadata")
     tmp_dir = tempfile.mkdtemp()
-    metadata_dir = join(tmp_dir, 'metadata')
+    metadata_dir = join(tmp_dir, "metadata")
     shutil.copytree(original_metadata_dir, metadata_dir)
     print("Using temporary dir for metadata:", metadata_dir)
 
@@ -127,10 +133,9 @@ def convert_hes(data_dir, output_filename, format='HDF', max_chunks=None):
     for filename in FILENAMES:
         # Load appliance energy data chunk-by-chunk
         full_filename = join(data_dir, filename)
-        print('Loading', full_filename)
+        print("Loading", full_filename)
         try:
-            reader = pd.read_csv(full_filename, names=COL_NAMES, 
-                                 index_col=False, chunksize=CHUNKSIZE)
+            reader = pd.read_csv(full_filename, names=COL_NAMES, index_col=False, chunksize=CHUNKSIZE)
         except IOError as e:
             print(e, file=stderr)
             continue
@@ -141,113 +146,113 @@ def convert_hes(data_dir, output_filename, format='HDF', max_chunks=None):
             if max_chunks is not None and chunk_i >= max_chunks:
                 break
 
-            print(' processing chunk', chunk_i, 'of', filename)
+            print(" processing chunk", chunk_i, "of", filename)
             # Convert date and time columns to np.datetime64 objects
-            dt = chunk['date'] + ' ' + chunk['time']
-            del chunk['date']
-            del chunk['time']
-            chunk['datetime'] = pd.to_datetime(dt, format='%Y-%m-%d %H:%M:%S', utc=True)
+            dt = chunk["date"] + " " + chunk["time"]
+            del chunk["date"]
+            del chunk["time"]
+            chunk["datetime"] = pd.to_datetime(dt, format="%Y-%m-%d %H:%M:%S", utc=True)
 
             # Data is either tenths of a Wh or tenths of a degree
-            chunk['data'] *= 10
-            chunk['data'] = chunk['data'].astype(np.float32)
+            chunk["data"] *= 10
+            chunk["data"] = chunk["data"].astype(np.float32)
 
             # Iterate over houses in chunk
-            for hes_house_id, hes_house_id_df in chunk.groupby('house id'):
+            for hes_house_id, hes_house_id_df in chunk.groupby("house id"):
                 if hes_house_id not in house_codes:
                     house_codes.append(hes_house_id)
-                    
+
                 if hes_house_id not in house_appliance_codes.keys():
                     house_appliance_codes[hes_house_id] = []
-                
-                nilmtk_house_id = house_codes.index(hes_house_id)+1
-                
+
+                nilmtk_house_id = house_codes.index(hes_house_id) + 1
+
                 # Iterate over appliances in house
-                for appliance_code, appliance_df in chunk.groupby('appliance code'):
+                for appliance_code, appliance_df in chunk.groupby("appliance code"):
                     if appliance_code not in house_appliance_codes[hes_house_id]:
                         house_appliance_codes[hes_house_id].append(appliance_code)
-                    nilmtk_meter_id = house_appliance_codes[hes_house_id].index(appliance_code)+1
-                    _process_meter_in_chunk(nilmtk_house_id, nilmtk_meter_id, hes_house_id_df, store, appliance_code)
-                    
+                    nilmtk_meter_id = house_appliance_codes[hes_house_id].index(appliance_code) + 1
+                    _process_meter_in_chunk(
+                        nilmtk_house_id,
+                        nilmtk_meter_id,
+                        hes_house_id_df,
+                        store,
+                        appliance_code,
+                    )
+
             chunk_i += 1
-            
-            
-    print('houses with some data loaded:', house_appliance_codes.keys())
-    
+
+    print("houses with some data loaded:", house_appliance_codes.keys())
+
     store.close()
-    
+
     # generate building yaml metadata
     for hes_house_id in house_codes:
-        nilmtk_building_id = house_codes.index(hes_house_id)+1
+        nilmtk_building_id = house_codes.index(hes_house_id) + 1
         building_metadata = {}
-        building_metadata['instance'] = nilmtk_building_id
-        building_metadata['original_name'] = int(hes_house_id) # use python int
-        building_metadata['elec_meters'] = {}
-        building_metadata['appliances'] = []
-        
+        building_metadata["instance"] = nilmtk_building_id
+        building_metadata["original_name"] = int(hes_house_id)  # use python int
+        building_metadata["elec_meters"] = {}
+        building_metadata["appliances"] = []
+
         # initialise dict of instances of each appliance type
         instance_counter = {}
-        
+
         for appliance_code in house_appliance_codes[hes_house_id]:
-            nilmtk_meter_id = house_appliance_codes[hes_house_id].index(appliance_code)+1
+            nilmtk_meter_id = house_appliance_codes[hes_house_id].index(appliance_code) + 1
             # meter metadata
             if appliance_code in MAINS_CODES:
-                meter_metadata = {'device_model': 'multivoies',
-                                  'site_meter': True}
+                meter_metadata = {"device_model": "multivoies", "site_meter": True}
                 break
             elif appliance_code in CIRCUIT_CODES:
-                meter_metadata = {'device_model': 'multivoies'}
+                meter_metadata = {"device_model": "multivoies"}
                 break
             elif appliance_code in TEMPERATURE_CODES:
                 break
-            else: # is appliance
-                meter_metadata = {'device_model': 'wattmeter'}
-                
-            # only appliance meters at this point
-            building_metadata['elec_meters'][nilmtk_meter_id] = meter_metadata
-            # appliance metadata
-            lookup_row = hes_to_nilmtk_appliance_lookup[hes_to_nilmtk_appliance_lookup.Code==appliance_code].iloc[0]
-            appliance_metadata = {'original_name': lookup_row.Name, 
-                                      'meters': [nilmtk_meter_id] }
-            # appliance type
-            appliance_metadata.update({'type': lookup_row.nilmtk_name})
-            # TODO appliance room
-            
-            # appliance instance number
-            if instance_counter.get(lookup_row.nilmtk_name) == None:
-                instance_counter[lookup_row.nilmtk_name] = 0
-            instance_counter[lookup_row.nilmtk_name] += 1 
-            appliance_metadata['instance'] = instance_counter[lookup_row.nilmtk_name]
-            
-            building_metadata['appliances'].append(appliance_metadata)
-            
-            
-        building = 'building{:d}'.format(nilmtk_building_id)
-        
-        yaml_full_filename = join(
-            metadata_dir, building + '.yaml'
-        )
+            else:  # is appliance
+                meter_metadata = {"device_model": "wattmeter"}
 
-        with open(yaml_full_filename, 'w') as outfile:
-            #print(building_metadata)
+            # only appliance meters at this point
+            building_metadata["elec_meters"][nilmtk_meter_id] = meter_metadata
+            # appliance metadata
+            lookup_row = hes_to_nilmtk_appliance_lookup[hes_to_nilmtk_appliance_lookup.Code == appliance_code].iloc[0]
+            appliance_metadata = {
+                "original_name": lookup_row.Name,
+                "meters": [nilmtk_meter_id],
+            }
+            # appliance type
+            appliance_metadata.update({"type": lookup_row.nilmtk_name})
+            # TODO appliance room
+
+            # appliance instance number
+            if instance_counter.get(lookup_row.nilmtk_name) is None:
+                instance_counter[lookup_row.nilmtk_name] = 0
+            instance_counter[lookup_row.nilmtk_name] += 1
+            appliance_metadata["instance"] = instance_counter[lookup_row.nilmtk_name]
+
+            building_metadata["appliances"].append(appliance_metadata)
+
+        building = "building{:d}".format(nilmtk_building_id)
+
+        yaml_full_filename = join(metadata_dir, building + ".yaml")
+
+        with open(yaml_full_filename, "w") as outfile:
+            # print(building_metadata)
             outfile.write(yaml.dump(building_metadata))
-            
+
     # write yaml metadata to hdf5
-    convert_yaml_to_hdf5(
-        metadata_dir,
-        output_filename
-    )
+    convert_yaml_to_hdf5(metadata_dir, output_filename)
 
     # remote the temporary dir when finished
     shutil.rmtree(tmp_dir)
-    
+
 
 def _process_meter_in_chunk(nilmtk_house_id, meter_id, chunk, store, appliance_code):
-    data = chunk['data'].values
-    index = chunk['datetime']
+    data = chunk["data"].values
+    index = chunk["datetime"]
     df = pd.DataFrame(data=data, index=index)
-    df.columns = pd.MultiIndex.from_tuples([('power', 'active')])
-    
+    df.columns = pd.MultiIndex.from_tuples([("power", "active")])
+
     # Modify the column labels to reflect the power measurements recorded.
     df.columns.set_names(LEVEL_NAMES, inplace=True)
     df = df.sort_index()

@@ -1,17 +1,19 @@
 import unittest
-from os.path import join
 from os import remove
-from .testingtools import data_dir
-from nilmtk.datastore import HDFDataStore
+from os.path import join
+
 from nilmtk import DataSet
+from nilmtk.datastore import HDFDataStore
 from nilmtk.legacy.disaggregate import FHMM
+
+from .testingtools import data_dir
 
 
 class TestFHMM(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        filename = join(data_dir(), 'co_test.h5')
+        filename = join(data_dir(), "co_test.h5")
         cls.dataset = DataSet(filename)
 
     @classmethod
@@ -23,13 +25,12 @@ class TestFHMM(unittest.TestCase):
         fhmm = FHMM()
         fhmm.train(elec)
         mains = elec.mains()
-        output = HDFDataStore('output.h5', 'w')
+        output = HDFDataStore("output.h5", "w")
         fhmm.disaggregate(mains, output, sample_period=1)
 
         for meter in range(2, 4):
-            df1 = output.store.get('/building1/elec/meter{}'.format(meter))
-            df2 = self.dataset.store.store.get(
-                '/building1/elec/meter{}'.format(meter))
+            df1 = output.store.get("/building1/elec/meter{}".format(meter))
+            df2 = self.dataset.store.store.get("/building1/elec/meter{}".format(meter))
 
             self.assertEqual((df1 == df2).sum().values[0], len(df1.index))
             self.assertEqual(len(df1.index), len(df2.index))
@@ -37,5 +38,5 @@ class TestFHMM(unittest.TestCase):
         remove("output.h5")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

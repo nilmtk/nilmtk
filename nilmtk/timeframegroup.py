@@ -1,10 +1,9 @@
-import matplotlib.pyplot as plt
-import pandas as pd
 from datetime import timedelta
 
-# NILMTK imports
-from nilmtk.consts import SECS_PER_DAY
-from nilmtk.timeframe import TimeFrame
+import matplotlib.pyplot as plt
+import pandas as pd
+
+from .timeframe import TimeFrame
 
 
 class TimeFrameGroup(list):
@@ -13,12 +12,11 @@ class TimeFrameGroup(list):
     def __init__(self, timeframes=None):
         if isinstance(timeframes, pd.PeriodIndex):
             periods = timeframes
-            timeframes = [TimeFrame(period.start_time, period.end_time)
-                          for period in periods]
+            timeframes = [TimeFrame(period.start_time, period.end_time) for period in periods]
         args = [timeframes] if timeframes else []
         super(TimeFrameGroup, self).__init__(*args)
 
-    def plot(self, ax=None, y=0, height=1, gap=0.05, color='b', **kwargs):
+    def plot(self, ax=None, y=0, height=1, gap=0.05, color="b", **kwargs):
         if ax is None:
             ax = plt.gca()
         ax.xaxis.axis_date()
@@ -26,8 +24,7 @@ class TimeFrameGroup(list):
         for timeframe in self:
             length = timeframe.timedelta
             bottom_left_corner = (timeframe.start, y + gap)
-            rect = plt.Rectangle(bottom_left_corner, length, height,
-                                 color=color, **kwargs)
+            rect = plt.Rectangle(bottom_left_corner, length, height, color=color, **kwargs)
             ax.add_patch(rect)
 
         ax.autoscale_view()
