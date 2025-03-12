@@ -22,7 +22,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install 'git+https://github.com/VorobiovM/nilm_metadata/tree/feature/setuptools_and_wheels_distribution#egg=nilm_metadata'
+        pip install git+https://github.com/VorobiovM/nilm_metadata.git@feature/setuptools_and_wheels_distribution
         pip install -e .[dev]
 
     - name: Lint with ruff
