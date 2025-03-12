@@ -6,18 +6,19 @@ build-backend = "setuptools.build_meta"
 name = "nilmtk"
 dynamic = ["version"]
 dependencies = [
-    "pandas",
-    "numpy",
+    "h5py",
+    "hdf5plugin ",
+    "hmmlearn~=0.3.0",
+    "jupyterlab",
+    "matplotlib",
     "networkx",
+    #"nilm_metadata",
+    "numpy",
+    "pandas~=2.2.0",
+    "scikit-learn",
     "scipy",
     "tables",
-    "scikit-learn",
-    "hmmlearn",
     "pyyaml",
-    "matplotlib",
-    "jupyterlab",
-    # "nilm_metadata>=0.2.5"
-    "nilm_metadata @ file:///home/arch/nilmtk/nilm_metadata-0.2.5.dev3+ge194fa2-py2.py3-none-any.whl",
 ]
 requires-python = ">= 3.11"
 authors = [{ name = "NILMTK developers" }]
@@ -47,7 +48,7 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-dev = ["black", "coverage", "coveralls", "isort", "pytest", "sphinx"]
+dev = ["coverage", "coveralls", "pytest", "ruff", "sphinx"]
 full = ["deddiag-loader", "psycopg2"]
 
 [project.urls]
@@ -72,9 +73,54 @@ testpaths = [
     "nilmtk/tests",
 ]
 
-[tool.black]
+[tool.ruff]
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".ipynb_checkpoints",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pyenv",
+    ".pytest_cache",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    ".vscode",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "nilmtk/legacy",
+    "node_modules",
+    "site-packages",
+    "tests",
+    "venv",
+    "*.ipynb",
+]
 line-length = 120
-target-version = ['py311']
+indent-width = 4
+target-version = "py311"
 
-[tool.isort]
-profile = "black"
+[tool.ruff.lint]
+select = ["E", "F"]
+ignore = ["E731", "F403", "F405"]
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.format]
+exclude = ["docs/source/conf.py"]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+docstring-code-format = false
+
+[project.scripts]
+generate_data = "nilmtk.tests.generate_data:create_all"
