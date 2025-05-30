@@ -103,7 +103,7 @@ setup(
         "scikit-learn>=0.21.2",
         "hmmlearn>=0.2.1",
         "pyyaml",
-        "matplotlib==3.1.3",
+        "matplotlib>=3.10.3",
         "jupyterlab"
     ],
     description="Estimate the energy consumed by individual appliances from "

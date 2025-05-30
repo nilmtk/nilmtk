@@ -9,7 +9,7 @@ import warnings
 import numpy as np
 import pandas as pd
 import networkx as nx
-from IPython.core.display import HTML, display
+from IPython.display import HTML, display
 from sklearn.metrics import mean_squared_error
 
 from nilmtk.datastore import HDFDataStore, CSVDataStore
