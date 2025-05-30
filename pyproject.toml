@@ -1,0 +1,96 @@
+[build-system]
+requires = ["hatchling>=1.21.0"]
+build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[project]
+name = "nilmtk"
+version = "0.4.1"
+description = "Non-Intrusive Load Monitoring Toolkit - Modernized for Python 3.11"
+readme = "README.md"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.11"
+authors = [
+    {name = "NILMTK Team", email = "nilmtk@example.com"}
+]
+keywords = ["energy", "disaggregation", "nilm", "smart-grid"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering",
+    "Operating System :: Microsoft :: Windows",
+]
+
+# Essential dependencies only (based on current NILMTK codebase)
+dependencies = [
+    "ipython>=8.7.0",
+    "nilm_metadata @ git+https://github.com/nilmtk/nilm_metadata.git",
+    "nose",
+    # Core scientific computing (Windows-compatible versions)
+    "numpy>=1.24.0",
+    "pandas>=2.0.0",
+    "scipy>=1.11.0",
+    "scikit-learn>=1.3.0",
+    # Data storage (essential for NILMTK-DF format)
+    "tables>=3.8.0", # PyTables for HDF5 support
+    "h5py>=3.9.0", # Additional HDF5 support
+    # Visualization (required by NILMTK plotting)
+    "matplotlib>=3.7.0",
+    # Graph algorithms (used by NILMTK internally)
+    "networkx>=3.0",
+    # Machine Learning (for FHMM algorithm)
+    "hmmlearn>=0.3.0",
+    # Utilities
+    "pyyaml>=6.0", # For configuration files
+    "tqdm>=4.65.0", # Progress bars
+]
+
+[project.optional-dependencies]
+# Development dependencies
+dev = [
+    "jupyter>=1.0.0",
+    "jupyterlab>=4.0.0",
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "black>=23.0.0",
+    "ruff>=0.0.280",
+]
+
+# Documentation
+docs = [
+    "sphinx>=7.0.0",
+    "sphinx-rtd-theme>=1.3.0",
+]
+
+[project.scripts]
+nilmtk-convert = "nilmtk.dataset_converters.cli:main"
+
+# UV-specific configuration
+[tool.uv]
+dev-dependencies = [
+    "pytest>=7.4.0",
+    "black>=23.0.0",
+    "ruff>=0.0.280",
+]
+
+
+# Code quality tools (Windows compatible)
+[tool.black]
+line-length = 88
+target-version = ['py311']
+
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+select = ["E", "F", "UP", "B", "SIM", "I"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "--cov=nilmtk --cov-report=html"
