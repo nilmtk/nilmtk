@@ -19,7 +19,7 @@ NILMTK is a toolkit designed to help **researchers** evaluate the accuracy of NI
 To install NILMTK, first install [uv](https://docs.astral.sh/uv/getting-started/installation/) and then run:<br>
 `uv pip install git+https://github.com/nilmtk/nilmtk.git`
 
-If you are a new user, read the [install instructions here](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/user_guide/install_user.md). It came to our attention that some users follow third-party tutorials to install NILMTK. Always remember to check the dates of such tutorials, many are very outdated and don't reflect NILMTK's current version or the recommended/supported setup.
+It came to our attention that some users follow third-party tutorials to install NILMTK. Always remember to check the dates of such tutorials, many are very outdated and don't reflect NILMTK's current version or the recommended/supported setup.
 
 # Why a toolkit for NILM?
 
