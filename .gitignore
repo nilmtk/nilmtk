@@ -17,6 +17,8 @@ notebooks/*.h5
 .idea/*
 .idea
 .DS_Store
+ci/
+conda/
 
 # Ignoring Local datasets: 
 data/REDD
