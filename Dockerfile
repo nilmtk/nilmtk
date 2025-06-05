@@ -1,25 +1,23 @@
-# Base image with Python 3.11
 FROM python:3.11-slim
 
-# Link back to the source repo so GitHub auto-associates the package
-LABEL org.opencontainers.image.source="https://github.com/nilmtk/nilmtk"
+LABEL org.opencontainers.image.source="https://github.com/enfuego27826/nilmtk"
 
-# Install build tools and Git for pip VCS installs
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-      build-essential \
-      git && \
+    apt-get install -y --no-install-recommends build-essential git curl && \
     rm -rf /var/lib/apt/lists/*
 
-# Set working directory
+# Install uv globally via pip
+RUN pip install uv
+
 WORKDIR /app
 
-# Copy source code
-COPY . /app
+# Copy pyproject.toml, uv.lock, and README.md so build backend can access metadata files
+COPY pyproject.toml uv.lock* README.md ./
 
-# Upgrade pip and install NILMTK (using setup.py)
-RUN pip install --upgrade pip && \
-    pip install .
+# Install nilmtk using uv pip install
+RUN uv pip install --system .
 
-# Default to a shell for interactive use
+# Copy all source files after install (optional, if you want the whole repo inside container)
+COPY . .
+
 CMD ["bash"]
