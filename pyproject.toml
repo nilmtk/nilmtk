@@ -94,3 +94,6 @@ select = ["E", "F", "UP", "B", "SIM", "I"]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 addopts = "--cov=nilmtk --cov-report=html"
+
+[tool.hatch.build.targets.wheel]
+packages = ["nilmtk"]

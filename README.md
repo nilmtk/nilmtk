@@ -1,5 +1,3 @@
-[![Build Status](https://travis-ci.org/nilmtk/nilmtk.svg?branch=master)](https://travis-ci.org/nilmtk/nilmtk) [![Install with conda](https://anaconda.org/nilmtk/nilmtk/badges/installer/conda.svg)](https://anaconda.org/nilmtk/nilmtk) [![conda package version](https://anaconda.org/nilmtk/nilmtk/badges/version.svg)](https://anaconda.org/nilmtk/nilmtk)
-
 # NILMTK: Non-Intrusive Load Monitoring Toolkit
 
 Non-Intrusive Load Monitoring (NILM) is the process of estimating the
@@ -15,9 +13,30 @@ NILMTK is a toolkit designed to help **researchers** evaluate the accuracy of NI
 
 [NILMTK Documentation](https://github.com/nilmtk/nilmtk/tree/master/docs/manual)
 
-## Installation
+# Installation
+
+## UV Support
+This Python package uses uv for installation. uv is a fast and modern Python package manager that replaces tools like pip and virtualenv, with support for pyproject.toml and ultra-fast dependency resolution. 
+
 To install NILMTK, first install [uv](https://docs.astral.sh/uv/getting-started/installation/) and then run:<br>
-`uv pip install git+https://github.com/nilmtk/nilmtk.git`
+```
+uv pip install git+https://github.com/nilmtk/nilmtk.git
+```
+
+## Docker Support
+Docker is an open-source platform for developing, shipping, and running applications in lightweight, portable containers that bundle code, runtime, libraries, and system tools into a single package. It ensures everyone runs the same environment, regardless of host OS, and keeps NILMTK’s dependencies contained without polluting the system Python.
+
+
+Build and run locally
+```
+docker build -t nilmtk-uv .
+docker run --rm -it nilmtk-uv bash
+```
+Pull the pre-built image
+```
+docker pull ghcr.io/enfuego27826/nilmtk:latest
+docker run --rm -it ghcr.io/enfuego27826/nilmtk:latest bash
+```
 
 It came to our attention that some users follow third-party tutorials to install NILMTK. Always remember to check the dates of such tutorials, many are very outdated and don't reflect NILMTK's current version or the recommended/supported setup.
 
