@@ -1,0 +1,130 @@
+instance: 1
+original_name: RAE
+elec_meters:
+  1: &PS24_mains
+    site_meter: true
+    device_model: PS24
+  2: &PS24
+    submeter_of: 0
+    device_model: PS24
+  3: *PS24
+  4: *PS24
+  5: *PS24
+  6: *PS24
+  7: *PS24
+  8: *PS24
+  9: *PS24
+  10: *PS24
+  11: *PS24
+  12: *PS24
+  13: *PS24
+  14: *PS24
+  15: *PS24
+  16: *PS24
+  17: *PS24
+  18: *PS24
+appliances:
+
+- original_name: sub1+sub2
+  type: oven
+  description:  Kitchen Wall Oven L1 and L2
+  instance: 1
+  meters: [2]
+
+- original_name: sub3+sub4
+  type: light
+  description: Kitchen Counter Plugs L1 and L2
+  instance: 1
+  meters: [3]
+
+- original_name: sub5+sub6
+  type: tumble dryer
+  description: Clothes Dryer L1 and L2
+  instance: 1
+  meters: [4]
+
+- original_name: sub7
+  type: sockets
+  description: Upstairs Bedroom AFCI Arc-Fault Plugs
+  instance: 1
+  meters: [5]
+
+- original_name: sub8
+  type: fridge
+  description: Kitchen Fridge
+  instance: 1
+  meters: [6]
+
+- original_name: sub9
+  type: washing machine
+  description: Clothes Washer
+  instance: 1
+  meters: [7]
+
+- original_name: sub10
+  type: dishwasher
+  description: Kitchen Dishwasher
+  instance: 1
+  meters: [8]
+
+- original_name: sub11
+  type: electric furnace
+  description: Furnace & Hot Water Unit (incl. Furnace Room Plug)
+  instance: 1
+  meters: [9]
+
+- original_name: sub12
+  type: light
+  description: Basement Plugs & Lights (incl. Outside Plugs)
+  instance: 2
+  meters: [10]
+
+- original_name: sub13+sub14
+  type: heat pump
+  description: Heat Pump L1 and L2
+  instance: 1
+  meters: [11]
+
+- original_name: sub15+sub16
+  type: subpanel
+  description: Garage Sub-Panel L1 and L2
+  instance: 1
+  meters: [12]
+
+- original_name: sub17+sub18
+  type: fan
+  description: Upstairs Plugs & Lights L1 (incl. Bathroom Lights and Vent Fan, Smoke Alarms, Living Room Plugs) and L2
+  instance: 2
+  meters: [13]
+
+- original_name: sub19
+  type: television
+  description: Basement Blue Plugs (incl. Ent. TV/Amp/DVD/PVR)
+  instance: 1
+  meters: [14]
+
+- original_name: sub20
+  type: fan
+  description: Bathrooms (incl. 3 GFCI Plugs, 2 Lights, 1 Vent Fan, Chest Freezer)
+  instance: 1
+  meters: [15]
+
+- original_name: sub21+sub22
+  type: subpanel
+  description: Rental Suite Sub-Panel L1 and L2
+  instance: 2
+  meters: [16]
+
+- original_name: sub23
+  type: microwave
+  description: Misc. Plugs (incl. Dining Room, Gas Cooktop, Microwave)
+  instance: 1
+  meters: [17]
+
+- original_name: sub24
+  type: modem
+  description: Home Office (incl. Telco/Cable/Net/Security Equip.)
+  instance: 1
+  meters: [18]
+
+construction_year: 1955
