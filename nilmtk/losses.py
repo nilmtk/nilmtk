@@ -16,6 +16,15 @@ def f1score(app_gt, app_pred):
 
     return f1_score(gt_temp, pred_temp)
 
+def mcc(app_gt, app_pred):
+    # https://scikit-learn.org/stable/modules/generated/sklearn.metrics.matthews_corrcoef.html?highlight=mcc
+    threshold = 10
+    gt_temp = np.array(app_gt)
+    gt_temp = np.where(gt_temp<threshold,0,1)
+    pred_temp = np.array(app_pred)
+    pred_temp = np.where(pred_temp<threshold,0,1)
+    return matthews_corrcoef(gt_temp, pred_temp)
+
 def relative_error(app_gt,app_pred):
     constant = 1
     numerator = np.abs(app_gt - app_pred)
@@ -41,3 +50,9 @@ def nep(app_gt,app_pred):
     denominator = np.sum(app_gt)
 
     return numerator/denominator
+
+def estacc(app_gt,app_pred):
+    # Estimation Accuracy as in: http://makonin.com/doc/ENEF_2014.pdf
+    numerator = np.sum(np.abs(app_gt-app_pred))
+    denominator = 2 * np.sum(app_gt)
+    return 1 - numerator/denominator
