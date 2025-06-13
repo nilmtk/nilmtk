@@ -131,8 +131,7 @@ def _convert(input_path, store, measurement_mapping_func, tz, sort_index=True):
                 df_year.insert(0, 'Date & Time', date_time_df)
                 df_year.insert(1, 'use', mains_df)
                 # Append all years data to 1 dataframe
-                df_all_years = df_all_years.append(
-                    df_year, ignore_index=True, sort=False)
+                df_all_years = pd.concat([df_all_years, df_year], ignore_index=True, sort=False)
         # Change index to datetime format
         df_all_years['Date & Time'] = pd.to_datetime(
             df_all_years['Date & Time'], utc=True)

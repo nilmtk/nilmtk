@@ -222,9 +222,11 @@ def f1_score(predictions, ground_truth):
             aligned_states_chunk = aligned_states_chunk.astype(int)
             score = sklearn_f1_score(aligned_states_chunk.iloc[:, 0],
                                      aligned_states_chunk.iloc[:, 1])
-            scores_for_meter = scores_for_meter.append(
-                {'score': score, 'num_samples': len(aligned_states_chunk)},
-                ignore_index=True)
+            new_row = pd.DataFrame([{
+                'score': score, 
+                'num_samples': len(aligned_states_chunk)
+            }])
+            scores_for_meter = pd.concat([scores_for_meter, new_row], ignore_index=True)
 
         # Calculate weighted mean
         num_samples = scores_for_meter['num_samples'].sum()
