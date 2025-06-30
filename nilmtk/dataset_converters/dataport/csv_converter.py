@@ -292,7 +292,7 @@ def extract_building_data(csv_filename, b_id, b_metadata, chunksize, csv_b_cache
             if b_data.empty:
                 b_data = b_chunk
             else:
-                b_data = b_data.append(b_chunk)
+                b_data = pd.concat([b_data, b_chunk])
 
     print("\t" + " " * len(msg), end='\r')
     if not b_data.empty:
