@@ -183,13 +183,12 @@ class TimeFrame(object):
     def query_terms(self, variable_name='timeframe'):
         if self.empty:
             raise Exception("TimeFrame is empty.")
-        terms = []
+        terms = ""
         if self.start is not None:
-            terms.append("index>=" + variable_name + ".start")
+            terms += "index>=" + variable_name + ".start"
         if self.end is not None:
-            terms.append("index<" + ("=" if self.include_end else "")
-                         + variable_name + ".end")
-        return None if terms == [] else terms
+            terms += " and index<" + ("=" if self.include_end else "") + variable_name + ".end"
+        return None if terms == '' else terms
 
     def slice(self, frame):
         """Slices `frame` using self.start and self.end.
