@@ -139,7 +139,7 @@ class Electric(object):
                 resample_kwargs = {}
 
             def resample_func(df):
-                resample_kwargs['rule'] = '{:d}S'.format(sample_period)
+                resample_kwargs['rule'] = '{:d}s'.format(sample_period)
                 return safe_resample(df, **resample_kwargs)
 
             kwargs.setdefault('preprocessing', []).append(
@@ -838,7 +838,7 @@ def align_two_meters(master, slave, func='power_series'):
     master, slave : ElecMeter or MeterGroup instances
     """
     sample_period = master.sample_period()
-    period_alias = '{:d}S'.format(sample_period)
+    period_alias = '{:d}s'.format(sample_period)
     sections = master.good_sections()
     master_generator = getattr(master, func)(sections=sections)
     for master_chunk in master_generator:

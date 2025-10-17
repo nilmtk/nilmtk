@@ -700,7 +700,7 @@ class MeterGroup(Electric):
         columns = pd.MultiIndex.from_tuples(
             self._convert_physical_quantity_and_ac_type_to_cols(**kwargs)['columns'],
             names=LEVEL_NAMES)
-        freq = '{:d}S'.format(int(sample_period))
+        freq = '{:d}s'.format(int(sample_period))
         verbose = kwargs.get('verbose')
 
         # Check for empty sections
