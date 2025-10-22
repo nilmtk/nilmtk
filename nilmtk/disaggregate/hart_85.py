@@ -583,9 +583,13 @@ class Hart85(Disaggregator):
         pickle_out.close()
 
     def import_model(self, filename):
-        pickle_in = open(filename)
+        pickle_in = open(filename, "rb")
         self.model = pickle.load(pickle_in)
         self.columns = self.model['columns']
+        self.best_matches = self.model['best_matches']
+        self.appliances = []
+        for appliance in self.model['best_matches']:
+            self.appliances.append(appliance)
         self.state_threshold = self.model['state_threshold']
         self.noise_level = self.model['noise_level']
         self.steady_states = self.model['steady_states']
