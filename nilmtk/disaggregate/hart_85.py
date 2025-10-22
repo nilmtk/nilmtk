@@ -305,10 +305,10 @@ class Hart85(Disaggregator):
                         abs_value_transient_minus_centroid["multidim"].idxmin())
                 if positive:
                     # Turned on
-                    states.loc[transient_tuple[0]][index_least_delta] = 1
+                    states.loc[transient_tuple[0], index_least_delta] = 1
                 else:
                     # Turned off
-                    states.loc[transient_tuple[0]][index_least_delta] = 0
+                    states.loc[transient_tuple[0], index_least_delta] = 0
         prev = states.iloc[-1].to_dict()
         power_chunk_dict = self.assign_power_from_states(states, prev)
         self.power_dict = power_chunk_dict
@@ -447,10 +447,10 @@ class Hart85(Disaggregator):
                             abs_value_transient_minus_centroid["multidim"].idxmin())
                     if positive:
                         # Turned on
-                        states.loc[transient_tuple[0]][index_least_delta] = 1
+                        states.loc[transient_tuple[0], index_least_delta] = 1
                     else:
                         # Turned off
-                        states.loc[transient_tuple[0]][index_least_delta] = 0
+                        states.loc[transient_tuple[0], index_least_delta] = 0
             prev = states.iloc[-1].to_dict()
             power_chunk_dict = self.assign_power_from_states(states, prev)
             self.power_dict = power_chunk_dict
