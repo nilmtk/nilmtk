@@ -9,12 +9,6 @@ import pandas as pd
 
 from pandas import Timestamp
 
-# check whether deddiag-loader package has already installed
-try:
-    from deddiag_loader import Connection, Items, MeasurementsExpanded
-except ImportError:
-    raise ImportError('Please install package deddiag-loader with "pip install deddiag-loader"')
-
 # DEDDIAG measurements [[(physical_quantity, ac_type)]]
 measurements_conf = [['power'], ['active']]
 
@@ -79,6 +73,12 @@ def _convert(connection, dest_file, start_date, end_date, tz, sort_index=True):
     sort_index : bool
         Defaults to True
     """
+
+    # check whether deddiag-loader package has already installed
+    try:
+        from deddiag_loader import Connection, Items, MeasurementsExpanded
+    except ImportError:
+        raise ImportError('Please install package deddiag-loader with "pip install deddiag-loader"')
 
     print(f"Loading house {house_nr}", end="... ")
     stdout.flush()
