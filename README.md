@@ -23,6 +23,11 @@ To install NILMTK, first install [uv](https://docs.astral.sh/uv/getting-started/
 uv pip install git+https://github.com/nilmtk/nilmtk.git
 ```
 
+To use the `deddiag` dataset, install the optional dependency with:
+```
+uv pip install "nilmtk[deddiag] @ git+https://github.com/nilmtk/nilmtk
+```
+
 ## Docker Support
 Docker is an open-source platform for developing, shipping, and running applications in lightweight, portable containers that bundle code, runtime, libraries, and system tools into a single package. It ensures everyone runs the same environment, regardless of host OS, and keeps NILMTK’s dependencies contained without polluting the system Python.
 

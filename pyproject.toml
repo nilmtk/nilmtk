@@ -52,6 +52,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+#  Dependencies for deddiag dataset loader
+deddiag = ["deddiag-loader"]
+
 # Development dependencies
 dev = [
     "jupyter>=1.0.0",
