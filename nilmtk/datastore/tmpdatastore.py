@@ -17,8 +17,3 @@ class TmpDataStore(HDFDataStore):
     @doc_inherit
     def close(self):
         self.store.close()
-        try:
-            os.remove(self.full_path)
-        except FileNotFoundError:
-            pass
-

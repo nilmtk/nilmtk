@@ -9,6 +9,7 @@ from .datastore.datastore import join_key
 from .utils import get_datastore
 from .timeframe import TimeFrame
 
+import nilmtk
 
 class DataSet(object):
     """
@@ -138,6 +139,14 @@ class DataSet(object):
 
     def elecs(self):
         return [building.elec for building in self.buildings.values()]
+
+    def close(self):
+        self.clear_cache()
+        nilmtk.STATS_CACHE.close()
+
+        if self.store is not None:
+            self.store.close()
+            self.store = None
 
     def clear_cache(self):
         for elec in self.elecs():
