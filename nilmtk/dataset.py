@@ -45,6 +45,12 @@ class DataSet(object):
         if filename is not None:
             self.import_metadata(get_datastore(filename, format))
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.close()
+
     def import_metadata(self, store):
         """
         Parameters
