@@ -30,7 +30,7 @@ classifiers = [
 # Essential dependencies only (based on current NILMTK codebase)
 dependencies = [
     "ipython>=8.7.0",
-    "nilm_metadata @ git+https://github.com/nilmtk/nilm_metadata.git",
+    "nilm_metadata @ git+https://github.com/nilmtk/nilm_metadata.git@59c9990de4836d77c0dcd807bd4293e39e0cc314",
     "nose",
     # Core scientific computing (Windows-compatible versions)
     "numpy>=1.24.0",
