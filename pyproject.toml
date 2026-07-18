@@ -75,9 +75,10 @@ docs = [
 nilmtk-convert = "nilmtk.dataset_converters.cli:main"
 
 # UV-specific configuration
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
     "black>=23.0.0",
     "ruff>=0.0.280",
 ]
@@ -96,7 +97,7 @@ line-length = 88
 select = ["E", "F", "UP", "B", "SIM", "I"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["tests", "nilmtk/tests"]
 python_files = ["test_*.py"]
 addopts = "--cov=nilmtk --cov-report=html"
 

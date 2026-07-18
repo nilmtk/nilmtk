@@ -203,11 +203,12 @@ class FHMM(Disaggregator):
     MIN_CHUNK_LENGTH : int
     """
 
-    def __init__(self):
+    def __init__(self, random_state=0):
         self.model = {}
         self.predictions = pd.DataFrame()
         self.MIN_CHUNK_LENGTH = 100
         self.MODEL_NAME = 'FHMM'
+        self.random_state = random_state
 
 
 
@@ -247,7 +248,9 @@ class FHMM(Disaggregator):
 
             if len(o) > 1:
                 o = np.array(o)
-                mod = hmm.GaussianHMM(2, "full")
+                mod = hmm.GaussianHMM(
+                    2, "full", random_state=self.random_state
+                )
                 mod.fit(o)
                 models[appliance] = mod
                 print("Means for %s are" % appliance)
@@ -271,7 +274,7 @@ class FHMM(Disaggregator):
         self.meters = [nilmtk.global_meter_group.select_using_appliances(type=appliance).meters[0]
                        for appliance in self.individual.keys()]
 
-    def train(self, metergroup, num_states_dict={}, **load_kwargs):
+    def train(self, metergroup, num_states_dict=None, **load_kwargs):
         """Train using 1d FHMM.
 
         Places the learnt model in `model` attribute
@@ -279,6 +282,9 @@ class FHMM(Disaggregator):
         Online HMMs are welcome if someone can contribute :)
         Assumes all pre-processing has been done.
         """
+        if num_states_dict is None:
+            num_states_dict = {}
+
         learnt_model = OrderedDict()
         num_meters = len(metergroup.meters)
         if num_meters > 12:
@@ -318,17 +324,36 @@ class FHMM(Disaggregator):
                 if num_apps_states:
                     num_total_states = sum(num_apps_states)
                     
-            if num_states_dict.get(meter) is not None or num_states_dict.get(meter) is not None:
-                # User has specified the number  of states for this appliance
-                num_total_states = num_states_dict.get(meter)
-
-            # Otherwise, find the optimum number of states via clustering
+            # Find state centroids for deterministic HMM initialization.
             if num_total_states is None:
-                states = cluster(meter_data, max_num_clusters)
+                states = cluster(
+                    meter_data,
+                    max_num_clusters,
+                    random_state=self.random_state,
+                )
                 num_total_states = len(states)
+            else:
+                states = cluster(
+                    meter_data,
+                    max_num_clusters,
+                    exact_num_clusters=max(1, num_total_states - 1),
+                    random_state=self.random_state,
+                )
 
             print("Training model for submeter '{}' with {} states".format(meter, num_total_states))
-            learnt_model[meter] = hmm.GaussianHMM(num_total_states, "full")
+            model_kwargs = {
+                "n_components": num_total_states,
+                "covariance_type": "full",
+                "random_state": self.random_state,
+            }
+            if len(states) == num_total_states:
+                model_kwargs["init_params"] = "stc"
+
+            learnt_model[meter] = hmm.GaussianHMM(**model_kwargs)
+            if len(states) == num_total_states:
+                learnt_model[meter].means_ = np.asarray(
+                    states, dtype=float
+                ).reshape(-1, 1)
 
             # Fit
             learnt_model[meter].fit(X)

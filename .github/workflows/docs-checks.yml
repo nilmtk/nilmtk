@@ -24,7 +24,7 @@ jobs:
         run: python3 scripts/check_docs.py
       - name: Build source and wheel artifacts
         run: uv build
-      - name: Test the dataset converter command
+      - name: Run modern and legacy tests
         run: >-
           uv run --no-dev --with pytest --with pytest-cov
-          pytest -q tests/test_converter_cli.py tests/test_packaging_contracts.py
+          pytest -q tests nilmtk/tests
