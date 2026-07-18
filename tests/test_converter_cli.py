@@ -1,3 +1,5 @@
+import tempfile
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
@@ -103,3 +105,111 @@ def test_input_and_output_cannot_be_the_same_path(tmp_path, capsys):
 
     assert exit_info.value.code == 2
     assert "must be different" in capsys.readouterr().err
+
+
+def test_force_clears_existing_csv_directory_before_dispatch(tmp_path, monkeypatch):
+    source = tmp_path / "raw"
+    source.mkdir()
+    output = tmp_path / "converted"
+    output.mkdir()
+    stale = output / "stale-meter.csv"
+    stale.write_text("old", encoding="utf-8")
+
+    def convert_redd(_input_path, output_path, format):
+        assert format == "CSV"
+        assert not Path(output_path).exists()
+
+    monkeypatch.setattr(
+        cli.importlib,
+        "import_module",
+        lambda _name: SimpleNamespace(convert_redd=convert_redd),
+    )
+
+    assert (
+        cli.main(
+            ["redd", str(source), str(output), "--format", "CSV", "--force"]
+        )
+        == 0
+    )
+    assert not stale.exists()
+
+
+def test_failed_import_preserves_existing_forced_output(tmp_path, monkeypatch, capsys):
+    source = tmp_path / "raw"
+    source.mkdir()
+    output = tmp_path / "redd.h5"
+    output.write_text("keep", encoding="utf-8")
+
+    def fail_import(_name):
+        raise ImportError("missing optional dependency")
+
+    monkeypatch.setattr(cli.importlib, "import_module", fail_import)
+    with pytest.raises(SystemExit) as exit_info:
+        cli.main(["redd", str(source), str(output), "--force"])
+
+    assert exit_info.value.code == 1
+    assert output.read_text(encoding="utf-8") == "keep"
+    assert "missing optional dependency" in capsys.readouterr().err
+
+
+def test_output_cannot_be_nested_inside_input(tmp_path, capsys):
+    source = tmp_path / "raw"
+    source.mkdir()
+
+    with pytest.raises(SystemExit) as exit_info:
+        cli.main(["redd", str(source), str(source / "converted.h5")])
+
+    assert exit_info.value.code == 2
+    assert "inside the input directory" in capsys.readouterr().err
+
+
+def test_force_refuses_to_replace_shared_temporary_directory(capsys):
+    with pytest.raises(SystemExit) as exit_info:
+        cli.main(
+            [
+                "redd",
+                str(Path.home()),
+                tempfile.gettempdir(),
+                "--format",
+                "CSV",
+                "--force",
+            ]
+        )
+
+    assert exit_info.value.code == 2
+    assert "protected path" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize(
+    ("output_format", "make_output", "expected"),
+    [
+        ("HDF", lambda path: path.mkdir(), "must be a file"),
+        (
+            "CSV",
+            lambda path: path.write_text("wrong", encoding="utf-8"),
+            "directory",
+        ),
+    ],
+)
+def test_existing_output_type_must_match_format(
+    tmp_path, capsys, output_format, make_output, expected
+):
+    source = tmp_path / "raw"
+    source.mkdir()
+    output = tmp_path / "converted"
+    make_output(output)
+
+    with pytest.raises(SystemExit) as exit_info:
+        cli.main(
+            [
+                "redd",
+                str(source),
+                str(output),
+                "--format",
+                output_format,
+                "--force",
+            ]
+        )
+
+    assert exit_info.value.code == 2
+    assert expected in capsys.readouterr().err

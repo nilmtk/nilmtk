@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import argparse
 import importlib
+import shutil
+import tempfile
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -138,6 +140,52 @@ def _print_converter_list() -> None:
         print(f"  {name:<10} {reason}")
 
 
+def _validate_paths(
+    parser: argparse.ArgumentParser,
+    input_path: Path,
+    output_path: Path,
+    output_format: str,
+    force: bool,
+) -> None:
+    if not input_path.exists():
+        parser.error(f"input path does not exist: {input_path}")
+
+    resolved_input = input_path.resolve()
+    resolved_output = output_path.resolve()
+    if resolved_input == resolved_output:
+        parser.error("input and output paths must be different")
+    if input_path.is_dir() and resolved_output.is_relative_to(resolved_input):
+        parser.error("output path must not be inside the input directory")
+    if output_path.is_dir() and resolved_input.is_relative_to(resolved_output):
+        parser.error("input path must not be inside the output directory")
+
+    if not output_path.exists():
+        return
+    protected_paths = {
+        Path(resolved_output.anchor),
+        Path.cwd().resolve(),
+        Path.home().resolve(),
+        Path(tempfile.gettempdir()).resolve(),
+    }
+    if force and resolved_output in protected_paths:
+        parser.error(f"refusing to replace protected path: {output_path}")
+    if output_format == "HDF" and output_path.is_dir():
+        parser.error("HDF output path must be a file, not a directory")
+    if output_format == "CSV" and not output_path.is_dir():
+        parser.error("CSV output path must be a directory, not a file")
+    if not force:
+        parser.error(
+            f"output already exists (pass --force to replace it): {output_path}"
+        )
+
+
+def _remove_existing_output(output_path: Path) -> None:
+    if output_path.is_symlink() or output_path.is_file():
+        output_path.unlink()
+    elif output_path.is_dir():
+        shutil.rmtree(output_path)
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -148,15 +196,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     input_path = args.input_path.expanduser()
     output_path = args.output_path.expanduser()
-    if not input_path.exists():
-        parser.error(f"input path does not exist: {input_path}")
-    if input_path.resolve() == output_path.resolve():
-        parser.error("input and output paths must be different")
-    if output_path.exists() and not args.force:
-        parser.error(
-            f"output already exists (pass --force to replace it): {output_path}"
-        )
-    output_path.parent.mkdir(parents=True, exist_ok=True)
+    _validate_paths(parser, input_path, output_path, args.format, args.force)
 
     spec = CONVERTERS[args.command]
     try:
@@ -164,6 +204,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     except ImportError as error:
         parser.exit(1, f"nilmtk-convert: could not load {args.command}: {error}\n")
     converter = getattr(module, spec.function)
+
+    if args.force:
+        try:
+            _remove_existing_output(output_path)
+        except OSError as error:
+            parser.exit(1, f"nilmtk-convert: could not replace output: {error}\n")
+    output_path.parent.mkdir(parents=True, exist_ok=True)
     converter(str(input_path), str(output_path), format=args.format)
     return 0
 
