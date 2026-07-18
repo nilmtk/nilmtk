@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
 
-def cluster(X, max_num_clusters=3, exact_num_clusters=None):
+
+def cluster(X, max_num_clusters=3, exact_num_clusters=None, random_state=None):
     '''Applies clustering on reduced data,
     i.e. data where power is greater than threshold.
 
@@ -9,6 +10,10 @@ def cluster(X, max_num_clusters=3, exact_num_clusters=None):
     ----------
     X : pd.Series or single-column pd.DataFrame
     max_num_clusters : int
+    exact_num_clusters : int or None
+        Requested number of on-state clusters.
+    random_state : int or None
+        Seed used for subsampling and K-means initialization.
 
     Returns
     -------
@@ -16,10 +21,15 @@ def cluster(X, max_num_clusters=3, exact_num_clusters=None):
         Power in different states of an appliance, sorted
     '''
     # Find where power consumption is greater than 10
-    data = _transform_data(X)
+    data = _transform_data(X, random_state=random_state)
 
     # Find clusters
-    centroids = _apply_clustering(data, max_num_clusters, exact_num_clusters)
+    centroids = _apply_clustering(
+        data,
+        max_num_clusters,
+        exact_num_clusters,
+        random_state=random_state,
+    )
     centroids = np.append(centroids, 0)  # add 'off' state
     centroids = np.round(centroids).astype(np.int32)
     centroids = np.unique(centroids)  # np.unique also sorts
@@ -27,7 +37,7 @@ def cluster(X, max_num_clusters=3, exact_num_clusters=None):
     return centroids
 
 
-def _transform_data(data):
+def _transform_data(data, random_state=None):
     '''Subsamples if needed and converts to column vector (which is what
     scikit-learn requires).
 
@@ -52,26 +62,39 @@ def _transform_data(data):
     elif n_samples > MAX_NUMBER_OF_SAMPLES:
         # Randomly subsample (we don't want to smoothly downsample
         # because that is likely to change the values)
-        random_indices = np.random.randint(0, n_samples, MAX_NUMBER_OF_SAMPLES)
+        if random_state is None:
+            random_indices = np.random.randint(
+                0, n_samples, MAX_NUMBER_OF_SAMPLES
+            )
+        else:
+            random = np.random.RandomState(random_state)
+            random_indices = random.randint(
+                0, n_samples, MAX_NUMBER_OF_SAMPLES
+            )
         resampled = data_above_thresh[random_indices]
         return resampled.reshape(MAX_NUMBER_OF_SAMPLES, 1)
     else:
         return data_above_thresh.reshape(n_samples, 1)
 
 
-def _apply_clustering_n_clusters(X, n_clusters):
+def _apply_clustering_n_clusters(X, n_clusters, random_state=None):
     """
     :param X: ndarray
     :param n_clusters: exact number of clusters to use
     :return:
     """
     from sklearn.cluster import KMeans
-    k_means = KMeans(init='k-means++', n_clusters=n_clusters)
+    k_means = KMeans(
+        init='k-means++',
+        n_clusters=n_clusters,
+        random_state=random_state,
+    )
     k_means.fit(X)
     return k_means.labels_, k_means.cluster_centers_
 
 
-def _apply_clustering(X, max_num_clusters, exact_num_clusters=None):
+def _apply_clustering(
+        X, max_num_clusters, exact_num_clusters=None, random_state=None):
     '''
     Parameters
     ----------
@@ -87,6 +110,8 @@ def _apply_clustering(X, max_num_clusters, exact_num_clusters=None):
 
     from sklearn import metrics
 
+    distinct_samples = len(np.unique(X, axis=0))
+
     # Finds whether 2 or 3 gives better Silhouellete coefficient
     # Whichever is higher serves as the number of clusters for that
     # appliance
@@ -98,15 +123,21 @@ def _apply_clustering(X, max_num_clusters, exact_num_clusters=None):
 
     # If the exact number of clusters are specified, then use that
     if exact_num_clusters is not None:
-        labels, centers = _apply_clustering_n_clusters(X, exact_num_clusters)
+        exact_num_clusters = min(exact_num_clusters, distinct_samples)
+        labels, centers = _apply_clustering_n_clusters(
+            X, exact_num_clusters, random_state=random_state
+        )
         return centers.flatten()
 
     # Exact number of clusters are not specified, use the cluster validity measures
     # to find the optimal number
-    for n_clusters in range(1, max_num_clusters):
+    largest_candidate = min(max_num_clusters - 1, distinct_samples)
+    for n_clusters in range(1, largest_candidate + 1):
 
         try:
-            labels, centers = _apply_clustering_n_clusters(X, n_clusters)
+            labels, centers = _apply_clustering_n_clusters(
+                X, n_clusters, random_state=random_state
+            )
             k_means_labels[n_clusters] = labels
             k_means_cluster_centers[n_clusters] = centers
             k_means_labels_unique[n_clusters] = np.unique(labels)

@@ -1,11 +1,18 @@
 import unittest
 from os.path import join
-from nilmtk.tests.testingtools import data_dir
-from nilmtk import (Appliance, MeterGroup, ElecMeter, HDFDataStore, 
-                    global_meter_group, TimeFrame, DataSet)
-from nilmtk.utils import tree_root, nodes_adjacent_to_root
-from nilmtk.elecmeter import ElecMeterID
+
+from nilmtk import (
+    Appliance,
+    DataSet,
+    ElecMeter,
+    HDFDataStore,
+    MeterGroup,
+    global_meter_group,
+)
 from nilmtk.building import BuildingID
+from nilmtk.elecmeter import ElecMeterID
+from nilmtk.tests.testingtools import data_dir
+
 
 class TestMeterGroup(unittest.TestCase):
     @classmethod
@@ -71,7 +78,6 @@ class TestMeterGroup(unittest.TestCase):
             meter = ElecMeter(self.datastore, meter_meta, meter_id)
             meters.append(meter)
 
-        mains = meters[0]
         mg = MeterGroup(meters)
         self.assertEqual(mg.proportion_of_energy_submetered(), 1.0) 
         # Check a second time to check cache works
@@ -89,7 +95,9 @@ class TestMeterGroup(unittest.TestCase):
         appliances = [{'type': 'washer dryer', 'instance': 1, 'meters': [1,2]},
                       {'type': 'fridge', 'instance': 1, 'meters': [3]}]
         mg = MeterGroup()
-        mg.import_metadata(self.datastore, elec_meters, appliances, BuildingID(1, 'REDD'))
+        mg.import_metadata(
+            self.datastore, elec_meters, appliances, BuildingID(1, 'REDD')
+        )
         self.assertEqual(mg['washer dryer'].total_energy()['active'], 
                          mg['fridge'].total_energy()['active'] * 2)
 
@@ -125,25 +133,24 @@ class TestMeterGroup(unittest.TestCase):
 
     def test_total_energy(self):
         filename = join(data_dir(), 'random.h5')
-        ds = DataSet(filename)
-        ds.buildings[1].elec.total_energy()
-        ds.buildings[1].elec.total_energy() # test cache
-        ds.buildings[1].elec.clear_cache()
-        ds.store.close()
+        with DataSet(filename) as ds:
+            ds.buildings[1].elec.total_energy()
+            ds.buildings[1].elec.total_energy() # test cache
+            ds.buildings[1].elec.clear_cache()
 
     def test_load(self):
         filename = join(data_dir(), 'energy.h5')
-        ds = DataSet(filename)
-        elec = ds.buildings[1].elec
-        df = next(elec.load())
-        self.assertEqual(len(df), 13)
-        df = next(elec.load(chunksize=5))
-        self.assertEqual(len(df), 5)
-        df = next(elec.load(physical_quantity='energy'))
-        self.assertEqual(len(df), 13)
-        self.assertEqual(df.columns.levels, [['energy'], ['reactive']])
-        df = next(elec.load(ac_type='active'))
-        self.assertEqual(df.columns.levels, [['power'], ['active']])
+        with DataSet(filename) as ds:
+            elec = ds.buildings[1].elec
+            df = next(elec.load())
+            self.assertEqual(len(df), 13)
+            df = next(elec.load(chunksize=5))
+            self.assertEqual(len(df), 5)
+            df = next(elec.load(physical_quantity='energy'))
+            self.assertEqual(len(df), 13)
+            self.assertEqual(df.columns.levels, [['energy'], ['reactive']])
+            df = next(elec.load(ac_type='active'))
+            self.assertEqual(df.columns.levels, [['power'], ['active']])
         
 
 if __name__ == '__main__':

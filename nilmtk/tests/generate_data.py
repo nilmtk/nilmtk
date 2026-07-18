@@ -1,15 +1,17 @@
-import pandas as pd
-from datetime import timedelta
-from nilmtk.tests.testingtools import data_dir
-from os.path import join
-import itertools
 from collections import OrderedDict
+from datetime import timedelta
+from os.path import join
+
 import numpy as np
+import pandas as pd
+
 from nilmtk.consts import JOULES_PER_KWH
-from nilmtk.measurement import measurement_columns, AC_TYPES
+from nilmtk.measurement import AC_TYPES, measurement_columns
+from nilmtk.tests.testingtools import data_dir
 from nilmtk.utils import flatten_2d_list
 
 MAX_SAMPLE_PERIOD = 15
+RANDOM_SEED = 42
 
 
 def power_data(simple=True):
@@ -65,7 +67,7 @@ def create_random_df_hierarchical_column_index():
     N_METERS = 5
     N_MEASUREMENTS_PER_METER = 3
 
-    meters = ['meter{:d}'.format(i) for i in range(1, N_METERS + 1)]
+    meters = [f'meter{i:d}' for i in range(1, N_METERS + 1)]
     meters = [[m] * N_MEASUREMENTS_PER_METER for m in meters]
     meters = flatten_2d_list(meters)
     level2 = ['power', 'power', 'voltage'][
@@ -74,21 +76,24 @@ def create_random_df_hierarchical_column_index():
 
     columns = [meters, level2, level3]
     columns = pd.MultiIndex.from_arrays(columns)
-    rng = pd.date_range('2012-01-01', freq='S', periods=N_PERIODS)
-    data = np.random.randint(low=0, high=1000,
-                             size=(N_PERIODS,
-                                   N_METERS * N_MEASUREMENTS_PER_METER))
-    return pd.DataFrame(data=data, index=rng, columns=columns, dtype=np.float32)
+    index = pd.date_range('2012-01-01', freq='s', periods=N_PERIODS)
+    random = np.random.default_rng(RANDOM_SEED)
+    data = random.integers(low=0, high=1000,
+                           size=(N_PERIODS,
+                                 N_METERS * N_MEASUREMENTS_PER_METER))
+    return pd.DataFrame(data=data, index=index, columns=columns, dtype=np.float32)
 
 MEASUREMENTS = [('power', 'active'), ('energy', 'reactive'), ('voltage', '')]
 
 
-def create_random_df():
+def create_random_df(random=None):
     N_PERIODS = 10000
-    rng = pd.date_range('2012-01-01', freq='S', periods=N_PERIODS)
-    data = np.random.randint(
+    index = pd.date_range('2012-01-01', freq='s', periods=N_PERIODS)
+    if random is None:
+        random = np.random.default_rng(RANDOM_SEED)
+    data = random.integers(
         low=0, high=1000, size=(N_PERIODS, len(MEASUREMENTS)))
-    return pd.DataFrame(data=data, index=rng, dtype=np.float32,
+    return pd.DataFrame(data=data, index=index, dtype=np.float32,
                         columns=measurement_columns(MEASUREMENTS))
 
 
@@ -104,12 +109,12 @@ for col in MEASUREMENTS:
         'lower_limit': 0, 'upper_limit': 6000})
 
 
-def add_building_metadata(store, elec_meters, key='building1', appliances=[]):
+def add_building_metadata(store, elec_meters, key='building1', appliances=None):
     node = store.get_node(key)
     md = {
         'instance': 1,
         'elec_meters': elec_meters,
-        'appliances': appliances
+        'appliances': appliances or []
     }
     node._f_setattr('metadata', md)
 
@@ -119,7 +124,7 @@ def create_co_test_hdf5():
     N_METERS = 3
     chunk = 1000
     N_PERIODS = 4 * chunk
-    rng = pd.date_range('2012-01-01', freq='S', periods=N_PERIODS)
+    rng = pd.date_range('2012-01-01', freq='s', periods=N_PERIODS)
 
     dfs = OrderedDict()
     data = OrderedDict()
@@ -140,7 +145,7 @@ def create_co_test_hdf5():
     store = pd.HDFStore(FILENAME, 'w', complevel=9, complib='zlib')
     elec_meter_metadata = {}
     for meter in range(1, N_METERS + 1):
-        key = 'building1/elec/meter{:d}'.format(meter)
+        key = f'building1/elec/meter{meter:d}'
         print("Saving", key)
         store.put(key, dfs[meter], format='table')
         elec_meter_metadata[meter] = {
@@ -160,9 +165,6 @@ def create_co_test_hdf5():
 
     # Building metadata
     add_building_metadata(store, elec_meter_metadata)
-    for key in store.keys():
-        print(store[key])
-
     store.flush()
     store.close()
 
@@ -172,11 +174,12 @@ def create_random_hdf5():
     N_METERS = 5
 
     store = pd.HDFStore(FILENAME, 'w', complevel=9, complib='zlib')
+    random = np.random.default_rng(RANDOM_SEED)
     elec_meter_metadata = {}
     for meter in range(1, N_METERS + 1):
-        key = 'building1/elec/meter{:d}'.format(meter)
+        key = f'building1/elec/meter{meter:d}'
         print("Saving", key)
-        store.put(key, create_random_df(), format='table')
+        store.put(key, create_random_df(random), format='table')
         elec_meter_metadata[meter] = {
             'device_model': TEST_METER['model'],
             'submeter_of': 1,
@@ -220,7 +223,7 @@ def create_energy_hdf5(simple=True):
 
     # Save sensor data
     for meter_i in [1, 2, 3]:
-        key = 'building1/elec/meter{:d}'.format(meter_i)
+        key = f'building1/elec/meter{meter_i:d}'
         print("Saving", key)
         store.put(key, df, format='table')
         meta = {
@@ -251,3 +254,7 @@ def create_all():
     create_energy_hdf5(simple=False)
     create_random_hdf5()
     create_co_test_hdf5()
+
+
+if __name__ == '__main__':
+    create_all()

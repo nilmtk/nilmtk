@@ -148,7 +148,6 @@ class DataSet(object):
 
     def close(self):
         self.clear_cache()
-        nilmtk.STATS_CACHE.close()
 
         if self.store is not None:
             self.store.close()
