@@ -1,3 +1,4 @@
+import atexit
 import warnings
 import pandas as pd
 
@@ -21,6 +22,7 @@ with warnings.catch_warnings():
 
 global_meter_group = MeterGroup()
 STATS_CACHE = TmpDataStore()
+atexit.register(STATS_CACHE.close)
 
 def setup_package():
     """Nosetests package setup function (run when tests are done).

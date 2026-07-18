@@ -4,6 +4,9 @@ build
 *.pyc
 *.*~
 *.log
+.coverage
+htmlcov/
+uv.lock
 profile.txt
 *.so
 build/
@@ -26,4 +29,3 @@ data/ukdale
 *.h5
 *.tar
 *.dat
-

@@ -1,97 +1,167 @@
-# NILMTK: Non-Intrusive Load Monitoring Toolkit
+# NILMTK core
 
-Non-Intrusive Load Monitoring (NILM) is the process of estimating the
-energy consumed by individual appliances given just a whole-house
-power meter reading.  In other words, it produces an (estimated)
-itemised energy bill from just a single, whole-house power meter.
+NILMTK is the data and evaluation layer of the open-source ecosystem for
+non-intrusive load monitoring (NILM). It converts and loads energy datasets,
+represents buildings and meters, prepares time windows, computes statistics and
+metrics, and provides classical reference algorithms.
 
-NILMTK is a toolkit designed to help **researchers** evaluate the accuracy of NILM algorithms. If you are a new Python user, it is recommended to educate yourself on [Pandas](https://pandas.pydata.org/), [Pytables](http://www.pytables.org/) and other tools from the Python ecosystem.
+**Use this repository when your work is about data, meters, preprocessing, or
+metrics.** For maintained neural models or reproducible benchmark claims, use
+the companion repositories below.
 
-**⚠️It may take time for the NILMTK authors to get back to you regarding queries/issues. However, you are more than welcome to propose changes, support!** Remember to check existing issue tickets, especially the open ones.
+## Choose the right repository
 
-# Documentation
+| Job | Canonical repository |
+| --- | --- |
+| Convert, load, inspect, and score energy data | **[NILMTK core](https://github.com/nilmtk/nilmtk)** — this repository |
+| Resolve appliance names, synonyms, meters, and dataset semantics | [NILM Metadata](https://github.com/nilmtk/nilm_metadata) |
+| Use or contribute a disaggregation model | [nilmtk-contrib](https://github.com/nilmtk/nilmtk-contrib) |
+| Reproduce T1/T2/T3 protocols or publish a leaderboard result | [NILMbench](https://github.com/nilmtk/nilmbench) |
 
-[NILMTK Documentation](https://github.com/nilmtk/nilmtk/tree/master/docs/manual)
+The [NILMTK ecosystem guide](https://nilmtk.github.io/) explains how these
+layers fit together, which Docker route to use, and which papers to cite.
 
-# Installation
+## Supported installation
 
-## UV Support
-This Python package uses uv for installation. uv is a fast and modern Python package manager that replaces tools like pip and virtualenv, with support for pyproject.toml and ultra-fast dependency resolution. 
+NILMTK core supports Python 3.11 and newer. Use Python 3.11 for an end-to-end
+environment shared with nilmtk-contrib and NILMbench.
 
-To install NILMTK, first install [uv](https://docs.astral.sh/uv/getting-started/installation/) and then run:<br>
-```
-uv pip install git+https://github.com/nilmtk/nilmtk.git
-```
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/), then create
+an isolated environment:
 
-To use the `deddiag` dataset, install the optional dependency with:
-```
-uv pip install "nilmtk[deddiag] @ git+https://github.com/nilmtk/nilmtk
-```
-
-## Docker Support
-Docker is an open-source platform for developing, shipping, and running applications in lightweight, portable containers that bundle code, runtime, libraries, and system tools into a single package. It ensures everyone runs the same environment, regardless of host OS, and keeps NILMTK’s dependencies contained without polluting the system Python.
-
-
-Build and run locally
-```
-docker build -t nilmtk-uv .
-docker run --rm -it nilmtk-uv bash
-```
-Pull the pre-built image
-```
-docker pull ghcr.io/enfuego27826/nilmtk:latest
-docker run --rm -it ghcr.io/enfuego27826/nilmtk:latest bash
+```bash
+uv venv --python 3.11
+source .venv/bin/activate
+uv pip install "nilmtk @ git+https://github.com/nilmtk/nilmtk.git"
+python -c "import nilmtk; print(nilmtk.__version__)"
 ```
 
-It came to our attention that some users follow third-party tutorials to install NILMTK. Always remember to check the dates of such tutorials, many are very outdated and don't reflect NILMTK's current version or the recommended/supported setup.
+On Windows PowerShell, activate the environment with
+`.venv\Scripts\Activate.ps1`.
 
-# Why a toolkit for NILM?
+To use the DEDDIAG converter, install the optional extra:
 
-We quote our [NILMTK paper](http://arxiv.org/pdf/1404.3878v1.pdf)
-explaining the need for a NILM toolkit:
+```bash
+uv pip install "nilmtk[deddiag] @ git+https://github.com/nilmtk/nilmtk.git"
+```
 
-  > Empirically comparing disaggregation algorithms is currently
-  > virtually impossible. This is due to the different data sets used,
-  > the lack of reference implementations of these algorithms and the
-  > variety of accuracy metrics employed.
+Do not combine these instructions with old Python 3.6, Anaconda-channel, or
+`setup.py develop` tutorials. Those routes describe earlier releases and are
+not the supported installation for the current repository.
 
+### Verify the command-line converter
 
-# What NILMTK provides
+```bash
+nilmtk-convert --help
+nilmtk-convert list
+# Example after downloading REDD:
+nilmtk-convert redd /path/to/low_freq /path/to/redd.h5
+```
 
-To address this challenge, we present the Non-intrusive Load Monitoring
-Toolkit (NILMTK); an open source toolkit designed specifically to enable
-the comparison of energy disaggregation algorithms in a reproducible
-manner. This work is the first research to compare multiple
-disaggregation approaches across multiple publicly available data sets.
-NILMTK includes:
+Dataset-specific converter arguments and source links live under
+[`nilmtk/dataset_converters`](nilmtk/dataset_converters).
 
--  parsers for a range of existing data sets (8 and counting)
--  a collection of preprocessing algorithms
--  a set of statistics for describing data sets
--  a number of [reference benchmark disaggregation algorithms](https://github.com/nilmtk/nilmtk/wiki/NILM-Algorithms)
--  a common set of accuracy metrics
--  and much more!
+## Docker ownership
 
-# Publications
+NILMTK core is a Python library and does not publish a separate official core
+image. This is intentional:
 
-If you use NILMTK in academic work then please consider citing our papers. Here are some of the publications (contributors, please update this as required):
+- use the single [nilmtk-contrib Dockerfile](https://github.com/nilmtk/nilmtk-contrib)
+  for a general environment containing core, metadata, and model code;
+- use [NILMbench](https://github.com/nilmtk/nilmbench) for pinned CPU-smoke and
+  CUDA-benchmark runtimes that certify leaderboard results;
+- do not create an image for each algorithm.
 
-1. Nipun Batra, Jack Kelly, Oliver Parson, Haimonti Dutta, William Knottenbelt, Alex Rogers, Amarjeet Singh, Mani Srivastava. NILMTK: An Open Source Toolkit for Non-intrusive Load Monitoring. In: 5th International Conference on Future Energy Systems (ACM e-Energy), Cambridge, UK. 2014. DOI:[10.1145/2602044.2602051](http://dx.doi.org/10.1145/2602044.2602051). arXiv:[1404.3878](http://arxiv.org/abs/1404.3878).
-2. Nipun Batra, Jack Kelly, Oliver Parson, Haimonti Dutta, William Knottenbelt, Alex Rogers, Amarjeet Singh, Mani Srivastava. NILMTK: An Open Source Toolkit for Non-intrusive Load Monitoring". In: NILM Workshop, Austin, US. 2014 \[[pdf](http://nilmworkshop14.files.wordpress.com/2014/05/batra_nilmtk.pdf)\]
-3. Jack Kelly, Nipun Batra, Oliver Parson, Haimonti Dutta, William Knottenbelt, Alex Rogers, Amarjeet Singh, Mani Srivastava. Demo Abstract: NILMTK v0.2: A Non-intrusive Load Monitoring Toolkit for Large Scale Data Sets. In the first ACM Workshop On Embedded Systems For Energy-Efficient Buildings, 2014. DOI:[10.1145/2674061.2675024](http://dx.doi.org/10.1145/2674061.2675024). arXiv:[1409.5908](http://arxiv.org/abs/1409.5908).
-4. Nipun Batra, Rithwik Kukunuri, Ayush Pandey, Raktim Malakar, Rajat Kumar, Odysseas Krystalakos, Mingjun Zhong, Paulo Meira, and Oliver Parson. 2019. Towards reproducible state-of-the-art energy disaggregation. In Proceedings of the 6th ACM International Conference on Systems for Energy-Efficient Buildings, Cities, and Transportation (BuildSys '19). Association for Computing Machinery, New York, NY, USA, 193–202. DOI:[10.1145/3360322.3360844](https://doi.org/10.1145/3360322.3360844)
+Keeping container ownership in those two places prevents four repositories from
+shipping drifting copies of the same environment.
 
-Please note that NILMTK has evolved *a lot* since most of these papers were published! Please use the [online docs](https://github.com/nilmtk/nilmtk/tree/master/docs/manual)
-as a guide to the current API. 
+## Data
 
-# Brief history
+NILMTK does not redistribute REDD, UK-DALE, REFIT, or other licensed datasets.
+Download data from its official custodian, comply with its license, and convert
+it locally. A converted HDF5 dataset can then be opened with:
 
-* August 2019: v0.4 released with the new API. See also [NILMTK-Contrib](https://github.com/nilmtk/nilmtk-contrib).
-* June 2019: v0.3.1 released on [Anaconda Cloud](https://anaconda.org/nilmtk/nilmtk/).
-* Jav 2018: Initial Python 3 support on the v0.3 branch
-* Nov 2014: NILMTK wins best demo award at [ACM BuildSys](http://www.buildsys.org/2014/)
-* July 2014: v0.2 released
-* June 2014: NILMTK presented at [ACM e-Energy](http://conferences.sigcomm.org/eenergy/2014/)
-* April 2014: v0.1 released
+```python
+from nilmtk import DataSet
 
-For more detail, please see our [changelog](https://github.com/nilmtk/nilmtk/blob/master/docs/manual/development_guide/changelog.md).
+dataset = DataSet("redd.h5")
+print(dataset.metadata)
+print(dataset.buildings)
+```
+
+NILM Metadata is installed with core and supplies the canonical appliance
+taxonomy, synonyms, and meter relationships used while loading datasets.
+
+## What core provides
+
+- converters for public energy datasets;
+- lazy access to buildings, meters, appliances, and time frames;
+- resampling, alignment, preprocessing, and data-quality statistics;
+- standard NILM accuracy and energy metrics;
+- the rapid experimentation API used by nilmtk-contrib;
+- classical reference disaggregators and baseline utilities.
+
+Detailed API reference is published at
+[nilmtk.github.io/nilmtk/master](https://nilmtk.github.io/nilmtk/master/index.html).
+The repository manual and notebooks live under [`docs/manual`](docs/manual).
+
+## Development
+
+```bash
+git clone https://github.com/nilmtk/nilmtk.git
+cd nilmtk
+uv sync --extra dev
+uv run pytest tests
+```
+
+Before opening a pull request, run the narrow test for your change, the current
+package gate, and the documentation contract:
+
+```bash
+uv run pytest tests
+uv run python scripts/check_docs.py
+uv build
+```
+
+The historical core regression tests live under `nilmtk/tests` and
+`nilmtk/stats/tests`. Run the affected files explicitly when changing those
+modules; work to bring those fixtures into the default gate is tracked
+separately.
+
+Changes to dataset semantics belong in NILM Metadata. New model architectures
+belong in nilmtk-contrib. Benchmark task definitions and published result
+bundles belong in NILMbench.
+
+## Citation
+
+If you use core dataset conversion, meter abstractions, preprocessing, or
+metrics, cite the NILMTK paper:
+
+```bibtex
+@inproceedings{batra2014nilmtk,
+  title     = {NILMTK: An Open Source Toolkit for Non-intrusive Load Monitoring},
+  author    = {Batra, Nipun and Kelly, Jack and Parson, Oliver and Dutta, Haimonti
+               and Knottenbelt, William and Rogers, Alex and Singh, Amarjeet
+               and Srivastava, Mani},
+  booktitle = {Proceedings of the 5th ACM International Conference on Future
+               Energy Systems},
+  year      = {2014},
+  pages     = {265--276},
+  doi       = {10.1145/2602044.2602051}
+}
+```
+
+Also cite the [NILM Metadata paper](https://doi.org/10.1109/COMPSACW.2014.97)
+when relying on its schema or taxonomy, the
+[nilmtk-contrib paper](https://doi.org/10.1145/3360322.3360844) when using its
+model suite, and the [NILMBench2026 paper](https://doi.org/10.1145/3744256.3812587)
+when using its protocols, runner, or leaderboard results. Always cite the
+original model and dataset papers as well.
+
+## Help and license
+
+Search [existing issues](https://github.com/nilmtk/nilmtk/issues) before opening
+a report. Include the exact command, operating system, Python version, dataset
+identity, and a minimal reproducer.
+
+NILMTK is released under the [Apache License 2.0](LICENSE).
