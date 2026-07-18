@@ -1,89 +1,69 @@
-# Installing NILMTK
+# Install NILMTK core
 
-We recommend using [Anaconda](https://store.continuum.io/cshop/anaconda/), which bundles together most of the required packages. NILMTK requires Python 3.6+ due to the module it depends upon.
+These instructions describe the current repository. NILMTK core supports
+Python 3.11 and newer; use Python 3.11 when sharing an environment with
+nilmtk-contrib or NILMbench.
 
-After Anaconda has been installed, open up the terminal (Unix) or Anaconda prompt (Windows):
+## 1. Install uv
 
-1.  NILMTK should work fine in the base environment, but we recommend creating a new environment where NILMTK and related dependecies are installed.
-
-	```bash
-	conda create --name nilmtk-env 
-	```
-
-2. Add conda-forge to list of channels to be searched for packages.
-	```bash
-	conda config --add channels conda-forge
-	```
-
-3. Activate the new *nilmtk-env* environment.
-
-	```bash
-	conda activate nilmtk-env
-	```
-
-4. Install the NILMTK package
-
-	```bash
-	conda install -c nilmtk nilmtk
-	```
-	
-    This will install the latest version of nilmtk. As of June 2023 is the lastest version if nilmtk 0.4.3. You can equivalently use `conda install -c nilmtk nilmtk=0.4.3`.
-    For older versions, you may need to specify versions for other packages in order to get a working environment. E.g. for NILMTK v0.4.1, use `conda install -c nilmtk nilmtk=0.4.1 matplotlib=3.1.3`. It should be noted that as of June 2023 the only version available on the channels of anaconda.org is the version 0.4.3, attempts to install older version may lead to errors such as "PackageNotFoundError" on the terminal.
-
-5. The installed package import for python/ ipython can be  tested in the terminal using the following command:
-	```bash
-	python -c "import nilmtk"
-	```
-	or	
-	```bash
-	ipython -c "import nilmtk"
-	```
-	> Note: This might show DepreciationWarning due to the *imp* module. That will be fixed in a future release.
-
-	* Alternatively, you can also run your IDE in *nilmtk-env* from: Anaconda Navigator > "Applications on" dropdown > nilmtk-env
-	To check the current environment variables,
-
-		```python
-		import sys
-		print(sys.executable)
-		print(sys.version)
-		```
-		You will see an output similar to:
-		```
-		/home/ayush/anaconda3/envs/nilmtk-env/bin/python
-		3.6.7 | packaged by conda-forge | (default, Feb 28 2019, 09:07:38) 
-		[GCC 7.3.0]
-		```
-6. Run your Python IDE from this environment, for example:
-
-	```bash
-	jupyter notebook
-	```
-	or
-
-	```bash
-	spyder
-	```
-
-7. Import NILMTK in the IDE:
-
-	```python
-	import nilmtk
-	```
-	The package modules can now be used.
-8. To deactivate this environment,
-
-	```bash
-	conda deactivate
-	```
-    
-We recommend checking the [Anaconda documentation about environments](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html) if the concept is new to you.
-
-
-# Conda development snapshots
-
-If you want to try out tagged development versions, you can follow the normal installation guide but use the following command for the NILMTK installation (step 4):
+Follow the official [uv installation guide](https://docs.astral.sh/uv/getting-started/installation/),
+then confirm the command is available:
 
 ```bash
-    conda install -c nilmtk -c nilmtk/label/dev nilmtk
+uv --version
 ```
+
+## 2. Create an isolated environment
+
+```bash
+uv venv --python 3.11
+source .venv/bin/activate
+```
+
+On Windows PowerShell:
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+## 3. Install core
+
+```bash
+uv pip install "nilmtk @ git+https://github.com/nilmtk/nilmtk.git"
+```
+
+For the optional DEDDIAG converter:
+
+```bash
+uv pip install "nilmtk[deddiag] @ git+https://github.com/nilmtk/nilmtk.git"
+```
+
+## 4. Verify the installation
+
+```bash
+python -c "import nilmtk; print(nilmtk.__version__)"
+nilmtk-convert --help
+```
+
+## 5. Choose the next layer
+
+- Continue with core if you need converters, meters, preprocessing, or metrics.
+- Install [nilmtk-contrib](https://github.com/nilmtk/nilmtk-contrib) if you need
+  maintained disaggregation models.
+- Use [NILMbench](https://github.com/nilmtk/nilmbench) if you need frozen
+  real-data protocols and comparable leaderboard results.
+- Read the [ecosystem guide](https://nilmtk.github.io/) for Docker ownership and
+  citation guidance.
+
+## Data is separate
+
+Public datasets have their own licenses and download processes. NILMTK does not
+bundle them. Obtain each dataset from its official custodian and convert it
+locally with the matching module under
+[`nilmtk/dataset_converters`](../../../nilmtk/dataset_converters).
+
+## Avoid stale installation guides
+
+Instructions based on Python 3.6, the historical NILMTK Anaconda channel, or
+`setup.py develop` refer to earlier releases. Do not mix them with this uv-based
+environment.

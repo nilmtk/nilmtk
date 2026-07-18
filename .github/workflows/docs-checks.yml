@@ -1,0 +1,30 @@
+name: Documentation and package checks
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.11.28"
+          enable-cache: true
+      - name: Check onboarding and links
+        run: python3 scripts/check_docs.py
+      - name: Build source and wheel artifacts
+        run: uv build
+      - name: Test the dataset converter command
+        run: >-
+          uv run --no-dev --with pytest --with pytest-cov
+          pytest -q tests/test_converter_cli.py tests/test_packaging_contracts.py

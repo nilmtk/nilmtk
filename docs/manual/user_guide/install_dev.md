@@ -1,60 +1,63 @@
+# Develop NILMTK core
 
-# Install NILMTK
+Use Python 3.11 and uv so local development matches the ecosystem's supported
+research environment.
 
-We recommend using [Anaconda](https://www.anaconda.com/distribution/), which bundles togther most of the required packages. NILMTK requires Python 3.6+ due to the module it depends upon.
-
-If you prefer to avoid Anaconda, you could install most packages using `pip` but you will require a compatible C compiler for your Python distribution. Be sure to use the package versions listed in the file `environment-dev.yml`.
-
-Before anything, install Anaconda. If you already have it installed, be sure to keep it updated.
-
-The following instructions are general enough to work on Linux, macOS or Windows (run the commands on a Powershell session). Remember to adapt it to your environment.
-
-1. Install Git, if not available. On Linux, install using your distribution package manager, e.g.:
+## Clone and install
 
 ```bash
-sudo apt-get install git
-```
-
-On Windows, download and installation the official [Git](http://git-scm.com/download/win) client.
-
-Alternatively, if you do not have administrator access, you can install Git directly on the Anaconda distribution running `conda install git`.
-
-2. Download NILMTK:
-
-```bash
-cd ~
 git clone https://github.com/nilmtk/nilmtk.git
 cd nilmtk
+uv sync --extra dev
 ```
 
-The next step creates a separate environment for NILMTK (see [the Anaconda documentation]((https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html))), using NILMTK's `environment-dev.yml` text file to define which packages need to be installed. If you have a previous `nilmtk-env` environment, please remove it first (`conda env remove -n nilmtk-env`).
+The project metadata installs the reviewed NILM Metadata revision required by
+core. You do not need to run `setup.py` or install a separate Conda environment.
+
+## Run checks
+
+Start with the narrowest test that covers your change, then run the current
+package gate:
 
 ```bash
-conda env create -f environment-dev.yml
-conda activate nilmtk-env
+uv run pytest path/to/test_file.py
+uv run pytest tests
+uv run python scripts/check_docs.py
+uv build
 ```
 
-Next we will install [nilm_metadata](https://github.com/nilmtk/nilm_metadata) (for development, we recommend installing from the repository, even though there is a conda package available):
+The historical regression tests live under `nilmtk/tests` and
+`nilmtk/stats/tests`. Run the affected files explicitly when changing core or
+statistics behavior; their legacy HDF fixtures are being modernized before the
+directories join default discovery.
+
+## Work on core and metadata together
+
+Clone the repositories as siblings and install metadata editably only when your
+change genuinely crosses the schema boundary:
 
 ```bash
-cd ~
-git clone https://github.com/nilmtk/nilm_metadata/
-cd nilm_metadata
-python setup.py develop
 cd ..
+git clone https://github.com/nilmtk/nilm_metadata.git
+cd nilmtk
+uv pip install -e ../nilm_metadata
 ```
 
-Change back to your nilmtk directory and install NILMTK:
+Changes to appliance taxonomy, synonyms, schema, or meter semantics belong in
+[NILM Metadata](https://github.com/nilmtk/nilm_metadata). New architectures
+belong in [nilmtk-contrib](https://github.com/nilmtk/nilmtk-contrib), and frozen
+benchmark protocols or result bundles belong in
+[NILMbench](https://github.com/nilmtk/nilmbench).
 
-```bash
-cd ~/nilmtk
-python setup.py develop
-```
+## Pull request evidence
 
-Run the unit tests:
+Include:
 
-```bash
-nosetests
-```
+- the failure or missing behavior your change addresses;
+- focused regression tests, including malformed or boundary inputs;
+- every test command and outcome, including known failures;
+- dataset identity and a minimal reproducible window when data behavior changes;
+- documentation updates when a public contract changes.
 
-Then, work away on NILMTK!  When you are done, just do `conda deactivate` to deactivate the nilmtk-env (or just clone the terminal/session).
+Do not commit licensed datasets, credentials, generated environments, or local
+HDF5 outputs.
