@@ -9,14 +9,14 @@ metrics, and provides classical reference algorithms.
 metrics.** For maintained neural models or reproducible benchmark claims, use
 the companion repositories below.
 
-## Choose the right repository
+## Ecosystem repositories
 
-| Job | Canonical repository |
+| Research task | Repository |
 | --- | --- |
-| Convert, load, inspect, and score energy data | **[NILMTK core](https://github.com/nilmtk/nilmtk)** — this repository |
-| Resolve appliance names, synonyms, meters, and dataset semantics | [NILM Metadata](https://github.com/nilmtk/nilm_metadata) |
-| Use or contribute a disaggregation model | [nilmtk-contrib](https://github.com/nilmtk/nilmtk-contrib) |
-| Reproduce T1/T2/T3 protocols or publish a leaderboard result | [NILMbench](https://github.com/nilmtk/nilmbench) |
+| Dataset conversion, meter access, preprocessing, and metrics | **[NILMTK core](https://github.com/nilmtk/nilmtk)** — this repository |
+| Appliance taxonomy, synonyms, meter relationships, and dataset schema | [NILM Metadata](https://github.com/nilmtk/nilm_metadata) |
+| Disaggregation model implementation and testing | [nilmtk-contrib](https://github.com/nilmtk/nilmtk-contrib) |
+| Fixed T1/T2/T3 evaluation and published result bundles | [NILMbench](https://github.com/nilmtk/nilmbench) |
 
 The [NILMTK ecosystem guide](https://nilmtk.github.io/) explains how these
 layers fit together, which Docker route to use, and which papers to cite.
