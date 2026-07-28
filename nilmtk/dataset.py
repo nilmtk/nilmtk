@@ -1,5 +1,7 @@
 import os
+from typing import Optional, Union
 from collections import OrderedDict
+import datatime
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -28,7 +30,7 @@ class DataSet(object):
         See nilm-metadata.readthedocs.org/en/latest/dataset_metadata.html#dataset
     """
 
-    def __init__(self, filename=None, format='HDF'):
+    def __init__(self, filename:Optional[str]=None, format:str='HDF'):
         """
         Parameters
         ----------
@@ -39,11 +41,14 @@ class DataSet(object):
             format of output. 'HDF', 'CSV' or None. Defaults to 'HDF'.
             Use None for automatic inference from file name extension.
         """
-        self.store = None
-        self.buildings = OrderedDict()
-        self.metadata = {}
+        self.buildings: OrderedDict = OrderedDict()
+        self.metadata: dict = {}
         if filename is not None:
-            self.import_metadata(get_datastore(filename, format))
+            self.store:Optional[nilmtk.DataStore] = get_datastore(filename, format)
+            self.metadata = self.store.load_metadata()
+            self._init_buildings()
+        else: 
+            self.store = None
 
     def __enter__(self):
         return self
@@ -51,22 +56,29 @@ class DataSet(object):
     def __exit__(self, exc_type, exc_value, traceback):
         self.close()
 
-    def import_metadata(self, store):
-        """
-        Parameters
-        ----------
-        store : nilmtk.DataStore
-        """
-        self.store = store
-        self.metadata = store.load_metadata()
-        self._init_buildings(store)
-        return self
+    # This is assigning attribute at init time, which can be easily done in init
+    # def import_metadata(self):
+    #     """
+    #     Parameters
+    #     ----------
+    #     store : nilmtk.DataStore
+    #     """
+    #     self.store = store
+    #     self.metadata = store.load_metadata()
+    #     self._init_buildings(store)
+    #     return self
 
-    def save(self, destination):
+    def save(self, destination:str) -> None:
         for b_id, building in self.buildings.items():
             building.save(destination, '/building' + str(b_id))
 
-    def _init_buildings(self, store):
+    # The store object is already an element of self, it is redundant to pass store
+    # Except there are case where it is need to pass the different store object to
+    # to the dataset, it should be better to just create a new dataset object
+    def _init_buildings(self) -> None:
+        if self.store is None:
+            return 
+        store = self.store
         buildings = store.elements_below_key('/')
         buildings.sort()
 
@@ -76,7 +88,11 @@ class DataSet(object):
                 store, '/'+b_key, self.metadata.get('name'))
             self.buildings[building.identifier.instance] = building
 
-    def set_window(self, start=None, end=None):
+    def set_window(
+            self, 
+            start:Optional[Union[str, pd.Timestamp, datatime.datetime]]=None, 
+            end=Optional[Union[str, pd.Timestamp, datatime.datetime]]
+        ) -> None:
         """Set the timeframe window on self.store. Used for setting the
         'region of interest' non-destructively for all processing.
 
@@ -93,7 +109,7 @@ class DataSet(object):
 
         self.store.window = TimeFrame(start, end, tz)
 
-    def describe(self, **kwargs):
+    def describe(self, **kwargs) -> pd.DataFrame:
         """Returns a DataFrame describing this dataset.
         Each column is a building.  Each row is a feature."""
         keys = list(self.buildings.keys())
@@ -143,7 +159,8 @@ class DataSet(object):
 
         return axes
 
-    def elecs(self):
+    def elecs(self) -> list[nilmtk.MeterGroup]:
+        """Give a list of all buildings metergroup in the dataset"""
         return [building.elec for building in self.buildings.values()]
 
     def close(self):
