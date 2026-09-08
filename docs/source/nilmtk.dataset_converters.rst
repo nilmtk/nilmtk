@@ -10,6 +10,7 @@ Subpackages
     nilmtk.dataset_converters.combed
     nilmtk.dataset_converters.dataport
     nilmtk.dataset_converters.eco
+    nilmtk.dataset_converters.gelap
     nilmtk.dataset_converters.greend
     nilmtk.dataset_converters.hes
     nilmtk.dataset_converters.iawe

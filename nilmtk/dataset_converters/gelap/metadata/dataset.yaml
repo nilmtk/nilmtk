@@ -1,0 +1,20 @@
+name: GeLaP
+long_name: German Labeled Dataset for Power Consumption
+creators:
+- Wilhelm, Sebastian
+- Jakob, Dietmar
+- Kasbauer, Jakob
+- Ahrens, Diane
+publication_date: 2021
+description: Several weeks of power data for 20 different homes.
+subject: Disaggregated power demand from domestic buildings.
+number_of_buildings: 20
+timezone: Europe/Berlin
+schema: https://github.com/nilmtk/nilm_metadata/tree/59c9990de4836d77c0dcd807bd4293e39e0cc314
+related_documents:
+- https://mygit.th-deg.de/tcg/gelap
+- https://doi.org/10.1007/978-981-16-2377-6_5
+- https://github.com/camilomarino/GeLaP-NILMTK-Converter
+rights_list:
+- name: Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International
+  uri: https://creativecommons.org/licenses/by-nc-sa/4.0/

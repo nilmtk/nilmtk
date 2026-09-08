@@ -61,6 +61,8 @@ nilmtk-convert redd /path/to/low_freq /path/to/redd.h5
 Dataset-specific converter arguments and source links live under
 [`nilmtk/dataset_converters`](nilmtk/dataset_converters).
 
+Dataset guide: [GeLaP conversion](nilmtk/dataset_converters/gelap/README.md).
+
 ## Docker ownership
 
 NILMTK core is a Python library and does not publish a separate official core

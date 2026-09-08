@@ -1,0 +1,21 @@
+GeLaP_monitor:
+  model: GeLaP_monitor
+  sample_period: 0.28   # the interval between samples. In seconds.
+  max_sample_period: 3   # Max allowable interval between samples. Seconds.
+  measurements:
+  - physical_quantity: power   # power, voltage, energy, current?
+    type: active   # active (real power), reactive or apparent?
+    upper_limit: 8000
+    lower_limit: 0
+  wireless: false
+
+Gelap_whole_house:
+  model: Gelap_whole_house
+  sample_period: 1   # the interval between samples. In seconds.
+  max_sample_period: 6   # Max allowable interval between samples. Seconds.
+  measurements:
+  - physical_quantity: power   # power, voltage, energy, current?
+    type: active   # active (real power), reactive or apparent?
+    upper_limit: 50000
+    lower_limit: 0
+  wireless: false
