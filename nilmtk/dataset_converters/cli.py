@@ -18,6 +18,7 @@ class ConverterSpec:
     module: str
     function: str
     description: str
+    formats: tuple[str, ...] = ("HDF", "CSV")
 
 
 CONVERTERS = {
@@ -35,6 +36,12 @@ CONVERTERS = {
         "nilmtk.dataset_converters.dred.convert_dred",
         "convert_dred",
         "DRED",
+    ),
+    "gelap": ConverterSpec(
+        "nilmtk.dataset_converters.gelap.convert_gelap",
+        "convert_gelap",
+        "GeLaP",
+        formats=("HDF",),
     ),
     "hes": ConverterSpec(
         "nilmtk.dataset_converters.hes.convert_hes",
@@ -119,7 +126,7 @@ def build_parser() -> argparse.ArgumentParser:
         )
         command.add_argument(
             "--format",
-            choices=("HDF", "CSV"),
+            choices=spec.formats,
             default="HDF",
             help="destination datastore format (default: HDF)",
         )

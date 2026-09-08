@@ -1,0 +1,81 @@
+instance: 11
+original_name: hh-11
+elec_meters:
+  1: &id001
+    submeter_of: 11
+    device_model: GeLaP_monitor
+  2: *id001
+  3: *id001
+  4: *id001
+  5: *id001
+  6: *id001
+  7: *id001
+  8: *id001
+  9: *id001
+  10: *id001
+  11:
+    site_meter: true
+    device_model: Gelap_whole_house
+appliances:
+- original_name: television
+  room: living room
+  type: television
+  instance: 1
+  multiple: true
+  meters:
+  - 1
+- original_name: television-receiver
+  room: living room
+  type: set top box
+  instance: 1
+  meters:
+  - 2
+- original_name: floor lamp
+  room: living room
+  type: lamp
+  instance: 1
+  meters:
+  - 3
+- original_name: toaster
+  room: kitchen
+  type: toaster
+  instance: 1
+  meters:
+  - 4
+- original_name: electric kettle
+  room: kitchen
+  type: kettle
+  instance: 1
+  meters:
+  - 5
+- original_name: juicer
+  room: kitchen
+  type: small cooking appliance
+  instance: 1
+  meters:
+  - 6
+- original_name: coffee machine
+  room: kitchen
+  type: coffee maker
+  instance: 1
+  meters:
+  - 7
+- original_name: dryer
+  room: bathroom
+  type: tumble dryer
+  instance: 1
+  meters:
+  - 8
+- original_name: television
+  room: bedroom
+  type: television
+  instance: 2
+  multiple: true
+  meters:
+  - 9
+- original_name: computer
+  room: office
+  type: computer
+  instance: 1
+  meters:
+  - 10
