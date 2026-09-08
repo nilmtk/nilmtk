@@ -81,3 +81,14 @@ The authors publish GeLaP under
 That notice is retained in the dataset metadata; conversion does not change the
 dataset's terms. Metadata mappings are adapted from the authors' household
 labels.
+
+## Code license
+
+Copyright 2026 Camilo Mariño. The converter code, tests, and original
+documentation are licensed under [Apache License 2.0](../../../../LICENSE), matching NILMTK.
+This permits use, modification, and redistribution, including commercial use,
+subject to the license terms.
+
+This license grant does not cover third-party datasets or metadata adapted from
+the dataset authors. Their original terms and attribution remain applicable;
+conversion does not relicense those materials.
