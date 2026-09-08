@@ -1,0 +1,19 @@
+emonPi:
+  model: emonPi
+  manufacturer: OpenEnergyMonitor
+  manufacturer_url: https://openenergymonitor.org/
+  description: >
+    An all in one two circuit energy monitor and base-station which collects
+    data, hosts the emonCMS software and can also receive data from other
+    sensor nodes. emonPi measures real (active) power, rms value of voltage.
+  sample_period: 5   # the interval between samples. In seconds.
+  max_sample_period: 5   # Max allowable interval between samples. Seconds.
+  measurements:
+  - physical_quantity: voltage
+    upper_limit: 5000
+    lower_limit: 0
+  - physical_quantity: power
+    type: active   #(real power)
+    upper_limit: 5000
+    lower_limit: 0
+  wireless: false

@@ -1,0 +1,22 @@
+instance: 3
+original_name: premises_3
+elec_meters:
+  1:
+    site_meter: true
+    device_model: emonPi
+    data_location: Premises_3/Mains.csv
+  2:
+    submeter_of: 1
+    device_model: emonPi
+    data_location: Premises_3/Refrigerator.csv
+  3:
+    submeter_of: 1
+    device_model: emonPi
+    data_location: Premises_3/Washing_machine.csv
+appliances:
+    - {type: fridge, instance: 1, room: Kitchen, meters: [2]}
+    - {type: washer dryer, instance: 1, room: Kitchen, meters: [3]}
+n_occupants: 4
+description_of_occupants: A family of 2 teenagers (female and male).
+ownership: rented
+building_type: flat

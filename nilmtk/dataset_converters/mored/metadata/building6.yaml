@@ -1,0 +1,27 @@
+instance: 6
+original_name: Premises_6
+elec_meters:
+  1:
+    site_meter: true
+    device_model: emonPi
+    data_location: Premises_6/Mains.csv
+  2:
+    submeter_of: 1
+    device_model: emonPi
+    data_location: Premises_6/Dish_washer.csv
+  3:
+    submeter_of: 1
+    device_model: emonPi
+    data_location: Premises_6/TV.csv
+  4:
+    submeter_of: 1
+    device_model: emonPi
+    data_location: Premises_6/Washing_machine.csv
+appliances:
+    - {type: dishwasher, instance: 1, room: kitchen, meters: [2]}
+    - {type: television, instance: 1, room: living room, meters: [3]}
+    - {type: washer dryer, instance: 1, room: kitchen, meters: [4]}
+n_occupants: 3
+description_of_occupants: A family of 1 female teen and 1 older son.
+ownership: owned
+building_type: flat

@@ -1,0 +1,38 @@
+instance: 10
+original_name: Premises_10
+elec_meters:
+  1:
+    site_meter: true
+    device_model: emonPi
+    data_location: Premises_10/Mains.csv
+  2:
+    submeter_of: 1
+    device_model: emonPi
+    data_location: Premises_10/Refrigerator.csv
+  3:
+    submeter_of: 1
+    device_model: emonPi
+    data_location: Premises_10/Freezer.csv
+  4:
+    submeter_of: 1
+    device_model: emonPi
+    data_location: Premises_10/TV.csv
+  5:
+    submeter_of: 1
+    device_model: emonPi
+    data_location: Premises_10/Washing_machine.csv
+  6:
+    submeter_of: 1
+    device_model: emonPi
+    data_location: Premises_10/Water_heater.csv
+
+appliances:
+    - {type: fridge, instance: 1, room: kitchen, meters: [2]}
+    - {type: freezer, instance: 1, room: kitchen, meters: [3]}
+    - {type: television, instance: 1, room: living room, meters: [4]}
+    - {type: washer dryer, instance: 1, room: kitchen, meters: [5]}
+    - {type: electric water heater, instance: 1, room: kitchen, meters: [6]}
+n_occupants: 3
+description_of_occupants: adult daughter with elderly parents.
+ownership: owned
+building_type: flat

@@ -13,6 +13,7 @@ Subpackages
     nilmtk.dataset_converters.greend
     nilmtk.dataset_converters.hes
     nilmtk.dataset_converters.iawe
+    nilmtk.dataset_converters.mored
     nilmtk.dataset_converters.redd
     nilmtk.dataset_converters.ukdale
 

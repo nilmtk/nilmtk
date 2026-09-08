@@ -1,0 +1,55 @@
+instance: 9
+original_name: Premises_9
+elec_meters:
+  2:
+    submeter_of: 0
+    device_model: emonPi
+    data_location: Premises_9/Refrigerator.csv
+  3:
+    submeter_of: 0
+    device_model: emonPi
+    data_location: Premises_9/GarageLights.csv
+  4:
+    submeter_of: 0
+    device_model: emonPi
+    data_location: Premises_9/TV.csv
+  5:
+    submeter_of: 0
+    device_model: emonPi
+    data_location: Premises_9/WashingMachine.csv
+  6:
+    submeter_of: 0
+    device_model: emonPi
+    data_location: Premises_9/Printer.csv
+appliances:
+- type: fridge
+  instance: 1
+  room: kitchen
+  meters:
+  - 2
+- type: light
+  instance: 1
+  room: Garage
+  meters:
+  - 3
+- type: television
+  instance: 1
+  room: living room
+  meters:
+  - 4
+- type: washer dryer
+  instance: 1
+  room: kitchen
+  meters:
+  - 5
+- type: printer
+  instance: 1
+  room: study room
+  meters:
+  - 6
+n_occupants: 7
+description_of_occupants: family of four kids with one maid.
+ownership: owned
+building_type: semi-detached
+description: Only appliance ground truth is available. No whole-premises meter was
+  recorded; submeter_of 0 denotes an unmetered mains supply.
