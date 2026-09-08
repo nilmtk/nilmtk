@@ -1,0 +1,27 @@
+name: MORED-WPILGT
+long_name: The Moroccan Buildings' Electricity Consumption Dataset - Whole Premises and Individual Load ground truth
+creators:
+- Ahajjam, Mohamed Aymane
+- Bonilla-Licea, Daniel
+- Essayeh, Chaimaa
+- Ghogho, Mounir
+- Kobbane, Abdellatif
+# Mariño, Camilo (convert creator)
+publication_date: 2020
+institution: International University of Rabat (UIR) and ENSIAS, Mohammed V University in Rabat
+contact: mounir.ghogho@uir.ac.ma
+description: Several weeks of power data from different Moroccan households.
+subject: Disaggregated power demand from domestic buildings.
+number_of_buildings: 10
+timezone: Africa/Casablanca
+geo_location:
+  locality: Rabat, Sala Al-Jadida, and Tetuàn    # City
+  country: MA   # standard two-letter country code defined by ISO 3166-1 alpha-2
+  latitude: 33.994013 # Sala Al Jadida's coorindates
+  longitude: -6.736019
+related_documents:
+- https://github.com/camilomarino/MORED-NILMTK-Converter
+- https://moredataset.github.io/MORED/
+- >
+  Ahajjam, M.A.; Bonilla Licea, D.; Essayeh, C.; Ghogho, M.; Kobbane, A. MORED: A Moroccan Buildings’ Electricity Consumption Dataset. Energies 2020, 13, 6737.
+  https://doi.org/10.3390/en13246737 #link for PDF of journal paper

@@ -1,0 +1,23 @@
+instance: 8
+original_name: Premises_8
+elec_meters:
+  1:
+    site_meter: true
+    device_model: emonPi
+    data_location: Premises_8/Mains.csv
+  2:
+    submeter_of: 1
+    device_model: emonPi
+    data_location: Premises_8/Refrigerator.csv
+  3:
+    submeter_of: 1
+    device_model: emonPi
+    data_location: Premises_8/TV.csv
+
+appliances:
+    - {type: fridge, instance: 1, room: kitchen, meters: [2]}
+    - {type: television, instance: 1, room: living room, meters: [3]}
+n_occupants: 1
+description_of_occupants: 1 adult woman.
+ownership: owned
+building_type: flat

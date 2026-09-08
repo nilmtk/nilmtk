@@ -1,0 +1,32 @@
+instance: 4
+original_name: Premises_4
+elec_meters:
+  1:
+    site_meter: true
+    device_model: emonPi
+    data_location: Premises_4/Mains.csv
+  2:
+    submeter_of: 1
+    device_model: emonPi
+    data_location: Premises_4/Blender.csv
+  3:
+    submeter_of: 1
+    device_model: emonPi
+    data_location: Premises_4/Refrigerator.csv
+  4:
+    submeter_of: 1
+    device_model: emonPi
+    data_location: Premises_4/Washing_machine.csv
+  5:
+    submeter_of: 1
+    device_model: emonPi
+    data_location: Premises_4/Water_heater.csv
+appliances:
+    - {type: food processor, instance: 1, room: Kitchen, meters: [2]}
+    - {type: fridge, instance: 1, room: Kitchen, meters: [3]}
+    - {type: washer dryer, instance: 1, room: kitchen, meters: [4]}
+    - {type: electric water heater, instance: 1, room: kitchen, meters: [5]}
+n_occupants: 3
+description_of_occupants: A family of 1 older son. The father is Bedridden. The mother is retired elementary school teacher. The son is unemployed.
+ownership: rented
+building_type: flat

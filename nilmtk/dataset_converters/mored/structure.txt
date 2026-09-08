@@ -1,0 +1,75 @@
+data
+├── Premises_1
+│   ├── Blender.csv
+│   ├── Events.csv
+│   ├── Hair_dryer.csv
+│   ├── Laptop_ASUS.csv
+│   ├── Laptop_MSI.csv
+│   ├── Mains.csv
+│   ├── Panini_grill.csv
+│   ├── Refrigerator.csv
+│   ├── TV_monitor.csv
+│   └── Washing_machine.csv
+├── Premises_10
+│   ├── Events.csv
+│   ├── Freezer.csv
+│   ├── Mains.csv
+│   ├── Refrigerator.csv
+│   ├── TV.csv
+│   ├── Washing_machine.csv
+│   └── Water_heater.csv
+├── Premises_2
+│   ├── Events.csv
+│   ├── Freezer.csv
+│   ├── Mains.csv
+│   ├── Refrigerator.csv
+│   ├── TV.csv
+│   └── Washing_machine.csv
+├── Premises_3
+│   ├── Events.csv
+│   ├── Mains.csv
+│   ├── Refrigerator.csv
+│   └── Washing_machine.csv
+├── Premises_4
+│   ├── Blender.csv
+│   ├── Events.csv
+│   ├── Mains.csv
+│   ├── Refrigerator.csv
+│   ├── Washing_machine.csv
+│   └── Water_heater.csv
+├── Premises_5
+│   ├── Events.csv
+│   ├── Hair_dryer.csv
+│   ├── Hair_straightner.csv
+│   ├── Mains.csv
+│   ├── Oven.csv
+│   ├── Refrigerator.csv
+│   ├── TV_monitor.csv
+│   ├── Washing_machine.csv
+│   └── Water_heater.csv
+├── Premises_6
+│   ├── Dish_washer.csv
+│   ├── Events.csv
+│   ├── Mains.csv
+│   ├── TV.csv
+│   └── Washing_machine.csv
+├── Premises_7
+│   ├── Freezer.csv
+│   ├── Mains.csv
+│   ├── Refrigerator.csv
+│   ├── TV.csv
+│   └── Washing_machine.csv
+├── Premises_8
+│   ├── Events.csv
+│   ├── Mains.csv
+│   ├── Refrigerator.csv
+│   └── TV.csv
+└── Premises_9
+    ├── Events.csv
+    ├── GarageLights.csv
+    ├── Printer.csv
+    ├── Refrigerator.csv
+    ├── TV.csv
+    └── WashingMachine.csv
+
+10 directories, 62 files

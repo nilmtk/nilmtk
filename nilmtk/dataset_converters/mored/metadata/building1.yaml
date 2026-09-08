@@ -1,0 +1,54 @@
+instance: 1
+original_name: premises_1
+elec_meters:
+  1:
+    site_meter: true
+    device_model: emonPi
+    data_location: Premises_1/Mains.csv
+  2:
+    submeter_of: 1
+    device_model: emonPi
+    data_location: Premises_1/Blender.csv
+  3:
+    submeter_of: 1
+    device_model: emonPi
+    data_location: Premises_1/Laptop_ASUS.csv
+  4:
+    submeter_of: 1
+    device_model: emonPi
+    data_location: Premises_1/Laptop_MSI.csv
+  5:
+    submeter_of: 1
+    device_model: emonPi
+    data_location: Premises_1/TV_monitor.csv
+  6:
+    submeter_of: 1
+    device_model: emonPi
+    data_location: Premises_1/Panini_grill.csv
+  7:
+    submeter_of: 1
+    device_model: emonPi
+    data_location: Premises_1/Refrigerator.csv
+  8:
+    submeter_of: 1
+    device_model: emonPi
+    data_location: Premises_1/Washing_machine.csv
+  9:
+    submeter_of: 1
+    device_model: emonPi
+    data_location: Premises_1/Hair_dryer.csv
+
+appliances:
+    - {type: food processor, instance: 1, room: Kitchen, meters: [2]}
+    - {type: computer, instance: 1, room: Living room, meters: [3], brand: ASUS}
+    - {type: computer, instance: 2, room: Bedroom, meters: [4], brand: MSI}
+    - {type: flat screen, instance: 1, room: Living room, meters: [5]}
+    - {type: electric grill, instance: 1, room: Kitchen, meters: [6]}
+    - {type: fridge, instance: 1, room: Kitchen, meters: [7]}
+    - {type: spin dryer, instance: 1, room: corridor, meters: [8]}
+    - {type: hair dryer, instance: 1, meters: [9]}
+
+n_occupants: 2
+description_of_occupants: 2 male adults pursuing a PhD and a Master's degree.
+ownership: rented
+building_type: flat
