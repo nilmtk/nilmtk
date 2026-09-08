@@ -58,6 +58,20 @@ Tests generate synthetic readings for all 220 meters, reopen the result with
 `DataSet`, and check meter topology, timestamps, phase sums, metadata, archives,
 subsets and failure cleanup. No raw measurements are redistributed in tests.
 
+The complete twenty-house release was validated on 2026-09-08 with an installed
+NILMTK integration wheel. All 2,660,429,595 source rows were read; the expected
+output contains 2,660,429,589 rows after excluding one invalid row and five
+duplicate timestamps. Every output timestamp and float32 value matched an
+independent full-source reference using canonical SHA256 comparisons.
+
+Each complete house was converted through the CLI in four parallel processes.
+The resulting HDF5 groups were combined using native HDF5 object copies,
+preserving all 220 full indexes. Loading/resampling, energy and good-section
+statistics were exercised for every meter; upstream-meter links and a
+two-appliance CO train/predict smoke test on household 1 also passed. This tests
+integration, not the scientific accuracy of the disaggregation algorithm.
+No original measurements are redistributed with this contribution.
+
 Dataset authors: Sebastian Wilhelm, Dietmar Jakob, Jakob Kasbauer and Diane
 Ahrens. Cite [GeLaP: German Labeled Dataset for Power Consumption (2021)](https://doi.org/10.1007/978-981-16-2377-6_5).
 Converter author: Camilo Mariño.
