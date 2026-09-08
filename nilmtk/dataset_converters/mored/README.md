@@ -56,6 +56,13 @@ convert_mored("/path/to/data", "mored.h5", source_timezone="Africa/Casablanca")
 Use the Python API to select `source_timezone`. Ambiguous or nonexistent local
 times raise rather than silently shifting data.
 
+The [dataset paper, section 3.3.2](https://doi.org/10.3390/en13246737)
+says the acquisition devices synchronize with the country's clock. This suggests
+local acquisition time, but does not specify the timezone used when exporting
+CSV strings. The source metadata and this statement do not independently verify
+the inherited UTC default. Events are derived from the same measurements and
+cannot establish an absolute timezone independently.
+
 ### Output format
 
 Only HDF5 is supported (`format="HDF"`). The current NILMTK CSV reader does not
@@ -81,6 +88,17 @@ The timestamp comparison uses the documented UTC source-time assumption.
 The complete official `Premises_9/TV.csv` and `Premises_9/Refrigerator.csv` files
 were byte-identical (6,707,937 bytes each). Both published channels are preserved;
 the converter cannot infer which source label or recording should be corrected.
+
+A fresh download from the current official folder reproduced this result using
+two distinct Drive file IDs. Both files have SHA-256
+`4da063176dccb8febd240b12ec192326c498c91e3c45f5b4c726522163fb795b`.
+The published events also label TV and refrigerator at exactly the same 200,686
+timestamps. The provider's [2022 link fix](https://github.com/MOREDataset/MORED/commit/94e525c589c638b14e00cdc593591cba5f319616)
+corrected a link pointing to premises 2; the validation already uses the corrected
+premises-9 folder. No replacement recording was identified in the reviewed
+provider repository, history, or public issue. Treat these two channels as
+potentially duplicated source data when choosing evaluation appliances.
+
 
 Dataset reference: Ahajjam et al. (2020),
 [MORED: A Moroccan Buildings' Electricity Consumption Dataset](https://doi.org/10.3390/en13246737).
