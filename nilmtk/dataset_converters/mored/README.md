@@ -71,6 +71,17 @@ redistributed in the tests. Dataset YAML is adapted from the authors' metadata;
 their other appliance descriptions (including washer/dryer classifications)
 are retained rather than inferred from filenames alone.
 
+A full WPILGT download was validated on 2026-09-08 using an installed NILMTK
+integration wheel: all 44,172,557 readings across 53 meters matched an independent
+CSV-to-HDF5 comparison exactly. Loading/resampling, energy and good-section
+statistics were exercised for every meter. A two-appliance CO train/predict run
+on household 1 also passed; this is an integration check, not an accuracy study.
+The timestamp comparison uses the documented UTC source-time assumption.
+
+The complete official `Premises_9/TV.csv` and `Premises_9/Refrigerator.csv` files
+were byte-identical (6,707,937 bytes each). Both published channels are preserved;
+the converter cannot infer which source label or recording should be corrected.
+
 Dataset reference: Ahajjam et al. (2020),
 [MORED: A Moroccan Buildings' Electricity Consumption Dataset](https://doi.org/10.3390/en13246737).
 Converter author: Camilo Mariño. Downloaded data remain subject to the dataset
